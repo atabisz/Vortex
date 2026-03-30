@@ -11,6 +11,7 @@ packages:
 
 allowBuilds:
   '@nexusmods/fomod-installer-native': true
+  "@electron/rebuild": true
   "@parcel/watcher": true
   ba2tk: true
   bsatk: true
@@ -41,6 +42,7 @@ catalog:
   "@babel/preset-typescript": 7.16.7
   "@babel/register": 7.16.8
   "@duckdb/node-api": 1.5.1-r.1
+  "@electron/rebuild": 4.0.3
   "@electron/remote": ^2.0.12
   "@eslint-react/eslint-plugin": 2.3.7
   "@eslint/js": 9.39.1
