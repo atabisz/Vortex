@@ -73,7 +73,10 @@ Plans:
   2. `dotnetprobe` ELF is accessible on disk at runtime and returns a valid .NET runtime detection result on Linux (FOMD-02 satisfied)
   3. The platform guard in `installer_dotnet/index.ts` that previously threw on Linux no longer fires — the Linux code path activates instead (FOMD-03 satisfied)
   4. Connecting a FOMOD mod against a test game on Linux completes without error — the `ModInstallerIPC` process starts, accepts a TCP connection, and responds to `TestSupported` (FOMD-04 satisfied)
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [x] 04-01-PLAN.md — Add Linux FOMOD binary asarUnpack entries and fix VortexIPCConnection exe resolution
+- [ ] 04-02-PLAN.md — Build verification and end-to-end FOMOD TCP transport validation on Linux
 
 ### Phase 5: IPC and Elevation Audit
 **Goal**: Named pipe paths are replaced with platform-correct socket paths and the elevation scope for Phase 1 is documented
@@ -96,5 +99,5 @@ Phases 1 and 3 can begin in parallel. Phase 2 depends on Phase 1. Phase 4 depend
 | 1. Runtime Environment | 1/1 | Complete   | 2026-03-30 |
 | 2. winapi-bindings Shim | 2/2 | Complete   | 2026-03-30 |
 | 3. Native Addon Compilation | 3/3 | Complete   | 2026-03-30 |
-| 4. FOMOD Installer Integration | 0/? | Not started | - |
+| 4. FOMOD Installer Integration | 0/2 | Planning complete | - |
 | 5. IPC and Elevation Audit | 0/? | Not started | - |

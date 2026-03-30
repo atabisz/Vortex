@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: 03-03 Task 1 complete, awaiting CI verification (Task 2 checkpoint)
-last_updated: "2026-03-30T20:46:43.214Z"
+status: Ready to execute
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-03-30T22:57:36.305Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 8
+  completed_plans: 7
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** `pnpm run start` works on Linux without crashing — a developer can launch and use Vortex on a Linux machine
-**Current focus:** Phase 03 — native-addon-compilation
+**Current focus:** Phase 04 — fomod-installer-integration
 
 ## Current Position
 
-Phase: 03 (native-addon-compilation) — EXECUTING
-Plan: 2 of 3
-Status: Ready to execute
+Phase: 04 (fomod-installer-integration) — EXECUTING
+Plan: 2 of 2
+All 3 plans complete. All UAT passed.
 Last activity: 2026-03-30
 
 Progress: [░░░░░░░░░░] 0%
@@ -58,6 +58,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03-native-addon-compilation P01 | 3 | 2 tasks | 3 files |
 | Phase 03-native-addon-compilation P02 | 4 | 1 tasks | 4 files |
 | Phase 03-native-addon-compilation P03 | 10 | 2 tasks | 2 files |
+| Phase 04-fomod-installer-integration P01 | 8 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,9 @@ Recent decisions affecting current work:
 - [Phase 03-native-addon-compilation]: CI step ordering corrected: Rust toolchain before cmake/build-deps before pnpm install
 - [Phase 03-native-addon-compilation]: loot binding.gyp patch: replace -l../loot_api/libloot with -L../loot_api -llibloot on Linux; add RPATH $ORIGIN/../../loot_api; cmake output is libloot.so.0 (not liblibloot.so due to PREFIX=)
 - [Phase 03-native-addon-compilation]: verify-addons.cjs: loot verified via ldd not require() because Electron V8 headers (module v140) are incompatible with plain node (module v127); pnpm isolation requires workspace-relative require.resolve paths
+- [Phase 04-fomod-installer-integration]: Explicit asarUnpack paths for Linux binaries (not broad globs) per D-01 decision
+- [Phase 04-fomod-installer-integration]: platformExeName in VortexIPCConnection strips .exe on Linux; Windows behavior unchanged
+- [Phase 04-fomod-installer-integration]: FOMD-03 dotnetprobe Linux branch already correct in installer_dotnet/index.ts — no code changes needed
 
 ### Pending Todos
 
@@ -97,6 +101,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T20:46:30.810Z
-Stopped at: 03-03 Task 1 complete, awaiting CI verification (Task 2 checkpoint)
+Last session: 2026-03-30T22:57:36.301Z
+Stopped at: Completed 04-01-PLAN.md
 Resume file: None

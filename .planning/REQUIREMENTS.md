@@ -30,10 +30,10 @@
 
 ### FOMOD Installer
 
-- [ ] **FOMD-01**: Linux FOMOD binaries (`ModInstaller.Native.so`, `ModInstallerIPC` ELF) added to `asarUnpack` in `electron-builder.config.json` so they are accessible at runtime
-- [ ] **FOMD-02**: `dotnetprobe` Linux ELF added to `asarUnpack` and/or `linux.extraResources`
-- [ ] **FOMD-03**: Platform guard in `installer_dotnet/index.ts` that throws on Linux is removed — existing Linux code path is activated
-- [ ] **FOMD-04**: FOMOD TCP transport completes a handshake end-to-end on Linux — `ModInstallerIPC` ELF accepts a TCP connection and responds to `TestSupported`
+- [x] **FOMD-01**: Linux FOMOD binaries (`ModInstaller.Native.so`, `ModInstallerIPC` ELF) added to `asarUnpack` in `electron-builder.config.json` so they are accessible at runtime
+- [x] **FOMD-02**: `dotnetprobe` Linux ELF added to `asarUnpack` and/or `linux.extraResources`
+- [x] **FOMD-03**: Platform guard in `installer_dotnet/index.ts` that throws on Linux is removed — existing Linux code path is activated
+- [x] **FOMD-04**: FOMOD TCP transport completes a handshake end-to-end on Linux — `ModInstallerIPC` ELF accepts a TCP connection and responds to `TestSupported`
 
 ### IPC / Elevation
 
@@ -99,10 +99,10 @@
 | NADD-04 | Phase 3 | Complete |
 | NADD-05 | Phase 3 | Complete |
 | NADD-06 | Phase 3 | Complete |
-| FOMD-01 | Phase 4 | Pending |
-| FOMD-02 | Phase 4 | Pending |
-| FOMD-03 | Phase 4 | Pending |
-| FOMD-04 | Phase 4 | Pending |
+| FOMD-01 | Phase 4 | Complete |
+| FOMD-02 | Phase 4 | Complete |
+| FOMD-03 | Phase 4 | Complete |
+| FOMD-04 | Phase 4 | Complete |
 | IPC-01 | Phase 5 | Pending |
 | IPC-02 | Phase 5 | Pending |
 | IPC-03 | Phase 5 | Pending |
