@@ -44,12 +44,30 @@ jobs:
           echo "GYP_MSVS_VERSION=2022" >> $env:GITHUB_ENV
 
       # NOTE(erri120): fontconfig required by font-scanner required by theme-switcher
-      - name: Install fontconfig
+      # cmake and liblz4-dev required for native addon compilation on Linux
+      - name: Install Linux build dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev cmake liblz4-dev
+
+      # Rust toolchain required by libloot 0.29.1 (rewritten in Rust at 0.25+)
+      # Must run before "Install dependencies" because postinstall-libloot.cjs
+      # builds libloot from source during pnpm install on Linux
+      - name: Install Rust toolchain
+        if: runner.os == 'Linux'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
 
       - name: Install dependencies
         run: pnpm install
+
+      - name: Rebuild native addons for Electron
+        if: runner.os == 'Linux'
+        run: npx @electron/rebuild -f -v 39.8.0
+
+      - name: Verify native addons load
+        if: runner.os == 'Linux'
+        run: node scripts/verify-addons.cjs
 
       - name: Build
         run: pnpm run build:all
