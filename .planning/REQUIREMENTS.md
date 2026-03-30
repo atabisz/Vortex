@@ -13,7 +13,7 @@
 
 ### winapi-bindings Shim
 
-- [ ] **WAPI-01**: webpack alias maps `winapi-bindings` → `./util/winapi-shim.ts` on Linux builds — the app reaches the renderer without MODULE_NOT_FOUND crash (covers all 21 import sites with one config change)
+- [x] **WAPI-01**: webpack alias maps `winapi-bindings` → `./util/winapi-shim.ts` on Linux builds — the app reaches the renderer without MODULE_NOT_FOUND crash (covers all 21 import sites with one config change)
 - [x] **WAPI-02**: `GetDiskFreeSpaceEx` shim returns valid data via `fs.statfs()` — firststeps_dashlet renders without crashing on first launch
 - [x] **WAPI-03**: `GetVolumePathName` shim returns correct path root via `stat.dev` comparison — firststeps_dashlet renders without crashing on first launch
 - [x] **WAPI-04**: `ShellExecuteEx` shim throws a clear error on Linux (pkexec integration deferred pending elevation audit)
@@ -88,7 +88,7 @@
 | RENV-01 | Phase 1 | Complete |
 | RENV-02 | Phase 1 | Complete |
 | RENV-03 | Phase 1 | Complete |
-| WAPI-01 | Phase 2 | Pending |
+| WAPI-01 | Phase 2 | Complete |
 | WAPI-02 | Phase 2 | Complete |
 | WAPI-03 | Phase 2 | Complete |
 | WAPI-04 | Phase 2 | Complete |

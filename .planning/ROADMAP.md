@@ -13,7 +13,7 @@ Vortex is a Windows-only Electron mod manager. This milestone ports it to Linux 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Runtime Environment** - Add Electron runtime libraries and fix Linux-broken paths so the app can be built and tested (completed 2026-03-30)
-- [ ] **Phase 2: winapi-bindings Shim** - Replace the Windows-only module with a Linux shim so the renderer loads without crashing
+- [x] **Phase 2: winapi-bindings Shim** - Replace the Windows-only module with a Linux shim so the renderer loads without crashing (completed 2026-03-30)
 - [ ] **Phase 3: Native Addon Compilation** - Compile all C++ native addons for Linux in CI so they load at startup
 - [ ] **Phase 4: FOMOD Installer Integration** - Unpack Linux binaries from asar and validate the TCP transport end-to-end
 - [ ] **Phase 5: IPC and Elevation Audit** - Abstract named pipe paths to platform-correct sockets and document elevation scope
@@ -43,10 +43,10 @@ Plans:
   3. Opening the app on Linux with all 21 `winapi-bindings` import sites active produces no `MODULE_NOT_FOUND` or native binding load error in the console (WAPI-01 satisfied)
   4. Calling any registry, process-list, or file-ACL function on Linux returns a safe stub value rather than throwing an unhandled exception (WAPI-05 satisfied)
   5. Windows `pnpm run start` still works — no regression in Windows CI (WAPI-01 webpack alias is Linux build only)
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
 - [x] 02-01-PLAN.md — TDD: Create winapi-shim.ts with full export coverage (GetDiskFreeSpaceEx, GetVolumePathName, stubs)
-- [ ] 02-02-PLAN.md — Wire webpack and rolldown build aliases to resolve winapi-bindings to shim on Linux
+- [x] 02-02-PLAN.md — Wire webpack and rolldown build aliases to resolve winapi-bindings to shim on Linux
 **UI hint**: yes
 
 ### Phase 3: Native Addon Compilation
@@ -90,7 +90,7 @@ Phases 1 and 3 can begin in parallel. Phase 2 depends on Phase 1. Phase 4 depend
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Runtime Environment | 1/1 | Complete   | 2026-03-30 |
-| 2. winapi-bindings Shim | 0/2 | Planned | - |
+| 2. winapi-bindings Shim | 2/2 | Complete   | 2026-03-30 |
 | 3. Native Addon Compilation | 0/? | Not started | - |
 | 4. FOMOD Installer Integration | 0/? | Not started | - |
 | 5. IPC and Elevation Audit | 0/? | Not started | - |
