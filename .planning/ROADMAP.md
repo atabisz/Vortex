@@ -60,7 +60,7 @@ Plans:
   4. Windows CI addon compilation continues to pass — no regression
 **Plans:** 3 plans
 Plans:
-- [ ] 03-01-PLAN.md — Build libloot 0.29.1 from source for Linux via postinstall script + CI Rust/cmake setup
+- [x] 03-01-PLAN.md — Build libloot 0.29.1 from source for Linux via postinstall script + CI Rust/cmake setup
 - [ ] 03-02-PLAN.md — Add @electron/rebuild CI step, verify-addons smoke test, NADD-06 audit documentation
 - [ ] 03-03-PLAN.md — Integration: fix loot RPATH, validate complete CI pipeline, human-verify CI green
 

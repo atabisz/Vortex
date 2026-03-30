@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 02-winapi-bindings-shim 02-02-PLAN.md
-last_updated: "2026-03-30T12:33:55.352Z"
+status: executing
+stopped_at: Completed 03-native-addon-compilation/03-01-PLAN.md
+last_updated: "2026-03-30T20:10:01.784Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 6
+  completed_plans: 4
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** `pnpm run start` works on Linux without crashing — a developer can launch and use Vortex on a Linux machine
-**Current focus:** Phase 02 — winapi-bindings-shim
+**Current focus:** Phase 03 — native-addon-compilation
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 03 (native-addon-compilation) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
 Last activity: 2026-03-30
 
 Progress: [░░░░░░░░░░] 0%
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-runtime-environment P01 | 4 | 3 tasks | 4 files |
 | Phase 02-winapi-bindings-shim P01 | 3 | 1 tasks | 2 files |
 | Phase 02-winapi-bindings-shim P02 | 15 | 2 tasks | 3 files |
+| Phase 03-native-addon-compilation P01 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,8 @@ Recent decisions affecting current work:
 - [Phase 02-winapi-bindings-shim]: RegGetValue returns undefined in production shim (not object as in Jest mock)
 - [Phase 02-winapi-bindings-shim]: webpack/rolldown alias at bundle time catches all 18+ winapi-bindings import sites without source edits
 - [Phase 02-winapi-bindings-shim]: SHIM_PATH uses import.meta.dirname for ESM-safe resolution in build.mjs
+- [Phase 03-native-addon-compilation]: Build libloot 0.29.1 from source via cmake+cargo — LOOT dropped Linux prebuilts at 0.24.5; postinstall script delivers liblibloot.so to loot_api/
+- [Phase 03-native-addon-compilation]: Rust toolchain step placed before pnpm install in CI — postinstall-libloot.cjs needs cargo on PATH during dependency installation
 
 ### Pending Todos
 
@@ -85,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T12:26:13.094Z
-Stopped at: Completed 02-winapi-bindings-shim 02-02-PLAN.md
+Last session: 2026-03-30T20:10:01.780Z
+Stopped at: Completed 03-native-addon-compilation/03-01-PLAN.md
 Resume file: None
