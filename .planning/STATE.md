@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-03-30T20:12:13.440Z"
+stopped_at: 03-03 Task 1 complete, awaiting CI verification (Task 2 checkpoint)
+last_updated: "2026-03-30T20:46:43.214Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 ## Current Position
 
 Phase: 03 (native-addon-compilation) — EXECUTING
-Plan: 3 of 3
+Plan: 2 of 3
 Status: Ready to execute
 Last activity: 2026-03-30
 
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-winapi-bindings-shim P02 | 15 | 2 tasks | 3 files |
 | Phase 03-native-addon-compilation P01 | 3 | 2 tasks | 3 files |
 | Phase 03-native-addon-compilation P02 | 4 | 1 tasks | 4 files |
+| Phase 03-native-addon-compilation P03 | 10 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,10 @@ Recent decisions affecting current work:
 - [Phase 03-native-addon-compilation]: gamebryo-savegame disabled on Linux: two compile errors (MSVC exception constructor + lz4/zlib linker flags); NADD-06 clear error via ExtensionManager lazy-load failure
 - [Phase 03-native-addon-compilation]: vortexmt confirmed clean for Linux: proper WIN32 guards, portable C++ — added to CI rebuild
 - [Phase 03-native-addon-compilation]: xxhash-addon loads from NAPI prebuilds without rebuild (node-gyp-build handles linux-x64 glibc/musl)
+- [Phase 03-native-addon-compilation]: LD_LIBRARY_PATH in-process + CI wrapper chosen over patch-package RPATH for loot.node runtime .so resolution
+- [Phase 03-native-addon-compilation]: CI step ordering corrected: Rust toolchain before cmake/build-deps before pnpm install
+- [Phase 03-native-addon-compilation]: loot binding.gyp patch: replace -l../loot_api/libloot with -L../loot_api -llibloot on Linux; add RPATH $ORIGIN/../../loot_api; cmake output is libloot.so.0 (not liblibloot.so due to PREFIX=)
+- [Phase 03-native-addon-compilation]: verify-addons.cjs: loot verified via ldd not require() because Electron V8 headers (module v140) are incompatible with plain node (module v127); pnpm isolation requires workspace-relative require.resolve paths
 
 ### Pending Todos
 
@@ -92,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T20:12:13.436Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-03-30T20:46:30.810Z
+Stopped at: 03-03 Task 1 complete, awaiting CI verification (Task 2 checkpoint)
 Resume file: None

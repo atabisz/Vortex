@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Runtime Environment** - Add Electron runtime libraries and fix Linux-broken paths so the app can be built and tested (completed 2026-03-30)
 - [x] **Phase 2: winapi-bindings Shim** - Replace the Windows-only module with a Linux shim so the renderer loads without crashing (completed 2026-03-30)
-- [ ] **Phase 3: Native Addon Compilation** - Compile all C++ native addons for Linux in CI so they load at startup
+- [x] **Phase 3: Native Addon Compilation** - Compile all C++ native addons for Linux in CI so they load at startup (completed 2026-03-30)
 - [ ] **Phase 4: FOMOD Installer Integration** - Unpack Linux binaries from asar and validate the TCP transport end-to-end
 - [ ] **Phase 5: IPC and Elevation Audit** - Abstract named pipe paths to platform-correct sockets and document elevation scope
 
@@ -58,11 +58,11 @@ Plans:
   2. The running app loads all five addons at startup without a native binding load error in the console
   3. `vortexmt` and `gamebryo-savegame` audit result is documented — either a Linux CI target is added (clean audit) or a clear disabled/shimmed error is wired (Windows-specific APIs found) (NADD-06 satisfied)
   4. Windows CI addon compilation continues to pass — no regression
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 Plans:
 - [x] 03-01-PLAN.md — Build libloot 0.29.1 from source for Linux via postinstall script + CI Rust/cmake setup
 - [x] 03-02-PLAN.md — Add @electron/rebuild CI step, verify-addons smoke test, NADD-06 audit documentation
-- [ ] 03-03-PLAN.md — Integration: fix loot RPATH, validate complete CI pipeline, human-verify CI green
+- [x] 03-03-PLAN.md — Integration: fix loot RPATH, validate complete CI pipeline, human-verify CI green
 
 ### Phase 4: FOMOD Installer Integration
 **Goal**: FOMOD mod installation completes end-to-end on Linux — the Linux binaries are unpacked and the TCP transport handshakes successfully
@@ -95,6 +95,6 @@ Phases 1 and 3 can begin in parallel. Phase 2 depends on Phase 1. Phase 4 depend
 |-------|----------------|--------|-----------|
 | 1. Runtime Environment | 1/1 | Complete   | 2026-03-30 |
 | 2. winapi-bindings Shim | 2/2 | Complete   | 2026-03-30 |
-| 3. Native Addon Compilation | 0/3 | In progress | - |
+| 3. Native Addon Compilation | 3/3 | Complete   | 2026-03-30 |
 | 4. FOMOD Installer Integration | 0/? | Not started | - |
 | 5. IPC and Elevation Audit | 0/? | Not started | - |
