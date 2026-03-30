@@ -21,12 +21,12 @@
 
 ### Native Addons
 
-- [ ] **NADD-01**: `bsatk` native addon compiles for Linux via `@electron/rebuild` in CI (GitHub Actions Linux runner)
-- [ ] **NADD-02**: `esptk` native addon compiles for Linux via `@electron/rebuild` in CI
+- [x] **NADD-01**: `bsatk` native addon compiles for Linux via `@electron/rebuild` in CI (GitHub Actions Linux runner)
+- [x] **NADD-02**: `esptk` native addon compiles for Linux via `@electron/rebuild` in CI
 - [x] **NADD-03**: `loot` native addon compiles for Linux via `@electron/rebuild` in CI
-- [ ] **NADD-04**: `bsdiff-node` native addon compiles for Linux via `@electron/rebuild` in CI
-- [ ] **NADD-05**: `xxhash-addon` native addon compiles for Linux via `@electron/rebuild` in CI
-- [ ] **NADD-06**: `vortexmt` and `gamebryo-savegame` audited for Windows-specific API usage — compilation added to CI if clean, disabled/shimmed with clear error if Windows-only
+- [x] **NADD-04**: `bsdiff-node` native addon compiles for Linux via `@electron/rebuild` in CI
+- [x] **NADD-05**: `xxhash-addon` native addon compiles for Linux via `@electron/rebuild` in CI
+- [x] **NADD-06**: `vortexmt` and `gamebryo-savegame` audited for Windows-specific API usage — compilation added to CI if clean, disabled/shimmed with clear error if Windows-only
 
 ### FOMOD Installer
 
@@ -93,12 +93,12 @@
 | WAPI-03 | Phase 2 | Complete |
 | WAPI-04 | Phase 2 | Complete |
 | WAPI-05 | Phase 2 | Complete |
-| NADD-01 | Phase 3 | Pending |
-| NADD-02 | Phase 3 | Pending |
+| NADD-01 | Phase 3 | Complete |
+| NADD-02 | Phase 3 | Complete |
 | NADD-03 | Phase 3 | Complete |
-| NADD-04 | Phase 3 | Pending |
-| NADD-05 | Phase 3 | Pending |
-| NADD-06 | Phase 3 | Pending |
+| NADD-04 | Phase 3 | Complete |
+| NADD-05 | Phase 3 | Complete |
+| NADD-06 | Phase 3 | Complete |
 | FOMD-01 | Phase 4 | Pending |
 | FOMD-02 | Phase 4 | Pending |
 | FOMD-03 | Phase 4 | Pending |
