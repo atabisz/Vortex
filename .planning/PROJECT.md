@@ -21,9 +21,11 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 
 ### Active
 
-- [ ] Devcontainer includes Electron runtime libraries for Linux (libglib2.0-0, libnss3, libatk, etc.)
+- [x] Devcontainer includes Electron runtime libraries for Linux (libglib2.0-0, libnss3, libatk, etc.) — Validated in Phase 1: Runtime Environment
+- [x] `localAppData()` returns `XDG_DATA_HOME ?? ~/.local/share` on Linux — Validated in Phase 1: Runtime Environment
+- [x] electron-builder Linux packaging skips Windows .exe extraResources — Validated in Phase 1: Runtime Environment
 - [ ] All C++ native addons compile and run on Linux (bsatk, esptk, loot, bsdiff-node, xxhash-addon audited/ported)
-- [ ] winapi-bindings replaced with a Linux shim (pkexec for ShellExecuteEx, no-ops for registry/UAC functions)
+- [x] winapi-bindings replaced with a Linux shim (pkexec for ShellExecuteEx, no-ops for registry/UAC functions) — Validated in Phase 2: winapi-bindings Shim
 - [ ] FOMOD installer recompiled for Linux using .NET 9 (Linux binary, not .exe)
 - [ ] Elevation model works on Linux: pkexec + Unix domain sockets replacing named pipes
 - [ ] Windows build, tests, and CI remain unaffected throughout
@@ -64,7 +66,7 @@ The primary modding use case on Linux is Proton-managed Windows games (Skyrim, F
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | FOMOD: recompile for Linux via .NET 9 | Native Linux binary, no Wine dep, .NET 9 already in devcontainer | — Pending |
-| winapi-bindings: platform shim (not removal) | Registry/UAC functions are already guarded — shim only replaces the module binding | — Pending |
+| winapi-bindings: platform shim (not removal) | Registry/UAC functions are already guarded — shim only replaces the module binding | ✓ Done — webpack + rolldown aliases, 48-function shim, 19 tests passing |
 | Steam Deck: AppImage (not Flatpak) | Flatpak sandbox restrictions on ~/.steam need validation; AppImage works today | — Pending |
 | Heroic Launcher: deferred to Phase 4 | Phase 2 focus is Steam only; Heroic adds complexity without core validation | — Pending |
 | Elevation scope: audit first | Most Steam libraries are user-owned — pkexec may not be needed at all | — Pending |
@@ -88,4 +90,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-30 after initialization*
+*Last updated: 2026-03-30 after Phase 2: winapi-bindings Shim complete*
