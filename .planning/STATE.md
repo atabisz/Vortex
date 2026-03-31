@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Usable on Linux
 status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-03-31T22:06:20.842Z"
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-03-31T22:14:17.033Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 ## Current Position
 
 Phase: 06 (steam-proton-detection) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-03-31
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 06-steam-proton-detection P01 | 3 | 2 tasks | 3 files |
+| Phase 06-steam-proton-detection P02 | 15 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,8 @@ Recent decisions affecting current work:
 - [Phase 06-steam-proton-detection]: findLinuxSteamPath() kept intact for backward compat; findAllLinuxSteamPaths() is additive
 - [Phase 06-steam-proton-detection]: oslist as primary Proton signal when available — enables never-launched game detection without compatdata
 - [Phase 06-steam-proton-detection]: Appid dedup uses Set<string> first-occurrence-wins after games reduce, before tap()
+- [Phase 06-steam-proton-detection]: getMyGamesPath accepts compatDataPath string directly — simpler signature, callers already have path from Phase 06-01 work
+- [Phase 06-steam-proton-detection]: PromiseBB.resolve(asyncFn()) wrapping at ini_prep call sites preserves two-arg .catch(UserCanceled) without rewriting error handlers
 
 ### Research Context (v2.0)
 
@@ -112,6 +115,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-31T22:06:20.838Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-03-31T22:14:17.028Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None
