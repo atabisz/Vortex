@@ -70,6 +70,9 @@ nul
 # Serena (AI agent) memory files
 .serena
 
+# PAI memory files
+MEMORY/
+
 # playright stuff
 playwright/playwright-report/
 playwright/run-*
@@ -98,3 +101,4 @@ flatpak/scripts/__pycache__/
 test-results/
 
 .codemogger
+.planning/

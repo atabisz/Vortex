@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: Linux Port Phase 1
-status: v1.0 milestone complete
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-03-31T01:37:21.787Z"
-last_activity: 2026-03-31
+milestone: v2.0
+milestone_name: Usable on Linux
+status: planning
+stopped_at: Phase 6 context gathered
+last_updated: "2026-03-31T10:27:15.842Z"
+last_activity: 2026-03-31 — Roadmap created for v2.0 milestone
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 10
-  completed_plans: 10
+  total_phases: 3
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
   percent: 0
 ---
 
@@ -21,19 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** `pnpm run start` works on Linux without crashing — a developer can launch and use Vortex on a Linux machine
-**Current focus:** Planning v2.0 milestone — Steam/Proton game management, elevation model, packaging
-
-See: .planning/PROJECT.md (updated 2026-03-30)
-
-**Core value:** `pnpm run start` works on Linux without crashing — a developer can launch and use Vortex on a Linux machine
-**Current focus:** Phase 05 — ipc-and-elevation-audit
+**Current focus:** Phase 6 — Steam/Proton Detection
 
 ## Current Position
 
-Phase: 05
+Phase: 6 — Steam/Proton Detection
 Plan: Not started
-All 3 plans complete. All UAT passed.
-Last activity: 2026-03-31
+Status: Ready to plan
+Last activity: 2026-03-31 — Roadmap created for v2.0 milestone
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -57,15 +52,6 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
-| Phase 01-runtime-environment P01 | 4 | 3 tasks | 4 files |
-| Phase 02-winapi-bindings-shim P01 | 3 | 1 tasks | 2 files |
-| Phase 02-winapi-bindings-shim P02 | 15 | 2 tasks | 3 files |
-| Phase 03-native-addon-compilation P01 | 3 | 2 tasks | 3 files |
-| Phase 03-native-addon-compilation P02 | 4 | 1 tasks | 4 files |
-| Phase 03-native-addon-compilation P03 | 10 | 2 tasks | 2 files |
-| Phase 04-fomod-installer-integration P01 | 8 | 2 tasks | 2 files |
-| Phase 05-ipc-and-elevation-audit P02 | 5 | 1 tasks | 1 files |
-| Phase 05-ipc-and-elevation-audit P01 | 10 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -76,7 +62,7 @@ Recent decisions affecting current work:
 
 - FOMOD: recompile via .NET 9 (Linux binary already ships in npm packages — packaging only)
 - winapi-bindings: webpack alias shim on Linux (one config change, catches all 21 import sites)
-- Elevation: defer pkexec to Phase 2 — shim ShellExecuteEx as throw; most Steam libs are user-owned
+- Elevation: defer pkexec to v3.0 — shim ShellExecuteEx as throw; most Steam libs are user-owned
 - IPC serialisation trap: extract `getIPCPath(id)` utility and patch BOTH parent server and stringified child closure
 - [Phase 01-runtime-environment]: localAppData Linux branch: XDG_DATA_HOME ?? os.homedir()/.local/share using ?? not || to handle empty string correctly
 - [Phase 01-runtime-environment]: electron-builder: Windows .exe redistributables scoped to win.extraResources; Linux packaging references only cross-platform entries
@@ -100,17 +86,28 @@ Recent decisions affecting current work:
 - [Phase 05-ipc-and-elevation-audit]: Static import + vi.spyOn used instead of dynamic import() for node16 moduleResolution compat in ipc.test.ts
 - [Phase 05-ipc-and-elevation-audit]: baseFunc serialized closure in symlink_activator_elevate patched identically to elevatedMain in elevated.ts
 
+### Research Context (v2.0)
+
+Key findings from research/SUMMARY.md affecting Phase 6–8 execution:
+
+- STAM track: ~80% done. Primary new code = `getMyGamesPath()` in `proton.ts` + platform guard in `gameSupport.ts`
+- DIST track: Two config edits in `electron-builder.config.json` + one CI job in `package.yml`
+- PROT track: Two code gaps — `ensureAppImageDesktopEntry()` in `nxm.ts` + `pendingDownload` field in `Application.ts`
+- Critical pitfall: Wine prefix always uses `steamuser` as home dirname — never `os.userInfo().username`
+- Critical pitfall: Cold-start NXM URL silently dropped before Redux store ready — `pendingDownload` fix required
+- Critical pitfall: AppImage `xdg-settings` registers non-existent desktop ID unless `.desktop` file written first
+- PROT-02 SteamOS Steam Browser behavior unknown — may defer to v3.0 if hardware unavailable
+
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
-- IPC-03 serialisation trap: elevated.ts `.toString()`'d closure must be patched — source grep alone is insufficient, must inspect stringified child code path
-- NADD-06 (vortexmt/gamebryo-savegame): conditional on audit; may slip to Phase 2 if Windows-specific APIs found
+- PROT-02: SteamOS Steam Browser NXM behavior undocumented — requires Steam Deck hardware; defer to v3.0 if unavailable
 
 ## Session Continuity
 
-Last session: 2026-03-31T01:13:41.086Z
-Stopped at: Completed 05-01-PLAN.md
-Resume file: None
+Last session: 2026-03-31T10:27:15.838Z
+Stopped at: Phase 6 context gathered
+Resume file: .planning/phases/06-steam-proton-detection/06-CONTEXT.md
