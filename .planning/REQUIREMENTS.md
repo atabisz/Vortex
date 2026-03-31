@@ -40,7 +40,7 @@
 - [ ] **IPC-01**: `getIPCPath(id)` utility extracted — returns `\\\\?\\pipe\\{id}` on Windows, `path.join(os.tmpdir(), 'vortex-{id}.sock')` on Linux
 - [ ] **IPC-02**: `elevated.ts` parent `startIPCServer()` uses `getIPCPath()` — no hardcoded `\\\\?\\pipe` UNC prefix on Linux
 - [ ] **IPC-03**: Serialised `elevatedMain` closure uses `getIPCPath()` via passed-in argument — the stringified child process code connects to a Unix socket on Linux, not a named pipe
-- [ ] **IPC-04**: Elevation audit complete — documents whether `runElevated()` is called in any startup code path and whether pkexec is needed for Phase 1
+- [x] **IPC-04**: Elevation audit complete — documents whether `runElevated()` is called in any startup code path and whether pkexec is needed for Phase 1
 
 ## v2 Requirements
 
@@ -106,7 +106,7 @@
 | IPC-01 | Phase 5 | Pending |
 | IPC-02 | Phase 5 | Pending |
 | IPC-03 | Phase 5 | Pending |
-| IPC-04 | Phase 5 | Pending |
+| IPC-04 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 22 total

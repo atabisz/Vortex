@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to plan
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-03-31T00:30:53.177Z"
+status: Ready to execute
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-03-31T01:10:17.256Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 10
+  completed_plans: 9
   percent: 0
 ---
 
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** `pnpm run start` works on Linux without crashing — a developer can launch and use Vortex on a Linux machine
-**Current focus:** Phase 04 — fomod-installer-integration
+**Current focus:** Phase 05 — ipc-and-elevation-audit
 
 ## Current Position
 
-Phase: 5
-Plan: Not started
+Phase: 05 (ipc-and-elevation-audit) — EXECUTING
+Plan: 2 of 2
 All 3 plans complete. All UAT passed.
 Last activity: 2026-03-31
 
@@ -59,6 +59,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03-native-addon-compilation P02 | 4 | 1 tasks | 4 files |
 | Phase 03-native-addon-compilation P03 | 10 | 2 tasks | 2 files |
 | Phase 04-fomod-installer-integration P01 | 8 | 2 tasks | 2 files |
+| Phase 05-ipc-and-elevation-audit P02 | 5 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,7 @@ Recent decisions affecting current work:
 - [Phase 04-fomod-installer-integration]: Explicit asarUnpack paths for Linux binaries (not broad globs) per D-01 decision
 - [Phase 04-fomod-installer-integration]: platformExeName in VortexIPCConnection strips .exe on Linux; Windows behavior unchanged
 - [Phase 04-fomod-installer-integration]: FOMD-03 dotnetprobe Linux branch already correct in installer_dotnet/index.ts — no code changes needed
+- [Phase 05-ipc-and-elevation-audit]: pkexec not required for Phase 1 — all 6 runElevated call sites are user-triggered; startup path is clean
 
 ### Pending Todos
 
@@ -101,6 +103,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T22:57:36.301Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-03-31T01:10:17.252Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None
