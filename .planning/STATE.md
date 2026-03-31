@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: milestone
-status: Phase complete — ready for verification
+milestone_name: Linux Port Phase 1
+status: v1.0 milestone complete
 stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-03-31T01:13:41.090Z"
+last_updated: "2026-03-31T01:37:21.787Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 5
@@ -18,6 +18,11 @@ progress:
 
 ## Project Reference
 
+See: .planning/PROJECT.md (updated 2026-03-31)
+
+**Core value:** `pnpm run start` works on Linux without crashing — a developer can launch and use Vortex on a Linux machine
+**Current focus:** Planning v2.0 milestone — Steam/Proton game management, elevation model, packaging
+
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** `pnpm run start` works on Linux without crashing — a developer can launch and use Vortex on a Linux machine
@@ -25,8 +30,8 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 ## Current Position
 
-Phase: 05 (ipc-and-elevation-audit) — EXECUTING
-Plan: 2 of 2
+Phase: 05
+Plan: Not started
 All 3 plans complete. All UAT passed.
 Last activity: 2026-03-31
 

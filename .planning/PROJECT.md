@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. This milestone ports it to Linux — starting with Phase 1: getting Vortex to launch and run on Linux without breaking the existing Windows build. The approach is surgical: platform-guarded additions, no large refactors, Windows CI stays green throughout.
+Vortex is an Electron-based mod manager for Nexus Mods, currently targeting Windows and Linux. v1.0 shipped the full Linux boot milestone: `pnpm run start` produces a visible Electron window on Linux, all 22 requirements satisfied, Windows CI untouched throughout. The approach is surgical — platform-guarded additions, no refactors, every change additive or conditional.
 
 ## Core Value
 
@@ -14,44 +14,51 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 
 - ✓ Vortex launches and runs on Windows — existing
 - ✓ Mod installation via FOMOD installer (.exe/.dll, C#/.NET) — existing
-- ✓ Native addons (bsatk, esptk, loot, vortexmt, gamebryo-savegame, bsdiff-node, xxhash-addon) built for Windows — existing
+- ✓ Native addons (bsatk, esptk, loot, vortexmt, xxhash-addon, bsdiff-node) built for Windows — existing
 - ✓ Elevation via Windows UAC + named pipes — existing
 - ✓ Steam game detection on Windows via gamestore-steam extension — existing
 - ✓ proton.ts foundation for Proton/Wine path resolution — existing
+- ✓ **RENV-01**: Devcontainer includes all 16 Electron 39 runtime shared libraries — v1.0
+- ✓ **RENV-02**: `localAppData()` returns `XDG_DATA_HOME ?? ~/.local/share` on Linux — v1.0
+- ✓ **RENV-03**: electron-builder Linux packaging skips Windows `.exe` extraResources — v1.0
+- ✓ **WAPI-01–05**: winapi-bindings 48-export Linux shim; webpack + rolldown aliases; Electron window appears — v1.0
+- ✓ **NADD-01–06**: bsatk, esptk, loot, bsdiff-node, xxhash-addon compile on Linux CI; vortexmt clean; gamebryo-savegame disabled with NADD-06 audit — v1.0
+- ✓ **FOMD-01–04**: Linux FOMOD binaries unpacked from asar; VortexIPCConnection strips .exe; TCP transport handshake validated — v1.0
+- ✓ **IPC-01–04**: `getIPCPath()` utility; all 4 IPC sites patched; serialisation trap closed; elevation audit complete — v1.0
 
 ### Active
 
-- [x] Devcontainer includes Electron runtime libraries for Linux (libglib2.0-0, libnss3, libatk, etc.) — Validated in Phase 1: Runtime Environment
-- [x] `localAppData()` returns `XDG_DATA_HOME ?? ~/.local/share` on Linux — Validated in Phase 1: Runtime Environment
-- [x] electron-builder Linux packaging skips Windows .exe extraResources — Validated in Phase 1: Runtime Environment
-- [ ] All C++ native addons compile and run on Linux (bsatk, esptk, loot, bsdiff-node, xxhash-addon audited/ported)
-- [x] winapi-bindings replaced with a Linux shim (pkexec for ShellExecuteEx, no-ops for registry/UAC functions) — Validated in Phase 2: winapi-bindings Shim
-- [ ] FOMOD installer recompiled for Linux using .NET 9 (Linux binary, not .exe)
-- [ ] Elevation model works on Linux: pkexec + Unix domain sockets replacing named pipes
-- [ ] Windows build, tests, and CI remain unaffected throughout
+- [ ] **ELEV-01**: `pkexec` + Unix domain socket elevation fully implemented for operations that require elevated privileges on Linux
+- [ ] **ELEV-02**: Elevation works on Steam Deck (SteamOS) without requiring a polkit password
+- [ ] **STAM-01–05**: Steam/Proton game detection: library VDF parsing, Flatpak paths, Proton prefix resolution, `{mygames}` → Wine prefix, top-4-title game extension audit
+- [ ] **DIST-01–04**: AppImage + .deb packaging, GitHub Actions Linux CI artifacts, auto-updater `latest-linux.yml`
+- [ ] **PROT-01–02**: NXM protocol handler validated on SteamOS/KDE Plasma
 
 ### Out of Scope
 
-- Steam/Proton game detection and prefix resolution — Phase 2
-- AppImage / .deb packaging and distribution — Phase 3
-- Auto-updater CI/CD changes — Phase 3
-- Native Linux game support (GOG, Heroic, itch.io) — Phase 4
-- Steam Deck Flatpak investigation — Phase 3 or later (AppImage works in Desktop Mode without Flatpak)
-- vortexmt and gamebryo-savegame Linux compilation — pending audit for Windows deps (may slip to Phase 2)
+- pkexec / polkit implementation — deferred pending elevation audit; most Steam libraries are user-owned and need no elevation (confirmed v1.0 audit)
+- Native Linux game support (GOG, itch.io) — separate track, deferred to Phase 4+
+- Heroic Launcher integration — deferred to Phase 4
+- Steam Deck Flatpak distribution — AppImage works in Desktop Mode; Flatpak sandbox restrictions on `~/.steam` need validation before investing
+- Wine wrapper for FOMOD — rejected; Linux binaries already exist in npm packages
+- Large codebase refactors — Windows code paths must remain untouched; all Linux support is additive
+- gamebryo-savegame Linux compilation — uses MSVC exception constructors and lz4/zlib linker flags; deferred to Phase 2 or later
 
 ## Context
 
-Vortex is an existing, production Electron app with a Redux state model. The codebase already has:
-- `src/util/linux/proton.ts` — Proton path resolution foundation
-- Platform guards (`if (process.platform !== 'win32')`) in multiple extensions
-- .NET 9 installed in the devcontainer (Linux-native FOMOD compilation is viable)
-- Flatpak Steam detection already exists in gamestore-steam extension
+**Shipped v1.0 on 2026-03-31.** The app boots on Linux — a developer can `pnpm run start` and see a visible Electron window.
 
-The primary modding use case on Linux is Proton-managed Windows games (Skyrim, Fallout 4, Cyberpunk, BG3 via Steam). Native Linux game support is a separate, smaller use case deferred until Track 1 (Phases 1-3) is stable.
+**Technical state after v1.0:**
+- winapi-bindings shim: 48 exports, statfsSync/statSync for disk ops, all registry/ACL/privilege functions no-ops
+- Native addons: 5 addons CI-compiled for Linux (`loot` via libloot 0.29.1 built from source); loot.node uses LD_LIBRARY_PATH fallback
+- FOMOD: Linux ELF binaries unpacked from asar; TCP transport handshake validated end-to-end
+- IPC: `getIPCPath()` utility routes to Unix sockets on Linux, named pipes on Windows
+- Elevation: pkexec deferred — confirmed not on any startup path; 6 call sites documented
+- CI: ubuntu-latest and windows-latest both green
 
-**Windows compatibility is non-negotiable:** all changes must be additive or platform-guarded. No modifications to Windows code paths. Windows CI must stay green after every commit.
+**Platform guard pattern established:** `if (process.platform === 'linux') { ... }` before Windows path — used consistently across all 5 phases.
 
-**Steam Deck is a first-class target:** AppImage format (Phase 3) must work in Desktop Mode. Flatpak investigation deferred until after Phase 3 stabilizes.
+**v2.0 focus:** Steam/Proton game management, elevation model, packaging/distribution, protocol handler.
 
 ## Constraints
 
@@ -65,29 +72,18 @@ The primary modding use case on Linux is Proton-managed Windows games (Skyrim, F
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| FOMOD: recompile for Linux via .NET 9 | Native Linux binary, no Wine dep, .NET 9 already in devcontainer | — Pending |
-| winapi-bindings: platform shim (not removal) | Registry/UAC functions are already guarded — shim only replaces the module binding | ✓ Done — webpack + rolldown aliases, 48-function shim, 19 tests passing |
-| Steam Deck: AppImage (not Flatpak) | Flatpak sandbox restrictions on ~/.steam need validation; AppImage works today | — Pending |
+| FOMOD: recompile for Linux via .NET 9 | Native Linux binary, no Wine dep, .NET 9 already in devcontainer | ✓ Validated — Linux ELF binaries ship in npm packages, TCP transport handshake confirmed |
+| winapi-bindings: platform shim (not removal) | Registry/UAC functions already guarded — shim replaces the module binding only | ✓ Done — webpack + rolldown aliases, 48-function shim, 19 tests passing |
+| winapi-bindings: webpack/rolldown alias approach | One config change catches all 21 import sites without touching source files | ✓ Validated — covers all import sites with zero source edits |
+| Steam Deck: AppImage (not Flatpak) | Flatpak sandbox restrictions on ~/.steam need validation; AppImage works today | — Pending v2.0 |
 | Heroic Launcher: deferred to Phase 4 | Phase 2 focus is Steam only; Heroic adds complexity without core validation | — Pending |
-| Elevation scope: audit first | Most Steam libraries are user-owned — pkexec may not be needed at all | — Pending |
-| Milestone scope: Phase 1 only | Ship "boots on Linux" before planning Phases 2-3; validate feasibility first | — Pending |
-
-## Evolution
-
-This document evolves at phase transitions and milestone boundaries.
-
-**After each phase transition** (via `/gsd:transition`):
-1. Requirements invalidated? → Move to Out of Scope with reason
-2. Requirements validated? → Move to Validated with phase reference
-3. New requirements emerged? → Add to Active
-4. Decisions to log? → Add to Key Decisions
-5. "What This Is" still accurate? → Update if drifted
-
-**After each milestone** (via `/gsd:complete-milestone`):
-1. Full review of all sections
-2. Core Value check — still the right priority?
-3. Audit Out of Scope — reasons still valid?
-4. Update Context with current state
+| Elevation scope: audit first | Most Steam libraries are user-owned — pkexec may not be needed at all | ✓ Confirmed — pkexec absent from all startup paths; deferred to v2 |
+| loot: build from source via cmake+cargo | Dropped Linux prebuilts at 0.24.5; postinstall script delivers liblibloot.so | ✓ Done — loot.node compiles and loads on Linux |
+| loot RPATH: LD_LIBRARY_PATH in-process | Simpler than patch-package RPATH; CI wrapper handles .so resolution | ✓ Done — CI and local dev both work |
+| gamebryo-savegame: disabled on Linux | MSVC exception constructor + lz4/zlib linker flags — Windows-specific; clear error via lazy-load | ✓ Done — NADD-06 audit documented |
+| IPC serialisation trap: getIPCPath via argument | `.toString()`'d child closure must receive getIPCPath as argument — source grep insufficient | ✓ Done — both parent and stringified child patched |
+| pkexec: defer to v2 | Phase 1 audit confirms no startup path requires elevation; user-triggered only | ✓ Confirmed — 6 call sites documented, all user-triggered |
+| Milestone scope: Phase 1 only | Ship "boots on Linux" before planning Phases 2-3; validate feasibility first | ✓ Validated — all 22 requirements shipped in ~1 day |
 
 ---
-*Last updated: 2026-03-30 after Phase 2: winapi-bindings Shim complete*
+*Last updated: 2026-03-31 after v1.0 milestone complete*
