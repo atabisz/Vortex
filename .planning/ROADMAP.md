@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: winapi-bindings Shim** - Replace the Windows-only module with a Linux shim so the renderer loads without crashing (completed 2026-03-30)
 - [x] **Phase 3: Native Addon Compilation** - Compile all C++ native addons for Linux in CI so they load at startup (completed 2026-03-30)
 - [ ] **Phase 4: FOMOD Installer Integration** - Unpack Linux binaries from asar and validate the TCP transport end-to-end
-- [ ] **Phase 5: IPC and Elevation Audit** - Abstract named pipe paths to platform-correct sockets and document elevation scope
+- [x] **Phase 5: IPC and Elevation Audit** - Abstract named pipe paths to platform-correct sockets and document elevation scope (completed 2026-03-31)
 
 ## Phase Details
 
@@ -88,9 +88,9 @@ Plans:
   2. The elevated.ts parent server `startIPCServer()` uses `getIPCPath()` — no hardcoded UNC pipe prefix appears in the Linux startup path (IPC-02 satisfied)
   3. The stringified `elevatedMain` closure connects to a Unix socket on Linux — the serialisation trap (`.toString()` child code) is patched as well as the parent call (IPC-03 satisfied)
   4. The elevation audit document exists and answers: whether `runElevated()` is called on any startup path and whether `pkexec` is needed for Phase 1 (IPC-04 satisfied)
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
-- [ ] 05-01-PLAN.md — Create getIPCPath utility and patch all IPC pipe path sites
+- [x] 05-01-PLAN.md — Create getIPCPath utility and patch all IPC pipe path sites
 - [x] 05-02-PLAN.md — Elevation audit document (runElevated scope and pkexec decision)
 
 ## Progress
@@ -104,4 +104,4 @@ Phases 1 and 3 can begin in parallel. Phase 2 depends on Phase 1. Phase 4 depend
 | 2. winapi-bindings Shim | 2/2 | Complete   | 2026-03-30 |
 | 3. Native Addon Compilation | 3/3 | Complete   | 2026-03-30 |
 | 4. FOMOD Installer Integration | 0/2 | Planning complete | - |
-| 5. IPC and Elevation Audit | 1/2 | In Progress|  |
+| 5. IPC and Elevation Audit | 2/2 | Complete   | 2026-03-31 |
