@@ -164,7 +164,7 @@ export function mygamesPath(gameMode: string): string {
           "drive_c",
           "users",
           "steamuser",
-          "My Documents",
+          "Documents",
         );
         return path.join(
           wineDocuments,
