@@ -11,9 +11,9 @@
 
 ### Steam/Proton Detection (STAM)
 
-- [ ] **STAM-01**: Steam game library VDF parsing works on Linux (native Steam install paths)
-- [ ] **STAM-02**: All valid Steam library roots scanned and merged; Flatpak Steam paths (`~/.var/app/com.valvesoftware.Steam`) resolved; dual-install (Flatpak + native) handled correctly
-- [ ] **STAM-03**: Proton prefix path resolved per-game from `steamapps/compatdata/`; never-launched games detected via `oslist` ACF field
+- [x] **STAM-01**: Steam game library VDF parsing works on Linux (native Steam install paths)
+- [x] **STAM-02**: All valid Steam library roots scanned and merged; Flatpak Steam paths (`~/.var/app/com.valvesoftware.Steam`) resolved; dual-install (Flatpak + native) handled correctly
+- [x] **STAM-03**: Proton prefix path resolved per-game from `steamapps/compatdata/`; never-launched games detected via `oslist` ACF field
 - [ ] **STAM-04**: `{mygames}` variable resolves to correct Wine prefix location (`compatdata/<appid>/pfx/drive_c/users/steamuser/Documents/My Games`) on Linux; Windows resolution unchanged
 - [ ] **STAM-05**: Top-4-title game extensions confirmed working on Linux: Skyrim SE, Fallout 4, Cyberpunk 2077, Stardew Valley (inherits STAM-04 fix for Bethesda titles)
 
