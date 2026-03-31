@@ -106,3 +106,12 @@ None - no external service configuration required.
 ---
 *Phase: 06-steam-proton-detection*
 *Completed: 2026-03-31*
+
+## Self-Check: PASSED
+
+- FOUND: src/renderer/src/util/linux/steamPaths.ts
+- FOUND: src/renderer/src/util/linux/proton.ts
+- FOUND: src/renderer/src/util/Steam.ts
+- FOUND: .planning/phases/06-steam-proton-detection/06-01-SUMMARY.md
+- FOUND commit: 3e2c31458 (Task 1)
+- FOUND commit: 0f1daeb56 (Task 2)
