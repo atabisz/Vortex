@@ -39,7 +39,7 @@
 Plans:
 - [x] 06-01-PLAN.md — Multi-root Steam detection + oslist Proton detection
 - [x] 06-02-PLAN.md — Wine prefix {mygames} path fix (both gameSupport.ts files + async iniFiles)
-- [ ] 06-03-PLAN.md — Top-4 game extension audit + Fallout 4 dead import fix
+- [x] 06-03-PLAN.md — Top-4 game extension audit + Fallout 4 dead import fix
 **UI hint**: yes
 
 ### Phase 7: Linux Packaging
