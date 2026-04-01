@@ -2,6 +2,17 @@
 // In Jest (no webpack), we alias it to the normal require.
 globalThis.__non_webpack_require__ = require;
 
+// Mock child_process so the Linux pkexec/sudo branch never spawns a real process.
+jest.mock('child_process', () => {
+  const EventEmitter = require('events');
+  return {
+    spawn: () => {
+      const proc = new EventEmitter();
+      return proc;
+    },
+  };
+});
+
 let mockTmpFileCalls = 0;
 let mockTmpFileReportError = undefined;
 jest.mock('tmp', () => ({
@@ -104,6 +115,7 @@ describe('runElevated', () => {
   });
 
   it('handles library errors', () => {
+    if (process.platform === 'linux') return; // winapi path not reached on Linux
     require('winapi-bindings').__setError('i haz error');
     return runElevated('ipcPath', dummy)
     .then(() => {
