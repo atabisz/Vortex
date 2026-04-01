@@ -4,7 +4,7 @@ milestone: v2.0
 milestone_name: Usable on Linux
 status: verifying
 stopped_at: Completed 06-03-PLAN.md — STAM-05 verified
-last_updated: "2026-04-01T00:03:18.055Z"
+last_updated: "2026-04-01T00:09:42.071Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 3
@@ -25,8 +25,8 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 
 ## Current Position
 
-Phase: 06 (steam-proton-detection) — EXECUTING
-Plan: 3 of 3
+Phase: 7
+Plan: Not started
 Status: Phase complete — ready for verification
 Last activity: 2026-04-01
 
