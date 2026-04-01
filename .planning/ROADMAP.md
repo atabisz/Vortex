@@ -22,7 +22,7 @@
 
 - [ ] **Phase 6: Steam/Proton Detection** — Validate and complete Steam/Proton game detection on Linux; fix `{mygames}` Wine prefix path; audit top-4 game extensions
 - [x] **Phase 7: Linux Packaging** — Produce AppImage and .deb artifacts via electron-builder; add Linux CI job; generate auto-updater manifest (completed 2026-04-01)
-- [ ] **Phase 8: NXM Protocol Handler** — Wire and validate NXM "Download with Manager" on standard Linux and SteamOS/KDE Plasma
+- [x] **Phase 8: NXM Protocol Handler** — Wire and validate NXM "Download with Manager" on standard Linux and SteamOS/KDE Plasma (completed 2026-04-01)
 
 ## Phase Details
 
@@ -67,8 +67,8 @@ Plans:
   4. NXM handler is confirmed working in SteamOS Desktop Mode (KDE Plasma); Steam Browser behavior documented or deferred to v3.0 if hardware is unavailable
 **Plans**: 2 plans
 Plans:
-- [ ] 08-01-PLAN.md — AppImage desktop entry + KDE kbuildsycoca6 refresh for NXM handler
-- [ ] 08-02-PLAN.md — Cold-start NXM URL buffer in Application.ts
+- [x] 08-01-PLAN.md — AppImage desktop entry + KDE kbuildsycoca6 refresh for NXM handler
+- [x] 08-02-PLAN.md — Cold-start NXM URL buffer in Application.ts
 
 ## Progress
 
@@ -81,4 +81,4 @@ Plans:
 | 5. IPC and Elevation Audit | v1.0 | 2/2 | Complete | 2026-03-31 |
 | 6. Steam/Proton Detection | v2.0 | 0/3 | Planned | - |
 | 7. Linux Packaging | v2.0 | 2/2 | Complete   | 2026-04-01 |
-| 8. NXM Protocol Handler | v2.0 | 0/2 | Planned | - |
+| 8. NXM Protocol Handler | v2.0 | 2/2 | Complete   | 2026-04-01 |

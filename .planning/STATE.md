@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Usable on Linux
-status: verifying
-stopped_at: Phase 8 context gathered
-last_updated: "2026-04-01T01:10:01.076Z"
+status: executing
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-04-01T01:41:34.132Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 3
-  completed_phases: 2
-  total_plans: 5
+  completed_phases: 1
+  total_plans: 7
   completed_plans: 5
   percent: 0
 ---
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** `pnpm run start` works on Linux without crashing — a developer can launch and use Vortex on a Linux machine
-**Current focus:** Phase 07 — linux-packaging
+**Current focus:** Phase 08 — nxm-protocol-handler
 
 ## Current Position
 
-Phase: 8
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 08 (nxm-protocol-handler) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-04-01
 
 Progress: [░░░░░░░░░░] 0%
@@ -58,6 +58,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 06-steam-proton-detection P03 | 20min | 2 tasks | 5 files |
 | Phase 07-linux-packaging P02 | 5 | 1 tasks | 1 files |
 | Phase 07-linux-packaging P01 | 2 | 2 tasks | 2 files |
+| Phase 08-nxm-protocol-handler P02 | 5 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,7 @@ Recent decisions affecting current work:
 - [Phase 07-linux-packaging]: pnpm run package:nosign reused for Linux — electron-builder ignores Windows signing config on Linux automatically
 - [Phase 07-linux-packaging]: linux.artifactName mirrors nsis.artifactName: vortex-setup-${version}.${ext}
 - [Phase 07-linux-packaging]: Auto-updater gate: process.env.APPIMAGE only — zip/deb installs get managed (no updater)
+- [Phase 08-nxm-protocol-handler]: Buffer args.download in mPendingDownload before startup; apply after startUi() resolves
 
 ### Research Context (v2.0)
 
@@ -128,6 +130,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-01T01:10:01.072Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-nxm-protocol-handler/08-CONTEXT.md
+Last session: 2026-04-01T01:41:34.127Z
+Stopped at: Completed 08-02-PLAN.md
+Resume file: None
