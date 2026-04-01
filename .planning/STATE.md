@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Usable on Linux
 status: verifying
-stopped_at: "Completed 06-03 Task 1; awaiting checkpoint:human-verify Task 2"
-last_updated: "2026-03-31T22:18:01.222Z"
-last_activity: 2026-03-31
+stopped_at: Completed 06-03-PLAN.md — STAM-05 verified
+last_updated: "2026-04-01T00:03:18.055Z"
+last_activity: 2026-04-01
 progress:
   total_phases: 3
   completed_phases: 1
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 Phase: 06 (steam-proton-detection) — EXECUTING
 Plan: 3 of 3
 Status: Phase complete — ready for verification
-Last activity: 2026-03-31
+Last activity: 2026-04-01
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 06-steam-proton-detection P01 | 3 | 2 tasks | 3 files |
 | Phase 06-steam-proton-detection P02 | 15 | 2 tasks | 4 files |
 | Phase 06-steam-proton-detection P03 | 5 | 1 tasks | 1 files |
+| Phase 06-steam-proton-detection P03 | 20min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -95,6 +96,9 @@ Recent decisions affecting current work:
 - [Phase 06-steam-proton-detection]: PromiseBB.resolve(asyncFn()) wrapping at ini_prep call sites preserves two-arg .catch(UserCanceled) without rewriting error handlers
 - [Phase 06-steam-proton-detection]: Bundled game extensions bypass webpack alias — Windows-only require() calls must be removed from source, not aliased
 - [Phase 06-steam-proton-detection]: Fallout 4 dead winapi-bindings removed from src/index.js; dist is gitignored and regenerated at build time
+- [Phase 06-steam-proton-detection]: steamPaths.ts: ~/.steam/root symlink resolved first; all roots read VDF for secondary library discovery
+- [Phase 06-steam-proton-detection]: GameStoreHelper.ts: result.priority guard removed — Steam entries on Linux never set priority
+- [Phase 06-steam-proton-detection]: transferPath.ts: win32-only guard removed from testPathTransfer(); diskusage.check() uses destination path on Linux
 
 ### Research Context (v2.0)
 
@@ -118,6 +122,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-31T22:18:01.218Z
-Stopped at: Completed 06-03 Task 1; awaiting checkpoint:human-verify Task 2
+Last session: 2026-04-01T00:03:12.833Z
+Stopped at: Completed 06-03-PLAN.md — STAM-05 verified
 Resume file: None
