@@ -1,5 +1,18 @@
 # Milestones
 
+## v3.0 Save Games + Elevation (Shipped: 2026-04-01)
+
+**Phases completed:** 2 phases, 4 plans, 4 tasks
+
+**Key accomplishments:**
+
+- pnpm patch for gamebryo-savegame fixing MSVC-only exception constructor and adding OS=="linux" lz4/zlib linker flags; CI and deb packaging updated
+- pkexec Linux branch in runElevated() with injectable spawner seam and 7 Vitest tests covering all exit code paths
+- Async mygamesPath() with getSteamEntry helper returns Wine prefix compatdata path for Proton games on Linux, fixing SAVE-02/03/04
+- isSteamOS() detection with /etc/os-release caching, sudo -n fallback in runElevated(), and branded polkit action file packaged in .deb via electron-builder extraFiles
+
+---
+
 ## v2.0 Usable on Linux (Shipped: 2026-04-01)
 
 **Phases completed:** 3 phases, 7 plans, 11 tasks

@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Save Games + Elevation
-status: verifying
-stopped_at: "Completed 10-01: async mygamesPath with Linux Proton branch (SAVE-02/03/04)"
-last_updated: "2026-04-01T06:08:12.430Z"
+status: complete
+stopped_at: "Milestone v3.0 archived — planning next milestone"
+last_updated: "2026-04-01T06:16:01.781Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 2
@@ -18,16 +18,16 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-01)
+See: .planning/PROJECT.md (updated 2026-04-01 after v3.0)
 
-**Core value:** A Linux user can install Vortex, detect their Steam/Proton games, and download mods via NXM link
-**Current focus:** Phase 10 — save-ui-validation-steamos-polkit
+**Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games
+**Current focus:** Planning next milestone (v4.0)
 
 ## Current Position
 
-Phase: 10
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: —
+Plan: —
+Status: v3.0 milestone complete — archived 2026-04-01
 Last activity: 2026-04-01
 
 Progress: [░░░░░░░░░░] 0%

@@ -103,6 +103,55 @@
 
 ---
 
+## Milestone: v3.0 — Save Games + Elevation
+
+**Shipped:** 2026-04-01
+**Phases:** 2 | **Plans:** 4 | **Tasks:** 7
+
+### What Was Built
+
+- gamebryo-savegame pnpm patch: `MoreInfoException` base changed to `std::runtime_error`, `binding.gyp` gains `OS=="linux"` lz4/zlib linker flags, CHAR_WIDTH fmt macro undef for GCC 13
+- pkexec Linux branch in `runElevated()` with injectable spawner seam; socket-before-spawn ordering enforced; 7 Vitest tests covering all exit code paths including UserCanceled (exit 126), auth failure (exit 127), and ECONNREFUSED
+- `mygamesPath()` and `iniPath()` made async with Linux Proton branch; `getSteamEntry()` helper via `GameStoreHelper`; all callers in `index.ts` await-updated; SAVE-02/03/04 fixed
+- `isSteamOS()` detection via `/etc/os-release` with module-level caching; `sudo -n` fallback before pkexec on SteamOS; graceful `UserCanceled` on both failures
+- `io.nexusmods.vortex.policy` polkit action file at `/usr/share/polkit-1/actions/` shipped in `.deb` via `electron-builder extraFiles`
+
+### What Worked
+
+- **pnpm patch pattern:** Established in v1.0 for loot — applied cleanly for gamebryo-savegame. The exact-version-pin requirement was documented from prior experience, preventing silent skip.
+- **Injectable spawner seam:** Designing `runElevated()` with a `spawner` parameter for CI testability made the 7-test suite possible without mock pollution. Clean separation of concerns.
+- **Cached isSteamOS():** Module-level caching of `/etc/os-release` read was identified in research as a pitfall (repeated file reads on every elevation). The fix was designed into the plan before execution.
+- **CONTEXT.md depth on SteamOS:** The research documented the "pkexec hangs without polkit agent in Game Mode" pitfall explicitly — this drove the `sudo -n` fallback design before any code was written.
+- **Bundled extension constraint navigation:** The `GameStoreHelper` / `ILocalSteamEntry` pattern for bundled extensions (can't import from renderer src/) was resolved in the plan phase with the right abstraction.
+
+### What Was Inefficient
+
+- **09-01/09-02 SUMMARY.md one-liners missing:** Both phase-09 summaries used placeholder `"One-liner:"` text — the gsd-tools summary-extract returned blanks. Required manual correction at milestone close. Same pattern as v2.0 Phase 7-02 gap.
+- **Phase 9 ROADMAP checkbox:** Phase 9's phase-level entry (`- [ ] **Phase 9:**`) wasn't updated to `[x]` — the progress table showed `In Progress` at milestone close. Consistent v1.0/v2.0 pattern; CLI still doesn't update phase-level `<details>` entries.
+- **ELEV-01 REQUIREMENTS.md checkbox:** ELEV-01 remained unchecked in REQUIREMENTS.md despite being complete per PROJECT.md and SUMMARY.md. Surfaced at milestone audit step. A minor paperwork gap but created a false alarm at close.
+
+### Patterns Established
+
+- **Vitest for native Electron code:** `elevated.test.ts` pattern — injectable spawner seam + `vi.spyOn(process)` + `vi.restoreAllMocks()` teardown — is the canonical test structure for OS-calling utility code
+- **isSteamOS() caching pattern:** Module-level `_isSteamOS: boolean | undefined` with lazy-init on first call — portable to any `/etc/os-release`-based detection
+- **polkit action file delivery:** `extraFiles` in `electron-builder.yml` with platform-scoped `filter: ["*.policy"]` — no postinstall hook needed; electron-builder handles placement
+- **Bundled extension GameStoreHelper pattern:** When a bundled extension needs Steam data, use `GameStoreHelper.getGameStore('steam').then(...)` and define a local `ILocalSteamEntry` interface
+
+### Key Lessons
+
+1. **SUMMARY.md one-liners need attention at plan-close time.** Three milestones in a row have had placeholder one-liners. The one-liner is extracted by gsd-tools for MILESTONES.md — a bad one-liner degrades the milestone record permanently. Write it properly when closing the plan.
+2. **Phase-level ROADMAP checkboxes need manual verification.** The `[ ]` to `[x]` update for phase-level entries in the `<details>` block is not automated. Add a manual check at phase-complete time.
+3. **REQUIREMENTS.md checkbox discipline.** Keep REQUIREMENTS.md in sync with PROJECT.md — if a requirement is validated in PROJECT.md, check it off in REQUIREMENTS.md too. Discrepancies surface as false alarms at milestone close.
+4. **Research-driven design prevents implementation surprises.** Both major pitfalls (pkexec hang on SteamOS, pnpm patch silent-skip on version bump) were documented in research/SUMMARY.md before coding. Zero surprises during execution.
+
+### Cost Observations
+
+- Model mix: Sonnet 4.6 (execution), Opus 4.6 (planning agents)
+- Sessions: ~3 sessions on 2026-04-01
+- Notable: Phase 10 was executed in a single session with zero blockers — CONTEXT.md quality and research depth drove this. Phase 9 required a targeted fix (inverted platform guard) post-execution.
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -111,6 +160,7 @@
 |-----------|----------|--------|------------|
 | v1.0 | ~5 | 5 | First milestone; research-verified dependency graph; audit-first for uncertain scope |
 | v2.0 | ~4 | 3 | CONTEXT.md quality drove Phase 8 precision; SUMMARY.md enforcement gap surfaced |
+| v3.0 | ~3 | 2 | Research-driven design eliminated all execution surprises; injectable seam pattern for testability |
 
 ### Cumulative Quality
 
@@ -118,10 +168,13 @@
 |-----------|-------------|--------------------------|--------------|
 | v1.0 | 22+ (Vitest) | 5 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
 | v2.0 | 16 (desktop escaping) + main process suite | 3 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
+| v3.0 | 7 (elevated.test.ts) + gameSupport stubs | 2 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
 
 ### Top Lessons (Verified Across Milestones)
 
 1. **Alias at the build boundary** — resolve module substitutions in webpack/rolldown config, not in source files
 2. **Audit before implementing** — characterise scope of uncertain requirements before coding; often reveals the requirement is smaller than assumed
-3. **SUMMARY.md is a first-class deliverable** — missing summaries surface as gaps at milestone close; enforce at plan-complete time
+3. **SUMMARY.md is a first-class deliverable** — missing summaries surface as gaps at milestone close; write the one-liner properly at plan-close time
 4. **Document platform-specific constants** — `steamuser`, `compatdata`, `steamapps` naming conventions belong in CONTEXT.md before execution, not discovered during debugging
+5. **Research-driven design eliminates surprises** — pitfalls documented in CONTEXT.md/RESEARCH.md before coding are pitfalls avoided; all v3.0 major pitfalls were pre-documented
+6. **Injectable seams for OS-calling code** — spawner parameter in `runElevated()` enables clean Vitest coverage without mock pollution; generalises to any platform-dependent utility
