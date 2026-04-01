@@ -201,6 +201,7 @@ import testModReference, {
   referenceEqual,
   testRefByIdentifiers,
 } from "./util/testModReference";
+import { resolvePathCase } from "./util/resolvePathCase";
 
 // Interface for tracking active installation information
 interface IActiveInstallation {
@@ -7776,6 +7777,7 @@ class InstallManager {
     const dirs = new Set<string>();
     const jobs: Array<{ src: string; dst: string; rel: string }> = [];
     const missingFiles = new Set<string>();
+    const dirCache = new Map<string, string[]>();
 
     const copyAsyncWrap = async (src: string, dst: string) => {
       try {
@@ -7799,7 +7801,7 @@ class InstallManager {
         folderCopies.push(source);
         continue;
       }
-      const src = path.join(tempPath, source);
+      const src = await resolvePathCase(tempPath, source, dirCache);
       const dst = path.join(destinationPath, destination);
       dirs.add(path.dirname(dst));
       jobs.push({ src, dst, rel: destination });
