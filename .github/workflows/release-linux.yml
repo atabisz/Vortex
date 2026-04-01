@@ -52,11 +52,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./dist/vortex-setup-*.AppImage
-            ./dist/vortex_*_amd64.deb
+            ./dist/vortex-setup.AppImage
+            ./dist/vortex_amd64.deb
             ./dist/latest-linux.yml
-          prerelease: true
+          prerelease: false
           draft: false
+          make_latest: true
           name: "Linux Beta ${{ github.ref_name }}"
           body: |
             Linux beta release built from the [Vortex Linux port fork](https://github.com/${{ github.repository }}).

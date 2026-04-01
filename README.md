@@ -47,23 +47,21 @@ Linux builds (AppImage + .deb) are published as [releases on this fork](../../re
 
 ## Installing
 
-**Latest release: [v1.0.0-linux-beta.6](https://github.com/atabisz/Vortex/releases/tag/v1.0.0-linux-beta.6)**
-
 | Package | Download |
 |---|---|
-| AppImage (recommended) | [vortex-setup-1.0.0.AppImage](https://github.com/atabisz/Vortex/releases/download/v1.0.0-linux-beta.6/vortex-setup-1.0.0.AppImage) |
-| Debian/Ubuntu .deb | [vortex_1.0.0_amd64.deb](https://github.com/atabisz/Vortex/releases/download/v1.0.0-linux-beta.6/vortex_1.0.0_amd64.deb) |
+| AppImage (recommended) | [vortex-setup.AppImage](https://github.com/atabisz/Vortex/releases/latest/download/vortex-setup.AppImage) |
+| Debian/Ubuntu .deb | [vortex_amd64.deb](https://github.com/atabisz/Vortex/releases/latest/download/vortex_amd64.deb) |
 
 **AppImage:**
 ```sh
-chmod +x vortex-setup-1.0.0.AppImage
-./vortex-setup-1.0.0.AppImage
+chmod +x vortex-setup.AppImage
+./vortex-setup.AppImage
 ```
 > Ubuntu 22.04+ users: `sudo apt install libfuse2` first.
 
 **Debian/Ubuntu (.deb):**
 ```sh
-sudo apt install ./vortex_1.0.0_amd64.deb
+sudo apt install ./vortex_amd64.deb
 ```
 
 ## Building from Source

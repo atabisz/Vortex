@@ -44,7 +44,7 @@ const config = {
   },
   linux: {
     target: ["AppImage", "deb"],
-    artifactName: "vortex-setup-${version}.${ext}",
+    artifactName: "vortex-setup.${ext}",
     icon: "../../assets/images/vortex.png",
     category: "Network;Development;Game;",
     synopsis: "Mod Manager",
@@ -64,7 +64,7 @@ const config = {
   },
   deb: {
     depends: ["xdg-utils", "libasound2"],
-    artifactName: "vortex_${version}_amd64.deb",
+    artifactName: "vortex_amd64.deb",
   },
   extraResources: [
     "./nsis/**/*",
