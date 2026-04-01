@@ -128,7 +128,7 @@
         }
 
         &.nxm-dropdown-item-danger {
-            color: var(--color-danger-strong);
+            color: var(--color-danger-moderate);
 
             &:enabled:hover,
             &.nxm-dropdown-item-active {

@@ -174,7 +174,7 @@ export interface ISettingsInterface {
   tools?: {
     addToolsToTitleBar: boolean;
     order?: { [gameId: string]: string[] };
-    pinned?: { [gameId: string]: { [toolId: string]: boolean } };
+    pinned?: { [gameId: string]: string[] };
   };
   primaryTool?: { [gameId: string]: string };
 }

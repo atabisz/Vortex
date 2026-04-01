@@ -87,12 +87,10 @@ export const generateToolStarters = (
       }
     });
 
-  if (toolsOrder !== undefined && toolsOrder.length > 0) {
-    const findIdx = (starter: StarterInfo) => {
-      const idx = toolsOrder.findIndex((toolId) => toolId === starter.id);
-      return idx !== -1 ? idx : starters.length;
-    };
-    starters.sort((lhs, rhs) => findIdx(lhs) - findIdx(rhs));
-  }
+  const findIdx = (starter: StarterInfo) => {
+    const idx = toolsOrder.findIndex((toolId) => toolId === starter.id);
+    return idx !== -1 ? idx : starters.length;
+  };
+  starters.sort((lhs, rhs) => findIdx(lhs) - findIdx(rhs));
   return starters;
 };
