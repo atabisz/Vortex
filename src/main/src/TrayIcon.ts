@@ -1,6 +1,5 @@
-import path from "node:path";
-
 import { BrowserWindow, Menu, Tray } from "electron";
+import path from "node:path";
 
 import { getVortexPath } from "./getVortexPath";
 import { log } from "./logging";
@@ -79,14 +78,11 @@ class TrayIcon {
     this.mTrayIcon.setContextMenu(
       Menu.buildFromTemplate([
         { label: "Start Game", click: () => this.startGame() },
-        {
-          label: "Quit",
-          click: () => {
-            for (const win of BrowserWindow.getAllWindows()) {
-              win.close();
-            }
-          },
-        },
+        { label: "Quit", click: () => {
+          for (const win of BrowserWindow.getAllWindows()) {
+            win.close();
+          }
+        } },
       ]),
     );
 
