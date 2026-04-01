@@ -800,6 +800,9 @@ overrides:
   node-addon-api: 8.5.0
 
 patchedDependencies:
+  gamebryo-savegame@2.1.2:
+    hash: 62fd1e62baa1952f3045b627ac9e7be285ec363c76be285d4d94a3e27568b409
+    path: patches/gamebryo-savegame@2.1.2.patch
   loot@6.2.1:
     hash: ba0ba09fba258f3fd09c591d8bf72f97da1459a4a85d8b7a768a1e57db8fb935
     path: patches/loot@6.2.1.patch
@@ -1775,7 +1778,7 @@ importers:
     optionalDependencies:
       gamebryo-savegame:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/f060df62b04aa53e0d2fa7e6de0c9df423bbd44c
+        version: https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/f060df62b04aa53e0d2fa7e6de0c9df423bbd44c(patch_hash=62fd1e62baa1952f3045b627ac9e7be285ec363c76be285d4d94a3e27568b409)
 
   extensions/gamebryo-test-settings:
     devDependencies:
@@ -7853,6 +7856,7 @@ packages:
   '@xmldom/xmldom@0.8.11':
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   '@xstate/fsm@1.6.5':
     resolution: {integrity: sha512-b5o1I6aLNeYlU/3CPlj/Z91ybk1gUsKT+5NAJI+2W4UjvS5KLG28K9v5UvNoFVjHV8PajVZ00RH3vnjyQO7ZAw==}
@@ -19298,7 +19302,7 @@ snapshots:
       string.fromcodepoint: 0.2.1
       string.prototype.codepointat: 0.2.1
 
-  gamebryo-savegame@https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/f060df62b04aa53e0d2fa7e6de0c9df423bbd44c:
+  gamebryo-savegame@https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/f060df62b04aa53e0d2fa7e6de0c9df423bbd44c(patch_hash=62fd1e62baa1952f3045b627ac9e7be285ec363c76be285d4d94a3e27568b409):
     dependencies:
       autogypi: 0.2.2
       copyfiles: 2.4.1
