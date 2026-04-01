@@ -62,7 +62,7 @@ Plans:
 **Plans**: 2 plans
 Plans:
 - [ ] 10-01-PLAN.md — Save path Linux-aware async mygamesPath + all caller updates (SAVE-02, SAVE-03, SAVE-04)
-- [ ] 10-02-PLAN.md — SteamOS isSteamOS + sudo -n fallback + polkit .policy file (ELEV-02, ELEV-03)
+- [x] 10-02-PLAN.md — SteamOS isSteamOS + sudo -n fallback + polkit .policy file (ELEV-02, ELEV-03)
 
 ## Progress
 
@@ -77,4 +77,4 @@ Plans:
 | 7. Linux Packaging | v2.0 | 2/2 | Complete | 2026-04-01 |
 | 8. NXM Protocol Handler | v2.0 | 2/2 | Complete | 2026-04-01 |
 | 9. Native Addon Fix + Elevation Foundation | v3.0 | 1/2 | In Progress|  |
-| 10. Save UI Validation + SteamOS + Polkit | v3.0 | 0/2 | Not started | - |
+| 10. Save UI Validation + SteamOS + Polkit | v3.0 | 1/2 | In Progress|  |

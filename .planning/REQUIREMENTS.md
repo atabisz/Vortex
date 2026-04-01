@@ -19,8 +19,8 @@
 ### Elevation (ELEV)
 
 - [ ] **ELEV-01**: `runElevated()` uses `pkexec` on Linux — Unix domain socket server listens before `pkexec` is spawned (socket-before-spawn ordering enforced); pkexec exit code 126 maps to `UserCanceled`; injectable spawner seam for CI testing; no elevation-related hangs or crashes on Linux
-- [ ] **ELEV-02**: SteamOS / Steam Deck elevation handled gracefully — `isSteamOS()` detected via `/etc/os-release`; `sudo -n` fallback attempted before pkexec; if both fail, user receives actionable notification rather than a hung UI
-- [ ] **ELEV-03**: `.deb` package installs a polkit action file — `io.nexusmods.vortex.policy` installed in `.deb` post-install hook; Vortex elevation requests display a branded polkit dialog instead of the generic `pkexec` prompt on desktop Linux
+- [x] **ELEV-02**: SteamOS / Steam Deck elevation handled gracefully — `isSteamOS()` detected via `/etc/os-release`; `sudo -n` fallback attempted before pkexec; if both fail, user receives actionable notification rather than a hung UI
+- [x] **ELEV-03**: `.deb` package installs a polkit action file — `io.nexusmods.vortex.policy` installed in `.deb` post-install hook; Vortex elevation requests display a branded polkit dialog instead of the generic `pkexec` prompt on desktop Linux
 
 ---
 
