@@ -38,7 +38,6 @@ const FAKE_FD = 42;
 function setupSyncMocks(tmpPath = FAKE_TMP) {
   vi.mocked(tmp.file).mockImplementation(
     (
-      _opts: unknown,
       cb: (
         err: Error | null,
         path: string,
