@@ -801,7 +801,7 @@ overrides:
 
 patchedDependencies:
   exe-version@2.3.0:
-    hash: 552936b6052032fd388a1bec5809f99715821de873478c57edf342a699e41c88
+    hash: 91e00f57460903f38a25b5a4ac079b466d8ef8cb8e3352c9e611de0f2e2266b6
     path: patches/exe-version@2.3.0.patch
   loot@6.2.1:
     hash: ba0ba09fba258f3fd09c591d8bf72f97da1459a4a85d8b7a768a1e57db8fb935
@@ -1329,7 +1329,7 @@ importers:
         version: 2.4.1
       exe-version:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=552936b6052032fd388a1bec5809f99715821de873478c57edf342a699e41c88)
+        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=91e00f57460903f38a25b5a4ac079b466d8ef8cb8e3352c9e611de0f2e2266b6)
       i18next:
         specifier: 'catalog:'
         version: 19.9.2
@@ -1629,7 +1629,7 @@ importers:
         version: 39.8.0
       exe-version:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=552936b6052032fd388a1bec5809f99715821de873478c57edf342a699e41c88)
+        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=91e00f57460903f38a25b5a4ac079b466d8ef8cb8e3352c9e611de0f2e2266b6)
       i18next:
         specifier: 'catalog:'
         version: 19.9.2
@@ -3617,7 +3617,7 @@ importers:
         version: 39.8.0
       exe-version:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=552936b6052032fd388a1bec5809f99715821de873478c57edf342a699e41c88)
+        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=91e00f57460903f38a25b5a4ac079b466d8ef8cb8e3352c9e611de0f2e2266b6)
       lodash:
         specifier: 'catalog:'
         version: 4.17.23
@@ -3656,7 +3656,7 @@ importers:
         version: 2.4.1
       exe-version:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=552936b6052032fd388a1bec5809f99715821de873478c57edf342a699e41c88)
+        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=91e00f57460903f38a25b5a4ac079b466d8ef8cb8e3352c9e611de0f2e2266b6)
       i18next:
         specifier: 'catalog:'
         version: 19.9.2
@@ -4091,7 +4091,7 @@ importers:
         version: 4.6.5
       exe-version:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=552936b6052032fd388a1bec5809f99715821de873478c57edf342a699e41c88)
+        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=91e00f57460903f38a25b5a4ac079b466d8ef8cb8e3352c9e611de0f2e2266b6)
       feedparser:
         specifier: 'catalog:'
         version: 2.3.0
@@ -4747,7 +4747,7 @@ importers:
         version: 1.15.8(enzyme@3.11.0)(react-dom@16.14.0)(react@16.14.0)
       exe-version:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=552936b6052032fd388a1bec5809f99715821de873478c57edf342a699e41c88)
+        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=91e00f57460903f38a25b5a4ac079b466d8ef8cb8e3352c9e611de0f2e2266b6)
       feedparser:
         specifier: 'catalog:'
         version: 2.3.0
@@ -18952,7 +18952,7 @@ snapshots:
 
   events@3.3.0: {}
 
-  exe-version@https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=552936b6052032fd388a1bec5809f99715821de873478c57edf342a699e41c88):
+  exe-version@https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=91e00f57460903f38a25b5a4ac079b466d8ef8cb8e3352c9e611de0f2e2266b6):
     dependencies:
       winapi-bindings: https://codeload.github.com/Nexus-Mods/node-winapi-bindings/tar.gz/faa92afe3320731e98abc15b3f5f19c60896d7c1
     transitivePeerDependencies:
