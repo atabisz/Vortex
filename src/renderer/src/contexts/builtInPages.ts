@@ -1,4 +1,5 @@
 import type { IMainPage } from "../types/IMainPage";
+
 import { GameSettings } from "../views/GameSettings";
 import { ToolsPage } from "../views/pages/Tools";
 import { Settings } from "../views/Settings";
@@ -8,7 +9,8 @@ import { Settings } from "../views/Settings";
  * Avoids repeating `propsFunc: () => undefined, visible: () => true` everywhere.
  */
 function definePage(
-  page: Pick<IMainPage, "id" | "title" | "group" | "component" | "icon"> & Partial<IMainPage>,
+  page: Pick<IMainPage, "id" | "title" | "group" | "component" | "icon"> &
+    Partial<IMainPage>,
 ): IMainPage {
   return {
     propsFunc: () => undefined,

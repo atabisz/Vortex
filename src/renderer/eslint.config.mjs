@@ -1,20 +1,18 @@
 import * as path from "node:path";
 
 import eslintReact from "@eslint-react/eslint-plugin";
+import eslint from "@eslint/js";
 import stylistic from "@stylistic/eslint-plugin";
-import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
+import prettierConfig from "eslint-config-prettier";
 import betterTailwindcss from "eslint-plugin-better-tailwindcss";
+import perfectionist from "eslint-plugin-perfectionist";
 import importPlugin from "eslint-plugin-import";
+import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import { defineConfig } from "eslint/config";
 import globals from "globals";
-
-import noBluebirdPromiseAliasRule from "../../eslint-rules/no-bluebird-promise-alias.mjs";
-import noBluebirdResolveWithPromiseLike from "../../eslint-rules/no-bluebird-resolve-promiselike.mjs";
-import noRestrictedImportsRule from "../../eslint-rules/no-restricted-imports.mjs";
-import { baseConfig } from "../../eslint.config.base.mjs";
+import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  ...baseConfig(import.meta.dirname),
   {
     ignores: [
       "temp/**",
@@ -25,11 +23,6 @@ export default defineConfig([
       // TODO: remove old Jest tests and replace with Vitests
       "**/__tests__/**",
       "**/__mocks__/**",
-
-      // Test files are excluded from tsconfig.json typecheck; ESLint's
-      // projectService would fail to resolve them, so skip them here too.
-      "**/*.test.ts",
-      "**/*.test.tsx",
     ],
   },
 
@@ -37,23 +30,23 @@ export default defineConfig([
     files: ["src/**/*.{ts,tsx}"],
     extends: [
       betterTailwindcss.configs.recommended,
+      eslint.configs.recommended,
       eslintReact.configs["recommended-type-checked"],
+      prettierConfig,
+      tseslint.configs.recommendedTypeChecked,
     ],
     languageOptions: {
       // TODO: remove Node globals after disabling nodeIntegration
       globals: { ...globals.node, ...globals.browser },
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
     plugins: {
+      perfectionist,
       "@stylistic": stylistic,
       import: importPlugin,
-      vortex: {
-        rules: {
-          "no-bluebird-promise-alias": noBluebirdPromiseAliasRule,
-          "no-bluebird-resolve-promiselike": noBluebirdResolveWithPromiseLike,
-          "no-restricted-imports-errors": noRestrictedImportsRule,
-          "no-restricted-imports-warnings": noRestrictedImportsRule,
-        },
-      },
     },
     settings: {
       "react-x": {
@@ -83,12 +76,16 @@ export default defineConfig([
       "better-tailwindcss/no-unknown-classes": "off",
 
       // Perfectionist
+      "perfectionist/sort-imports": "warn",
+      "perfectionist/sort-exports": "warn",
       "perfectionist/sort-jsx-props": [
         "warn",
         {
           type: "alphabetical",
           groups: ["shorthand-prop", "unknown", "callback"],
-          customGroups: [{ groupName: "callback", elementNamePattern: "^on.+" }],
+          customGroups: [
+            { groupName: "callback", elementNamePattern: "^on.+" },
+          ],
         },
       ],
 
@@ -96,18 +93,18 @@ export default defineConfig([
       "@stylistic/jsx-newline": ["warn", { prevent: false }],
       "@stylistic/jsx-self-closing-comp": "warn",
 
-      // Vortex custom rules
-      "vortex/no-bluebird-promise-alias": "error",
-      "vortex/no-bluebird-resolve-promiselike": "warn", // TODO: change to error
-      "vortex/no-restricted-imports-warnings": [
+      // Typescript
+      "@typescript-eslint/consistent-type-imports": "error",
+      "@typescript-eslint/no-unused-vars": [
         "warn",
         {
-          restrictions: [
-            {
-              name: "bluebird",
-              message: "Please avoid using Bluebird. Use ES6 promises instead",
-            },
-          ],
+          args: "all",
+          argsIgnorePattern: "^_",
+          caughtErrors: "all",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
         },
       ],
 
@@ -154,6 +151,24 @@ export default defineConfig([
       "prefer-const": "warn",
       "prefer-rest-params": "warn",
       "prefer-spread": "warn",
+    },
+  },
+
+  {
+    files: ["*.mjs"],
+    extends: [
+      eslint.configs.recommended,
+      tseslint.configs.recommended,
+      prettierConfig,
+    ],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+    plugins: { perfectionist },
+    rules: {
+      // Perfectionist
+      "perfectionist/sort-imports": "warn",
+      "perfectionist/sort-exports": "warn",
     },
   },
 ]);

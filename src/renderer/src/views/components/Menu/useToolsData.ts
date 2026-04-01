@@ -5,8 +5,13 @@ import { shallowEqual, useSelector } from "react-redux";
 import type { IToolStored } from "../../../extensions/gamemode_management/types/IToolStored";
 import type { IDiscoveredTool } from "../../../types/IDiscoveredTool";
 import type { IState } from "../../../types/IState";
+
 import { log } from "../../../util/log";
-import { activeGameId, currentGame, currentGameDiscovery } from "../../../util/selectors";
+import {
+  activeGameId,
+  currentGame,
+  currentGameDiscovery,
+} from "../../../util/selectors";
 import StarterInfo from "../../../util/StarterInfo";
 
 export interface UseToolsDataResult {
@@ -17,7 +22,6 @@ export interface UseToolsDataResult {
   discoveryPath: string | undefined;
   primaryToolId: string | undefined;
   pinnedToolsMap: { [key: string]: boolean };
-  deploymentCounter: number;
 }
 
 /**
@@ -27,24 +31,27 @@ export interface UseToolsDataResult {
 export const useToolsData = (): UseToolsDataResult => {
   const gameId = useSelector((state: IState) => activeGameId(state));
   const game = useSelector((state: IState) => currentGame(state));
-  const gameDiscovery = useSelector((state: IState) => currentGameDiscovery(state));
+  const gameDiscovery = useSelector((state: IState) =>
+    currentGameDiscovery(state),
+  );
   const discoveredTools = useSelector(
-    (state: IState) => state.settings?.gameMode?.discovered?.[gameId ?? ""]?.tools ?? {},
+    (state: IState) =>
+      state.settings?.gameMode?.discovered?.[gameId ?? ""]?.tools ?? {},
     shallowEqual,
   );
   const toolsOrder = useSelector(
-    (state: IState) => state.settings?.interface?.tools?.order?.[gameId ?? ""] ?? [],
+    (state: IState) =>
+      state.settings?.interface?.tools?.order?.[gameId ?? ""] ?? [],
     shallowEqual,
   );
   const primaryToolId = useSelector(
-    (state: IState) => state.settings?.interface?.primaryTool?.[gameId ?? ""] ?? undefined,
+    (state: IState) =>
+      state.settings?.interface?.primaryTool?.[gameId ?? ""] ?? undefined,
   );
   const pinnedToolsMap = useSelector(
-    (state: IState) => state.settings?.interface?.tools?.pinned?.[gameId ?? ""] ?? {},
+    (state: IState) =>
+      (state.settings?.interface as any)?.tools?.pinned?.[gameId ?? ""] ?? {},
     shallowEqual,
-  );
-  const deploymentCounter = useSelector(
-    (state: IState) => state.persistent?.deployment?.deploymentCounter?.[gameId ?? ""] ?? 0,
   );
 
   const gameStarter = useMemo((): StarterInfo | undefined => {
@@ -76,7 +83,9 @@ export const useToolsData = (): UseToolsDataResult => {
     // Add tools provided by the game extension
     knownTools.forEach((tool: IToolStored) => {
       try {
-        starters.push(new StarterInfo(game, gameDiscovery, tool, discoveredTools[tool.id]));
+        starters.push(
+          new StarterInfo(game, gameDiscovery, tool, discoveredTools[tool.id]),
+        );
       } catch (err) {
         log("warn", "invalid tool", { err });
       }
@@ -84,7 +93,9 @@ export const useToolsData = (): UseToolsDataResult => {
 
     // Add manually added tools
     Object.keys(discoveredTools)
-      .filter((toolId) => !preConfTools.has(toolId) && toolId !== gameStarter?.id)
+      .filter(
+        (toolId) => !preConfTools.has(toolId) && toolId !== gameStarter?.id,
+      )
       .sort((lhs, rhs) => {
         const tlhs = discoveredTools[lhs]?.timestamp || 0;
         const trhs = discoveredTools[rhs]?.timestamp || 0;
@@ -92,7 +103,14 @@ export const useToolsData = (): UseToolsDataResult => {
       })
       .forEach((toolId) => {
         try {
-          starters.push(new StarterInfo(game, gameDiscovery, undefined, discoveredTools[toolId]));
+          starters.push(
+            new StarterInfo(
+              game,
+              gameDiscovery,
+              undefined,
+              discoveredTools[toolId],
+            ),
+          );
         } catch (err) {
           log("error", "tool configuration invalid", {
             gameId,
@@ -110,7 +128,14 @@ export const useToolsData = (): UseToolsDataResult => {
     starters.sort((lhs, rhs) => findIdx(lhs) - findIdx(rhs));
 
     return starters;
-  }, [game, gameDiscovery, discoveredTools, toolsOrder, gameStarter?.id, gameId]);
+  }, [
+    game,
+    gameDiscovery,
+    discoveredTools,
+    toolsOrder,
+    gameStarter?.id,
+    gameId,
+  ]);
 
   return {
     gameId,
@@ -120,6 +145,5 @@ export const useToolsData = (): UseToolsDataResult => {
     discoveryPath: gameDiscovery?.path,
     primaryToolId,
     pinnedToolsMap,
-    deploymentCounter,
   };
 };
