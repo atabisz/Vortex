@@ -40,13 +40,25 @@
     "installerHeaderIcon": "nsis/icon.ico"
   },
   "linux": {
-    "target": ["zip"],
+    "target": ["AppImage", "deb"],
+    "artifactName": "vortex-setup-${version}.${ext}",
     "icon": "../../assets/images/vortex.png",
     "category": "Network;Development;Game;",
     "synopsis": "Mod Manager",
     "description": "The elegant, powerful, and open-source mod manager from Nexus Mods.",
     "maintainer": "Black Tree Gaming Ltd. <support@nexusmods.com> (https://www.nexusmods.com/)",
-    "mimeTypes": ["x-scheme-handler/nxm"]
+    "mimeTypes": ["x-scheme-handler/nxm"],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Nexus-Mods",
+        "repo": "Vortex",
+        "private": false
+      }
+    ]
+  },
+  "deb": {
+    "depends": ["xdg-utils", "libasound2"]
   },
   "extraResources": [
     "./nsis/**/*",
