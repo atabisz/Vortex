@@ -46,7 +46,7 @@
   4. Socket-before-spawn ordering is enforced — injectable spawner seam in CI tests produces no `ECONNREFUSED` errors
 **Plans**: 2 plans
 Plans:
-- [ ] 09-01-PLAN.md — gamebryo-savegame pnpm patch + CI apt + deb depends
+- [x] 09-01-PLAN.md — gamebryo-savegame pnpm patch + CI apt + deb depends
 - [ ] 09-02-PLAN.md — pkexec Linux branch + spawner seam + Vitest tests
 
 ### Phase 10: Save UI Validation + SteamOS + Polkit
@@ -76,5 +76,5 @@ Plans:
 | 6. Steam/Proton Detection | v2.0 | 3/3 | Complete | 2026-04-01 |
 | 7. Linux Packaging | v2.0 | 2/2 | Complete | 2026-04-01 |
 | 8. NXM Protocol Handler | v2.0 | 2/2 | Complete | 2026-04-01 |
-| 9. Native Addon Fix + Elevation Foundation | v3.0 | 0/2 | Planned | - |
+| 9. Native Addon Fix + Elevation Foundation | v3.0 | 1/2 | In Progress|  |
 | 10. Save UI Validation + SteamOS + Polkit | v3.0 | 0/? | Not started | - |

@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v3.0
-milestone_name: Planning
-status: idle
-stopped_at: "v2.0 milestone complete — shipped 2026-04-01"
-last_updated: "2026-04-01T12:00:00.000Z"
+milestone_name: Save Games + Elevation
+status: executing
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-04-01T04:33:49.188Z"
 last_activity: 2026-04-01
 progress:
-  total_phases: 0
+  total_phases: 2
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 2
+  completed_plans: 1
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-01)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, and download mods via NXM link
-**Current focus:** Planning v3.0
+**Current focus:** Phase 09 — Native Addon Fix + Elevation Foundation
 
 ## Current Position
 
-Phase: —
-Plan: —
-Status: v2.0 milestone complete — planning next milestone
+Phase: 09 (Native Addon Fix + Elevation Foundation) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-04-01
 
 Progress: [░░░░░░░░░░] 0%
@@ -60,6 +60,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 07-linux-packaging P01 | 2 | 2 tasks | 2 files |
 | Phase 08-nxm-protocol-handler P02 | 5 | 1 tasks | 1 files |
 | Phase 08-nxm-protocol-handler P01 | 8 | 2 tasks | 2 files |
+| Phase 09 P01 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -110,18 +111,19 @@ Recent decisions affecting current work:
 - [Phase 08-nxm-protocol-handler]: Buffer args.download in mPendingDownload before startup; apply after startUi() resolves
 - [Phase 08-nxm-protocol-handler]: generateWrapperScript appPath optional: AppImage self-contained, no Electron appPath needed; dev builds unaffected
 - [Phase 08-nxm-protocol-handler]: kbuildsycoca6 ENOENT logged at debug level: absence expected on non-KDE desktops
+- [Phase 09]: MoreInfoException: std::runtime_error base -- GCC rejects MSVC-specific std::exception(runtime_error) constructor form
+- [Phase 09]: No RPATH in gamebryo-savegame patch: lz4 and zlib are system libs, not bundled
 
-### Research Context (v2.0)
+### Research Context (v3.0)
 
-Key findings from research/SUMMARY.md affecting Phase 6–8 execution:
+Key findings from research/SUMMARY.md affecting Phase 9–10 execution:
 
-- STAM track: ~80% done. Primary new code = `getMyGamesPath()` in `proton.ts` + platform guard in `gameSupport.ts`
-- DIST track: Two config edits in `electron-builder.config.json` + one CI job in `package.yml`
-- PROT track: Two code gaps — `ensureAppImageDesktopEntry()` in `nxm.ts` + `pendingDownload` field in `Application.ts`
-- Critical pitfall: Wine prefix always uses `steamuser` as home dirname — never `os.userInfo().username`
-- Critical pitfall: Cold-start NXM URL silently dropped before Redux store ready — `pendingDownload` fix required
-- Critical pitfall: AppImage `xdg-settings` registers non-existent desktop ID unless `.desktop` file written first
-- PROT-02 SteamOS Steam Browser behavior unknown — may defer to v3.0 if hardware unavailable
+- SAVE track: gamebryo-savegame needs MoreInfoException base changed to std::runtime_error + binding.gyp OS=="linux" linker flags; pnpm patch pattern is established (see patches/loot@6.2.1.patch)
+- ELEV track: runElevated() needs Linux branch with pkexec spawn; IPC socket path already correct from v1.0 IPC-01; socket-before-spawn ordering is critical (Pitfall 1)
+- Critical pitfall: pkexec hangs without polkit agent on SteamOS Game Mode — sudo -n fallback or skip-elevation notification required
+- Critical pitfall: pnpm patch silently skips on version bump — pin exact version in package.json
+- STAM-04 scope gap: whether getVortexPath("documents") was globally patched or only via ini_prep variable resolver is unconfirmed — must verify before Phase 10 save path work
+- SAVE-04: SLocalSavePath INI patching depends on STAM-04 scope — verify during Phase 10 execution
 
 ### Pending Todos
 
@@ -129,10 +131,10 @@ None.
 
 ### Blockers/Concerns
 
-- PROT-02: SteamOS Steam Browser NXM behavior undocumented — requires Steam Deck hardware; defer to v3.0 if unavailable
+- STAM-04 getVortexPath("documents") scope unconfirmed — must read src/renderer/src/util/util.ts and STAM-04 commit diff before Phase 10 save path implementation
 
 ## Session Continuity
 
-Last session: 2026-04-01T01:42:09.247Z
-Stopped at: Completed 08-01-PLAN.md
+Last session: 2026-04-01T04:33:49.184Z
+Stopped at: Completed 09-01-PLAN.md
 Resume file: None
