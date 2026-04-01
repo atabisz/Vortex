@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-01 after v3.0)
 Phase: —
 Plan: —
 Status: v3.0 milestone complete — archived 2026-04-01
-Last activity: 2026-04-01
+Last activity: 2026-04-01 - Completed quick task 260401-scf: Fix FOMOD case-sensitivity error in InstallManager.extractArchive
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -150,9 +150,10 @@ None.
 | 260401-mvp | normalize backslashes in FOMOD copy source/destination paths | 2026-04-01 | 926255819 | [260401-mvp-normalize-backslashes-in-fomod-copy-sour](./quick/260401-mvp-normalize-backslashes-in-fomod-copy-sour/) |
 | 260401-oz3 | case-folding path resolver in LinkingDeployment for Linux | 2026-04-01 | 32a9b021b | [260401-oz3-case-folding-path-resolver-in-linkingdep](./quick/260401-oz3-case-folding-path-resolver-in-linkingdep/) |
 | 260401-scf | FOMOD case-sensitivity in InstallManager.extractArchive | 2026-04-01 | 6e56ba5bf | [260401-scf-fix-fomod-case-sensitivity-error-in-inst](./quick/260401-scf-fix-fomod-case-sensitivity-error-in-inst/) |
+| 260402-1b1 | Wine-era deployment manifest detection in loadActivation | 2026-04-02 | 5b2420f | [260402-1b1-implement-wine-era-deployment-manifest-d](./quick/260402-1b1-implement-wine-era-deployment-manifest-d/) |
 
 ## Session Continuity
 
-Last session: 2026-04-01T05:59:54.421Z
-Stopped at: Completed 10-01: async mygamesPath with Linux Proton branch (SAVE-02/03/04)
+Last session: 2026-04-02T00:00:00Z
+Stopped at: Completed quick task 260402-1b1: Wine-era deployment manifest detection in loadActivation
 Resume file: None
