@@ -64,6 +64,7 @@ const config = {
   },
   deb: {
     depends: ["xdg-utils", "libasound2"],
+    artifactName: "vortex_${version}_amd64.deb",
   },
   extraResources: [
     "./nsis/**/*",
