@@ -1,14 +1,18 @@
-# Vortex Linux Support — v2.0 Shipped
+# Vortex Linux Support — v3.0 In Progress
 
-## Current Milestone: v3.0 (Planning)
+## Current Milestone: v3.0 Save Games + Elevation
 
-**Goal:** TBD — run `/gsd:new-milestone` to define v3.0 scope.
+**Goal:** Skyrim SE and Fallout 4 save game management works in Vortex on Linux, and operations that require elevated privileges no longer silently fail.
 
-**Deferred from v2.0 (candidates for v3.0):**
-- ELEV-01/02: `pkexec` + Unix socket elevation for Linux privilege escalation; Steam Deck polkit-free flow
+**Target features:**
+- gamebryo-savegame compiles on Linux CI (fix MSVC exception constructors + lz4/zlib linker flags)
+- Save game manager UI functional end-to-end for Skyrim SE and Fallout 4 on Linux
+- pkexec + Unix domain socket elevation wired for any call site that currently errors without root on Linux (ELEV-01)
+- Steam Deck / SteamOS polkit-free elevation path (ELEV-02)
+
+**Still deferred (not in v3.0):**
 - DIST-05: AppImage delta auto-update on SteamOS immutable filesystem
-- PROT-03: NXM handler via Steam Browser overlay on Steam Deck (requires Nexus Mods web team + hardware)
-- gamebryo-savegame Linux compilation (MSVC exception constructors)
+- PROT-03: NXM handler via Steam Browser overlay on Steam Deck
 
 ## What This Is
 
@@ -49,14 +53,18 @@ A Linux user can install Vortex, detect their Steam/Proton games, and download m
 
 ### Active (v3.0)
 
-*(To be defined via `/gsd:new-milestone`)*
+- ✓ **SAVE-01**: gamebryo-savegame compiles on Linux CI — MSVC exception constructors fixed, lz4/zlib linker flags added, CHAR_WIDTH fmt macro collision resolved — v3.0 Phase 9
+- ✓ **ELEV-01**: pkexec + Unix domain socket elevation implemented; injectable spawner seam; socket-before-spawn ordering verified at all 4 call sites — v3.0 Phase 9
+- ✓ **SAVE-02**: `mygamesPath()` async with Linux Proton branch; resolves `compatdata/<appid>/pfx/drive_c/users/steamuser/Documents/My Games/<game>` — v3.0 Phase 10
+- ✓ **SAVE-03**: Fallout 4 save path covered by same async branch (gameId-keyed lookup) — v3.0 Phase 10
+- ✓ **SAVE-04**: `apply-settings` handler awaits `iniPath()` correctly; profile-scoped save comparison fixed — v3.0 Phase 10
+- ✓ **ELEV-02**: `isSteamOS()` detection + `sudo -n` fallback in `runElevated()`; graceful `UserCanceled` on failure — v3.0 Phase 10
+- ✓ **ELEV-03**: `io.nexusmods.vortex.policy` polkit action file shipped in .deb at `/usr/share/polkit-1/actions/` — v3.0 Phase 10
 
 ### Deferred
 
-- [ ] **ELEV-01**: `pkexec` + Unix domain socket elevation for Linux privilege escalation — deferred to v3.0
-- [ ] **ELEV-02**: Elevation on Steam Deck (SteamOS) without polkit password — deferred to v3.0
-- [ ] **DIST-05**: AppImage delta auto-update on SteamOS immutable filesystem — deferred to v3.0
-- [ ] **PROT-03**: NXM handler via Steam Browser overlay on Steam Deck — deferred to v3.0
+- [ ] **DIST-05**: AppImage delta auto-update on SteamOS immutable filesystem — deferred to v4.0
+- [ ] **PROT-03**: NXM handler via Steam Browser overlay on Steam Deck — deferred to v4.0; requires Nexus Mods web team + hardware
 
 ### Out of Scope
 
@@ -71,6 +79,10 @@ A Linux user can install Vortex, detect their Steam/Proton games, and download m
 ## Context
 
 **Shipped v2.0 on 2026-04-01.** A Linux user can install Vortex via AppImage or .deb, detect their Steam/Proton games, and click "Download with Manager" on Nexus Mods to start a mod download.
+
+**Phase 9 complete (2026-04-01):** gamebryo-savegame patch landed (SAVE-01 ✓); pkexec elevation branch wired with injectable seam (ELEV-01 ✓).
+
+**Phase 10 complete (2026-04-01):** `mygamesPath()` async with Linux Proton branch (SAVE-02/03/04 ✓); SteamOS `sudo -n` fallback + polkit action file shipped (ELEV-02/03 ✓). v3.0 milestone execution complete — all 5 requirements verified.
 
 **Technical state after v2.0:**
 - Steam detection: multi-root VDF scanning (native + Flatpak), oslist-based Proton detection for never-launched games, `{mygames}` Wine prefix path resolution
@@ -103,7 +115,7 @@ A Linux user can install Vortex, detect their Steam/Proton games, and download m
 | Elevation scope: audit first | Most Steam libraries are user-owned — pkexec may not be needed at all | ✓ Confirmed — pkexec absent from all startup paths; deferred to v3.0 |
 | loot: build from source via cmake+cargo | Dropped Linux prebuilts at 0.24.5; postinstall script delivers liblibloot.so | ✓ Done — loot.node compiles and loads on Linux |
 | loot RPATH: LD_LIBRARY_PATH in-process | Simpler than patch-package RPATH; CI wrapper handles .so resolution | ✓ Done — CI and local dev both work |
-| gamebryo-savegame: disabled on Linux | MSVC exception constructor + lz4/zlib linker flags — Windows-specific; clear error via lazy-load | ✓ Done — NADD-06 audit documented |
+| gamebryo-savegame: pnpm patch on Linux | MSVC exception constructor + lz4/zlib linker flags + CHAR_WIDTH fmt macro undef (GCC 13) | ✓ Done — builds and links cleanly; `ldd` confirms liblz4.so.1 + libz.so.1 resolve |
 | IPC serialisation trap: getIPCPath via argument | `.toString()`'d child closure must receive getIPCPath as argument — source grep insufficient | ✓ Done — both parent and stringified child patched |
 | pkexec: defer to v3.0 | Phase 1 audit confirms no startup path requires elevation; user-triggered only | ✓ Confirmed — 6 call sites documented, all user-triggered |
 | Steam detection: findAllLinuxSteamPaths() additive | findLinuxSteamPath() kept intact for backward compat; new function adds multi-root | ✓ Done — no regressions in existing path |
@@ -133,4 +145,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-01 after v2.0 milestone — Steam detection, AppImage/deb distribution, and NXM protocol handler shipped*
+*Last updated: 2026-04-01 — v3.0 milestone started: gamebryo-savegame Linux compilation + elevation*
