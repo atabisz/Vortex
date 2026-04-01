@@ -77,4 +77,4 @@ Plans:
 | 7. Linux Packaging | v2.0 | 2/2 | Complete | 2026-04-01 |
 | 8. NXM Protocol Handler | v2.0 | 2/2 | Complete | 2026-04-01 |
 | 9. Native Addon Fix + Elevation Foundation | v3.0 | 1/2 | In Progress|  |
-| 10. Save UI Validation + SteamOS + Polkit | v3.0 | 2/2 | Complete   | 2026-04-01 |
+| 10. Save UI Validation + SteamOS + Polkit | v3.0 | 2/2 | Complete    | 2026-04-01 |
