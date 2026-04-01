@@ -31,7 +31,7 @@
 ### 📋 v3.0 Save Games + Elevation (Phases 9–10)
 
 - [ ] **Phase 9: Native Addon Fix + Elevation Foundation** — gamebryo-savegame compiles on Linux CI; pkexec elevation functional with socket-before-spawn ordering
-- [ ] **Phase 10: Save UI Validation + SteamOS + Polkit** — Save game manager end-to-end on Linux for Skyrim SE and Fallout 4; SteamOS elevation path; .deb polkit action file
+- [x] **Phase 10: Save UI Validation + SteamOS + Polkit** — Save game manager end-to-end on Linux for Skyrim SE and Fallout 4; SteamOS elevation path; .deb polkit action file (completed 2026-04-01)
 
 ## Phase Details
 
@@ -61,7 +61,7 @@ Plans:
   5. `.deb` package installs `io.nexusmods.vortex.policy` polkit action file — Vortex elevation requests show a branded dialog on desktop Linux
 **Plans**: 2 plans
 Plans:
-- [ ] 10-01-PLAN.md — Save path Linux-aware async mygamesPath + all caller updates (SAVE-02, SAVE-03, SAVE-04)
+- [x] 10-01-PLAN.md — Save path Linux-aware async mygamesPath + all caller updates (SAVE-02, SAVE-03, SAVE-04)
 - [x] 10-02-PLAN.md — SteamOS isSteamOS + sudo -n fallback + polkit .policy file (ELEV-02, ELEV-03)
 
 ## Progress
@@ -77,4 +77,4 @@ Plans:
 | 7. Linux Packaging | v2.0 | 2/2 | Complete | 2026-04-01 |
 | 8. NXM Protocol Handler | v2.0 | 2/2 | Complete | 2026-04-01 |
 | 9. Native Addon Fix + Elevation Foundation | v3.0 | 1/2 | In Progress|  |
-| 10. Save UI Validation + SteamOS + Polkit | v3.0 | 1/2 | In Progress|  |
+| 10. Save UI Validation + SteamOS + Polkit | v3.0 | 2/2 | Complete   | 2026-04-01 |

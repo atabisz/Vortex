@@ -12,9 +12,9 @@
 ### Save Game Management (SAVE)
 
 - [x] **SAVE-01**: `gamebryo-savegame` native addon compiles and loads on Linux CI — `MoreInfoException` base class ported from MSVC `std::exception(std::runtime_error(...))` to `std::runtime_error`; `binding.gyp` gains `OS=="linux"` condition with `-llz4 -lz` linker flags; `pnpm patch` applied and pinned to exact package version; `@electron/rebuild` verifies `.node` loads without linker errors
-- [ ] **SAVE-02**: Save game manager UI lists saves for Skyrim SE on Linux — character name, level, location, timestamp, and screenshot thumbnail visible; save files read from correct Wine prefix path (`compatdata/<appid>/pfx/.../My Games/Skyrim Special Edition/Saves`) not `~/Documents`
-- [ ] **SAVE-03**: Save game manager UI lists saves for Fallout 4 on Linux — same as SAVE-02 but for Fallout 4; both primary Bethesda titles covered
-- [ ] **SAVE-04**: Profile-scoped saves work on Linux — `SLocalSavePath` INI patching writes to correct Wine prefix path; save files associated with the active mod profile in Vortex
+- [x] **SAVE-02**: Save game manager UI lists saves for Skyrim SE on Linux — character name, level, location, timestamp, and screenshot thumbnail visible; save files read from correct Wine prefix path (`compatdata/<appid>/pfx/.../My Games/Skyrim Special Edition/Saves`) not `~/Documents`
+- [x] **SAVE-03**: Save game manager UI lists saves for Fallout 4 on Linux — same as SAVE-02 but for Fallout 4; both primary Bethesda titles covered
+- [x] **SAVE-04**: Profile-scoped saves work on Linux — `SLocalSavePath` INI patching writes to correct Wine prefix path; save files associated with the active mod profile in Vortex
 
 ### Elevation (ELEV)
 
