@@ -171,6 +171,7 @@ async function createMinimalPackageJson(workspacePackageMap, catalog) {
     author: "Black Tree Gaming Ltd.",
     description:
       "The elegant, powerful, and open-source mod manager from Nexus Mods",
+    homepage: "https://www.nexusmods.com/site/mods/1",
     license: "GPL-3.0",
     type: mainPkg.type,
     packageManager: rootPkg.packageManager,

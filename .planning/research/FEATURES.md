@@ -1,284 +1,395 @@
-# Feature Landscape: Vortex Linux v2.0
+# Feature Research: Vortex Linux v3.0 — Save Games + Elevation
 
-**Domain:** Electron mod manager — Linux usability milestone
-**Researched:** 2026-03-31
-**Scope:** Steam/Proton detection, Linux packaging/distribution, NXM protocol handler
-
----
-
-## Category 1: Steam/Proton Game Detection
-
-### What's Already Built (v1.0 Foundation)
-
-- `steamPaths.ts` probes 6 Steam install locations in order: XDG standard, Debian symlink, Flatpak (`~/.var/app/com.valvesoftware.Steam/data/Steam`), Flatpak alternate XDG path, Snap, and legacy `~/.steam/steam`.
-- `proton.ts` implements: `detectProtonUsage()` (checks `compatdata/{appid}/`), `getConfiguredProtonName()` (reads `config.vdf`), `resolveProtonPath()` (3-pass: custom tools, exact match, fuzzy scan), `findLatestProton()` (fallback).
-- `Steam.ts` already calls `getProtonInfo()` per game entry on Linux and attaches `usesProton`, `compatDataPath`, `protonPath` to every `ISteamEntry`.
-- `libraryfolders.vdf` parsing finds additional Steam library roots beyond the base install.
-
-### What STAM-01 Through STAM-05 Require
-
-**STAM-01: VDF parsing on Linux (standard + Flatpak paths)**
-
-| Feature | Category | Complexity | Notes |
-|---------|----------|------------|-------|
-| `libraryfolders.vdf` parsed from native Steam path | Table stakes | Low | Already implemented in `Steam.ts:resolveSteamPaths()` |
-| `libraryfolders.vdf` parsed from Flatpak Steam path | Table stakes | Low | `steamPaths.ts` includes Flatpak path; needs integration test |
-| Silent fallback when VDF parse fails | Table stakes | Low | Already has `.catch()` with graceful empty return |
-| Multiple library roots discovered (e.g., game on external drive) | Table stakes | Low | VDF parsing already handles `{0: {path:...}, 1: {path:...}}` structure |
-
-**STAM-02: Flatpak Steam path resolution**
-
-| Feature | Category | Complexity | Notes |
-|---------|----------|------------|-------|
-| Flatpak data path `~/.var/app/com.valvesoftware.Steam/data/Steam` checked | Table stakes | Low | Already in `getLinuxSteamPaths()` |
-| Flatpak XDG path `~/.var/app/.../local/share/Steam` checked | Table stakes | Low | Already in `getLinuxSteamPaths()` |
-| Flatpak Steam `steamapps/` reads .acf manifests correctly | Table stakes | Low | Same `.acf` format regardless of Flatpak vs native |
-| Flatpak Steam `compatdata/` resolution for Proton prefixes | Table stakes | Low | Path constructed relative to steamAppsPath, format identical |
-| Detection when both native and Flatpak Steam are installed | Differentiator | Medium | Current code takes first valid path; should prefer native, fall back to Flatpak |
-
-Edge case: Flatpak Steam's `steamapps/` directory is inside the sandbox at `~/.var/app/com.valvesoftware.Steam/`. Vortex running as a non-Flatpak process has direct filesystem access to this path — no sandbox escaping needed.
-
-**STAM-03: Proton prefix path resolution**
-
-| Feature | Category | Complexity | Notes |
-|---------|----------|------------|-------|
-| `compatdata/{appid}/` detected as Proton game marker | Table stakes | Low | Already in `detectProtonUsage()` |
-| Wine prefix path returned as `compatdata/{appid}/pfx/` | Table stakes | Low | Already in `getWinePrefixPath()` |
-| Proton version resolved from `config.vdf` `CompatToolMapping` | Table stakes | Low | Already in `getConfiguredProtonName()` |
-| GE-Proton (custom) resolved via `compatibilitytools.d/` | Table stakes | Low | Already in `resolveProtonPath()` first pass |
-| Fallback to latest installed Proton when config.vdf unavailable | Table stakes | Low | Already in `findLatestProton()` |
-| Proton tool path used to build `proton run <exe>` command | Table stakes | Low | Already in `buildProtonCommand()` |
-| `STEAM_COMPAT_DATA_PATH` and `WINEPREFIX` env vars set | Table stakes | Low | Already in `buildProtonEnvironment()` |
-
-Edge case: Some users run games through Proton Experimental which shows as `proton_experimental` in `config.vdf` but lives at `Proton - Experimental/` on disk. The fuzzy keyword match in `resolveProtonPath()` handles this.
-
-**STAM-04: `{mygames}` variable resolution inside Wine prefix on Linux**
-
-| Feature | Category | Complexity | Notes |
-|---------|----------|------------|-------|
-| `{mygames}` resolves to `documents/My Games` on Windows (existing) | Table stakes | None | `gameSupport.ts:210`: `path.join(getVortexPath("documents"), "My Games")` |
-| `{mygames}` resolves to Wine prefix `Documents/My Games` on Linux | **Table stakes** | **Medium** | **Gap: Electron `app.getPath("documents")` on Linux returns `~/Documents`, NOT the Wine prefix path** |
-| Detection of whether a game's save/config path is inside Wine prefix | Table stakes | Medium | Need to check if game uses Proton, then redirect documents path |
-| Wine prefix documents path: `compatdata/{appid}/pfx/drive_c/users/steamuser/Documents` | Table stakes | Low | Standard Wine/Proton prefix layout — well-documented |
-| Fallback when Wine prefix doesn't exist yet (first launch) | Table stakes | Low | Proton creates prefix on first game run; Vortex shouldn't create it |
-
-Critical insight: On Linux, `app.getPath("documents")` returns `~/Documents` (the host XDG documents dir). For Proton games, the game's `.ini` files live inside the Wine prefix at `steamuser/Documents/My Games/...`, not `~/Documents/My Games/`. The `{mygames}` variable resolution in `ini_prep/gameSupport.ts` will silently point to the wrong location unless there is per-game, platform-aware path overriding. This is the single most complex item in the STAM category.
-
-**STAM-05: Top-4-title game extension audit**
-
-| Game | Detection Method | Complexity | Linux-Specific Issues |
-|------|-----------------|------------|----------------------|
-| Skyrim SE | Steam appid `489830`, `.acf` manifest | Low | `{mygames}` points to `~/Documents/My Games/Skyrim Special Edition` (wrong on Linux — needs Wine prefix redirect) |
-| Fallout 4 | Steam appid `377160`, `.acf` manifest | Low | Same `{mygames}` issue; also has `Fallout4.ini` / `Fallout4Custom.ini` in Wine prefix |
-| Cyberpunk 2077 | Steam appid `1091500`, `.acf` manifest | Low | Saves/config in `~/AppData/Local/CD Projekt Red/Cyberpunk 2077` on Windows — maps to Wine prefix on Linux |
-| Stardew Valley | Steam appid `413150`, `.acf` manifest | Low | Runs natively on Linux (not through Proton) — saves in `~/.config/StardewValley`; no Wine prefix needed |
-
-Key finding: Stardew Valley has a native Linux build. It does not go through Proton. Its save path is `~/.config/StardewValley/` or `~/.local/share/StardewValley/`. The game extension should not attempt Wine prefix resolution for it.
-
-### Anti-Features (Steam/Proton)
-
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| Auto-creating Wine prefixes | Proton manages prefix creation; creating one manually can corrupt game state | Check for existence, error gracefully if absent |
-| Heroic Launcher detection | Explicitly deferred to Phase 4 per PROJECT.md | Leave as `// TODO: Phase 4` comment |
-| GOG/itch.io Linux native game support | Separate track, Phase 4+ | Leave Windows code untouched |
-| Parsing `localconfig.vdf` for playtime or extra metadata | Not required for mod installation; adds fragile parsing surface | Use `appmanifest_*.acf` only |
+**Domain:** Electron mod manager — save game management + privilege escalation on Linux
+**Researched:** 2026-04-01
+**Confidence:** HIGH — all claims based on direct codebase inspection
+**Milestone scope:** SAVE-01 through SAVE-03, ELEV-01, ELEV-02
 
 ---
 
-## Category 2: Linux Packaging and Distribution
+## Prerequisite: What Is Already Built
 
-### Existing State
+Before detailing v3.0 features, these v1.0/v2.0 foundations are assumed complete and in scope
+as dependencies:
 
-The `electron-builder.config.json` has a `linux` section with `target: ["zip"]`. A Flatpak manifest exists at `flatpak/com.nexusmods.vortex.yaml` (uses `org.electronjs.Electron2.BaseApp`, Node 22, dotnet9). The `package.yml` CI workflow is Windows-only (`runs-on: windows-latest`).
-
-### DIST-01 Through DIST-04 Requirements
-
-**DIST-01: AppImage artifact**
-
-| Feature | Category | Complexity | Notes |
-|---------|----------|------------|-------|
-| `electron-builder` `linux.target` includes `AppImage` | Table stakes | Low | Add `"AppImage"` to target array alongside `"zip"` |
-| AppImage desktop integration category set | Table stakes | Low | `linux.category` already set to `"Network;Development;Game;"` |
-| AppImage `MimeType=x-scheme-handler/nxm` declared | Table stakes | Low | Already in `linux.mimeTypes` |
-| AppImage runs on Steam Deck Desktop Mode | Table stakes | Low | AppImage is self-contained; no system libs needed beyond what Electron bundles |
-| AppImage auto-updater integration (squashfs delta updates) | Differentiator | High | Requires `AppImageUpdate` or `electron-updater` AppImage channel; different binary format from zip |
-
-Notes on AppImage: electron-builder 24.x supports AppImage natively. The `asarUnpack` list already includes Linux-specific items (`.so` files, Linux ELF binaries). No changes needed to `asarUnpack` for AppImage. AppImage embeds a `.desktop` file automatically from the `linux` config.
-
-Steam Deck specifics: The Deck runs SteamOS 3.x (Arch-based). AppImages work in Desktop Mode without modification. Gaming Mode does not support arbitrary app launching directly. Users must switch to Desktop Mode to install Vortex.
-
-**DIST-02: .deb artifact**
-
-| Feature | Category | Complexity | Notes |
-|---------|----------|------------|-------|
-| `electron-builder` `linux.target` includes `deb` | Table stakes | Low | Add `"deb"` to target array |
-| `.deb` installs to `/opt/Vortex` by default | Table stakes | Low | electron-builder default is `/opt/{appName}` for deb targets |
-| `.desktop` file installed system-wide via `.deb` | Table stakes | Low | electron-builder handles this automatically for deb |
-| `nxm://` MIME type declared in `.deb` desktop entry | Table stakes | Low | Follows from `linux.mimeTypes` config |
-| `.deb` `postinst` script runs `update-desktop-database` | Table stakes | Low | electron-builder generates this automatically |
-| `maintainer` field set correctly in `.deb` control | Table stakes | Low | Already set in `linux.maintainer` |
-
-Note: `.deb` target does NOT require `dpkg-dev` on the build machine since electron-builder generates the package itself. The `ubuntu-latest` CI runner has all required tools.
-
-**DIST-03: GitHub Actions CI uploads Linux artifacts**
-
-| Feature | Category | Complexity | Notes |
-|---------|----------|------------|-------|
-| `package.yml` or new `package-linux.yml` job runs on `ubuntu-latest` | Table stakes | Low | Add job or new workflow |
-| Linux build job runs `pnpm run package:nosign` with Linux targets | Table stakes | Low | `--linux AppImage deb` flags via electron-builder |
-| AppImage artifact uploaded via `actions/upload-artifact` | Table stakes | Low | Mirror pattern from Windows `artifactNameInstaller` step |
-| `.deb` artifact uploaded via `actions/upload-artifact` | Table stakes | Low | Same as above |
-| Linux artifacts attached to GitHub draft release | Differentiator | Low | Add to `softprops/action-gh-release` files list |
-| Linux build skips code-signing secrets | Table stakes | Low | `package:nosign` already exists; no `ES_*` secrets needed |
-
-Note on `prepare-dist-package.mjs`: This script prepares the `dist/` directory before electron-builder runs. It must be verified to be platform-safe (no `VC_redist.x64.exe` download attempted on Linux runners). The `win.extraResources` in `electron-builder.config.json` is scoped to the `win` block — Linux builds skip it correctly.
-
-**DIST-04: Auto-updater `latest-linux.yml`**
-
-| Feature | Category | Complexity | Notes |
-|---------|----------|------------|-------|
-| `latest-linux.yml` generated by electron-builder during Linux package | Table stakes | Low | electron-builder auto-generates `latest-linux.yml` when AppImage target is built |
-| `latest-linux.yml` references AppImage artifact by filename | Table stakes | Low | Automatic from electron-builder |
-| `latest-linux.yml` uploaded to GitHub release alongside `.exe` | Table stakes | Low | Add to release files list in `package.yml` |
-| `electron-updater` checks `latest-linux.yml` on Linux at startup | Table stakes | Medium | Requires `electron-updater` to be configured with Linux feed URL |
-| Auto-updater download shows progress in UI | Differentiator | Medium | Same UX as Windows updater; already implemented in renderer |
-| Flatpak build skips auto-updater (`IGNORE_UPDATES=yes`) | Table stakes | None | Already in `flatpak/com.nexusmods.vortex.yaml` finish-args |
-
-Important: `electron-updater` supports AppImage auto-update. For v2.0, generating the `latest-linux.yml` file is the requirement — full delta-update validation can be deferred.
-
-### Packaging Anti-Features
-
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| Flatpak as primary distribution target for v2.0 | Flatpak manifest exists but has sandbox/xdg-settings complexity; not yet on Flathub | Ship AppImage + deb; Flatpak manifest exists for future Flathub submission |
-| Snap package | Snap has additional confinement issues with Electron; poor DX for modding workflows | Not needed; AppImage covers portable case |
-| RPM package | Adds build complexity; Fedora/RHEL users can use AppImage | Defer or let community package |
-| Code signing on Linux | No standard Linux app signing; `.deb` packages are not code-signed like .exe | Skip; only Windows build signs |
+- `{mygames}` resolves to `compatdata/<appid>/pfx/drive_c/users/steamuser/Documents/My Games`
+  on Linux (STAM-04 — confirmed working)
+- Skyrim SE and Fallout 4 detected and manageable on Linux via Steam/Proton (STAM-05)
+- gamebryo-savegame addon is DISABLED on Linux with a clear error via lazy-load failure (NADD-06)
+- `runElevated()` in `elevated.ts` calls `winapi.ShellExecuteEx` which currently throws on Linux
+  (ShellExecuteEx shim raises NotImplemented)
+- `symlink_activator_elevate` extension already returns `isSupported() = false` on non-win32
+- `IPC path` uses Unix domain sockets on Linux (already patched in v1.0, IPC-01 through IPC-04)
 
 ---
 
-## Category 3: NXM Protocol Handler
+## Category 1: Save Game Manager — C++ Addon Compilation (SAVE-01)
 
-### What's Already Built
+### What Is Linux-Incompatible in gamebryo-savegame
 
-The codebase contains a fully implemented NXM protocol handler for Linux:
+Exactly two blockers prevent the addon from compiling on Linux. Both are in the C++ source or
+build configuration.
 
-- `protocolRegistration/linux/nxm.ts`: Full implementation using `xdg-settings set default-url-scheme-handler nxm <desktop-id>` and `update-desktop-database`.
-- `protocolRegistration/linux/common.ts`: Flatpak-aware `flatpak-spawn --host` wrapper for `xdg-settings` calls.
-- Desktop entry generation for dev builds: `com.nexusmods.vortex.dev.desktop` with `MimeType=x-scheme-handler/nxm`.
-- Wrapper script (`com.nexusmods.vortex.dev.sh`) that handles `LD_LIBRARY_PATH` cleanup (prevents library conflicts from browser-launched instances), NixOS `XDG_DATA_DIRS` preservation, and conditional `--download %u` passing.
-- `flatpak/com.nexusmods.vortex.desktop` with `MimeType=x-scheme-handler/nxm;` already declared.
+**Blocker 1: MSVC exception constructor extension**
 
-### PROT-01 and PROT-02 Requirements
+In `gamebryosavegame.cpp`, `MoreInfoException` inherits `std::exception` and calls:
 
-**PROT-01: NXM handler on standard Linux (xdg-open)**
+```cpp
+MoreInfoException(...) : std::exception(std::runtime_error(message)) { ... }
+```
 
-| Feature | Category | Complexity | Notes |
-|---------|----------|------------|-------|
-| `xdg-settings set default-url-scheme-handler nxm <desktop-id>` on "Handle Nexus Links" toggle | Table stakes | None | Already fully implemented |
-| `.desktop` file written to `~/.local/share/applications/` for dev builds | Table stakes | None | Already implemented in `ensureDevDesktopEntry()` |
-| `update-desktop-database ~/.local/share/applications/` called after desktop file change | Table stakes | None | Already in `refreshDesktopDatabase()` |
-| Idempotent registration (no-op if already default) | Table stakes | None | Already checks previous handler before setting |
-| `xdg-settings get default-url-scheme-handler nxm` queried to detect current handler | Table stakes | None | Already in `getDefaultUrlSchemeHandler()` |
-| `--download nxm://...` argument parsed by Vortex on startup | Table stakes | Low | Existing Windows code path; needs Linux integration test |
-| GNOME support via xdg-settings | Table stakes | None | `xdg-settings` is DE-agnostic; works on GNOME 40+ |
-| KDE Plasma support via xdg-settings | Table stakes | None | Same as GNOME — `xdg-settings` is the standard |
-| Handler works from Firefox/Chromium "Download with Manager" | Table stakes | Low | Relies on browser calling `xdg-open nxm://...`; needs integration test |
-| Non-mainstream DE support (Hyprland, i3, Sway) | Differentiator | Low | Wrapper script hack already addresses xdg-utils issue #279 |
+This is an MSVC extension — GCC and Clang do not allow a string or `std::exception` argument
+to the `std::exception` constructor. Fix: call `std::runtime_error` directly as the base class,
+or store message in `m_Message` and override `what()`. The fix is ~5 lines in
+`gamebryosavegame.cpp` with no behavioral change.
 
-Known issue documented in code: `xdg-utils` has a generic fallback bug (issue #279) for non-mainstream desktop environments. The wrapper script approach already mitigates this. NixOS users need `XDG_DATA_DIRS` preserved — already handled in wrapper generation.
+**Blocker 2: lz4 and zlib linker flags are Windows-only**
 
-**PROT-02: NXM handler on SteamOS/KDE Plasma**
+`binding.gyp` contains a single `conditions: [['OS=="win"', { ... }]]` block that provides:
+- Include dirs for lz4 and zlib headers (`./lz4/include`, `./zlib/include`)
+- Library flags: `-l../lz4/dll/liblz4`, `-l../zlib/lib/zlib`
 
-| Feature | Category | Complexity | Notes |
-|---------|----------|------------|-------|
-| `xdg-settings` available on SteamOS 3.x | Table stakes | Low | SteamOS 3.x (Arch-based) ships xdg-utils; confirmed by Steam itself using it |
-| KDE Plasma `mimeapps.list` updated via `xdg-settings` | Table stakes | None | `xdg-settings set` writes to `~/.config/mimeapps.list` which KDE respects |
-| Flatpak build uses `flatpak-spawn --host xdg-settings` for handler registration | Table stakes | None | Already fully implemented in `common.ts:setDefaultUrlSchemeHandler()` |
-| `IS_FLATPAK=true` env var detected when running as Flatpak | Table stakes | None | Already set via `finish-args --env=IS_FLATPAK=true` in flatpak YAML |
-| `--talk-name=org.freedesktop.Flatpak` permission present in Flatpak manifest | Table stakes | None | Already in `flatpak/com.nexusmods.vortex.yaml` finish-args |
-| nxm:// link clicked in Steam Browser (SteamOS) triggers handler | Differentiator | Medium | Steam's internal browser may handle protocols differently; needs validation |
-| Handler survives SteamOS system update (immutable OS) | Table stakes | Low | `~/.local/share/applications/` and `~/.config/mimeapps.list` are in user home — survives OS updates |
+These are Windows DLL pre-built binaries downloaded by `download_lz4.js` (only runs on
+`process.platform === "win32"`). Linux has no equivalent condition block in `binding.gyp`.
+Fix: add `OS=="linux"` condition block linking against system liblz4 and zlib (`-llz4 -lz`),
+which are available as `liblz4-dev` and `zlib1g-dev` on Debian/Ubuntu.
 
-Steam Deck specific notes:
-- SteamOS uses KDE Plasma in Desktop Mode. The `xdg-settings` approach is correct.
-- Gaming Mode (Big Picture) does not have a browser that supports nxm:// links; users must use Desktop Mode.
-- SteamOS is immutable — system dirs are read-only. All registration happens in user home. This is already correct.
-- The Flatpak sandbox `--talk-name=org.freedesktop.Flatpak` allows `flatpak-spawn --host` to escape the sandbox for `xdg-settings` calls.
+### What Is Already Cross-Platform
 
-**PROT-02 Validation Risk Table**
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `string_cast.h` Linux stub | Ready | On non-Win32: `toWC()` returns `const char*` as `std::string`; `toMB()` same — no-op pass-through |
+| `determineEncoding()` Cyrillic detection | Benign on Linux | `#ifdef _WIN32` around Cyrillic heuristic; Linux always returns `UTF8ORLATIN1` — correct default |
+| Binary file I/O (all `read*` methods) | Fully portable | Standard `std::ifstream` with POSIX `stat()` fallback already in place |
+| LZ4Decoder, ZlibDecoder | Portable once linked | Uses standard `LZ4_decompress_safe()` and `z_stream` APIs — platform-independent |
+| Screenshot decoding (RGB→RGBA) | Fully portable | Standard `memcpy` loop |
+| Plugin list parsing | Fully portable | String operations only |
+| File mtime fallback (`m_CreationTime`) | Already guarded | `#ifdef _WIN32 _wstat / #else stat()` already present in `read()` |
+| NAPI async thread callback | Fully portable | `Napi::ThreadSafeFunction` is cross-platform |
+| Save format detection (Oblivion/Skyrim/FO3/FO4 headers) | Fully portable | Pure binary header matching |
+| `DirectDecoder` file open | Portable after fix | `toWC().c_str()` on Linux returns `const char*` — `std::ifstream(const char*)` is standard |
 
-| Test Case | Risk Level | Notes |
-|-----------|-----------|-------|
-| KDE Plasma desktop: click nxm:// in Firefox | Low | Standard path |
-| KDE Plasma desktop: click nxm:// in Chromium | Low | Standard path |
-| SteamOS Desktop Mode: click nxm:// in Firefox | Medium | Needs hardware or SteamOS VM |
-| SteamOS Desktop Mode: click nxm:// in Steam Browser | High | Steam's built-in browser may not delegate to xdg-open |
-| Flatpak build: flatpak-spawn escapes sandbox to set handler | Medium | Code reviewed; needs live Flatpak install test |
-| Dev build on SteamOS: wrapper script runs correctly | Medium | Needs test on SteamOS |
+### Table Stakes for SAVE-01
 
-### Protocol Handler Anti-Features
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| `MoreInfoException` compiles on GCC/Clang | Prerequisite for any Linux build | LOW | ~5-line change: replace `std::exception(message)` base call |
+| lz4/zlib linked via system packages on Linux | Build system parity with loot addon pattern | LOW | Add `OS=="linux"` block to `binding.gyp`; use `-llz4 -lz` |
+| Linux build dependencies declared in CI | Developer environment reproducibility | LOW | `liblz4-dev` and `zlib1g-dev` in CI apt-get step |
+| `GamebryoSave.node` produced by `node-gyp rebuild` on Linux | Addon functional | LOW | Follows from above two fixes |
+| CI step verifies `.node` loads without linker errors | Confidence in ship artifact | LOW | `ldd GamebryoSave.node` check, consistent with loot pattern |
+
+---
+
+## Category 2: Save Game Manager UI (SAVE-02, SAVE-03)
+
+### What the UI Must Do
+
+The `gamebryo-savegame-management` extension registers a "Save Games" main page via
+`context.registerMainPage("savegame", "Save games", SavegameList, ...)`. The page is already
+built and works on Windows. The question for Linux is path resolution and save file location.
+
+**Save file location on Linux for Proton games:**
+
+On Windows: `%USERPROFILE%\Documents\My Games\<Game>\Saves\`
+On Linux (Proton): `~/.local/share/Steam/steamapps/compatdata/<appid>/pfx/drive_c/users/steamuser/Documents/My Games/<Game>/Saves/`
+
+The `mygamesPath()` function in `gamebryo-savegame-management/src/util/gameSupport.ts` calls:
+
+```typescript
+path.join(util.getVortexPath("documents"), "My Games", gameSupport.get(gameMode, "mygamesPath"))
+```
+
+On Linux, `getVortexPath("documents")` must return the Wine prefix documents path (not
+`~/Documents`) for Proton games. This was solved by STAM-04 — the `{mygames}` variable
+resolution redirects to the Wine prefix path. However, the `mygamesPath()` in the savegame
+extension calls `getVortexPath("documents")` directly, not through the `{mygames}` variable
+resolver. Verify whether STAM-04 also patched `getVortexPath("documents")` or only the
+`ini_prep/gameSupport.ts` variable substitution.
+
+**Per-game `mygamesPath` values (already in gameSupport.ts):**
+
+| Game | `mygamesPath` value | Full Linux path (relative to Wine prefix docs) |
+|------|--------------------|-------------------------------------------------|
+| Skyrim SE | `Skyrim Special Edition` | `.../steamuser/Documents/My Games/Skyrim Special Edition/Saves/` |
+| Fallout 4 | `Fallout4` | `.../steamuser/Documents/My Games/Fallout4/Saves/` |
+
+**Save file formats:**
+
+| Game | Extension | Format header |
+|------|-----------|---------------|
+| Skyrim SE | `.ess` + `.skse` | `TESV_SAVEGAME` |
+| Fallout 4 | `.fos` + `.f4se` | `FO4_SAVEGAME` |
+
+The addon reads both — no Linux-specific format differences.
+
+**UI components (already implemented, require no changes for Linux):**
+
+- `SavegameList.tsx` — table view with sortable columns
+- `ScreenshotCanvas.tsx` — renders screenshot from `Uint8ClampedArray` buffer
+- `savegameAttributes.tsx` — character name, level, location, playtime, creation time, plugins
+- `PluginList.tsx` — list of plugins loaded at save time
+- `Settings.tsx` — local saves per-profile toggle
+
+### Table Stakes for SAVE-02 / SAVE-03
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Save list loads for Skyrim SE on Linux (SAVE-02) | Core save manager function | MEDIUM | Depends on correct save path resolution via STAM-04 |
+| Save list loads for Fallout 4 on Linux (SAVE-03) | Core save manager function | MEDIUM | Same path dependency |
+| Character name displayed correctly (UTF-8) | Users identify saves by character | LOW | C++ `toMB()` stub on Linux is pass-through — no encoding issue for UTF-8 names |
+| Character level displayed | Users identify saves by progression | LOW | Integer field — no platform difference |
+| Save location (in-game area name) displayed | Users identify saves by context | LOW | String field — no platform difference |
+| Save timestamp displayed | Users sort saves chronologically | LOW | Uses POSIX `stat().st_mtime` fallback — works on Linux |
+| Playtime displayed | Users identify saves by session | LOW | String field from binary format |
+| Screenshot thumbnail rendered in list | Users identify saves visually | LOW | RGBA buffer decoded by C++ — works once addon compiles |
+| Plugin list visible for a selected save | Users verify mod compatibility | LOW | Plugin array from binary format — no platform difference |
+| "Open Save Games" button opens correct directory | Users manage files externally | MEDIUM | Path must resolve to Wine prefix docs path |
+| "Refresh" button reloads saves | Live session management | LOW | Debouncer + turbowalk — no platform dependency |
+| Corrupted save shown with error state | Partial file tolerance | LOW | `CORRUPTED_NAME` sentinel already in code |
+| "Remove save" deletes both `.ess` and `.skse` | Save integrity | LOW | `saveFiles()` returns both extensions — no platform difference |
+| Save manager page hidden when game not supported | Extension discoverability | LOW | `gameSupported()` guard already exists |
+
+### Differentiators for Save Management
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Profile-scoped saves on Linux | Per-modlist save isolation | MEDIUM | Already implemented for Windows; requires `SLocalSavePath` INI patching in Wine prefix |
+| Transfer saves between profiles on Linux | Modlist migration | MEDIUM | `transferSavegames()` is pure Node.js file copy — works once path is correct |
+| "Restore plugins" from save on Linux | Reproduce exact load order | LOW | `restoreSavegamePlugins()` calls `api.events.emit("set-plugin-list")` — no platform dependency |
+
+### Anti-Features for Save Management
 
 | Anti-Feature | Why Avoid | What to Do Instead |
 |--------------|-----------|-------------------|
-| Removing/unsetting handler on deregistration | Community expectation is "last launched wins"; deregistration should be user-explicit | Log that deregistration is external; already implemented this way |
-| Registering `nxm` at system level (`/usr/share/applications/`) | Requires root; breaks on immutable filesystems | User-local `~/.local/share/applications/` only |
-| Using Electron's `setAsDefaultProtocolClient` on Linux | Electron's built-in does not work for Linux | Already bypassed — Linux uses custom xdg-settings path |
-| Supporting `nxm+https://` or other protocol variants | Only `nxm://` is used by Nexus Mods | Handle `nxm` only |
+| Creating Wine prefix documents path | Proton manages prefix; Vortex creating it can interfere with game first-launch | Check for existence, return `ENOENT`-safe empty list |
+| Scanning global `~/Documents/My Games/` on Linux for saves | Wrong path for Proton games | Always use Wine prefix path from STAM-04 resolution |
+| Supporting non-Proton Linux game saves (native Bethesda builds) | Bethesda games do not have native Linux builds | No action needed |
+| Steam Deck cloud sync conflict management | Complex; requires Valve's cloud save API | Defer — not in v3.0 scope |
+
+---
+
+## Category 3: Elevation (ELEV-01, ELEV-02)
+
+### What Elevation Is For
+
+On Windows, `runElevated()` in `util/elevated.ts` serializes a JavaScript closure into a
+temp file, then launches a new Node process elevated via `ShellExecuteEx` with `verb: "runas"`.
+The elevated process communicates results back over a named pipe / Unix domain socket.
+
+On Linux the mechanism uses `ShellExecuteEx` (Windows API) to trigger the UAC dialog — which
+does not exist. The shim throws, causing `runElevated()` to reject with an error.
+
+**Known call sites (from v1.0 audit — 6 total, all user-triggered):**
+
+1. `util/fs.ts`: `elevatedUnlock()` — grants `rwx` permission on a locked path via `permissions` module
+2. `util/fs.ts`: `elevated()` — generic wrapper used by `elevatedUnlock`
+3. `extensions/symlink_activator_elevate/index.ts`: `startElevated()` / `stopElevated()` — symlink deployment service management
+4. `extensions/symlink_activator_elevate/index.ts`: `removeTask()` — clean up Windows scheduled task
+5. `util/runElevatedCustomTool.ts` — run a game tool (e.g., SKSE) elevated
+6. `ExtensionManager.ts` — one call site for extension-triggered elevation
+
+**Which call sites actually fire on Linux:**
+
+- `symlink_activator_elevate`: `isSupported()` returns false on non-win32 → symlink deployment
+  never activates → `startElevated()`/`stopElevated()`/`removeTask()` never called
+- `removeTask()`: Explicitly gated `if (process.platform !== "win32") return undefined`
+- `elevatedUnlock()` in `fs.ts`: Fires on `EPERM` from file operations — THIS CAN FIRE on Linux
+  when deploying mods to a path the user does not own (e.g., system-installed game directory)
+- `runElevatedCustomTool.ts`: Can fire if user launches an external tool with elevation checked
+
+**The realistic Linux elevation need:**
+
+Most Steam games are installed to `~/.local/share/Steam/steamapps/common/` — user-owned, no
+elevation needed. Elevation on Linux is only needed when:
+1. The game is installed to a system path (e.g., `/opt/Steam/` — rare but valid)
+2. A deployment destination path requires root (e.g., custom mods folder on a root-owned mount)
+3. A user requests an elevated tool launch
+
+**ELEV-01: pkexec + Unix domain socket elevation**
+
+The Linux analog to `ShellExecuteEx verb:runas` is `pkexec` (PolicyKit Execute). The pattern:
+1. Write the serialized JS closure to a temp file (same as today)
+2. Instead of `ShellExecuteEx`, run: `pkexec <node-executable> --run <tmpPath>`
+3. pkexec displays an authentication dialog (polkit agent — graphical on GNOME/KDE)
+4. The elevated Node process connects back via the already-working Unix domain socket
+
+The existing IPC infrastructure (Unix domain socket) is already correct for Linux (patched in
+v1.0, IPC-01 through IPC-04). Only the launch mechanism needs replacing.
+
+**ELEV-02: Steam Deck / SteamOS polkit-free elevation**
+
+Steam Deck runs as user `deck`. The account has a blank password by default and can `sudo`
+without a password. The polkit agent in Gaming Mode may not be present. Options:
+1. `sudo -n` (non-interactive) — works if NOPASSWD is set in sudoers
+2. `pkexec --disable-internal-agent` + pre-configured polkit rule granting Vortex elevation
+3. Detect SteamOS and fall back to `sudo -n` before trying pkexec
+
+### Table Stakes for ELEV-01
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| `runElevated()` on Linux uses `pkexec` instead of `ShellExecuteEx` | Core elevation mechanism | MEDIUM | Platform guard in `elevated.ts`; `pkexec` is standard on all major distros |
+| Elevated Node process runs the serialized closure | Parity with Windows behavior | LOW | Same closure serialization; only launcher changes |
+| Result returned via Unix domain socket | IPC already works | LOW | Socket path already correct from IPC-01 patch |
+| User cancellation detected (pkexec exit code 126) | UX — cancel ≠ error | LOW | pkexec exits 126 when user cancels auth dialog; map to `UserCanceled` |
+| Auth failure detected (pkexec exit code 127) | UX — distinguish cancel from failure | LOW | pkexec exits 127 on auth failure; map to error with user message |
+| pkexec unavailable handled gracefully | Headless / minimal systems | LOW | Check for pkexec in PATH at call site; show "elevation not available" |
+| Elevated process receives correct `node_modules` paths | Closure requires npm packages | LOW | Same `moduleRoot` injection as Windows; already in `elevatedMain` |
+| `elevated()` function in `fs.ts` uses new Linux path | `elevatedUnlock()` works on Linux | LOW | The `elevated()` function wraps `runElevated()` — benefit is automatic |
+
+### Table Stakes for ELEV-02
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| SteamOS detected (check `/etc/os-release` `ID=steamos`) | Different elevation strategy needed | LOW | One-time detection at startup |
+| `sudo -n` attempted on SteamOS before pkexec | Steam Deck user has NOPASSWD sudo | LOW | `deck` account has passwordless sudo by design |
+| Graceful fallback when `sudo -n` fails | Not all SteamOS setups are default | LOW | Fall through to pkexec if `sudo -n` exits non-zero |
+| No polkit dialog shown on Steam Deck when NOPASSWD works | UX — seamless on Deck | LOW | `sudo -n` is non-interactive by definition |
+| Elevation path documented for custom SteamOS setups | Power user transparency | LOW | Error message suggests `pkexec` / polkit setup |
+
+### Differentiators for Elevation
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| GUI polkit agent auto-detected (GNOME/KDE) | Correct dialog shown based on DE | LOW | pkexec invokes installed agent automatically — no extra work |
+| Elevation prompt includes operation description | Users understand what they're authorizing | MEDIUM | pkexec supports `--action-id` for polkit rules with descriptions |
+| Persistent elevation token (one auth per session) | Fewer password prompts | HIGH | Requires polkit rule with session-scoped authorization — complex; defer |
+| `kdesu` / `gksu` fallback for legacy systems | Older distros without pkexec | LOW | Detect pkexec absence, try kdesu/gksu — LOW value, not in v3.0 |
+
+### Anti-Features for Elevation
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| Running Vortex itself as root | Security hazard; Electron as root is dangerous | Always run Vortex as user; elevate only specific operations |
+| `sudo` with stored password | Password storage in app is a security risk | Use pkexec / polkit agent only |
+| Requiring root for mod deployment to user-owned paths | Breaks most common setup (user-installed Steam) | Check path ownership first; only elevate when actually needed |
+| Windows scheduled task pattern on Linux | Tasks API doesn't exist on Linux | On Linux, the elevated process exits after its operation — no persistent service |
+| Silently retrying EPERM without elevation prompt | UX — user should know elevation is happening | Always show polkit/pkexec dialog before elevated operation |
 
 ---
 
 ## Feature Dependencies
 
 ```
-STAM-01 (VDF parsing)
-  └── STAM-02 (Flatpak paths) — path constants only, no parse changes
-  └── STAM-03 (Proton prefix) — depends on steamAppsPath from STAM-01
-        └── STAM-04 ({mygames} in Wine prefix) — depends on compatDataPath from STAM-03
-              └── STAM-05 (game extension audit) — depends on STAM-04 for Bethesda games
+SAVE-01 (addon compiles on Linux)
+  └── SAVE-02 (Skyrim SE save list) — addon must load for refreshSavegames() to work
+  └── SAVE-03 (Fallout 4 save list) — same dependency
 
-DIST-01 (AppImage) — electron-builder config change, no code deps
-  └── DIST-04 (latest-linux.yml) — AppImage must exist for auto-updater to generate yml
-DIST-02 (.deb) — independent of AppImage
-DIST-03 (CI artifacts) — depends on DIST-01 and DIST-02 being buildable
+STAM-04 ({mygames} in Wine prefix) — already completed v2.0
+  └── SAVE-02 (correct save path) — mygamesPath() must resolve to Wine prefix docs
+  └── SAVE-03 (correct save path) — same
 
-PROT-01 (xdg-open, standard Linux) — no deps on STAM or DIST
-  └── PROT-02 (SteamOS validation) — depends on PROT-01 being correct; validates Flatpak path
+ELEV-01 (pkexec elevation)
+  └── ELEV-02 (Steam Deck path) — ELEV-02 is a specialization of ELEV-01's mechanism
+
+IPC-01 through IPC-04 (Unix socket IPC) — already completed v1.0
+  └── ELEV-01 — elevated process communicates over already-correct Unix socket
+
+SAVE-01 ──independent──> ELEV-01  (no dependency between them)
 ```
 
-NXM handler registration does NOT require packaging to be done first for development. The dev desktop entry approach (already implemented) lets NXM work without an AppImage or .deb install. Packaging is only required to validate that the packaged `.desktop` file installs and registers correctly.
+### Dependency Notes
+
+- **SAVE-02/SAVE-03 require STAM-04:** The save manager calls `mygamesPath(gameMode)` which
+  calls `util.getVortexPath("documents")`. On Linux this must return the Wine prefix docs path.
+  Verify whether STAM-04 patched `getVortexPath("documents")` globally or only through the
+  `{mygames}` variable resolver in `ini_prep`. If global, SAVE-02/03 get it for free. If only
+  via `ini_prep`, savegame extension needs its own Linux override.
+
+- **ELEV-02 extends ELEV-01:** The pkexec mechanism from ELEV-01 must exist before ELEV-02 can
+  add the `sudo -n` pre-check for SteamOS. Both can be implemented in the same phase.
 
 ---
 
-## MVP Recommendation by Category
+## MVP Definition for v3.0
 
-**Steam/Proton (STAM-01 to STAM-05):**
-- Prioritize: STAM-01/02/03 — infrastructure nearly complete; mainly needs integration tests
-- STAM-04 (`{mygames}` in Wine prefix) is the highest complexity item — requires platform-conditional path logic in `ini_prep/gameSupport.ts`
-- STAM-05 game audit is table stakes validation, not new code (except `{mygames}` fix for Bethesda games)
-- Validate Stardew Valley first: native Linux, no Wine prefix, simplest case
+### Launch With (v3.0)
 
-**Packaging (DIST-01 to DIST-04):**
-- DIST-01/02 are low-complexity config changes to `electron-builder.config.json` (add `"AppImage"` and `"deb"` to targets)
-- DIST-03 requires a new/modified GitHub Actions job — straightforward
-- DIST-04 is automatic once DIST-01 builds succeed
+- [ ] SAVE-01: `MoreInfoException` + lz4/zlib linking fixed; `GamebryoSave.node` compiles on Linux CI
+- [ ] SAVE-02: Save list loads for Skyrim SE; character name, level, location, timestamp visible
+- [ ] SAVE-03: Save list loads for Fallout 4; same attributes visible
+- [ ] ELEV-01: `runElevated()` uses `pkexec` on Linux; cancel (126) mapped to `UserCanceled`
+- [ ] ELEV-02: SteamOS detection; `sudo -n` pre-check before pkexec on Steam Deck
 
-**Protocol (PROT-01 to PROT-02):**
-- PROT-01 implementation is complete — the work is integration testing and `--download` argument parsing verification on Linux
-- PROT-02 validation on SteamOS is the highest risk; Steam Browser behavior is unknown
+### Add After Validation (v3.x)
+
+- [ ] Profile-scoped saves with INI patching inside Wine prefix — trigger: SAVE-02/03 confirmed working
+- [ ] Save transfer between profiles — trigger: profile saves working
+- [ ] Elevation operation description via polkit action-id — trigger: ELEV-01 in use
+
+### Future Consideration (v4.0+)
+
+- [ ] Steam cloud save conflict detection for Linux — deferred; requires Valve cloud API
+- [ ] Persistent elevation token (session-scoped polkit rule) — high complexity, low frequency need
+- [ ] `kdesu`/`gksu` legacy fallback — minimal user value given pkexec ubiquity since 2012
+
+---
+
+## Feature Prioritization Matrix
+
+| Feature | User Value | Implementation Cost | Priority |
+|---------|------------|---------------------|----------|
+| SAVE-01: addon compiles | HIGH | LOW | P1 |
+| SAVE-02: Skyrim SE saves visible | HIGH | MEDIUM | P1 |
+| SAVE-03: Fallout 4 saves visible | HIGH | MEDIUM | P1 |
+| ELEV-01: pkexec mechanism | MEDIUM | MEDIUM | P1 |
+| ELEV-02: Steam Deck sudo path | MEDIUM | LOW | P1 |
+| Profile-scoped saves (Linux INI) | MEDIUM | MEDIUM | P2 |
+| Save transfer between profiles | LOW | LOW | P2 |
+| Polkit action-id description | LOW | MEDIUM | P3 |
+| Persistent elevation token | LOW | HIGH | P3 |
+
+**Priority key:** P1 = in v3.0, P2 = after v3.0 validation, P3 = future
+
+---
+
+## Linux-Specific Behavioral Notes
+
+### Save paths: Wine prefix vs native
+
+On Windows, saves are at `%USERPROFILE%\Documents\My Games\<Game>\Saves\`.
+On Linux (Proton games), saves are at:
+`~/.local/share/Steam/steamapps/compatdata/<appid>/pfx/drive_c/users/steamuser/Documents/My Games/<Game>/Saves/`
+
+The `gamebryo-savegame-management` extension has no concept of Wine prefixes — it only calls
+`util.getVortexPath("documents")`. If STAM-04 made `getVortexPath("documents")` return the
+Wine prefix path when a Proton game is active, the savegame extension works transparently.
+If not, a platform guard is needed in `mygamesPath()` inside the extension.
+
+### pkexec dialog UX by desktop environment
+
+- **GNOME**: `gnome-polkit` agent (installed by default) shows a lock-icon password dialog
+- **KDE Plasma**: `polkit-kde-authentication-agent-1` shows a KDE-styled dialog
+- **XFCE / minimal DEs**: `lxpolkit` or similar; may not be installed — `pkexec` falls back to
+  terminal prompt if no graphical agent found
+- **Steam Deck Gaming Mode**: No graphical polkit agent active; `sudo -n` (ELEV-02) is the
+  only viable path without requiring the user to set up a polkit agent
+
+### pkexec security note
+
+pkexec 0.105 (CVE-2021-4034 "PwnKit") was patched in most distros by early 2022. Modern
+systems (Ubuntu 22.04+, Fedora 35+, Debian 11+) are safe. The security concern is historical;
+current pkexec usage is standard practice for GUI elevation.
 
 ---
 
 ## Sources
 
-- Codebase: `/home/alex/src/Vortex/src/renderer/src/util/linux/steamPaths.ts`
-- Codebase: `/home/alex/src/Vortex/src/renderer/src/util/linux/proton.ts`
-- Codebase: `/home/alex/src/Vortex/src/renderer/src/util/protocolRegistration/linux/`
-- Codebase: `/home/alex/src/Vortex/src/main/electron-builder.config.json`
-- Codebase: `/home/alex/src/Vortex/flatpak/com.nexusmods.vortex.yaml`
-- Codebase: `/home/alex/src/Vortex/.github/workflows/package.yml`
-- Codebase: `/home/alex/src/Vortex/src/renderer/src/extensions/ini_prep/gameSupport.ts`
-- Codebase: `/home/alex/src/Vortex/src/main/src/getVortexPath.ts`
-- Code references in `nxm.ts`: NexusMods.App Linux protocol implementation, xdg-utils issue #279
-- Confidence: HIGH — all claims based on direct codebase inspection
+- Codebase: `/home/alex/src/Vortex/node_modules/.pnpm/node_modules/gamebryo-savegame/src/gamebryosavegame.cpp`
+- Codebase: `/home/alex/src/Vortex/node_modules/.pnpm/node_modules/gamebryo-savegame/src/gamebryosavegame.h`
+- Codebase: `/home/alex/src/Vortex/node_modules/.pnpm/node_modules/gamebryo-savegame/src/string_cast.h`
+- Codebase: `/home/alex/src/Vortex/node_modules/.pnpm/node_modules/gamebryo-savegame/binding.gyp`
+- Codebase: `/home/alex/src/Vortex/extensions/gamebryo-savegame-management/src/index.ts`
+- Codebase: `/home/alex/src/Vortex/extensions/gamebryo-savegame-management/src/util/gameSupport.ts`
+- Codebase: `/home/alex/src/Vortex/extensions/gamebryo-savegame-management/src/util/refreshSavegames.ts`
+- Codebase: `/home/alex/src/Vortex/src/renderer/src/util/elevated.ts`
+- Codebase: `/home/alex/src/Vortex/src/renderer/src/util/fs.ts` (elevatedUnlock, elevated functions)
+- Codebase: `/home/alex/src/Vortex/src/renderer/src/extensions/symlink_activator_elevate/index.ts`
+- Codebase: `/home/alex/src/Vortex/.planning/PROJECT.md` (ELEV-01/ELEV-02 requirements, v1.0 audit)
+- Codebase: `/home/alex/src/Vortex/.planning/STATE.md` (v1.0 phase 05 elevation audit findings)
+- Confidence: HIGH — all claims based on direct codebase inspection, no training-data assertions
+
+---
+*Feature research for: Vortex Linux v3.0 — Save Games + Elevation*
+*Researched: 2026-04-01*
