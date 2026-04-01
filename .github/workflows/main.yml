@@ -47,7 +47,7 @@ jobs:
       # cmake and liblz4-dev required for native addon compilation on Linux
       - name: Install Linux build dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev cmake liblz4-dev
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev cmake liblz4-dev zlib1g-dev
 
       # Rust toolchain required by libloot 0.29.1 (rewritten in Rust at 0.25+)
       # Must run before "Install dependencies" because postinstall-libloot.cjs
