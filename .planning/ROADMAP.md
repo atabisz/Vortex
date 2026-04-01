@@ -51,7 +51,10 @@ Plans:
   2. A GitHub Actions CI run produces a `vortex_{version}_amd64.deb` artifact with `xdg-utils` and `libasound2` declared as dependencies
   3. Linux artifacts (AppImage, .deb, `latest-linux.yml`) are uploaded to GitHub releases in the same job run as the Windows artifacts
   4. The in-app auto-updater checks for Linux updates only when running from an AppImage (`process.env.APPIMAGE` is set)
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 07-01-PLAN.md — electron-builder AppImage + deb config and auto-updater gate
+- [ ] 07-02-PLAN.md — Parallel build-linux CI job in package.yml
 
 ### Phase 8: NXM Protocol Handler
 **Goal**: Clicking "Download with Manager" on Nexus Mods opens Vortex and starts the download — in both dev and AppImage builds, on standard Linux and SteamOS/KDE Plasma
@@ -74,5 +77,5 @@ Plans:
 | 4. FOMOD Installer Integration | v1.0 | 2/2 | Complete | 2026-03-31 |
 | 5. IPC and Elevation Audit | v1.0 | 2/2 | Complete | 2026-03-31 |
 | 6. Steam/Proton Detection | v2.0 | 0/3 | Planned | - |
-| 7. Linux Packaging | v2.0 | 0/? | Not started | - |
+| 7. Linux Packaging | v2.0 | 0/2 | Planned | - |
 | 8. NXM Protocol Handler | v2.0 | 0/? | Not started | - |
