@@ -342,6 +342,31 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 <!-- GSD:architecture-end -->
 
 <!-- GSD:workflow-start source:GSD defaults -->
+## Branch Strategy
+
+This fork maintains two branches for clean upstream PR separation:
+
+- **`linux-port`** — upstream PR candidate. Contains only Linux compatibility changes: platform guards, Linux code paths, devcontainer support, native addon work. No `.planning/` docs, no distribution CI, no fork tooling.
+- **`master`** — full fork. Includes everything in `linux-port` plus GSD planning artifacts, AppImage/deb build config, GitHub Actions distribution CI, and any fork-specific work.
+
+### Workflow rule
+
+**Linux port work (upstream-eligible):** Commit to `linux-port` first, then merge into `master`.
+**Fork-only work (distribution, planning, internal tooling):** Commit directly to `master` only.
+
+### What belongs where
+
+| Change type | Branch |
+|---|---|
+| Platform guards, Linux code paths | `linux-port` |
+| Bug fixes with Linux platform guards | `linux-port` |
+| Devcontainer Linux support | `linux-port` |
+| Native addon / build tooling for Linux | `linux-port` |
+| GSD `.planning/` docs | `master` only |
+| AppImage / deb build config | `master` only |
+| GitHub Actions distribution CI | `master` only |
+| Fork-specific IDE config | `master` only |
+
 ## GSD Workflow Enforcement
 
 Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
