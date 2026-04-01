@@ -800,8 +800,11 @@ overrides:
   node-addon-api: 8.5.0
 
 patchedDependencies:
+  exe-version@2.3.0:
+    hash: 552936b6052032fd388a1bec5809f99715821de873478c57edf342a699e41c88
+    path: patches/exe-version@2.3.0.patch
   gamebryo-savegame@2.1.2:
-    hash: 62fd1e62baa1952f3045b627ac9e7be285ec363c76be285d4d94a3e27568b409
+    hash: 13dfacf7de67dcd9115b21f2b44af06545b1e211c07f00314e8ab23aab358d30
     path: patches/gamebryo-savegame@2.1.2.patch
   loot@6.2.1:
     hash: ba0ba09fba258f3fd09c591d8bf72f97da1459a4a85d8b7a768a1e57db8fb935
@@ -1329,7 +1332,7 @@ importers:
         version: 2.4.1
       exe-version:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406
+        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=552936b6052032fd388a1bec5809f99715821de873478c57edf342a699e41c88)
       i18next:
         specifier: 'catalog:'
         version: 19.9.2
@@ -1629,7 +1632,7 @@ importers:
         version: 39.8.0
       exe-version:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406
+        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=552936b6052032fd388a1bec5809f99715821de873478c57edf342a699e41c88)
       i18next:
         specifier: 'catalog:'
         version: 19.9.2
@@ -1778,7 +1781,7 @@ importers:
     optionalDependencies:
       gamebryo-savegame:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/f060df62b04aa53e0d2fa7e6de0c9df423bbd44c(patch_hash=62fd1e62baa1952f3045b627ac9e7be285ec363c76be285d4d94a3e27568b409)
+        version: https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/f060df62b04aa53e0d2fa7e6de0c9df423bbd44c(patch_hash=13dfacf7de67dcd9115b21f2b44af06545b1e211c07f00314e8ab23aab358d30)
 
   extensions/gamebryo-test-settings:
     devDependencies:
@@ -3617,7 +3620,7 @@ importers:
         version: 39.8.0
       exe-version:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406
+        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=552936b6052032fd388a1bec5809f99715821de873478c57edf342a699e41c88)
       lodash:
         specifier: 'catalog:'
         version: 4.17.23
@@ -3656,7 +3659,7 @@ importers:
         version: 2.4.1
       exe-version:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406
+        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=552936b6052032fd388a1bec5809f99715821de873478c57edf342a699e41c88)
       i18next:
         specifier: 'catalog:'
         version: 19.9.2
@@ -4091,7 +4094,7 @@ importers:
         version: 4.6.5
       exe-version:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406
+        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=552936b6052032fd388a1bec5809f99715821de873478c57edf342a699e41c88)
       feedparser:
         specifier: 'catalog:'
         version: 2.3.0
@@ -4747,7 +4750,7 @@ importers:
         version: 1.15.8(enzyme@3.11.0)(react-dom@16.14.0)(react@16.14.0)
       exe-version:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406
+        version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=552936b6052032fd388a1bec5809f99715821de873478c57edf342a699e41c88)
       feedparser:
         specifier: 'catalog:'
         version: 2.3.0
@@ -18952,7 +18955,7 @@ snapshots:
 
   events@3.3.0: {}
 
-  exe-version@https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406:
+  exe-version@https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=552936b6052032fd388a1bec5809f99715821de873478c57edf342a699e41c88):
     dependencies:
       winapi-bindings: https://codeload.github.com/Nexus-Mods/node-winapi-bindings/tar.gz/faa92afe3320731e98abc15b3f5f19c60896d7c1
     transitivePeerDependencies:
@@ -19302,7 +19305,7 @@ snapshots:
       string.fromcodepoint: 0.2.1
       string.prototype.codepointat: 0.2.1
 
-  gamebryo-savegame@https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/f060df62b04aa53e0d2fa7e6de0c9df423bbd44c(patch_hash=62fd1e62baa1952f3045b627ac9e7be285ec363c76be285d4d94a3e27568b409):
+  gamebryo-savegame@https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/f060df62b04aa53e0d2fa7e6de0c9df423bbd44c(patch_hash=13dfacf7de67dcd9115b21f2b44af06545b1e211c07f00314e8ab23aab358d30):
     dependencies:
       autogypi: 0.2.2
       copyfiles: 2.4.1
