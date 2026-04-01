@@ -53,6 +53,56 @@
 
 ---
 
+## Milestone: v2.0 — Usable on Linux
+
+**Shipped:** 2026-04-01
+**Phases:** 3 | **Plans:** 7 | **Tasks:** 11
+
+### What Was Built
+
+- Multi-root Steam scanning (native + Flatpak) with oslist-based Proton detection for never-launched Windows-only games
+- `{mygames}` Wine prefix path resolution fixed: `PROTON_USERNAME = "steamuser"` constant, `getMyGamesPath()` helper, async `iniFiles()` with Linux guard; "My Documents" → "Documents" bug corrected
+- Top-4 game extensions (Skyrim SE, Fallout 4, Cyberpunk 2077, Stardew Valley) confirmed Linux-compatible; dead `winapi-bindings` require removed from Fallout 4
+- electron-builder configured for AppImage + .deb targets; auto-updater gated behind `process.env.APPIMAGE`; `latest-linux.yml` auto-generated
+- GitHub Actions `build-linux` parallel CI job alongside Windows — Rust toolchain → apt deps → pnpm → `package:nosign` → validate → release
+- `ensureAppImageDesktopEntry()` writes `.desktop` + wrapper script before `xdg-settings`; `kbuildsycoca6` refresh for KDE Plasma; `mPendingDownload` cold-start NXM buffer in `Application.ts`
+
+### What Worked
+
+- **PROTON_USERNAME constant:** Documenting the "steamuser" pitfall in CONTEXT before coding prevented a hard-to-diagnose bug — the Username in Wine prefix is never the OS username
+- **Parallel CI job (no needs:):** Parallel sibling job was the right call; zero sequencing overhead, no Windows job changes needed
+- **Surgical NXM changes:** Phase 8 required only 3 targeted lines in `Application.ts` and one new function in `nxm.ts` — the pre-phase research (CONTEXT.md) made the scope clear before touching code
+- **Cold-start buffer pattern:** `mPendingDownload` field is idiomatic Electron startup-phase coordination; clean, testable, and self-documenting
+- **Additive functions for Steam paths:** `findAllLinuxSteamPaths()` as a new function alongside the existing `findLinuxSteamPath()` preserved backward compat with zero regression risk
+
+### What Was Inefficient
+
+- **Phase 7-02 missing SUMMARY.md:** Plan was executed and committed but SUMMARY.md was never created — caught at milestone close; required reconstructing from commit message. Post-execution doc step needs better enforcement.
+- **Phase 6 ROADMAP checkbox:** Phase 6 wasn't marked `[x]` in the ROADMAP despite all summaries and verification passing — same issue as v1.0's Phase 4 checkbox. The `phase complete` CLI didn't update the phase-level entry in the `<details>` block.
+- **Phase ordering:** Phases 7 and 8 were executed before Phase 6's ROADMAP was marked complete — the state counter showed `completed_phases: 2/3` at milestone close even though all work was done.
+
+### Patterns Established
+
+- **PROTON_USERNAME constant:** Never use `os.userInfo().username` for Wine prefix paths — always `steamuser`
+- **AppImage desktop entry before xdg-settings:** `ensureAppImageDesktopEntry()` must run before `setDefaultUrlSchemeHandler()` — xdg-settings requires the `.desktop` file to exist first
+- **KDE graceful degradation:** `kbuildsycoca6 --noincremental` catch on ENOENT — silently skip on non-KDE desktops
+- **CI parallel Linux job pattern:** `build-linux` with no `needs:`, replicated version parsing in bash, `pnpm run package:nosign`
+
+### Key Lessons
+
+1. **Document the platform-specific constants.** `PROTON_USERNAME = "steamuser"` seems obvious in retrospect but would have been a multi-hour debug. Getting this into CONTEXT.md before the plan runs makes it explicit.
+2. **SUMMARY.md is a first-class deliverable.** Phase 7-02 had commits but no summary — the plan itself said "create SUMMARY.md" in its `<output>` block. This gap surfaced at milestone close. Treat missing SUMMARYs as incomplete plans.
+3. **Checkpoint on ROADMAP checkbox after each phase complete.** Two milestones in a row have had a phase-level checkbox discrepancy. The `phase complete` CLI updates plan-level `[x]` entries but not the phase-level bold entry. Manual verification needed until the CLI is fixed.
+4. **Research pays off at the AppImage boundary.** The cold-start NXM and desktop entry pitfalls were both documented in CONTEXT.md from the research phase — the execution plans were precise because the research was thorough.
+
+### Cost Observations
+
+- Model mix: Sonnet 4.6 (primary execution + verification), Sonnet 4.6 (planning agents)
+- Sessions: ~4 sessions across 1 day (2026-04-01)
+- Notable: Phase 8 was the leanest phase (2 plans, 11 tasks total) due to high-quality CONTEXT.md reducing scope uncertainty to near-zero
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -60,14 +110,18 @@
 | Milestone | Sessions | Phases | Key Change |
 |-----------|----------|--------|------------|
 | v1.0 | ~5 | 5 | First milestone; research-verified dependency graph; audit-first for uncertain scope |
+| v2.0 | ~4 | 3 | CONTEXT.md quality drove Phase 8 precision; SUMMARY.md enforcement gap surfaced |
 
 ### Cumulative Quality
 
 | Milestone | Tests Added | Zero-Dep Linux Additions | CI Platforms |
 |-----------|-------------|--------------------------|--------------|
 | v1.0 | 22+ (Vitest) | 5 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
+| v2.0 | 16 (desktop escaping) + main process suite | 3 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
 
 ### Top Lessons (Verified Across Milestones)
 
 1. **Alias at the build boundary** — resolve module substitutions in webpack/rolldown config, not in source files
 2. **Audit before implementing** — characterise scope of uncertain requirements before coding; often reveals the requirement is smaller than assumed
+3. **SUMMARY.md is a first-class deliverable** — missing summaries surface as gaps at milestone close; enforce at plan-complete time
+4. **Document platform-specific constants** — `steamuser`, `compatdata`, `steamapps` naming conventions belong in CONTEXT.md before execution, not discovered during debugging

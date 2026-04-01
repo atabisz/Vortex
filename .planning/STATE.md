@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.0
-milestone_name: Usable on Linux
-status: verifying
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-04-01T01:42:09.251Z"
+milestone: v3.0
+milestone_name: Planning
+status: idle
+stopped_at: "v2.0 milestone complete — shipped 2026-04-01"
+last_updated: "2026-04-01T12:00:00.000Z"
 last_activity: 2026-04-01
 progress:
-  total_phases: 3
-  completed_phases: 2
-  total_plans: 7
-  completed_plans: 6
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
   percent: 0
 ---
 
@@ -18,16 +18,16 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-31)
+See: .planning/PROJECT.md (updated 2026-04-01)
 
-**Core value:** `pnpm run start` works on Linux without crashing — a developer can launch and use Vortex on a Linux machine
-**Current focus:** Phase 08 — nxm-protocol-handler
+**Core value:** A Linux user can install Vortex, detect their Steam/Proton games, and download mods via NXM link
+**Current focus:** Planning v3.0
 
 ## Current Position
 
-Phase: 08 (nxm-protocol-handler) — EXECUTING
-Plan: 2 of 2
-Status: Phase complete — ready for verification
+Phase: —
+Plan: —
+Status: v2.0 milestone complete — planning next milestone
 Last activity: 2026-04-01
 
 Progress: [░░░░░░░░░░] 0%

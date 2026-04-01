@@ -1,5 +1,20 @@
 # Milestones
 
+## v2.0 Usable on Linux (Shipped: 2026-04-01)
+
+**Phases completed:** 3 phases, 7 plans, 11 tasks
+
+**Key accomplishments:**
+
+- Multi-root Steam scanning (native + Flatpak) with oslist-based Proton detection for never-launched Windows-only games
+- Proton Wine prefix INI path resolution fixed: PROTON_USERNAME constant, getMyGamesPath() helper, async iniFiles() with Linux guard, and "My Documents" -> "Documents" bug corrected across two gameSupport files
+- Dead winapi-bindings require removed from Fallout 4; all 4 top-title game extensions confirmed Linux-compatible
+- electron-builder AppImage + deb targets configured and auto-updater gated behind process.env.APPIMAGE on Linux
+- Parallel build-linux job added to package.yml — produces AppImage, .deb, and latest-linux.yml alongside Windows artifacts
+- AppImage .desktop entry + KDE kbuildsycoca6 refresh wired for NXM protocol handler registration on Linux
+
+---
+
 ## v1.0 Linux Port Phase 1 (Shipped: 2026-03-31)
 
 **Phases completed:** 5 phases, 10 plans, 16 tasks
