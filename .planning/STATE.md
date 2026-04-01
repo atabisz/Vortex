@@ -4,7 +4,7 @@ milestone: v2.0
 milestone_name: Usable on Linux
 status: verifying
 stopped_at: Completed 07-01-PLAN.md
-last_updated: "2026-04-01T00:42:37.205Z"
+last_updated: "2026-04-01T00:48:55.694Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 3
@@ -25,8 +25,8 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 
 ## Current Position
 
-Phase: 07 (linux-packaging) — EXECUTING
-Plan: 2 of 2
+Phase: 8
+Plan: Not started
 Status: Phase complete — ready for verification
 Last activity: 2026-04-01
 
