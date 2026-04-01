@@ -26,8 +26,8 @@
 
 ### NXM Protocol Handler (PROT)
 
-- [ ] **PROT-01**: NXM "Download with Manager" works on standard Linux (GNOME, KDE Plasma) in both dev and AppImage builds — `ensureAppImageDesktopEntry()` writes `.desktop` file for AppImage builds; cold-start NXM URL buffered in `pendingDownload` field and applied after Redux store ready
-- [ ] **PROT-02**: NXM handler validated on SteamOS/KDE Plasma Desktop Mode; `kbuildsycoca6 --noincremental` triggered after desktop DB update on KDE; Steam Browser NXM behavior documented (defer to v3.0 if hardware unavailable)
+- [x] **PROT-01**: NXM "Download with Manager" works on standard Linux (GNOME, KDE Plasma) in both dev and AppImage builds — `ensureAppImageDesktopEntry()` writes `.desktop` file for AppImage builds; cold-start NXM URL buffered in `pendingDownload` field and applied after Redux store ready
+- [x] **PROT-02**: NXM handler validated on SteamOS/KDE Plasma Desktop Mode; `kbuildsycoca6 --noincremental` triggered after desktop DB update on KDE; Steam Browser NXM behavior documented (defer to v3.0 if hardware unavailable)
 
 ---
 

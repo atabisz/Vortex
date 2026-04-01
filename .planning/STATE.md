@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Usable on Linux
-status: executing
-stopped_at: Completed 08-02-PLAN.md
-last_updated: "2026-04-01T01:41:34.132Z"
+status: verifying
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-04-01T01:42:09.251Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 
 Phase: 08 (nxm-protocol-handler) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-01
 
 Progress: [░░░░░░░░░░] 0%
@@ -59,6 +59,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 07-linux-packaging P02 | 5 | 1 tasks | 1 files |
 | Phase 07-linux-packaging P01 | 2 | 2 tasks | 2 files |
 | Phase 08-nxm-protocol-handler P02 | 5 | 1 tasks | 1 files |
+| Phase 08-nxm-protocol-handler P01 | 8 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,8 @@ Recent decisions affecting current work:
 - [Phase 07-linux-packaging]: linux.artifactName mirrors nsis.artifactName: vortex-setup-${version}.${ext}
 - [Phase 07-linux-packaging]: Auto-updater gate: process.env.APPIMAGE only — zip/deb installs get managed (no updater)
 - [Phase 08-nxm-protocol-handler]: Buffer args.download in mPendingDownload before startup; apply after startUi() resolves
+- [Phase 08-nxm-protocol-handler]: generateWrapperScript appPath optional: AppImage self-contained, no Electron appPath needed; dev builds unaffected
+- [Phase 08-nxm-protocol-handler]: kbuildsycoca6 ENOENT logged at debug level: absence expected on non-KDE desktops
 
 ### Research Context (v2.0)
 
@@ -130,6 +133,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-01T01:41:34.127Z
-Stopped at: Completed 08-02-PLAN.md
+Last session: 2026-04-01T01:42:09.247Z
+Stopped at: Completed 08-01-PLAN.md
 Resume file: None
