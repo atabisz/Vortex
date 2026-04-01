@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 Linux Port Phase 1** — Phases 1–5 (shipped 2026-03-31) — [archive](.planning/milestones/v1.0-ROADMAP.md)
 - ✅ **v2.0 Usable on Linux** — Phases 6–8 (shipped 2026-04-01) — [archive](.planning/milestones/v2.0-ROADMAP.md)
-- 📋 **v3.0** — (planned)
+- 📋 **v3.0 Save Games + Elevation** — Phases 9–10 (planned)
 
 ## Phases
 
@@ -28,9 +28,41 @@
 
 </details>
 
-### 📋 v3.0 (Planned)
+### 📋 v3.0 Save Games + Elevation (Phases 9–10)
 
-*(No phases defined yet — run `/gsd:new-milestone` to plan v3.0)*
+- [ ] **Phase 9: Native Addon Fix + Elevation Foundation** — gamebryo-savegame compiles on Linux CI; pkexec elevation functional with socket-before-spawn ordering
+- [ ] **Phase 10: Save UI Validation + SteamOS + Polkit** — Save game manager end-to-end on Linux for Skyrim SE and Fallout 4; SteamOS elevation path; .deb polkit action file
+
+## Phase Details
+
+### Phase 9: Native Addon Fix + Elevation Foundation
+**Goal**: The gamebryo-savegame native addon compiles and loads on Linux CI, and runElevated() no longer fails on Linux
+**Depends on**: Phase 8 (v2.0 complete)
+**Requirements**: SAVE-01, ELEV-01
+**Success Criteria** (what must be TRUE):
+  1. `gamebryo-savegame.node` loads on Linux CI without linker errors — `@electron/rebuild` output shows success and `ldd` confirms lz4/zlib resolve to system libraries
+  2. `pnpm install` applies the gamebryo-savegame patch without warnings; the package is pinned to an exact version in package.json
+  3. `runElevated()` on Linux spawns pkexec without crashing; user pressing Cancel returns `UserCanceled` error (no hang, no silent failure)
+  4. Socket-before-spawn ordering is enforced — injectable spawner seam in CI tests produces no `ECONNREFUSED` errors
+**Plans**: 2 plans
+Plans:
+- [ ] 09-01-PLAN.md — gamebryo-savegame pnpm patch + CI apt + deb depends
+- [ ] 09-02-PLAN.md — pkexec Linux branch + spawner seam + Vitest tests
+
+### Phase 10: Save UI Validation + SteamOS + Polkit
+**Goal**: Save game manager works end-to-end for Skyrim SE and Fallout 4 on Linux, profile-scoped saves work correctly, and elevation is safe on Steam Deck
+**Depends on**: Phase 9
+**Requirements**: SAVE-02, SAVE-03, SAVE-04, ELEV-02, ELEV-03
+**Success Criteria** (what must be TRUE):
+  1. Skyrim SE save game list displays character name, level, location, timestamp, and screenshot thumbnail on Linux — saves read from Wine prefix path, not ~/Documents
+  2. Fallout 4 save game list displays the same fields on Linux with the same correct Wine prefix path
+  3. Profile-scoped saves are associated with the active Vortex mod profile on Linux — `SLocalSavePath` INI patching writes to the correct Wine prefix path
+  4. On SteamOS/Steam Deck, a failed elevation attempt shows an actionable notification rather than a hung or crashed UI
+  5. `.deb` package installs `io.nexusmods.vortex.policy` polkit action file — Vortex elevation requests show a branded dialog on desktop Linux
+**Plans**: 2 plans
+Plans:
+- [ ] 09-01-PLAN.md — gamebryo-savegame pnpm patch + CI apt + deb depends
+- [ ] 09-02-PLAN.md — pkexec Linux branch + spawner seam + Vitest tests
 
 ## Progress
 
@@ -44,3 +76,5 @@
 | 6. Steam/Proton Detection | v2.0 | 3/3 | Complete | 2026-04-01 |
 | 7. Linux Packaging | v2.0 | 2/2 | Complete | 2026-04-01 |
 | 8. NXM Protocol Handler | v2.0 | 2/2 | Complete | 2026-04-01 |
+| 9. Native Addon Fix + Elevation Foundation | v3.0 | 0/2 | Planned | - |
+| 10. Save UI Validation + SteamOS + Polkit | v3.0 | 0/? | Not started | - |
