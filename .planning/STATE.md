@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Usable on Linux
 status: verifying
-stopped_at: Completed 06-03-PLAN.md — STAM-05 verified
-last_updated: "2026-04-01T00:09:42.071Z"
+stopped_at: Completed 07-01-PLAN.md
+last_updated: "2026-04-01T00:42:37.205Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 3
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  completed_phases: 2
+  total_plans: 5
+  completed_plans: 5
   percent: 0
 ---
 
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** `pnpm run start` works on Linux without crashing — a developer can launch and use Vortex on a Linux machine
-**Current focus:** Phase 06 — steam-proton-detection
+**Current focus:** Phase 07 — linux-packaging
 
 ## Current Position
 
-Phase: 7
-Plan: Not started
+Phase: 07 (linux-packaging) — EXECUTING
+Plan: 2 of 2
 Status: Phase complete — ready for verification
 Last activity: 2026-04-01
 
@@ -56,6 +56,8 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 06-steam-proton-detection P02 | 15 | 2 tasks | 4 files |
 | Phase 06-steam-proton-detection P03 | 5 | 1 tasks | 1 files |
 | Phase 06-steam-proton-detection P03 | 20min | 2 tasks | 5 files |
+| Phase 07-linux-packaging P02 | 5 | 1 tasks | 1 files |
+| Phase 07-linux-packaging P01 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -99,6 +101,10 @@ Recent decisions affecting current work:
 - [Phase 06-steam-proton-detection]: steamPaths.ts: ~/.steam/root symlink resolved first; all roots read VDF for secondary library discovery
 - [Phase 06-steam-proton-detection]: GameStoreHelper.ts: result.priority guard removed — Steam entries on Linux never set priority
 - [Phase 06-steam-proton-detection]: transferPath.ts: win32-only guard removed from testPathTransfer(); diskusage.check() uses destination path on Linux
+- [Phase 07-linux-packaging]: build-linux is a parallel sibling job (no needs:) — runs concurrently with Windows build
+- [Phase 07-linux-packaging]: pnpm run package:nosign reused for Linux — electron-builder ignores Windows signing config on Linux automatically
+- [Phase 07-linux-packaging]: linux.artifactName mirrors nsis.artifactName: vortex-setup-${version}.${ext}
+- [Phase 07-linux-packaging]: Auto-updater gate: process.env.APPIMAGE only — zip/deb installs get managed (no updater)
 
 ### Research Context (v2.0)
 
@@ -122,6 +128,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-01T00:03:12.833Z
-Stopped at: Completed 06-03-PLAN.md — STAM-05 verified
+Last session: 2026-04-01T00:42:37.200Z
+Stopped at: Completed 07-01-PLAN.md
 Resume file: None

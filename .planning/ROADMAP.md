@@ -21,7 +21,7 @@
 ### v2.0 Usable on Linux
 
 - [ ] **Phase 6: Steam/Proton Detection** — Validate and complete Steam/Proton game detection on Linux; fix `{mygames}` Wine prefix path; audit top-4 game extensions
-- [ ] **Phase 7: Linux Packaging** — Produce AppImage and .deb artifacts via electron-builder; add Linux CI job; generate auto-updater manifest
+- [x] **Phase 7: Linux Packaging** — Produce AppImage and .deb artifacts via electron-builder; add Linux CI job; generate auto-updater manifest (completed 2026-04-01)
 - [ ] **Phase 8: NXM Protocol Handler** — Wire and validate NXM "Download with Manager" on standard Linux and SteamOS/KDE Plasma
 
 ## Phase Details
@@ -53,8 +53,8 @@ Plans:
   4. The in-app auto-updater checks for Linux updates only when running from an AppImage (`process.env.APPIMAGE` is set)
 **Plans**: 2 plans
 Plans:
-- [ ] 07-01-PLAN.md — electron-builder AppImage + deb config and auto-updater gate
-- [ ] 07-02-PLAN.md — Parallel build-linux CI job in package.yml
+- [x] 07-01-PLAN.md — electron-builder AppImage + deb config and auto-updater gate
+- [x] 07-02-PLAN.md — Parallel build-linux CI job in package.yml
 
 ### Phase 8: NXM Protocol Handler
 **Goal**: Clicking "Download with Manager" on Nexus Mods opens Vortex and starts the download — in both dev and AppImage builds, on standard Linux and SteamOS/KDE Plasma
@@ -77,5 +77,5 @@ Plans:
 | 4. FOMOD Installer Integration | v1.0 | 2/2 | Complete | 2026-03-31 |
 | 5. IPC and Elevation Audit | v1.0 | 2/2 | Complete | 2026-03-31 |
 | 6. Steam/Proton Detection | v2.0 | 0/3 | Planned | - |
-| 7. Linux Packaging | v2.0 | 0/2 | Planned | - |
+| 7. Linux Packaging | v2.0 | 2/2 | Complete   | 2026-04-01 |
 | 8. NXM Protocol Handler | v2.0 | 0/? | Not started | - |
