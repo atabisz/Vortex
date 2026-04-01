@@ -65,7 +65,10 @@ Plans:
   2. Clicking "Download with Manager" while Vortex is closed launches Vortex and begins the download after the Redux store is ready — the NXM URL is not silently dropped
   3. The NXM protocol handler is registered and functional when running from a packaged AppImage build (`.desktop` file written to `~/.local/share/applications/`)
   4. NXM handler is confirmed working in SteamOS Desktop Mode (KDE Plasma); Steam Browser behavior documented or deferred to v3.0 if hardware is unavailable
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 08-01-PLAN.md — AppImage desktop entry + KDE kbuildsycoca6 refresh for NXM handler
+- [ ] 08-02-PLAN.md — Cold-start NXM URL buffer in Application.ts
 
 ## Progress
 
@@ -78,4 +81,4 @@ Plans:
 | 5. IPC and Elevation Audit | v1.0 | 2/2 | Complete | 2026-03-31 |
 | 6. Steam/Proton Detection | v2.0 | 0/3 | Planned | - |
 | 7. Linux Packaging | v2.0 | 2/2 | Complete   | 2026-04-01 |
-| 8. NXM Protocol Handler | v2.0 | 0/? | Not started | - |
+| 8. NXM Protocol Handler | v2.0 | 0/2 | Planned | - |

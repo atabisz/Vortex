@@ -11,6 +11,8 @@
 <a href="https://www.facebook.com/nexussites/"><img src="https://img.shields.io/badge/Facebook-1877F2?style=for-the-badge&logo=facebook&logoColor=white" alt="Facebook"></a>
 </p>
 
+> **This is an unofficial community fork** adding Linux support to Vortex. The upstream project ([Nexus-Mods/Vortex](https://github.com/Nexus-Mods/Vortex)) is Windows-only. Linux beta builds (AppImage + deb) are published as releases on this fork. For installation instructions see the [Releases](../../releases) page.
+
 ## Introduction
 
 Vortex is the current mod manager from Nexus Mods. It is designed to make modding your game as simple as possible for new users, while still providing enough control for more experienced veterans of the modding scene.

@@ -1,0 +1,68 @@
+name: Release Linux (AppImage + deb)
+
+# Runs on this fork only (master branch). Not intended for upstream.
+# Triggered by pushing a version tag, e.g.: git tag v1.0.0-linux-beta && git push --tags
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-22.04
+    env:
+      DEBUG: electron-builder
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Install Linux build dependencies
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev cmake liblz4-dev
+
+      - name: Read Node.js version from package.json
+        id: node-version
+        run: |
+          NODE_VERSION=$(node -e "console.log(require('./package.json').engines.node)")
+          echo "NODE_VERSION=$NODE_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.node-version.outputs.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build AppImage and deb
+        run: pnpm run package:nosign
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./dist/vortex-setup-*.AppImage
+            ./dist/vortex_*_amd64.deb
+            ./dist/latest-linux.yml
+          prerelease: true
+          draft: false
+          name: "Linux Beta ${{ github.ref_name }}"
+          body: |
+            Linux beta release built from the [Vortex Linux port fork](https://github.com/${{ github.repository }}).
+
+            **Installation:**
+            - **AppImage** (recommended): Download, `chmod +x`, run. Ubuntu 22.04+ users: `sudo apt install libfuse2` first.
+            - **.deb**: `sudo dpkg -i vortex_*_amd64.deb` (Debian/Ubuntu only)
+
+            This is a community port — not an official Nexus Mods release.
