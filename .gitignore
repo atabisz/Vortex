@@ -43,6 +43,9 @@ build/
 !build/linux/
 !build/linux/**
 bld/
+
+# DuckDB extension build output
+src/main/build/duckdb-extensions/
 [Oo]bj/
 lib/cpp/loot/loot/
 lib/cpp/loot/loot_api/docs/
@@ -75,6 +78,12 @@ nul
 
 # PAI memory files
 MEMORY/
+
+# Sewer's LLM artifacts
+PROMPT-*.md
+
+# Sewer's local reviews
+.vscode/local-reviews/
 
 # playright stuff
 playwright/playwright-report/
