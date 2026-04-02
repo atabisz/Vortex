@@ -1879,7 +1879,10 @@ export function updateToken(
     ),
   )
     .then(() => getUserInfo(api, nexus)) // update userinfo as we've set some new nexus credentials, either by launch, login or token refresh
-    .then(() => true)
+    .then(() => {
+      api.events.emit("did-login", null);
+      return BluebirdPromise.resolve(true);
+    })
     .catch((err) => {
       api.showErrorNotification("Authentication failed, please log in again", err, {
         allowReport: false,
