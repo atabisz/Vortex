@@ -4,27 +4,31 @@
  */
 
 import type { IModRequirements } from "@nexusmods/nexus-api";
-import { getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
 
-import { setModAttribute } from "../../../actions";
 import type { IExtensionApi } from "../../../types/IExtensionContext";
 import type { IHealthCheckResult } from "../../../types/IHealthCheck";
-import { HealthCheckSeverity } from "../../../types/IHealthCheck";
-import { getGame, nexusGameId, renderModName } from "../../../util/api";
-import { log } from "../../../util/log";
-import { getSafe } from "../../../util/storeHelper";
-import { batchDispatch } from "../../../util/util";
 import type { IMod } from "../../mod_management/types/IMod";
-import { isLoggedIn } from "../../nexus_integration/selectors";
-import { numericGameIdToDomainName } from "../../nexus_integration/util";
-import { makeModUID } from "../../nexus_integration/util/UIDs";
-import { activeProfile } from "../../profile_management/selectors";
 import type {
   IModRequirementsCheckMetadata,
   IModMissingRequirements,
   IModRequirementsCheckParams,
-  IModRequirementExt,
 } from "../types";
+
+import { setModAttribute } from "../../../actions";
+import { HealthCheckSeverity } from "../../../types/IHealthCheck";
+import {
+  getGame,
+  nexusGameId,
+  renderModName,
+} from "../../../util/api";
+import { log } from "../../../util/log";
+import { getSafe } from "../../../util/storeHelper";
+import { batchDispatch } from "../../../util/util";
+import { getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
+import { isLoggedIn } from "../../nexus_integration/selectors";
+import { numericGameIdToDomainName } from "../../nexus_integration/util";
+import { makeModUID } from "../../nexus_integration/util/UIDs";
+import { activeProfile } from "../../profile_management/selectors";
 import { getModFilesWithCache } from "../util";
 
 export const MOD_REQUIREMENTS_CHECK_ID = "check-nexus-mod-requirements";
@@ -57,10 +61,15 @@ function createResult(
 /**
  * Build human-readable details string from mod issues
  */
-function buildDetailsString(modsWithIssues: IModMissingRequirements[], errors: string[]): string {
+function buildDetailsString(
+  modsWithIssues: IModMissingRequirements[],
+  errors: string[],
+): string {
   const parts: string[] = [];
 
-  const modsWithMissingMods = modsWithIssues.filter((m) => m.missingMods.length > 0);
+  const modsWithMissingMods = modsWithIssues.filter(
+    (m) => m.missingMods.length > 0,
+  );
   if (modsWithMissingMods.length > 0) {
     parts.push("=== Missing Mod Requirements ===");
     for (const modEntry of modsWithMissingMods) {
@@ -72,7 +81,9 @@ function buildDetailsString(modsWithIssues: IModMissingRequirements[], errors: s
     parts.push("");
   }
 
-  const modsWithDlc = modsWithIssues.filter((m) => m.dlcRequirements.length > 0);
+  const modsWithDlc = modsWithIssues.filter(
+    (m) => m.dlcRequirements.length > 0,
+  );
   if (modsWithDlc.length > 0) {
     parts.push("=== DLC Requirements (Please Verify) ===");
     for (const modEntry of modsWithDlc) {
@@ -122,12 +133,22 @@ export async function checkModRequirements(
     const profile = activeProfile(state);
 
     if (!profile) {
-      return createResult(startTime, "passed", HealthCheckSeverity.Info, "No active profile");
+      return createResult(
+        startTime,
+        "passed",
+        HealthCheckSeverity.Info,
+        "No active profile",
+      );
     }
 
     const gameId = profile.gameId;
     if (!gameId) {
-      return createResult(startTime, "passed", HealthCheckSeverity.Info, "No game selected");
+      return createResult(
+        startTime,
+        "passed",
+        HealthCheckSeverity.Info,
+        "No game selected",
+      );
     }
 
     if (!isLoggedIn(state)) {
@@ -141,7 +162,10 @@ export async function checkModRequirements(
 
     const useCachedOnly = params?.cachedOnly === true;
 
-    const enabledMods = getEnabledMods(api, gameId).filter(
+    const allEnabledMods = getEnabledMods(api, gameId);
+
+    // Mods whose requirements we check: user-installed Nexus mods only
+    const checkableMods = allEnabledMods.filter(
       (mod: IMod) =>
         mod.type !== "collection" &&
         !mod.attributes?.installedAsDependency &&
@@ -149,15 +173,22 @@ export async function checkModRequirements(
         mod.attributes?.source === "nexus",
     );
 
-    if (enabledMods.length === 0) {
-      return createResult(startTime, "passed", HealthCheckSeverity.Info, "No Nexus mods installed");
+    if (checkableMods.length === 0) {
+      return createResult(
+        startTime,
+        "passed",
+        HealthCheckSeverity.Info,
+        "No Nexus mods installed",
+      );
     }
 
-    // Build lookup structures for O(1) access
+    // Build lookup structures from ALL enabled mods so that mods installed
+    // as dependencies (e.g. via collections) are recognized as satisfying
+    // requirements.
     const installedModIds = new Set<number>();
     const modsByNexusId = new Map<number, IMod>();
 
-    for (const mod of enabledMods) {
+    for (const mod of allEnabledMods) {
       const nexusModId = mod.attributes?.modId;
       if (nexusModId) {
         installedModIds.add(nexusModId);
@@ -174,8 +205,8 @@ export async function checkModRequirements(
       errors: [],
     };
 
-    const modLimit = params?.limit ?? enabledMods.length;
-    const modsToCheck = enabledMods.slice(0, modLimit);
+    const modLimit = params?.limit ?? checkableMods.length;
+    const modsToCheck = checkableMods.slice(0, modLimit);
 
     // Build a map of requirements: first from cache, then fetch missing ones
     const requirementsMap: {
@@ -213,19 +244,26 @@ export async function checkModRequirements(
           throw new Error("Nexus API not available");
         }
 
-        const fetchedRequirements = await nexusGetModRequirements(gameId, modsNeedingFetch);
+        const fetchedRequirements = await nexusGetModRequirements(
+          gameId,
+          modsNeedingFetch,
+        );
 
         if (fetchedRequirements) {
           const cacheActions: ReturnType<typeof setModAttribute>[] = [];
 
-          for (const [modIdStr, requirements] of Object.entries(fetchedRequirements)) {
+          for (const [modIdStr, requirements] of Object.entries(
+            fetchedRequirements,
+          )) {
             const modId = parseInt(modIdStr, 10);
             requirementsMap[modId] = requirements;
             metadata.modsFetched++;
 
             const mod = modsByNexusId.get(modId);
             if (mod && requirements) {
-              cacheActions.push(setModAttribute(gameId, mod.id, "requirements", requirements));
+              cacheActions.push(
+                setModAttribute(gameId, mod.id, "requirements", requirements),
+              );
             }
           }
 
@@ -237,7 +275,9 @@ export async function checkModRequirements(
         log("warn", "Failed to fetch mod requirements", {
           error: (err as Error).message,
         });
-        metadata.errors.push(`Failed to fetch requirements: ${(err as Error).message}`);
+        metadata.errors.push(
+          `Failed to fetch requirements: ${(err as Error).message}`,
+        );
       }
     }
 
@@ -246,7 +286,6 @@ export async function checkModRequirements(
       const modId = mod.attributes?.modId;
       if (!modId) continue;
       const gameId = mod.attributes.downloadGame;
-      if (!gameId) continue;
 
       // Get Nexus domain name for the requiring mod
       const game = getGame(gameId);
@@ -284,69 +323,59 @@ export async function checkModRequirements(
 
       // Check Nexus mod requirements
       if (requirements.nexusRequirements?.nodes) {
-        const requiredBy: IModRequirementExt["requiredBy"] = {
-          modId,
-          modName: getModName(),
-          modUrl: requiringModNexusDomain
-            ? `https://www.nexusmods.com/${requiringModNexusDomain}/mods/${modId}`
-            : undefined,
-        };
-
         for (const req of requirements.nexusRequirements.nodes) {
-          // External requirements (e.g. tools from GitHub) don't have valid
-          // Nexus mod IDs — report them as missing but skip the API lookup
-          if (req.externalRequirement) {
-            getModEntry().missingMods.push({
-              ...req,
-              modId: 0,
-              gameId,
-              uid: `external-${req.id}`,
-              requiredBy,
-              modUrl: req.url,
-            });
-            continue;
-          }
-
           const requiredModId = parseInt(req.modId, 10);
-          if (isNaN(requiredModId) || requiredModId <= 0) {
-            continue;
-          }
-
-          if (installedModIds.has(requiredModId)) {
-            continue;
-          }
-
-          const requiredGameId = req.gameId ? parseInt(req.gameId, 10) : undefined;
+          const requiredGameId = req.gameId
+            ? parseInt(req.gameId, 10)
+            : undefined;
           const domainName =
-            requiredGameId != null ? numericGameIdToDomainName(requiredGameId) : gameId;
+            requiredGameId != null
+              ? numericGameIdToDomainName(requiredGameId)
+              : gameId;
+          // Fallback for gameId if domain name not found (to satisfy type contract)
           const gameIdForStorage = domainName ?? gameId;
 
-          // Only show items for mods with exactly one main file
-          try {
-            const mainFiles = await getModFilesWithCache(api, gameIdForStorage, requiredModId);
-            if (mainFiles.length !== 1) {
+          if (!installedModIds.has(requiredModId)) {
+            // Only show items for mods with exactly one main file
+            try {
+              const mainFiles = await getModFilesWithCache(
+                api,
+                gameIdForStorage,
+                requiredModId,
+              );
+              if (mainFiles.length !== 1) {
+                continue;
+              }
+            } catch {
+              // If we can't fetch files, skip this requirement
               continue;
             }
-          } catch {
-            continue;
-          }
 
-          getModEntry().missingMods.push({
-            ...req,
-            modId: requiredModId,
-            gameId: gameIdForStorage,
-            uid: makeModUID({
-              modId: req.modId,
-              fileId: "0",
+            getModEntry().missingMods.push({
+              ...req,
+              modId: requiredModId,
               gameId: gameIdForStorage,
-            }),
-            requiredBy,
-            modUrl:
-              (req.url && req.url.trim()) ||
-              (domainName
-                ? `https://www.nexusmods.com/${domainName}/mods/${requiredModId}`
-                : undefined),
-          });
+              uid: makeModUID({
+                modId: req.modId,
+                fileId: "0",
+                gameId: gameIdForStorage,
+              }),
+              requiredBy: {
+                modId,
+                modName: getModName(),
+                // The nexus mods URL of the mod that requires this dependency
+                modUrl: requiringModNexusDomain
+                  ? `https://www.nexusmods.com/${requiringModNexusDomain}/mods/${modId}`
+                  : undefined,
+              },
+              // The URL of the required dependency mod
+              modUrl:
+                (req.url && req.url.trim()) ||
+                (domainName
+                  ? `https://www.nexusmods.com/${domainName}/mods/${requiredModId}`
+                  : undefined),
+            });
+          }
         }
       }
 
@@ -364,7 +393,10 @@ export async function checkModRequirements(
 
     // Count totals
     const modsWithIssues = Object.values(metadata.modRequirements);
-    const totalMissingMods = modsWithIssues.reduce((sum, m) => sum + m.missingMods.length, 0);
+    const totalMissingMods = modsWithIssues.reduce(
+      (sum, m) => sum + m.missingMods.length,
+      0,
+    );
     const totalDlcRequirements = modsWithIssues.reduce(
       (sum, m) => sum + m.dlcRequirements.length,
       0,
@@ -382,7 +414,10 @@ export async function checkModRequirements(
     }
 
     const details = buildDetailsString(modsWithIssues, metadata.errors);
-    const severity = totalMissingMods > 0 ? HealthCheckSeverity.Warning : HealthCheckSeverity.Info;
+    const severity =
+      totalMissingMods > 0
+        ? HealthCheckSeverity.Warning
+        : HealthCheckSeverity.Info;
     const status = totalMissingMods > 0 ? "warning" : "passed";
 
     return createResult(
@@ -393,7 +428,11 @@ export async function checkModRequirements(
       { details, metadata },
     );
   } catch (error) {
-    log("error", "Failed to check Nexus mod requirements", unknownToError(error));
+    log(
+      "error",
+      "Failed to check Nexus mod requirements",
+      unknownToError(error),
+    );
     return createResult(
       startTime,
       "error",
