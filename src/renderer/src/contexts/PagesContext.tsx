@@ -18,7 +18,31 @@ import {
   activeProfileId as activeProfileIdSelector,
   mainPage as mainPageSelector,
 } from "../util/selectors";
-import { builtInPages } from "./builtInPages";
+import { GameSettings } from "../views/GameSettings";
+import { Settings } from "../views/Settings";
+
+const gameSettingsPage: IMainPage = {
+  priority: 80,
+  id: "game_settings",
+  title: "Preferences",
+  group: "per-game",
+  isModernOnly: true,
+  component: GameSettings,
+  icon: "tune",
+  propsFunc: () => undefined,
+  visible: () => true,
+};
+
+const settingsPage: IMainPage = {
+  priority: 30,
+  id: "application_settings",
+  title: "Settings",
+  group: "global",
+  component: Settings,
+  icon: "settings",
+  propsFunc: () => undefined,
+  visible: () => true,
+};
 
 export interface IPagesContext {
   mainPages: IMainPage[];
@@ -59,7 +83,7 @@ export const PagesProvider: FC<IPagesProviderProps> = ({ children }) => {
 
   const sortedPages = useMemo(
     () =>
-      [...mainPages, ...builtInPages]
+      [...mainPages, settingsPage, gameSettingsPage]
         .filter((page) => {
           if (useModernLayout && page.isClassicOnly) return false;
           if (!useModernLayout && page.isModernOnly) return false;
