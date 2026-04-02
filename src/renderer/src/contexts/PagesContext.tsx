@@ -8,16 +8,41 @@ import React, {
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { setOpenMainPage } from "../actions/session";
-import { useMainPages } from "../hooks/useMainPages";
 import type { IMainPage } from "../types/IMainPage";
 import type { IState } from "../types/IState";
+
+import { setOpenMainPage } from "../actions/session";
+import { useMainPages } from "../hooks/useMainPages";
 import {
   activeGameId as activeGameIdSelector,
   activeProfileId as activeProfileIdSelector,
   mainPage as mainPageSelector,
 } from "../util/selectors";
-import { builtInPages } from "./builtInPages";
+import { GameSettings } from "../views/GameSettings";
+import { Settings } from "../views/Settings";
+
+const gameSettingsPage: IMainPage = {
+  priority: 80,
+  id: "game_settings",
+  title: "Preferences",
+  group: "per-game",
+  isModernOnly: true,
+  component: GameSettings,
+  icon: "tune",
+  propsFunc: () => undefined,
+  visible: () => true,
+};
+
+const settingsPage: IMainPage = {
+  priority: 30,
+  id: "application_settings",
+  title: "Settings",
+  group: "global",
+  component: Settings,
+  icon: "settings",
+  propsFunc: () => undefined,
+  visible: () => true,
+};
 
 export interface IPagesContext {
   mainPages: IMainPage[];
@@ -49,12 +74,16 @@ export const PagesProvider: FC<IPagesProviderProps> = ({ children }) => {
   const mainPage = useSelector(mainPageSelector);
   const activeProfileId = useSelector(activeProfileIdSelector);
   const activeGameId = useSelector(activeGameIdSelector);
-  const useModernLayout = useSelector((state: IState) => state.settings.window.useModernLayout);
-  const profilesVisible = useSelector((state: IState) => state.settings.interface.profilesVisible);
+  const useModernLayout = useSelector(
+    (state: IState) => state.settings.window.useModernLayout,
+  );
+  const profilesVisible = useSelector(
+    (state: IState) => state.settings.interface.profilesVisible,
+  );
 
   const sortedPages = useMemo(
     () =>
-      [...mainPages, ...builtInPages]
+      [...mainPages, settingsPage, gameSettingsPage]
         .filter((page) => {
           if (useModernLayout && page.isClassicOnly) return false;
           if (!useModernLayout && page.isModernOnly) return false;
@@ -100,7 +129,11 @@ export const PagesProvider: FC<IPagesProviderProps> = ({ children }) => {
     [sortedPages, mainPage],
   );
 
-  return <PagesContext.Provider value={contextValue}>{children}</PagesContext.Provider>;
+  return (
+    <PagesContext.Provider value={contextValue}>
+      {children}
+    </PagesContext.Provider>
+  );
 };
 
 export const PagesConsumer = PagesContext.Consumer;
