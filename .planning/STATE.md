@@ -151,9 +151,10 @@ None.
 | 260401-oz3 | case-folding path resolver in LinkingDeployment for Linux | 2026-04-01 | 32a9b021b | [260401-oz3-case-folding-path-resolver-in-linkingdep](./quick/260401-oz3-case-folding-path-resolver-in-linkingdep/) |
 | 260401-scf | FOMOD case-sensitivity in InstallManager.extractArchive | 2026-04-01 | 6e56ba5bf | [260401-scf-fix-fomod-case-sensitivity-error-in-inst](./quick/260401-scf-fix-fomod-case-sensitivity-error-in-inst/) |
 | 260402-1b1 | Wine-era deployment manifest detection in loadActivation | 2026-04-02 | 5b2420f | [260402-1b1-implement-wine-era-deployment-manifest-d](./quick/260402-1b1-implement-wine-era-deployment-manifest-d/) |
+| 260402-iko | fix hardlink undeploy orphan when manifest missing | 2026-04-02 | ca5fffb | [260402-iko-fix-hardlink-undeploy-orphan-when-manife](./quick/260402-iko-fix-hardlink-undeploy-orphan-when-manife/) |
 
 ## Session Continuity
 
-Last session: 2026-04-02T00:00:00Z
-Stopped at: Completed quick task 260402-1b1: Wine-era deployment manifest detection in loadActivation
+Last session: 2026-04-02T03:15:00Z
+Stopped at: Completed quick task 260402-iko: fix hardlink undeploy orphan when manifest missing
 Resume file: None
