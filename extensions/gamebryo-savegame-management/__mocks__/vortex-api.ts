@@ -1,5 +1,6 @@
 import { vi } from "vitest";
 import * as path from "node:path";
+import { setSafe, deleteOrNop } from "../../../src/renderer/src/util/storeHelper";
 
 // Mock GameStoreHelper — getSteamEntry calls util.GameStoreHelper.getGameStore("steam")
 // Tests will override allGames() return values via vi.fn()
@@ -24,6 +25,8 @@ export const mockGetVortexPath = vi.fn((key: string) => {
 export const mockDiscoveryByGame = vi.fn().mockReturnValue(undefined);
 
 export const util = {
+  setSafe,
+  deleteOrNop,
   GameStoreHelper: mockGameStoreHelper,
   getVortexPath: mockGetVortexPath,
   makeOverlayableDictionary: vi.fn((
