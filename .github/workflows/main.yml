@@ -102,7 +102,7 @@ jobs:
 
   api:
     needs: build
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    if: github.repository == 'Nexus-Mods/Vortex' && github.ref == 'refs/heads/master' && github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
