@@ -1,57 +1,93 @@
-<p align="center">
-  <img src=".github/assets/github_readme_title.png" alt="Vortex Mod Manager title banner"/>
-</p>
+# Vortex Linux Port
 
-<p align="center">  
-<a href="https://discord.gg/nexusmods"><img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
-<a href="https://twitter.com/nexussites"><img src="https://img.shields.io/badge/twitter-000000?style=for-the-badge&logo=x&logoColor=white" alt="X (formally Twitter)"></a>
-<a href="https://www.youtube.com/c/NexusModsYT"><img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube"></a>
-<a href="https://www.instagram.com/nexusmodsofficial/"><img src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram"></a>
-<a href="https://www.reddit.com/r/nexusmods/"><img src="https://img.shields.io/badge/Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white" alt="Reddit"></a>
-<a href="https://www.facebook.com/nexussites/"><img src="https://img.shields.io/badge/Facebook-1877F2?style=for-the-badge&logo=facebook&logoColor=white" alt="Facebook"></a>
-</p>
+> **This is an unofficial community fork.** The official project is [Nexus-Mods/Vortex](https://github.com/Nexus-Mods/Vortex) — maintained by Nexus Mods, Windows-only, and where you should report bugs if you're on Windows. This fork exists solely to get Vortex running on Linux. Go there for general support, feature requests, and all non-Linux issues.
 
-## Introduction
+Linux builds (AppImage + .deb) are published as [releases on this fork](../../releases).
 
-Vortex is the current mod manager from Nexus Mods. It is designed to make modding your game as simple as possible for new users, while still providing enough control for more experienced veterans of the modding scene.
+---
 
-Our approach with Vortex aims to take complex tasks such as sorting your load order or managing your mod files and automate as much of the process as possible with the goal of having you achieve a stable modded game with minimal effort. We want to help you spend less time modding and more time playing your games.
+## Personal Note
 
-## Features
+I created this Linux port so I could manage mods for Skyrim and Fallout 4 on my Linux machine. I hope the work here proves useful to the Vortex team and can eventually land as an upstream PR.
 
-* **Multi-game Support** - with mod support for over 250 different games and counting, Vortex is the most versatile mod manager available. This includes games such as [Skyrim](https://www.nexusmods.com/skyrimspecialedition), [Fallout 3](https://www.nexusmods.com/fallout3), [Fallout 4](https://www.nexusmods.com/fallout4), [Fallout: New Vegas](https://www.nexusmods.com/newvegas/), [Cyberpunk 2077](https://www.nexusmods.com/cyberpunk2077/), [Baldur's Gate 3](https://www.nexusmods.com/baldursgate3/), [Starfield](https://www.nexusmods.com/starfield/), [Stardew Valley](https://www.nexusmods.com/stardewvalley/), [Bannerlord](https://www.nexusmods.com/mountandblade2bannerlord), [Witcher 3](https://www.nexusmods.com/witcher3), [Elden Ring](https://www.nexusmods.com/eldenring), [The Sims 4](https://www.nexusmods.com/thesims4), [Monster Hunter: World](https://www.nexusmods.com/monsterhunterworld), [Oblivion](https://www.nexusmods.com/oblivion), [Palworld](https://www.nexusmods.com/palworld), [Blade & Sorcery](https://www.nexusmods.com/bladeandsorcery), [Valheim](https://www.nexusmods.com/valheim), [Hogwarts Legacy](https://www.nexusmods.com/hogwartslegacy/), [7 Days to Die](https://www.nexusmods.com/7daystodie/). 
+---
 
-* **Close integration with Nexus Mods** - Vortex is designed to seamlessly interact with Nexus Mods, allowing you to easily find, install, and play mods from our site, learn about new files and catch the latest news.
+## What Works
 
-* **Modding made easy** - The built-in auto-sorting system manages your load order and helps you to resolve mod conflicts with powerful, yet easy to use plugin management features.
+**As of v2.0 (shipped 2026-04-01) — with post-release fixes through April 2026:**
 
-* **Mod Profiles** - Easily set up, switch between, and manage independent mod profiles, enabling you to use exactly the combination of mods that you want for a particular playthrough.
+- **Launches on Linux** — `pnpm run start` works on Linux without crashing; all native addons (bsatk, esptk, loot, vortexmt, xxhash-addon, bsdiff-node) compile and load
+- **FOMOD installer** — C#/.NET FOMOD installers work via native Linux binaries (no Wine dependency)
+- **Steam/Proton game detection** — Multi-root VDF scanning (native Steam + Flatpak), Proton prefix resolution, never-launched game detection via `oslist`, and correct `{mygames}` Wine path resolution (`compatdata/<appid>/pfx/drive_c/users/steamuser/Documents/My Games`)
+- **Top game extensions work**: Skyrim SE, Fallout 4, Cyberpunk 2077, Stardew Valley all confirmed working on Linux with Proton
+- **NXM "Download with Manager"** — Clicking download links on Nexus Mods triggers Vortex on GNOME and KDE Plasma in both dev and AppImage builds; KDE Plasma's `kbuildsycoca6` database refresh wired in
+  - NXM settings toggle enabled on Linux (previously incorrectly hidden)
+  - Second-instance lock fixed to use correct app path on Linux
+  - Download bugs in dev mode (`argv` slice + `--no-sandbox` propagation) fixed
+  - Firefox `handlers.json` NXM entry cleared on registration to avoid stale handler conflicts
+- **Packaged distributions** — AppImage and `.deb` built by CI and published alongside Windows artifacts; auto-updater available for AppImage installs
+- **winapi-bindings shim** — All 21 Windows registry/UAC import sites shimmed at bundle time; no source edits to Windows code
+- **Hardlink mod deployment** — Turbowalk entries enriched with `lstat` on Linux so the hardlink purge correctly detects and removes dead links; staging scan uses sync callback + promise queue to avoid async race on Linux
+- **Path normalisation** — Backslash-in-filename paths produced by archive extraction normalised to forward slashes on Linux
+- **XDG paths** — `@vortex/fs` XDG path constants (config, data, cache, state) integrated into the Linux port for correct platform-native directory resolution
 
-* **Modern, Easy-to-use UI** - Featuring a fully customisable interface, Vortex allows you to quickly and easily access tools and manage your games, plugins, downloads and save games.
+## What Doesn't Work
 
-* **Extensions and Plugins** - Vortex is released under a GPL-3.0 License, giving our community the ability to write extensions and frameworks which can then interact with Vortex, continually adding to its functionality.
+| Feature | Status | Notes |
+|---|---|---|
+| Save game management (Skyrim SE, Fallout 4) | Broken | `gamebryo-savegame` native addon has MSVC exception constructors + lz4/zlib linker issues; disabled on Linux with a clear error |
+| Elevated privilege operations | Degraded | `pkexec` + Unix socket elevation not yet implemented; user-triggered elevation calls fail gracefully; startup path confirmed clean |
+| NXM via Steam Browser overlay (Steam Deck) | Unknown | WebKit-based overlay `xdg-open` behavior undocumented; requires hardware + Nexus Mods web team coordination |
+| AppImage delta auto-updates on SteamOS | Not implemented | `electron-updater` behavior on SteamOS immutable filesystem needs validation |
+| GOG / itch.io / Heroic Launcher games | Not supported | Steam/Proton only for now |
+| Steam Deck Flatpak distribution | Not packaged | AppImage works in Desktop Mode; Flatpak `~/.steam` sandbox restrictions need validation first |
 
-## Getting Started
+## Roadmap
 
-To get started, Vortex can be downloaded from [Nexus Mods](https://www.nexusmods.com/site/mods/1?tab=files) or from [GitHub](https://github.com/Nexus-Mods/Vortex/releases/latest). After the installer has been downloaded, just run it and follow the instructions.
+### v3.0 — Save Games + Elevation (planning)
 
-Additional information on Vortex and guides can be found in the [Vortex Wiki](https://github.com/Nexus-Mods/Vortex/wiki).
+- Fix `gamebryo-savegame` native addon compilation on Linux (MSVC exception constructors + lz4/zlib linker flags)
+- Save game manager UI working end-to-end for Skyrim SE and Fallout 4 on Linux
+- `pkexec` + Unix domain socket elevation for operations that require root (mod deployment, symlink creation)
+- Elevation path for Steam Deck / SteamOS without a polkit password
 
-## Resources
+### v4.0+ (deferred)
 
-- [Download Vortex](https://www.nexusmods.com/site/mods/1?tab=files) from Nexus Mods
-- [GitHub](https://github.com/Nexus-Mods/Vortex) for source code, issues, and pull requests.
-- [Vortex Forum](https://forums.nexusmods.com/index.php?/forum/4306-vortex-support/) or [Discord](https://discord.gg/nexusmods) for support and discussions with the community and the team.
-- [Vortex Wiki](https://github.com/Nexus-Mods/Vortex/wiki) for knowledge base, articles and troubleshooting
+- GOG, itch.io, Heroic Launcher game detection
+- NXM handler via Steam Browser overlay on Steam Deck
+- AppImage delta auto-update on SteamOS
+- Steam Deck Flatpak distribution
 
-## Contributing
+## Installing
 
-The majority of Vortex code is open-source. We are committed to a transparent development process and highly appreciate any contributions. Whether you are helping us fix bugs, proposing new features, improving our documentation or spreading the word - we would love to have you as a part of the Vortex community.
+| Package | Download |
+|---|---|
+| AppImage (recommended) | [vortex-setup.AppImage](https://github.com/atabisz/Vortex/releases/latest/download/vortex-setup.AppImage) |
+| Debian/Ubuntu .deb | [vortex_amd64.deb](https://github.com/atabisz/Vortex/releases/latest/download/vortex_amd64.deb) |
 
-- Bug Report: If you see an error message or encounter an issue while using our application, please create a [bug report](https://github.com/Nexus-Mods/Vortex/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=).
-- Feature Request: If you have an idea or if there is a capability that is missing and would make development easier and more robust, please submit a [feature request](https://github.com/Nexus-Mods/Vortex/issues/new?assignees=&labels=&projects=&template=feature_request.md&title=).
-- Review Extension: If you're creating a game extension and need us to review it, please submit a [review extension](https://github.com/Nexus-Mods/Vortex/issues/new?assignees=&labels=extension+%3Agear%3A&projects=&template=review-extension.yaml&title=Review%3A+Game+Name) request.
+**AppImage:**
+```sh
+chmod +x vortex-setup.AppImage
+./vortex-setup.AppImage
+```
+> Ubuntu 22.04+ users: `sudo apt install libfuse2` first.
 
-## License
+**Debian/Ubuntu (.deb):**
+```sh
+sudo apt install ./vortex_amd64.deb
+```
 
-This project is licensed under the [GPL-3.0](https://github.com/Nexus-Mods/Vortex/blob/master/LICENSE.md) license.
+## Building from Source
+
+```sh
+volta install node@22
+pnpm install
+pnpm run build
+pnpm run start
+```
+
+See [AGENTS.md](AGENTS.md) for the full dev setup.
+
+## Upstream Project
+
+All credit for Vortex belongs to the Nexus Mods team and contributors at [Nexus-Mods/Vortex](https://github.com/Nexus-Mods/Vortex).
