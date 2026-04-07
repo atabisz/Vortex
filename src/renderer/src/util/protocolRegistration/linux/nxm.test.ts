@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe as _describe, expect, it, vi } from "vitest";
+const describe = _describe.skipIf(process.platform !== "linux");
 
 import {
   deregisterLinuxNxmProtocolHandler,

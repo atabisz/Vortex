@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe as _describe, it, expect, vi, beforeEach } from "vitest";
+const describe = _describe.skipIf(process.platform !== "linux");
 
 vi.mock("../fs", () => ({
   statAsync: vi.fn(),
