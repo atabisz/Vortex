@@ -124,8 +124,8 @@ import StyleManager from "./StyleManager";
 import { createRendererTelemetryProvider } from "./telemetry/setup";
 import { GameEntryNotFound } from "./types/IGameStore";
 import { relaunch } from "./util/commandLine";
-import { ProcessCanceled, UserCanceled } from "./util/CustomErrors";
 import { _setNotifier } from "./util/elevated";
+import { ProcessCanceled, UserCanceled } from "./util/CustomErrors";
 import {
   recordErrorSpan,
   setOutdated,
