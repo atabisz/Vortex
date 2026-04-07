@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-01 after v3.0)
 Phase: —
 Plan: —
 Status: v3.0 milestone complete — archived 2026-04-01
-Last activity: 2026-04-07 - Completed quick task 260407-grv: Fix NXM download bugs in dev mode
+Last activity: 2026-04-07 - Completed quick task 260407-iv0: Patch Firefox profiles with nxm expose pref during Linux NXM registration
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -154,9 +154,11 @@ None.
 | 260402-iko | fix hardlink undeploy orphan when manifest missing | 2026-04-02 | ca5fffb | [260402-iko-fix-hardlink-undeploy-orphan-when-manife](./quick/260402-iko-fix-hardlink-undeploy-orphan-when-manife/) |
 | 260407-grv | Fix NXM download bugs: cli.ts argv slice and no-sandbox propagation | 2026-04-07 | d9986f6 | [260407-grv-fix-nxm-download-bug-cli-ts-argv-slice-a](./quick/260407-grv-fix-nxm-download-bug-cli-ts-argv-slice-a/) |
 | 260407-icu | Remove Linux-disabled guard from NXM toggle in Settings.tsx | 2026-04-07 | b3c474bcc | [260407-icu-remove-the-linux-disabled-guard-from-the](./quick/260407-icu-remove-the-linux-disabled-guard-from-the/) |
+| 260407-iv0 | Patch Firefox profiles with nxm expose pref during Linux NXM registration | 2026-04-07 | 35ba35ccb | [260407-iv0-patch-firefox-profiles-with-nxm-expose-p](./quick/260407-iv0-patch-firefox-profiles-with-nxm-expose-p/) |
+| 260407-h9r | Clear Firefox handlers.json nxm entry on registration | 2026-04-07 | e08518b20 | — |
 
 ## Session Continuity
 
 Last session: 2026-04-07T00:05:00Z
-Stopped at: Completed quick task 260407-icu: Remove Linux-disabled guard from NXM toggle in Settings.tsx
+Stopped at: Completed quick task 260407-h9r: Clear Firefox handlers.json nxm entry on registration
 Resume file: None
