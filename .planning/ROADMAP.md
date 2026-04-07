@@ -84,7 +84,9 @@ Plans:
   2. The transferred save file appears in the destination profile's save list after transfer
   3. The source save file is not modified or deleted by the transfer operation
   4. Transfer works for both Skyrim SE and Fallout 4 on Linux (Wine prefix paths)
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 13-01-PLAN.md — Extend fs.ts case-folding to copy/rename/ensureDir + empty-state transfer UX
 
 ### Phase 14: Linux Case-Folding fs Wrapper
 **Goal**: Eliminate Windows-assumes-case-insensitive bugs without patching individual callsites — wrap vortex-api's fs module with a Linux shim that resolves actual on-disk casing before any `readFile`/`writeFile`/`stat`/`watch` call on game AppData paths
@@ -127,5 +129,5 @@ Plans:
 | 10. Save UI Validation + SteamOS + Polkit | v3.0 | 2/2 | Complete | 2026-04-01 |
 | 11. Persistent Elevation Token | v4.0 | 1/1 | Complete    | 2026-04-07 |
 | 12. Elevation End-to-End Validation + Steam Deck Error UX | v4.0 | 1/1 | Complete    | 2026-04-07 |
-| 13. Save Transfer | v4.0 | 0/TBD | Not started | - |
+| 13. Save Transfer | v4.0 | 0/1 | In progress | - |
 | 14. Linux Case-Folding fs Wrapper | v4.0 | 2/2 | Complete    | 2026-04-07 |
