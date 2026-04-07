@@ -23,7 +23,7 @@ Linux builds (AppImage + .deb) are published as [releases on this fork](../../re
 | Feature | Status | Notes |
 |---|---|---|
 | Save game management (Skyrim SE, Fallout 4) | Broken | `gamebryo-savegame` native addon has MSVC exception constructors + lz4/zlib linker issues; disabled on Linux with a clear error |
-| Elevated privilege operations | Degraded | `pkexec` + Unix socket elevation not yet implemented; user-triggered elevation calls fail gracefully; startup path confirmed clean |
+| Elevated privilege operations | Working (.deb) / Degraded (AppImage) | `.deb` installs a polkit rules file granting session-scoped credential caching (`AUTH_ADMIN_KEEP`) — password prompted once per desktop session. AppImage users are prompted on every elevation call. |
 | NXM via Steam Browser overlay (Steam Deck) | Unknown | WebKit-based overlay `xdg-open` behavior undocumented; requires hardware + Nexus Mods web team coordination |
 | AppImage delta auto-updates on SteamOS | Not implemented | `electron-updater` behavior on SteamOS immutable filesystem needs validation |
 | GOG / itch.io / Heroic Launcher games | Not supported | Steam/Proton only for now |
@@ -31,14 +31,14 @@ Linux builds (AppImage + .deb) are published as [releases on this fork](../../re
 
 ## Roadmap
 
-### v3.0 — Save Games + Elevation (planning)
+### v4.0 — Elevation Hardening + Save Transfer (in progress)
 
-- Fix `gamebryo-savegame` native addon compilation on Linux (MSVC exception constructors + lz4/zlib linker flags)
-- Save game manager UI working end-to-end for Skyrim SE and Fallout 4 on Linux
-- `pkexec` + Unix domain socket elevation for operations that require root (mod deployment, symlink creation)
-- Elevation path for Steam Deck / SteamOS without a polkit password
+- Persistent elevation token via polkit session-scoped rules (.deb only)
+- End-to-end validation of all elevation operations on desktop Linux
+- Steam Deck error UX for missing polkit agent in Game Mode
+- Profile-to-profile save file transfer between Wine prefix paths
 
-### v4.0+ (deferred)
+### Future
 
 - GOG, itch.io, Heroic Launcher game detection
 - NXM handler via Steam Browser overlay on Steam Deck
@@ -63,6 +63,8 @@ chmod +x vortex-setup.AppImage
 ```sh
 sudo apt install ./vortex_amd64.deb
 ```
+
+> **Elevation note (.deb vs AppImage):** The `.deb` package installs a polkit rules file (`/etc/polkit-1/rules.d/10-vortex.rules`) that caches your admin credential for the desktop session. This means elevation operations (mod deployment, symlink creation) only prompt for your password once. AppImage builds do not include this rule — you will be prompted each time Vortex needs elevated privileges.
 
 ## Building from Source
 
