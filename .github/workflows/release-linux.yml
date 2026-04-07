@@ -1,10 +1,13 @@
 name: Release Linux (AppImage + deb)
 
 # Runs on this fork only (master branch). Not intended for upstream.
-# Triggered by pushing a version tag, e.g.: git tag v1.0.0-linux-beta && git push --tags
+# Triggered automatically on every master push (rolling latest-linux release)
+# or manually by pushing a version tag, e.g.: git tag v1.0.0-linux-beta && git push --tags
 
 on:
   push:
+    branches:
+      - master
     tags:
       - "v*"
 
@@ -46,10 +49,36 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Rebuild native addons for Electron
+        run: npx @electron/rebuild -f -v 39.8.0
+
+      # @electron/rebuild doesn't traverse pnpm's isolated store, so it misses loot.
+      # Loot's own postinstall fails during pnpm install because libloot.so is built
+      # by the root postinstall-libloot.cjs which runs after all package postinstalls.
+      # By this step libloot.so exists — rebuild loot explicitly.
+      - name: Rebuild loot addon for Electron
+        run: |
+          LOOT_DIR=$(node -e "process.stdout.write(require('path').dirname(require.resolve('loot/package.json', {paths: ['extensions/gamebryo-plugin-management/node_modules', 'node_modules']})))")
+          echo "Rebuilding loot at: $LOOT_DIR"
+          cd "$LOOT_DIR"
+          npx node-gyp rebuild --target=39.8.0 --arch=x64 --dist-url=https://electronjs.org/headers
+
+      - name: Verify native addons load
+        run: node scripts/verify-addons.cjs
+
       - name: Build AppImage and deb
         run: pnpm run package:nosign
 
-      - name: Create GitHub Release
+      # On master branch pushes, force-move the rolling latest-linux tag to this commit
+      # so the GitHub release always points to the most recent build.
+      - name: Update latest-linux tag
+        if: github.ref_type == 'branch'
+        run: |
+          git tag -f latest-linux
+          git push --force origin latest-linux
+
+      - name: Create GitHub Release (version tag)
+        if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
           files: |
@@ -62,6 +91,30 @@ jobs:
           name: "Linux Beta ${{ github.ref_name }}"
           body: |
             Linux beta release built from the [Vortex Linux port fork](https://github.com/${{ github.repository }}).
+
+            **Installation:**
+            - **AppImage** (recommended): Download, `chmod +x`, run. Ubuntu 22.04+ users: `sudo apt install libfuse2` first.
+            - **.deb**: `sudo dpkg -i vortex_*_amd64.deb` (Debian/Ubuntu only)
+
+            This is a community port — not an official Nexus Mods release.
+
+      - name: Create GitHub Release (master rolling)
+        if: github.ref_type == 'branch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-linux
+          files: |
+            ./dist/vortex-setup.AppImage
+            ./dist/vortex_amd64.deb
+            ./dist/latest-linux.yml
+          prerelease: true
+          draft: false
+          make_latest: false
+          name: "Linux Latest (master)"
+          body: |
+            Rolling Linux build from the latest master commit on the [Vortex Linux port fork](https://github.com/${{ github.repository }}).
+
+            Built from commit: ${{ github.sha }}
 
             **Installation:**
             - **AppImage** (recommended): Download, `chmod +x`, run. Ubuntu 22.04+ users: `sudo apt install libfuse2` first.
