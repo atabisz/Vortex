@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: Elevation Hardening + Save Transfer
-status: Milestone v4.0 started — 2026-04-07
-stopped_at: Phase 12 context gathered
-last_updated: "2026-04-07T21:36:17.151Z"
-last_activity: 2026-04-07
+status: "v4.0 complete — shipped 2026-04-07. Run /gsd-new-milestone to start v5.0."
+stopped_at: null
+last_updated: "2026-04-08T00:00:00.000Z"
+last_activity: 2026-04-08
 progress:
-  total_phases: 5
+  total_phases: 4
   completed_phases: 4
   total_plans: 5
   completed_plans: 5
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-07 after v4.0 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — with elevation operations that work reliably
-**Current focus:** v4.0 — Elevation Hardening + Save Transfer
+**Current focus:** v4.0 shipped — run /gsd-new-milestone to start v5.0
 
 ## Current Position
 
-Phase: 14
-Plan: Not started
-Status: Milestone v4.0 started — 2026-04-07
-Last activity: 2026-04-07
+Phase: —
+Plan: —
+Status: v4.0 complete — shipped 2026-04-07
+Last activity: 2026-04-08
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 

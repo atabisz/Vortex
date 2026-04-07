@@ -6,8 +6,8 @@
 
 **Key accomplishments:**
 
-- One-liner:
-- One-liner:
+- Polkit JS rules file (`10-vortex.rules`) grants `AUTH_ADMIN_KEEP` for `.deb` installs; AppImage deliberately excluded; README documents the difference
+- Injectable `_setNotifier` in `elevated.ts` fires dismissible Steam Deck error notification on sudo -n failure; 21 Vitest tests pass
 - Wine prefix case-folding extended to copyAsync/renameAsync/ensureDirAsync; transfer picker shows italicised empty-state guidance when no eligible profiles exist
 - resolvePathCase promoted to util/, fs.ts transparently resolves Wine prefix path casing for readFileAsync/writeFileAsync/statAsync/watch on Linux
 - PluginPersistor.resolvePluginsFilePath removed; serialize/deserialize use path.join directly; fs.ts shim handles case-folding transparently
