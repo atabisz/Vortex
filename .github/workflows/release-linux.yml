@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       DEBUG: electron-builder
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
     steps:
       - uses: actions/checkout@v4
@@ -34,7 +35,7 @@ jobs:
           echo "NODE_VERSION=$NODE_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
 
       - name: Use Node.js
         uses: actions/setup-node@v4
