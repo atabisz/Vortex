@@ -71,6 +71,12 @@ const config = {
   deb: {
     depends: ["xdg-utils", "libasound2", "liblz4-1", "zlib1g"],
     artifactName: "vortex_amd64.deb",
+    extraFiles: [
+      {
+        from: "../../build/linux/10-vortex.rules",
+        to: "/etc/polkit-1/rules.d/10-vortex.rules",
+      },
+    ],
   },
   extraResources: [
     "./nsis/**/*",
