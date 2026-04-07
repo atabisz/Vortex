@@ -40,7 +40,7 @@
 ### v4.0 Elevation Hardening + Save Transfer
 
 - [x] **Phase 11: Persistent Elevation Token** — Session-scoped polkit rule; no re-prompts within a session (completed 2026-04-07)
-- [ ] **Phase 12: Elevation End-to-End Validation + Steam Deck Error UX** — All desktop Linux elevation operations validated live; Steam Deck failure notification wired
+- [x] **Phase 12: Elevation End-to-End Validation + Steam Deck Error UX** — All desktop Linux elevation operations validated live; Steam Deck failure notification wired (completed 2026-04-07)
 - [ ] **Phase 13: Save Transfer** — Profile-to-profile save file copy between Wine prefix paths
 - [ ] **Phase 14: Linux Case-Folding fs Wrapper** — Shared fs shim resolving on-disk casing before AppData path calls
 
@@ -70,9 +70,9 @@ Plans:
   3. On Steam Deck in Game Mode (no polkit agent), the user sees a notification with a recovery path (e.g. "Switch to Desktop Mode to authorize")
   4. The Steam Deck error notification is dismissible and does not leave Vortex in a broken state
   5. Windows build and CI remain green after all validation fixes applied
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 Plans:
-- [ ] 12-01-PLAN.md — _setNotifier callback in elevated.ts, renderer.tsx wiring, notifier tests, HUMAN-UAT.md
+- [x] 12-01-PLAN.md — _setNotifier callback in elevated.ts, renderer.tsx wiring, notifier tests, HUMAN-UAT.md
 **UI hint**: yes
 
 ### Phase 13: Save Transfer
@@ -99,6 +99,15 @@ Plans:
   5. Windows build compiles and tests pass without modification — shim logic is Linux-only
 **Plans**: TBD
 
+## Backlog
+
+### Phase 999.1: Manual UAT — ELEV-05/ELEV-06 Desktop Linux + Steam Deck Elevation (BACKLOG)
+
+**Goal:** Manually validate Phase 12 elevation UX on real hardware — desktop Linux ELEV-05 checklist (hardlinks, permission repair, session token re-use, fresh session re-prompt) and Steam Deck Game Mode ELEV-06 notification UX. Also confirm Windows CI green via `main.yml` windows-latest matrix push.
+**Context:** Symlink deployment item skipped (not exposed in current UI). Automated Vitest coverage exists for ELEV-06 notifier; this validates end-to-end Electron rendering. Phase 11 polkit rule prerequisite for ELEV-05.
+**Requirements:** ELEV-05, ELEV-06
+**Plans:** 0 plans (promote with /gsd-review-backlog when ready)
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -114,6 +123,6 @@ Plans:
 | 9. Native Addon Fix + Elevation Foundation | v3.0 | 2/2 | Complete | 2026-04-01 |
 | 10. Save UI Validation + SteamOS + Polkit | v3.0 | 2/2 | Complete | 2026-04-01 |
 | 11. Persistent Elevation Token | v4.0 | 1/1 | Complete    | 2026-04-07 |
-| 12. Elevation End-to-End Validation + Steam Deck Error UX | v4.0 | 0/1 | Not started | - |
+| 12. Elevation End-to-End Validation + Steam Deck Error UX | v4.0 | 1/1 | Complete   | 2026-04-07 |
 | 13. Save Transfer | v4.0 | 0/TBD | Not started | - |
 | 14. Linux Case-Folding fs Wrapper | v4.0 | 0/TBD | Not started | - |
