@@ -1670,6 +1670,12 @@ importers:
 
   extensions/gamebryo-savegame-management:
     devDependencies:
+      '@testing-library/jest-dom':
+        specifier: 'catalog:'
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: 'catalog:'
+        version: 12.1.5(@types/react@16.14.69)(react-dom@16.14.0)(react@16.14.0)
       '@types/react':
         specifier: '16'
         version: 16.14.69
@@ -1691,12 +1697,18 @@ importers:
       '@types/redux-thunk':
         specifier: 'catalog:'
         version: 2.1.0(redux@4.2.1)
+      '@vitejs/plugin-react':
+        specifier: 'catalog:'
+        version: 6.0.1(vite@8.0.3)
       bluebird:
         specifier: 'catalog:'
         version: 3.7.2
       copyfiles:
         specifier: 'catalog:'
         version: 2.4.1
+      happy-dom:
+        specifier: 'catalog:'
+        version: 20.8.8
       i18next:
         specifier: 'catalog:'
         version: 19.9.2
@@ -1712,6 +1724,9 @@ importers:
       react:
         specifier: 'catalog:'
         version: 16.14.0
+      react-bootstrap:
+        specifier: 'catalog:'
+        version: 0.33.1(react-dom@16.14.0)(react@16.14.0)
       react-dom:
         specifier: 'catalog:'
         version: 16.14.0(react@16.14.0)
