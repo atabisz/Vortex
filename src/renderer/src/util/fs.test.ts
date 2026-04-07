@@ -13,8 +13,18 @@ vi.mock("fs-extra", async (importOriginal) => {
   const base = (actual.default ?? actual) as Record<string, unknown>;
   return {
     ...base,
+    copy: vi.fn().mockResolvedValue(undefined),
+    rename: vi.fn().mockResolvedValue(undefined),
+    ensureDir: vi.fn().mockResolvedValue(undefined),
+    link: vi.fn().mockResolvedValue(undefined),
+    stat: vi.fn().mockResolvedValue({ ino: 1n }),
     default: {
       ...base,
+      copy: vi.fn().mockResolvedValue(undefined),
+      rename: vi.fn().mockResolvedValue(undefined),
+      ensureDir: vi.fn().mockResolvedValue(undefined),
+      link: vi.fn().mockResolvedValue(undefined),
+      stat: vi.fn().mockResolvedValue({ ino: 1n }),
       readFile: (...args: unknown[]) => {
         if (args.length <= 1 || typeof args[args.length - 1] !== "function") {
           return Promise.resolve(mockData);
@@ -152,6 +162,74 @@ describe("fs.ts Wine prefix case-folding shim", () => {
     it("does NOT call resolvePathCase for non-Wine paths on Linux", async () => {
       setPlatform("linux");
       await fs.statAsync(NORMAL_PATH).catch(() => {});
+      expect(vi.mocked(resolvePathCase)).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("copyAsync", () => {
+    it("calls resolvePathCase for Wine prefix src on Linux", async () => {
+      setPlatform("linux");
+      await fs.copyAsync(WINE_PATH, "/tmp/dest", { noSelfCopy: true }).catch(
+        () => {},
+      );
+      expect(vi.mocked(resolvePathCase)).toHaveBeenCalled();
+    });
+
+    it("does NOT call resolvePathCase for non-Wine src on Linux", async () => {
+      setPlatform("linux");
+      await fs.copyAsync(NORMAL_PATH, "/tmp/dest", { noSelfCopy: true }).catch(
+        () => {},
+      );
+      expect(vi.mocked(resolvePathCase)).not.toHaveBeenCalled();
+    });
+
+    it("does NOT call resolvePathCase on Windows", async () => {
+      setPlatform("win32");
+      await fs.copyAsync(WINE_PATH, "/tmp/dest", { noSelfCopy: true }).catch(
+        () => {},
+      );
+      expect(vi.mocked(resolvePathCase)).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("renameAsync", () => {
+    it("calls resolvePathCase for Wine prefix sourcePath on Linux", async () => {
+      setPlatform("linux");
+      await fs.renameAsync(WINE_PATH, "/tmp/dest").catch(() => {});
+      expect(vi.mocked(resolvePathCase)).toHaveBeenCalled();
+    });
+
+    it("does NOT call resolvePathCase for non-Wine sourcePath on Linux", async () => {
+      setPlatform("linux");
+      await fs.renameAsync(NORMAL_PATH, "/tmp/dest").catch(() => {});
+      expect(vi.mocked(resolvePathCase)).not.toHaveBeenCalled();
+    });
+
+    it("does NOT call resolvePathCase on Windows", async () => {
+      setPlatform("win32");
+      await fs.renameAsync(WINE_PATH, "/tmp/dest").catch(() => {});
+      expect(vi.mocked(resolvePathCase)).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("ensureDirAsync", () => {
+    it("calls resolvePathCase for Wine prefix dirPath on Linux", async () => {
+      setPlatform("linux");
+      await fs
+        .ensureDirAsync(WINE_PATH)
+        .catch(() => {});
+      expect(vi.mocked(resolvePathCase)).toHaveBeenCalled();
+    });
+
+    it("does NOT call resolvePathCase for non-Wine dirPath on Linux", async () => {
+      setPlatform("linux");
+      await fs.ensureDirAsync(NORMAL_PATH).catch(() => {});
+      expect(vi.mocked(resolvePathCase)).not.toHaveBeenCalled();
+    });
+
+    it("does NOT call resolvePathCase on Windows", async () => {
+      setPlatform("win32");
+      await fs.ensureDirAsync(WINE_PATH).catch(() => {});
       expect(vi.mocked(resolvePathCase)).not.toHaveBeenCalled();
     });
   });
