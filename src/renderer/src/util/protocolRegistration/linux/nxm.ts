@@ -136,6 +136,48 @@ export function findFirefoxProfileDirs(): string[] {
 }
 
 /**
+ * Remove the `nxm` scheme entry from Firefox's handlers.json if present.
+ *
+ * Firefox checks handlers.json before about:config prefs. An existing entry
+ * (even with no configured app) overrides `network.protocol-handler.expose.nxm`
+ * and prevents Firefox from routing nxm:// through xdg-desktop-portal.
+ * Removing the entry lets the user.js pref take effect.
+ *
+ * Returns true if handlers.json was modified.
+ */
+export function clearFirefoxNxmHandlersEntry(profileDir: string): boolean {
+  const handlersPath = path.join(profileDir, "handlers.json");
+
+  let raw: string;
+  try {
+    raw = fs.readFileSync(handlersPath, { encoding: "utf8" });
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      return false;
+    }
+    throw err;
+  }
+
+  let data: Record<string, unknown>;
+  try {
+    data = JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    return false;
+  }
+
+  const schemes = data["schemes"] as Record<string, unknown> | undefined;
+  if (!schemes || !(NXM_PROTOCOL in schemes)) {
+    return false;
+  }
+
+  delete schemes[NXM_PROTOCOL];
+  fs.outputFileSync(handlersPath, JSON.stringify(data, null, 2), {
+    encoding: "utf8",
+  });
+  return true;
+}
+
+/**
  * Append `network.protocol-handler.expose.nxm = false` to Firefox user.js
  * if not already present. Returns true if the file was modified.
  */
@@ -205,21 +247,26 @@ export function registerLinuxNxmProtocolHandler(
 
   const firefoxProfileDirs = findFirefoxProfileDirs();
   let patchedCount = 0;
+  let clearedCount = 0;
   for (const profileDir of firefoxProfileDirs) {
     try {
+      if (clearFirefoxNxmHandlersEntry(profileDir)) {
+        clearedCount++;
+      }
       if (ensureFirefoxNxmUserPref(profileDir)) {
         patchedCount++;
       }
     } catch (err) {
-      log("warn", "failed to patch firefox user.js", {
+      log("warn", "failed to patch firefox profile for nxm", {
         profileDir,
         error: (err as Error).message,
       });
     }
   }
   if (firefoxProfileDirs.length > 0) {
-    log("info", "patched firefox user.js for nxm expose pref", {
-      patched: patchedCount,
+    log("info", "patched firefox profiles for nxm routing", {
+      userJsPatched: patchedCount,
+      handlersCleared: clearedCount,
       total: firefoxProfileDirs.length,
     });
   }
