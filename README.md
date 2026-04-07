@@ -8,7 +8,7 @@ Linux builds (AppImage + .deb) are published as [releases on this fork](../../re
 
 ## What Works
 
-**As of v2.0 (shipped 2026-04-01):**
+**As of v4.0 (shipped 2026-04-07):**
 
 - **Launches on Linux** — `pnpm run start` works on Linux without crashing; all native addons (bsatk, esptk, loot, vortexmt, xxhash-addon, bsdiff-node) compile and load
 - **FOMOD installer** — C#/.NET FOMOD installers work via native Linux binaries (no Wine dependency)
@@ -17,13 +17,17 @@ Linux builds (AppImage + .deb) are published as [releases on this fork](../../re
 - **NXM "Download with Manager"** — Clicking download links on Nexus Mods triggers Vortex on GNOME and KDE Plasma in both dev and AppImage builds; KDE Plasma's `kbuildsycoca6` database refresh wired in
 - **Packaged distributions** — AppImage and `.deb` built by CI and published alongside Windows artifacts; auto-updater available for AppImage installs
 - **winapi-bindings shim** — All 21 Windows registry/UAC import sites shimmed at bundle time; no source edits to Windows code
+- **Persistent session elevation token (.deb)** — The `.deb` package installs a polkit rules file granting `AUTH_ADMIN_KEEP`; elevation operations (mod deployment, symlink creation) prompt for your password once per desktop session rather than once per operation
+- **Steam Deck error UX** — When Vortex runs in Steam Deck Game Mode where no polkit agent is available, a clear notification tells the user to switch to Desktop Mode; Vortex remains functional after dismissal
+- **Save file transfer** — Save files can be transferred between Vortex profiles for Skyrim SE and Fallout 4 across Wine prefix paths using the save manager UI
+- **Linux case-folding fs wrapper** — A shared fs shim resolves actual on-disk casing for Wine prefix AppData paths before file operations, fixing `Plugins.txt`/`plugins.txt` mismatches and similar Windows-assumes-case-insensitive bugs
 
 ## What Doesn't Work
 
 | Feature | Status | Notes |
 |---|---|---|
-| Save game management (Skyrim SE, Fallout 4) | Broken | `gamebryo-savegame` native addon has MSVC exception constructors + lz4/zlib linker issues; disabled on Linux with a clear error |
-| Elevated privilege operations | Working (.deb) / Degraded (AppImage) | `.deb` installs a polkit rules file granting session-scoped credential caching (`AUTH_ADMIN_KEEP`) — password prompted once per desktop session. AppImage users are prompted on every elevation call. |
+| Save game viewer/parser (Skyrim SE, Fallout 4) | Broken | `gamebryo-savegame` native addon has MSVC exception constructors + lz4/zlib linker issues; disabled on Linux with a clear error. Save *transfer* between profiles works — see What Works above. |
+| Elevated privilege operations (AppImage) | Degraded | AppImage builds do not include the polkit rules file — users are prompted on every elevation call. Install the `.deb` for session-scoped credential caching. |
 | NXM via Steam Browser overlay (Steam Deck) | Unknown | WebKit-based overlay `xdg-open` behavior undocumented; requires hardware + Nexus Mods web team coordination |
 | AppImage delta auto-updates on SteamOS | Not implemented | `electron-updater` behavior on SteamOS immutable filesystem needs validation |
 | GOG / itch.io / Heroic Launcher games | Not supported | Steam/Proton only for now |
@@ -31,12 +35,13 @@ Linux builds (AppImage + .deb) are published as [releases on this fork](../../re
 
 ## Roadmap
 
-### v4.0 — Elevation Hardening + Save Transfer (in progress)
+### v4.0 — Elevation Hardening + Save Transfer (shipped 2026-04-07)
 
 - Persistent elevation token via polkit session-scoped rules (.deb only)
 - End-to-end validation of all elevation operations on desktop Linux
 - Steam Deck error UX for missing polkit agent in Game Mode
 - Profile-to-profile save file transfer between Wine prefix paths
+- Linux case-folding fs wrapper for Wine prefix AppData paths
 
 ### Future
 
