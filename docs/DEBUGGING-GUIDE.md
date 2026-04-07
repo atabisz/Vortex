@@ -50,7 +50,7 @@ VS Code debug configurations are defined in `.vscode/launch.json`. The default *
 
 **Important Notes:**
 
-- Always run `pnpm run build` before debugging to ensure source maps are current
+- Always run `pnpm run build:all` before debugging to ensure source maps are current
 - If breakpoints aren't hitting, check that `out/` directory has recent files
 - The renderer attach profile needs a running Electron instance with `--remote-debugging-port=9222` (provided by the main-process profiles or `pnpm run start`)
 
@@ -416,11 +416,11 @@ Sometimes issues only occur in production builds. Here's how to debug them.
 ### Build Production (Unsigned)
 
 ```bash
-# Build without code signing (faster)
-pnpm run package:nosign
+# Creates installer without code signing (faster)
+pnpm run package:local
 ```
 
-This creates an installer in `dist/` directory.
+This downloads required redistributables and creates an unsigned installer in `dist/` directory.
 
 ### Enable Source Maps
 

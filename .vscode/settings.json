@@ -8,5 +8,6 @@
   "tailwindCSS.experimental.configFile": "./src/stylesheets/tailwind-v4.css",
   "oxc.fmt.configPath": ".oxfmtrc.json",
   "editor.defaultFormatter": "oxc.oxc-vscode",
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "dotnet.defaultSolution": "disable"
 }

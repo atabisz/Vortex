@@ -29,7 +29,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install volta, Node.js and Yarn
-        uses: volta-cli/action@v4
+        uses: volta-cli/action@v5
 
       - name: Install pnpm
         uses: pnpm/action-setup@v5
@@ -47,7 +47,7 @@ jobs:
       # cmake and liblz4-dev required for native addon compilation on Linux
       - name: Install Linux build dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev cmake liblz4-dev
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev cmake liblz4-dev zlib1g-dev
 
       # Rust toolchain required by libloot 0.29.1 (rewritten in Rust at 0.25+)
       # Must run before "Install dependencies" because postinstall-libloot.cjs
@@ -64,6 +64,18 @@ jobs:
       - name: Rebuild native addons for Electron
         if: runner.os == 'Linux'
         run: npx @electron/rebuild -f -v 39.8.0
+
+      # @electron/rebuild doesn't traverse pnpm's isolated store, so it misses loot.
+      # Loot's own postinstall fails during pnpm install because libloot.so is built
+      # by the root postinstall-libloot.cjs which runs after all package postinstalls.
+      # By this step libloot.so exists — rebuild loot explicitly.
+      - name: Rebuild loot addon for Electron
+        if: runner.os == 'Linux'
+        run: |
+          LOOT_DIR=$(node -e "process.stdout.write(require('path').dirname(require.resolve('loot/package.json', {paths: ['extensions/gamebryo-plugin-management/node_modules', 'node_modules']})))")
+          echo "Rebuilding loot at: $LOOT_DIR"
+          cd "$LOOT_DIR"
+          npx node-gyp rebuild --target=39.8.0 --arch=x64 --dist-url=https://electronjs.org/headers
 
       - name: Verify native addons load
         if: runner.os == 'Linux'
@@ -90,7 +102,7 @@ jobs:
 
   api:
     needs: build
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    if: github.repository == 'Nexus-Mods/Vortex' && github.ref == 'refs/heads/master' && github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -104,7 +116,7 @@ jobs:
           name: api-artifacts
 
       - name: Install volta, Node.js
-        uses: volta-cli/action@v4
+        uses: volta-cli/action@v5
 
       - name: Install pnpm
         uses: pnpm/action-setup@v5

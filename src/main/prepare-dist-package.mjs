@@ -171,6 +171,7 @@ async function createMinimalPackageJson(workspacePackageMap, catalog) {
     author: "Black Tree Gaming Ltd.",
     description:
       "The elegant, powerful, and open-source mod manager from Nexus Mods",
+    homepage: "https://www.nexusmods.com/site/mods/1",
     license: "GPL-3.0",
     type: mainPkg.type,
     packageManager: rootPkg.packageManager,
@@ -239,7 +240,11 @@ async function preparePNPM(rawWorkspaceYaml) {
   const overrides = extractOverridesBlock(rawWorkspaceYaml);
 
   const minimalYaml =
-    (overrides ? overrides + "\n" : "") + catalog + "\n" + allowBuilds + "\n";
+    (overrides ? overrides + "\n" : "") +
+    catalog +
+    "\n" +
+    allowBuilds +
+    "\n";
 
   await writeFile(resolve(DIST_DIR, "pnpm-workspace.yaml"), minimalYaml);
   console.log("✔  Created dist/pnpm-workspace.yaml");

@@ -1,12 +1,54 @@
 import { getErrorCode, getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
+import { spawn } from "child_process";
+import type { ChildProcess } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import * as tmp from "tmp";
 
 import { getIPCPath } from "./ipc";
 import * as winapi from "winapi-bindings";
+import { UserCanceled } from "./CustomErrors";
 
 import { getRealNodeModulePaths } from "./webpack-hacks";
+
+type SpawnerFn = (cmd: string, args: string[]) => ChildProcess;
+let _spawner: SpawnerFn = spawn;
+
+/** @internal Override the spawn function for testing. Do not call in production. */
+export function _setSpawner(fn: SpawnerFn): void {
+  _spawner = fn;
+}
+
+function getSpawner(): SpawnerFn {
+  return _spawner;
+}
+
+let _isSteamOS: boolean | undefined;
+
+/**
+ * Detect SteamOS via /etc/os-release.
+ * Returns true when ID=steamos or ID_LIKE contains steamos.
+ * Result is cached after the first call.
+ */
+export function isSteamOS(): boolean {
+  if (_isSteamOS !== undefined) {
+    return _isSteamOS;
+  }
+  try {
+    const content = fs.readFileSync("/etc/os-release", "utf8");
+    _isSteamOS =
+      /^ID=steamos$/im.test(content) ||
+      /^ID_LIKE=.*steamos.*$/im.test(content);
+  } catch {
+    _isSteamOS = false;
+  }
+  return _isSteamOS;
+}
+
+/** @internal Reset the cached SteamOS detection result. Do not call in production. */
+export function _resetSteamOSCache(): void {
+  _isSteamOS = undefined;
+}
 
 declare const __non_webpack_require__: NodeJS.Require;
 
@@ -169,6 +211,59 @@ export function runElevated(
             if (errCode !== "EBADF") {
               return reject(err);
             }
+          }
+
+          if (process.platform === "linux") {
+            if (isSteamOS()) {
+              // SteamOS: pkexec hangs without polkit agent in Game Mode.
+              // Attempt sudo -n (non-interactive) instead.
+              const proc = getSpawner()("sudo", [
+                "-n",
+                process.execPath,
+                "--run",
+                tmpPath,
+              ]);
+              proc.on("close", (code: number | null) => {
+                if (code !== null && code !== 0) {
+                  // sudo -n failed (password required or ENOENT)
+                  const err = new UserCanceled();
+                  (err as any).message =
+                    "Elevation is not available in Steam Game Mode. " +
+                    "Switch to Desktop Mode to perform this operation.";
+                  reject(err);
+                }
+                // code 0 or null: normal exit; IPC handles results
+              });
+              proc.on("error", (_spawnErr: Error) => {
+                // sudo not found on PATH
+                const err = new UserCanceled();
+                (err as any).message =
+                  "Elevation is not available in Steam Game Mode. " +
+                  "Switch to Desktop Mode to perform this operation.";
+                reject(err);
+              });
+            } else {
+              // Standard desktop Linux: use pkexec (unchanged from Phase 9)
+              const proc = getSpawner()("pkexec", [
+                process.execPath,
+                "--run",
+                tmpPath,
+              ]);
+              proc.on("close", (code: number | null) => {
+                if (code === 126) {
+                  reject(new UserCanceled());
+                } else if (code !== null && code !== 0) {
+                  reject(
+                    new Error(`pkexec exited with code ${code}`),
+                  );
+                }
+                // code 0 or null: normal exit; IPC handles results
+              });
+              proc.on("error", (spawnErr: Error) => {
+                reject(spawnErr);
+              });
+            }
+            return resolve(tmpPath);
           }
 
           try {
