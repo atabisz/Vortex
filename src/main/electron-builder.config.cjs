@@ -66,15 +66,12 @@ const config = {
         from: "../../build/linux/io.nexusmods.vortex.policy",
         to: "/usr/share/polkit-1/actions/io.nexusmods.vortex.policy",
       },
-      {
-        from: "../../build/linux/10-vortex.rules",
-        to: "/etc/polkit-1/rules.d/10-vortex.rules",
-      },
     ],
   },
   deb: {
     depends: ["xdg-utils", "libasound2", "liblz4-1", "zlib1g"],
     artifactName: "vortex_amd64.deb",
+    afterInstall: "../../build/linux/deb-postinstall.sh",
   },
   extraResources: [
     "./nsis/**/*",
