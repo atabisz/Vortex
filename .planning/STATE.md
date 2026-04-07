@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-01 after v3.0)
 Phase: —
 Plan: —
 Status: v3.0 milestone complete — archived 2026-04-01
-Last activity: 2026-04-01 - Completed quick task 260401-scf: Fix FOMOD case-sensitivity error in InstallManager.extractArchive
+Last activity: 2026-04-07 - Completed quick task 260407-grv: Fix NXM download bugs in dev mode
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -152,6 +152,7 @@ None.
 | 260401-scf | FOMOD case-sensitivity in InstallManager.extractArchive | 2026-04-01 | 6e56ba5bf | [260401-scf-fix-fomod-case-sensitivity-error-in-inst](./quick/260401-scf-fix-fomod-case-sensitivity-error-in-inst/) |
 | 260402-1b1 | Wine-era deployment manifest detection in loadActivation | 2026-04-02 | 5b2420f | [260402-1b1-implement-wine-era-deployment-manifest-d](./quick/260402-1b1-implement-wine-era-deployment-manifest-d/) |
 | 260402-iko | fix hardlink undeploy orphan when manifest missing | 2026-04-02 | ca5fffb | [260402-iko-fix-hardlink-undeploy-orphan-when-manife](./quick/260402-iko-fix-hardlink-undeploy-orphan-when-manife/) |
+| 260407-grv | Fix NXM download bugs: cli.ts argv slice and no-sandbox propagation | 2026-04-07 | d9986f6 | [260407-grv-fix-nxm-download-bug-cli-ts-argv-slice-a](./quick/260407-grv-fix-nxm-download-bug-cli-ts-argv-slice-a/) |
 
 ## Session Continuity
 
