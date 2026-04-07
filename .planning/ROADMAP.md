@@ -123,6 +123,6 @@ Plans:
 | 9. Native Addon Fix + Elevation Foundation | v3.0 | 2/2 | Complete | 2026-04-01 |
 | 10. Save UI Validation + SteamOS + Polkit | v3.0 | 2/2 | Complete | 2026-04-01 |
 | 11. Persistent Elevation Token | v4.0 | 1/1 | Complete    | 2026-04-07 |
-| 12. Elevation End-to-End Validation + Steam Deck Error UX | v4.0 | 1/1 | Complete   | 2026-04-07 |
+| 12. Elevation End-to-End Validation + Steam Deck Error UX | v4.0 | 1/1 | Complete    | 2026-04-07 |
 | 13. Save Transfer | v4.0 | 0/TBD | Not started | - |
 | 14. Linux Case-Folding fs Wrapper | v4.0 | 0/TBD | Not started | - |
