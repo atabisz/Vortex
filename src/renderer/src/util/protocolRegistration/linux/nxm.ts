@@ -171,14 +171,27 @@ function generateWrapperScript(
     "unset LD_LIBRARY_PATH\n" +
     "unset LD_PRELOAD\n" +
     (electronEnvExports ? electronEnvExports + "\n" : "") +
-    // Only pass --download when a parameter %u is provided (nxm:// links from browser).
-    // This matches Windows behaviour, which includes --download on all protocol handler calls,
-    // but does not on non-handler calls (e.g., when starting from the start menu).
-    `if [ -n "$1" ]; then\n` +
-    `  exec "${escapeShellScriptArgument(executablePath)}" "${escapeShellScriptArgument(appPath)}" --download "$@"\n` +
-    `else\n` +
-    `  exec "${escapeShellScriptArgument(executablePath)}" "${escapeShellScriptArgument(appPath)}"\n` +
-    `fi\n`
+    // Propagate --no-sandbox if the current process was launched with it.
+    // Required in environments where Electron cannot use the sandbox (Docker, VMs,
+    // restricted kernels). Without this, the child Electron process launched by the
+    // wrapper script will crash before requestSingleInstanceLock() runs.
+    (() => {
+      const noSandboxFlag = process.argv.includes("--no-sandbox")
+        ? " --no-sandbox"
+        : "";
+      const escapedExec = escapeShellScriptArgument(executablePath);
+      const escapedApp = escapeShellScriptArgument(appPath);
+      // Only pass --download when a parameter %u is provided (nxm:// links from browser).
+      // This matches Windows behaviour, which includes --download on all protocol handler calls,
+      // but does not on non-handler calls (e.g., when starting from the start menu).
+      return (
+        `if [ -n "$1" ]; then\n` +
+        `  exec "${escapedExec}" "${escapedApp}"${noSandboxFlag} --download "$@"\n` +
+        `else\n` +
+        `  exec "${escapedExec}" "${escapedApp}"${noSandboxFlag}\n` +
+        `fi\n`
+      );
+    })()
   );
 }
 
