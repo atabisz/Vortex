@@ -5,6 +5,7 @@
 - ✅ **v1.0 Linux Port Phase 1** — Phases 1–5 (shipped 2026-03-31) — [archive](milestones/v1.0-ROADMAP.md)
 - ✅ **v2.0 Usable on Linux** — Phases 6–8 (shipped 2026-04-01) — [archive](milestones/v2.0-ROADMAP.md)
 - ✅ **v3.0 Save Games + Elevation** — Phases 9–10 (shipped 2026-04-01) — [archive](milestones/v3.0-ROADMAP.md)
+- 🔄 **v4.0 Elevation Hardening + Save Transfer** — Phases 11–13 (in progress)
 
 ## Phases
 
@@ -36,6 +37,52 @@
 
 </details>
 
+### v4.0 Elevation Hardening + Save Transfer
+
+- [ ] **Phase 11: Persistent Elevation Token** — Session-scoped polkit rule; no re-prompts within a session
+- [ ] **Phase 12: Elevation End-to-End Validation + Steam Deck Error UX** — All desktop Linux elevation operations validated live; Steam Deck failure notification wired
+- [ ] **Phase 13: Save Transfer** — Profile-to-profile save file copy between Wine prefix paths
+
+## Phase Details
+
+### Phase 11: Persistent Elevation Token
+**Goal**: Users can perform repeated elevation operations in a session without being prompted more than once
+**Depends on**: Phase 10 (polkit action file + pkexec foundation from v3.0)
+**Requirements**: ELEV-04
+**Success Criteria** (what must be TRUE):
+  1. User triggers an elevation operation (e.g. mod deploy) and enters their password once
+  2. User triggers a second elevation operation in the same session without being re-prompted
+  3. The polkit session rule file is installed at the correct path and grants auth_admin_keep for Vortex's action
+  4. A new session (fresh Vortex launch) prompts for the password again — the token does not persist across sessions
+  5. Windows build compiles and tests pass without modification — polkit rule logic is Linux-only
+**Plans:** 1 plan
+Plans:
+- [ ] 11-01-PLAN.md — Polkit rules file, .deb packaging, and README documentation
+
+### Phase 12: Elevation End-to-End Validation + Steam Deck Error UX
+**Goal**: All user-triggered elevation operations work reliably on desktop Linux; Steam Deck users see a clear, actionable failure notification when elevation is unavailable
+**Depends on**: Phase 11 (persistent token in place for full path validation)
+**Requirements**: ELEV-05, ELEV-06
+**Success Criteria** (what must be TRUE):
+  1. Mod deployment completes successfully on desktop Linux (Gnome/KDE) with ELEV-04 token active
+  2. Symlink creation and permission fix operations complete without crashing or hanging on desktop Linux
+  3. On Steam Deck in Game Mode (no polkit agent), the user sees a notification with a recovery path (e.g. "Switch to Desktop Mode to authorize")
+  4. The Steam Deck error notification is dismissible and does not leave Vortex in a broken state
+  5. Windows build and CI remain green after all validation fixes applied
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 13: Save Transfer
+**Goal**: Users can transfer saves between Vortex profiles on Linux using the existing save manager UI
+**Depends on**: Phase 10 (mygamesPath() async with Proton branch, from v3.0)
+**Requirements**: SAVE-05
+**Success Criteria** (what must be TRUE):
+  1. User can select a save in the save manager and transfer it to another active Vortex profile
+  2. The transferred save file appears in the destination profile's save list after transfer
+  3. The source save file is not modified or deleted by the transfer operation
+  4. Transfer works for both Skyrim SE and Fallout 4 on Linux (Wine prefix paths)
+**Plans**: TBD
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -50,3 +97,6 @@
 | 8. NXM Protocol Handler | v2.0 | 2/2 | Complete | 2026-04-01 |
 | 9. Native Addon Fix + Elevation Foundation | v3.0 | 2/2 | Complete | 2026-04-01 |
 | 10. Save UI Validation + SteamOS + Polkit | v3.0 | 2/2 | Complete | 2026-04-01 |
+| 11. Persistent Elevation Token | v4.0 | 0/1 | Planning | - |
+| 12. Elevation End-to-End Validation + Steam Deck Error UX | v4.0 | 0/TBD | Not started | - |
+| 13. Save Transfer | v4.0 | 0/TBD | Not started | - |

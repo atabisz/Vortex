@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v3.0
-milestone_name: Save Games + Elevation
-status: complete
-stopped_at: "Milestone v3.0 archived — planning next milestone"
-last_updated: "2026-04-01T06:16:01.781Z"
-last_activity: 2026-04-01
+milestone: v4.0
+milestone_name: Elevation Hardening + Save Transfer
+status: defining_requirements
+stopped_at: ""
+last_updated: "2026-04-07T00:00:00.000Z"
+last_activity: 2026-04-07
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
   percent: 0
 ---
 
@@ -18,16 +18,16 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-01 after v3.0)
+See: .planning/PROJECT.md (updated 2026-04-07 after v4.0 milestone start)
 
-**Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games
-**Current focus:** Planning next milestone (v4.0)
+**Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — with elevation operations that work reliably
+**Current focus:** v4.0 — Elevation Hardening + Save Transfer
 
 ## Current Position
 
-Phase: —
+Phase: Not started (defining requirements)
 Plan: —
-Status: v3.0 milestone complete — archived 2026-04-01
+Status: Milestone v4.0 started — 2026-04-07
 Last activity: 2026-04-07 - Completed quick task 260407-iv0: Patch Firefox profiles with nxm expose pref during Linux NXM registration
 
 Progress: [░░░░░░░░░░] 0%

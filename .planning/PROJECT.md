@@ -1,4 +1,14 @@
-# Vortex Linux Support — v3.0 Complete
+# Vortex Linux Support — v4.0 In Progress
+
+## Current Milestone: v4.0 Elevation Hardening + Save Transfer
+
+**Goal:** Close the README "Degraded" status on elevation — validate the v3.0 pkexec/polkit implementation end-to-end, fix gaps discovered in live testing, implement persistent polkit session token, and deliver save profile transfer.
+
+**Target features:**
+- ELEV-04: Persistent polkit session token — no re-prompts within a session
+- ELEV-05: End-to-end elevation validation — all user-triggered privilege operations work on desktop Linux
+- ELEV-06: Steam Deck elevation failure path — actionable error notification with recovery path
+- SAVE-05: Save transfer between Vortex profiles on Linux
 
 ## Current State
 
@@ -50,12 +60,17 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 - ✓ **ELEV-02**: `isSteamOS()` detection + `sudo -n` fallback in `runElevated()`; graceful `UserCanceled` on failure — v3.0
 - ✓ **ELEV-03**: `io.nexusmods.vortex.policy` polkit action file shipped in .deb at `/usr/share/polkit-1/actions/` — v3.0
 
-### Deferred (v4.0)
+### Active (v4.0)
+
+- [ ] **ELEV-04**: Persistent elevation token (session-scoped polkit rule) — no re-prompts within a session
+- [ ] **ELEV-05**: All user-triggered elevation operations complete successfully on desktop Linux without crashing or hanging
+- [ ] **ELEV-06**: Steam Deck elevation failure shows actionable error notification with recovery path
+- [ ] **SAVE-05**: Save transfer between Vortex profiles on Linux — pure file copy between Wine prefix paths
+
+### Deferred (v5.0+)
 
 - [ ] **DIST-05**: AppImage delta auto-update on SteamOS immutable filesystem
 - [ ] **PROT-03**: NXM handler via Steam Browser overlay on Steam Deck — requires Nexus Mods web team + hardware
-- [ ] **SAVE-05**: Save transfer between profiles on Linux — pure file copy; trivial once SAVE-04 paths confirmed
-- [ ] **ELEV-04**: Persistent elevation token (session-scoped polkit rule) — high complexity, low-frequency need
 
 ### Out of Scope
 
