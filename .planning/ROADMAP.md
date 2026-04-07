@@ -70,7 +70,9 @@ Plans:
   3. On Steam Deck in Game Mode (no polkit agent), the user sees a notification with a recovery path (e.g. "Switch to Desktop Mode to authorize")
   4. The Steam Deck error notification is dismissible and does not leave Vortex in a broken state
   5. Windows build and CI remain green after all validation fixes applied
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 12-01-PLAN.md — _setNotifier callback in elevated.ts, renderer.tsx wiring, notifier tests, HUMAN-UAT.md
 **UI hint**: yes
 
 ### Phase 13: Save Transfer
@@ -112,6 +114,6 @@ Plans:
 | 9. Native Addon Fix + Elevation Foundation | v3.0 | 2/2 | Complete | 2026-04-01 |
 | 10. Save UI Validation + SteamOS + Polkit | v3.0 | 2/2 | Complete | 2026-04-01 |
 | 11. Persistent Elevation Token | v4.0 | 1/1 | Complete    | 2026-04-07 |
-| 12. Elevation End-to-End Validation + Steam Deck Error UX | v4.0 | 0/TBD | Not started | - |
+| 12. Elevation End-to-End Validation + Steam Deck Error UX | v4.0 | 0/1 | Not started | - |
 | 13. Save Transfer | v4.0 | 0/TBD | Not started | - |
 | 14. Linux Case-Folding fs Wrapper | v4.0 | 0/TBD | Not started | - |
