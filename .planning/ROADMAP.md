@@ -39,7 +39,7 @@
 
 ### v4.0 Elevation Hardening + Save Transfer
 
-- [ ] **Phase 11: Persistent Elevation Token** — Session-scoped polkit rule; no re-prompts within a session
+- [x] **Phase 11: Persistent Elevation Token** — Session-scoped polkit rule; no re-prompts within a session (completed 2026-04-07)
 - [ ] **Phase 12: Elevation End-to-End Validation + Steam Deck Error UX** — All desktop Linux elevation operations validated live; Steam Deck failure notification wired
 - [ ] **Phase 13: Save Transfer** — Profile-to-profile save file copy between Wine prefix paths
 
@@ -55,9 +55,9 @@
   3. The polkit session rule file is installed at the correct path and grants auth_admin_keep for Vortex's action
   4. A new session (fresh Vortex launch) prompts for the password again — the token does not persist across sessions
   5. Windows build compiles and tests pass without modification — polkit rule logic is Linux-only
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 Plans:
-- [ ] 11-01-PLAN.md — Polkit rules file, .deb packaging, and README documentation
+- [x] 11-01-PLAN.md — Polkit rules file, .deb packaging, and README documentation
 
 ### Phase 12: Elevation End-to-End Validation + Steam Deck Error UX
 **Goal**: All user-triggered elevation operations work reliably on desktop Linux; Steam Deck users see a clear, actionable failure notification when elevation is unavailable
@@ -83,6 +83,18 @@ Plans:
   4. Transfer works for both Skyrim SE and Fallout 4 on Linux (Wine prefix paths)
 **Plans**: TBD
 
+## Backlog
+
+### Phase 999.1: Linux Case-Folding fs Wrapper (BACKLOG)
+
+**Goal:** Wrap vortex-api's fs module with a Linux shim that resolves actual on-disk casing before any `readFile`/`writeFile`/`stat`/`watch` call on game AppData paths — eliminating the class of Windows-assumes-case-insensitive bugs without patching individual callsites.
+**Context:** Skyrim SE creates `Plugins.txt` (capital P) via Proton/Wine; Vortex hardcodes lowercase paths. Fixed surgically in `PluginPersistor.ts` (2026-04-07), but the same mismatch will recur for ini files, save files, and other game AppData files. Scoped to Wine prefix AppData paths, not all fs calls globally. Prerequisite: promote `resolvePathCase` from `mod_management` into a shared utility (`@vortex/shared` or `vortex-api`).
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with /gsd-review-backlog when ready)
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -97,6 +109,6 @@ Plans:
 | 8. NXM Protocol Handler | v2.0 | 2/2 | Complete | 2026-04-01 |
 | 9. Native Addon Fix + Elevation Foundation | v3.0 | 2/2 | Complete | 2026-04-01 |
 | 10. Save UI Validation + SteamOS + Polkit | v3.0 | 2/2 | Complete | 2026-04-01 |
-| 11. Persistent Elevation Token | v4.0 | 0/1 | Planning | - |
+| 11. Persistent Elevation Token | v4.0 | 1/1 | Complete   | 2026-04-07 |
 | 12. Elevation End-to-End Validation + Steam Deck Error UX | v4.0 | 0/TBD | Not started | - |
 | 13. Save Transfer | v4.0 | 0/TBD | Not started | - |
