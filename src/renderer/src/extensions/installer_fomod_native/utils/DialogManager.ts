@@ -1,9 +1,10 @@
-import type * as fomodT from "@nexusmods/fomod-installer-native";
-import { getErrorMessageOrDefault } from "@vortex/shared";
-
 import type { IExtensionApi } from "../../../types/IExtensionContext";
 import { log } from "../../../util/log";
 import { showError } from "../../../util/message";
+
+import type { IDialogManager } from "../../installer_fomod_shared/utils/DialogQueue";
+import { DialogQueue } from "../../installer_fomod_shared/utils/DialogQueue";
+
 import {
   clearDialog,
   endDialog,
@@ -11,12 +12,14 @@ import {
   startDialog,
 } from "../../installer_fomod_shared/actions/installerUI";
 import type {
+  IChoices,
   IHeaderImage,
   IInstallerState,
   IInstallStep,
 } from "../../installer_fomod_shared/types/interface";
-import type { IDialogManager } from "../../installer_fomod_shared/utils/DialogQueue";
-import { DialogQueue } from "../../installer_fomod_shared/utils/DialogQueue";
+
+import type * as fomodT from "@nexusmods/fomod-installer-native";
+import { getErrorMessageOrDefault } from "@vortex/shared";
 
 /**
  * UI Delegate for native FOMOD installer
@@ -37,6 +40,12 @@ export class DialogManager implements IDialogManager {
   private mModuleName: string;
   private mImage: IHeaderImage;
   private mScriptPath: string;
+  // Saved choices from a previous installation used to pre-select options
+  // in the dialog while still allowing the user to modify them.
+  private mAttendedPresets: IChoices;
+  // Tracks which steps have already had presets applied to avoid re-applying
+  // on the subsequent uiUpdateState callback triggered by selectCallback.
+  private mPresetsAppliedSteps: Set<number> = new Set();
 
   public get instanceId(): string {
     return this.mInstanceId;
@@ -46,13 +55,20 @@ export class DialogManager implements IDialogManager {
     return this.mApi;
   }
 
-  public constructor(api: IExtensionApi, instanceId: string, scriptPath: string) {
+  public constructor(
+    api: IExtensionApi,
+    instanceId: string,
+    scriptPath: string,
+    attendedPresets?: IChoices,
+  ) {
     this.mApi = api;
     this.mInstanceId = instanceId;
     this.mScriptPath = scriptPath;
+    this.mAttendedPresets = attendedPresets;
 
     log("debug", "Created DialogManager instance", {
       instanceId: this.mInstanceId,
+      hasAttendedPresets: attendedPresets != null,
     });
   }
 
@@ -120,6 +136,12 @@ export class DialogManager implements IDialogManager {
 
       this.mApi.store.dispatch(setDialogState(state, this.mInstanceId));
 
+      // Apply attended presets: when the user is reinstalling a mod, pre-select
+      // the options they chose last time via selectCallback so the C# engine
+      // reflects the correct state — then the next uiUpdateState callback from
+      // the engine will carry the updated selections into Redux/UI.
+      this.applyAttendedPresets(installSteps, currentStep);
+
       const dialogQueue = DialogQueue.getInstance(this.mApi);
       dialogQueue.processNext();
     } catch (err) {
@@ -129,7 +151,11 @@ export class DialogManager implements IDialogManager {
         installSteps,
         error: getErrorMessageOrDefault(err),
       });
-      showError(this.mApi.store.dispatch, "update installer dialog failed", err);
+      showError(
+        this.mApi.store.dispatch,
+        "update installer dialog failed",
+        err,
+      );
       throw err;
     }
   };
@@ -145,9 +171,18 @@ export class DialogManager implements IDialogManager {
       this.mApi.store.dispatch(endDialog(this.mInstanceId));
 
       this.mApi.events
-        .removeListener(`fomod-installer-select-${this.mInstanceId}`, this.onDialogSelect)
-        .removeListener(`fomod-installer-continue-${this.mInstanceId}`, this.onDialogContinue)
-        .removeListener(`fomod-installer-cancel-${this.mInstanceId}`, this.onDialogEnd);
+        .removeListener(
+          `fomod-installer-select-${this.mInstanceId}`,
+          this.onDialogSelect,
+        )
+        .removeListener(
+          `fomod-installer-continue-${this.mInstanceId}`,
+          this.onDialogContinue,
+        )
+        .removeListener(
+          `fomod-installer-cancel-${this.mInstanceId}`,
+          this.onDialogEnd,
+        );
 
       this.mContinueCB = this.mSelectCB = this.mCancelCB = undefined;
 
@@ -175,7 +210,10 @@ export class DialogManager implements IDialogManager {
     try {
       this.mApi.events
         .on(`fomod-installer-select-${this.mInstanceId}`, this.onDialogSelect)
-        .on(`fomod-installer-continue-${this.mInstanceId}`, this.onDialogContinue)
+        .on(
+          `fomod-installer-continue-${this.mInstanceId}`,
+          this.onDialogContinue,
+        )
         .on(`fomod-installer-cancel-${this.mInstanceId}`, this.onDialogEnd);
 
       this.mApi.store.dispatch(
@@ -206,9 +244,66 @@ export class DialogManager implements IDialogManager {
   };
 
   /**
+   * Apply saved choices from a previous installation to the current step.
+   * Matches by step name and group name, then calls selectCallback to
+   * sync the C# engine state. The engine will fire another uiUpdateState
+   * with the updated selections, which we skip via mPresetsAppliedSteps.
+   */
+  private applyAttendedPresets(
+    installSteps: fomodT.types.IInstallStep[],
+    currentStep: number,
+  ): void {
+    if (this.mAttendedPresets == null || !this.mSelectCB) {
+      return;
+    }
+
+    if (this.mPresetsAppliedSteps.has(currentStep)) {
+      return;
+    }
+    this.mPresetsAppliedSteps.add(currentStep);
+
+    const step = installSteps[currentStep];
+    if (!step?.optionalFileGroups?.group) {
+      return;
+    }
+
+    const presetStep = this.mAttendedPresets.find((s) => s.name === step.name);
+    if (!presetStep) {
+      return;
+    }
+
+    for (const group of step.optionalFileGroups.group) {
+      const presetGroup = presetStep.groups.find(
+        (g) => g.name === group.name,
+      );
+      if (!presetGroup) {
+        continue;
+      }
+
+      const pluginIds = presetGroup.choices.map((c) => {
+        // Match by index first, fall back to name lookup
+        const byIdx = group.options.find((opt) => opt.id === c.idx);
+        if (byIdx) {
+          return byIdx.id;
+        }
+        const byName = group.options.find((opt) => opt.name === c.name);
+        return byName?.id;
+      }).filter((id): id is number => id != null);
+
+      if (pluginIds.length > 0) {
+        this.mSelectCB(step.id, group.id, pluginIds);
+      }
+    }
+  }
+
+  /**
    * Event handler: User selected options in the dialog
    */
-  private onDialogSelect = (stepId: string, groupId: string, pluginIds: string[]) => {
+  private onDialogSelect = (
+    stepId: string,
+    groupId: string,
+    pluginIds: string[],
+  ) => {
     log("debug", "User selected options in FOMOD dialog", {
       instanceId: this.mInstanceId,
       stepId,
@@ -229,7 +324,11 @@ export class DialogManager implements IDialogManager {
         pluginIds,
         error: getErrorMessageOrDefault(err),
       });
-      showError(this.mApi.store.dispatch, "select installer dialog failed", err);
+      showError(
+        this.mApi.store.dispatch,
+        "select installer dialog failed",
+        err,
+      );
       throw err;
     }
   };
@@ -255,7 +354,11 @@ export class DialogManager implements IDialogManager {
         currentStepId,
         error: getErrorMessageOrDefault(err),
       });
-      showError(this.mApi.store.dispatch, "continue installer dialog failed", err);
+      showError(
+        this.mApi.store.dispatch,
+        "continue installer dialog failed",
+        err,
+      );
       throw err;
     }
   };
@@ -280,7 +383,11 @@ export class DialogManager implements IDialogManager {
         instanceId: this.mInstanceId,
         error: getErrorMessageOrDefault(err),
       });
-      showError(this.mApi.store.dispatch, "cancel installer dialog failed", err);
+      showError(
+        this.mApi.store.dispatch,
+        "cancel installer dialog failed",
+        err,
+      );
       throw err;
     }
   };
@@ -289,7 +396,9 @@ export class DialogManager implements IDialogManager {
 /**
  * Convert native IInstallStep to shared IInstallStep format
  */
-const convertInstallStep = (nativeStep: fomodT.types.IInstallStep): IInstallStep => {
+const convertInstallStep = (
+  nativeStep: fomodT.types.IInstallStep,
+): IInstallStep => {
   return {
     id: nativeStep.id,
     name: nativeStep.name,
