@@ -179,20 +179,27 @@ function generateWrapperScript(
     "unset LD_LIBRARY_PATH\n" +
     "unset LD_PRELOAD\n" +
     (electronEnvExports ? electronEnvExports + "\n" : "") +
+    // Propagate --no-sandbox if the current process was launched with it.
+    // Required in environments where Electron cannot use the sandbox (Docker, VMs,
+    // restricted kernels). Without this, the child Electron process launched by the
+    // wrapper script will crash before requestSingleInstanceLock() runs.
     // Only pass --download when a parameter %u is provided (nxm:// links from browser).
     // This matches Windows behaviour, which includes --download on all protocol handler calls,
     // but does not on non-handler calls (e.g., when starting from the start menu).
     // AppImage builds are self-contained: no appPath positional argument needed.
     (() => {
+      const noSandboxFlag = process.argv.includes("--no-sandbox")
+        ? " --no-sandbox"
+        : "";
       const escapedExec = escapeShellScriptArgument(executablePath);
       const appPathArg = appPath
         ? ` "${escapeShellScriptArgument(appPath)}"`
         : "";
       return (
         `if [ -n "$1" ]; then\n` +
-        `  exec "${escapedExec}"${appPathArg} --download "$@"\n` +
+        `  exec "${escapedExec}"${appPathArg}${noSandboxFlag} --download "$@"\n` +
         `else\n` +
-        `  exec "${escapedExec}"${appPathArg}\n` +
+        `  exec "${escapedExec}"${appPathArg}${noSandboxFlag}\n` +
         `fi\n`
       );
     })()
