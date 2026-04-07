@@ -90,14 +90,17 @@ Plans:
 **Goal**: Eliminate Windows-assumes-case-insensitive bugs without patching individual callsites — wrap vortex-api's fs module with a Linux shim that resolves actual on-disk casing before any `readFile`/`writeFile`/`stat`/`watch` call on game AppData paths
 **Depends on**: Phase 10 (Proton/Wine path resolution foundation from v3.0)
 **Context**: Skyrim SE creates `Plugins.txt` (capital P) via Proton/Wine; Vortex hardcodes lowercase paths. Fixed surgically in `PluginPersistor.ts` (2026-04-07), but the same mismatch will recur for ini files, save files, and other game AppData files. Scoped to Wine prefix AppData paths, not all fs calls globally. Prerequisite: promote `resolvePathCase` from `mod_management` into a shared utility (`@vortex/shared` or `vortex-api`).
-**Requirements**: TBD
+**Requirements**: CASE-01, CASE-02, CASE-03, CASE-04
 **Success Criteria** (what must be TRUE):
   1. A `resolvePathCase` utility is promoted from `mod_management` into `@vortex/shared` or `vortex-api`
   2. The fs shim wraps `readFile`, `writeFile`, `stat`, and `watch` calls on Wine prefix AppData paths
   3. Vortex correctly reads `Plugins.txt` (capital P) without a surgical per-callsite fix
   4. No global fs calls are intercepted — shim is scoped to game AppData paths only
   5. Windows build compiles and tests pass without modification — shim logic is Linux-only
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 14-01-PLAN.md — Promote resolvePathCase, wire fs.ts shim, update mod_management imports
+- [ ] 14-02-PLAN.md — Clean up PluginPersistor surgical workaround
 
 ## Backlog
 
@@ -125,4 +128,4 @@ Plans:
 | 11. Persistent Elevation Token | v4.0 | 1/1 | Complete    | 2026-04-07 |
 | 12. Elevation End-to-End Validation + Steam Deck Error UX | v4.0 | 1/1 | Complete    | 2026-04-07 |
 | 13. Save Transfer | v4.0 | 0/TBD | Not started | - |
-| 14. Linux Case-Folding fs Wrapper | v4.0 | 0/TBD | Not started | - |
+| 14. Linux Case-Folding fs Wrapper | v4.0 | 0/2 | Not started | - |
