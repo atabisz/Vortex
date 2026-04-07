@@ -62,7 +62,7 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 
 ### Active (v4.0)
 
-- [ ] **ELEV-04**: Persistent elevation token (session-scoped polkit rule) — no re-prompts within a session
+- ✓ **ELEV-04**: Persistent elevation token — `10-vortex.rules` grants `AUTH_ADMIN_KEEP`; wired into `.deb` package; `.deb` vs AppImage difference documented in README — v4.0 (static checks pass; live polkit session caching UAT pending)
 - [ ] **ELEV-05**: All user-triggered elevation operations complete successfully on desktop Linux without crashing or hanging
 - [ ] **ELEV-06**: Steam Deck elevation failure shows actionable error notification with recovery path
 - [ ] **SAVE-05**: Save transfer between Vortex profiles on Linux — pure file copy between Wine prefix paths
@@ -85,6 +85,10 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 ## Context
 
 **Shipped v3.0 on 2026-04-01.** All 7 v3.0 requirements validated (SAVE-01–04, ELEV-01–03).
+
+**Phase 11 complete (2026-04-07).** ELEV-04 polkit rules file shipped in `.deb`; persistent session token infrastructure in place.
+
+**Phase 14 complete (2026-04-07).** `resolvePathCase` promoted to `src/renderer/src/util/`, exported as `util.resolvePathCase` from vortex-api. `fs.ts` now transparently resolves Wine prefix path casing for `readFileAsync`, `writeFileAsync`, `statAsync`, and `watch` on Linux. `PluginPersistor.resolvePluginsFilePath` workaround removed. CASE-01–04 satisfied.
 
 **Technical state after v3.0:**
 - Save game management: `mygamesPath()` and `iniPath()` are async with Linux Proton branch; `getSteamEntry()` uses `GameStoreHelper.getGameStore('steam')` (bundled extension constraint); `ILocalSteamEntry` local interface since `ISteamEntry` not exported by vortex-api

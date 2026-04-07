@@ -42,7 +42,7 @@
 - [x] **Phase 11: Persistent Elevation Token** — Session-scoped polkit rule; no re-prompts within a session (completed 2026-04-07)
 - [x] **Phase 12: Elevation End-to-End Validation + Steam Deck Error UX** — All desktop Linux elevation operations validated live; Steam Deck failure notification wired (completed 2026-04-07)
 - [ ] **Phase 13: Save Transfer** — Profile-to-profile save file copy between Wine prefix paths
-- [ ] **Phase 14: Linux Case-Folding fs Wrapper** — Shared fs shim resolving on-disk casing before AppData path calls
+- [x] **Phase 14: Linux Case-Folding fs Wrapper** — Shared fs shim resolving on-disk casing before AppData path calls (completed 2026-04-07)
 
 ## Phase Details
 
@@ -97,10 +97,10 @@ Plans:
   3. Vortex correctly reads `Plugins.txt` (capital P) without a surgical per-callsite fix
   4. No global fs calls are intercepted — shim is scoped to game AppData paths only
   5. Windows build compiles and tests pass without modification — shim logic is Linux-only
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
-- [ ] 14-01-PLAN.md — Promote resolvePathCase, wire fs.ts shim, update mod_management imports
-- [ ] 14-02-PLAN.md — Clean up PluginPersistor surgical workaround
+- [x] 14-01-PLAN.md — Promote resolvePathCase, wire fs.ts shim, update mod_management imports
+- [x] 14-02-PLAN.md — Clean up PluginPersistor surgical workaround
 
 ## Backlog
 
@@ -128,4 +128,4 @@ Plans:
 | 11. Persistent Elevation Token | v4.0 | 1/1 | Complete    | 2026-04-07 |
 | 12. Elevation End-to-End Validation + Steam Deck Error UX | v4.0 | 1/1 | Complete    | 2026-04-07 |
 | 13. Save Transfer | v4.0 | 0/TBD | Not started | - |
-| 14. Linux Case-Folding fs Wrapper | v4.0 | 0/2 | Not started | - |
+| 14. Linux Case-Folding fs Wrapper | v4.0 | 2/2 | Complete    | 2026-04-07 |
