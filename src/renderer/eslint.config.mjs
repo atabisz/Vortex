@@ -27,6 +27,11 @@ export default defineConfig([
       // TODO: remove old Jest tests and replace with Vitests
       "**/__tests__/**",
       "**/__mocks__/**",
+
+      // Test files are excluded from tsconfig.json typecheck; ESLint's
+      // projectService would fail to resolve them, so skip them here too.
+      "**/*.test.ts",
+      "**/*.test.tsx",
     ],
   },
 
