@@ -152,6 +152,56 @@
 
 ---
 
+## Milestone: v4.0 — Elevation Hardening + Save Transfer
+
+**Shipped:** 2026-04-07
+**Phases:** 4 | **Plans:** 5 | **Tasks:** 13 feat/test commits
+
+### What Was Built
+
+- Polkit rules file `10-vortex.rules` granting `AUTH_ADMIN_KEEP` — `.deb` installs persistent session token; AppImage correctly excluded
+- `_setNotifier`/`rejectWithSteamOSNotification` injectable seam in `elevated.ts`; wired in `renderer.tsx`; Steam Deck Game Mode failure fires Redux notification with recovery path — 21 Vitest tests pass
+- `resolvePathCase` promoted from `mod_management` to `src/renderer/src/util/`; exported as `util.resolvePathCase` from vortex-api
+- fs.ts transparent Wine prefix case-folding shim: `readFileAsync`, `writeFileAsync`, `statAsync`, `watch`, `copyAsync`, `renameAsync`, `ensureDirAsync` — 22 fs.test.ts tests pass
+- `PluginPersistor.resolvePluginsFilePath` per-callsite workaround removed; shim handles transparently
+- Save transfer picker: empty-state italicised message when no eligible profiles; transfer path resolves Wine prefix casing end-to-end
+
+### What Worked
+
+- **Fs shim pattern:** Wrapping at the `fs.ts` level with a three-way `isWinePrefixPath()` guard (platform + compatdata + pfx) was the right abstraction — all future callers get case-folding automatically, zero callsite changes
+- **TDD RED/GREEN commits:** All three fs wrapper tasks used explicit failing-test then passing-implementation commits — clean signal, easy bisect, verified behaviour before closing plans
+- **Phase 14 before Phase 13:** Executing Phase 14 (fs shim) before Phase 13 (save transfer) meant Phase 13 could simply use the shim rather than duplicate the case-folding logic. Dependency-aware execution ordering paid off.
+- **Integration chain verification:** All 6 cross-phase integration checks PASSED — source tracing confirmed end-to-end wiring before archiving. Zero integration surprises.
+- **_setNotifier mirrors _setSpawner:** Consistent injectable seam pattern across `elevated.ts` — discoverable, testable, and defensive with optional chaining
+
+### What Was Inefficient
+
+- **Phase 11 and 12 SUMMARY one-liners blank:** `gsd-tools summary-extract` returned empty for Phase 11 and 12 — same pattern as v2.0 and v3.0. The YAML frontmatter in those summaries uses `provides:` not `one_liner:` field. Three milestones in a row with this gap.
+- **lib/api.d.ts stale:** `resolvePathCase` was added to the source but the pre-generated `packages/vortex-api/lib/api.d.ts` was not regenerated. TypeScript consumers won't see the type until the next full build. A build step was omitted.
+- **VALIDATION.md missing for phases 11/13/14:** Nyquist compliance was not assessed for 3 of 4 phases. Phase 12 had a VALIDATION.md but `nyquist_compliant: false`. Validation infrastructure exists but was not wired into execution for these phases.
+
+### Patterns Established
+
+- **Wine prefix path scope guard:** `isWinePrefixPath()` three-way conjunction (platform + `/compatdata/` + `/pfx/`) is the canonical pattern for scoping Linux-only Wine path operations
+- **Fs shim at module level:** Wrap at `fs.ts` source level, not per-callsite — avoids drift as new callers are added
+- **TDD commit pair:** RED commit (failing tests) then GREEN commit (implementation) — every fs wrapper task used this pattern; it's the right approach for shim-level work
+- **`fileName.toLowerCase()` in watch handlers:** inotify event filenames arrive from OS outside the shim — `.toLowerCase()` in watch handlers must stay permanently (D-11)
+
+### Key Lessons
+
+1. **SUMMARY.md one-liners — fourth milestone with this gap.** The `one_liner:` field is not populated when summaries use the new YAML schema with `provides:` instead. Either standardise on `one_liner:` or update gsd-tools to extract from `provides:`. Address before v5.0.
+2. **Regenerate .d.ts files when promoting code to vortex-api.** Adding a function to `util/api.ts` requires `packages/vortex-api/lib/api.d.ts` to be regenerated. This is a build step, not a code step — it needs to be in the plan's task list explicitly.
+3. **VALIDATION.md should be created at plan-start, not retroactively.** Three phases had no VALIDATION.md. The Nyquist workflow (`/gsd-validate-phase`) creates it retroactively, but the value is in having it during execution. Include VALIDATION.md creation as the first task in every plan.
+4. **Transparent shims > per-callsite fixes.** The `resolvePluginsFilePath` workaround in PluginPersistor was the right surgical fix for v3.0, but a transparent fs shim in v4.0 made it obsolete and eliminated 7+ future per-callsite patches. Design for the shim layer when the problem is cross-cutting.
+
+### Cost Observations
+
+- Model mix: Sonnet 4.6 (primary execution + verification + integration check), Opus 4.6 (planning)
+- Sessions: ~4 sessions on 2026-04-07
+- Notable: Phase 14 and Phase 13 were executed in a single day with zero blockers; integration checker confirmed all 6 cross-phase wiring points clean
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -161,6 +211,7 @@
 | v1.0 | ~5 | 5 | First milestone; research-verified dependency graph; audit-first for uncertain scope |
 | v2.0 | ~4 | 3 | CONTEXT.md quality drove Phase 8 precision; SUMMARY.md enforcement gap surfaced |
 | v3.0 | ~3 | 2 | Research-driven design eliminated all execution surprises; injectable seam pattern for testability |
+| v4.0 | ~4 | 4 | Fs shim pattern over per-callsite fixes; TDD RED/GREEN commit pairs; integration checker confirmed all wiring |
 
 ### Cumulative Quality
 
@@ -169,6 +220,7 @@
 | v1.0 | 22+ (Vitest) | 5 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
 | v2.0 | 16 (desktop escaping) + main process suite | 3 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
 | v3.0 | 7 (elevated.test.ts) + gameSupport stubs | 2 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
+| v4.0 | 21 (elevated) + 22 (fs) + 6 (resolvePathCase) = 49 | 4 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
 
 ### Top Lessons (Verified Across Milestones)
 
@@ -178,3 +230,5 @@
 4. **Document platform-specific constants** — `steamuser`, `compatdata`, `steamapps` naming conventions belong in CONTEXT.md before execution, not discovered during debugging
 5. **Research-driven design eliminates surprises** — pitfalls documented in CONTEXT.md/RESEARCH.md before coding are pitfalls avoided; all v3.0 major pitfalls were pre-documented
 6. **Injectable seams for OS-calling code** — spawner parameter in `runElevated()` enables clean Vitest coverage without mock pollution; generalises to any platform-dependent utility
+7. **Transparent shims > per-callsite fixes** — when a cross-cutting problem affects N callsites, design the shim layer first; per-callsite workarounds become obsolete automatically
+8. **SUMMARY.md one-liner field** — four milestones with blank one-liners due to schema mismatch; standardise `one_liner:` field or update gsd-tools extraction before v5.0

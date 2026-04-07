@@ -1,5 +1,19 @@
 # Milestones
 
+## v4.0 Elevation Hardening + Save Transfer (Shipped: 2026-04-07)
+
+**Phases completed:** 5 phases, 5 plans, 5 tasks
+
+**Key accomplishments:**
+
+- One-liner:
+- One-liner:
+- Wine prefix case-folding extended to copyAsync/renameAsync/ensureDirAsync; transfer picker shows italicised empty-state guidance when no eligible profiles exist
+- resolvePathCase promoted to util/, fs.ts transparently resolves Wine prefix path casing for readFileAsync/writeFileAsync/statAsync/watch on Linux
+- PluginPersistor.resolvePluginsFilePath removed; serialize/deserialize use path.join directly; fs.ts shim handles case-folding transparently
+
+---
+
 ## v3.0 Save Games + Elevation (Shipped: 2026-04-01)
 
 **Phases completed:** 2 phases, 4 plans, 4 tasks

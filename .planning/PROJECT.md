@@ -1,24 +1,16 @@
-# Vortex Linux Support — v4.0 In Progress
-
-## Current Milestone: v4.0 Elevation Hardening + Save Transfer
-
-**Goal:** Close the README "Degraded" status on elevation — validate the v3.0 pkexec/polkit implementation end-to-end, fix gaps discovered in live testing, implement persistent polkit session token, and deliver save profile transfer.
-
-**Target features:**
-- ELEV-04: Persistent polkit session token — no re-prompts within a session
-- ELEV-05: End-to-end elevation validation — all user-triggered privilege operations work on desktop Linux
-- ELEV-06: Steam Deck elevation failure path — actionable error notification with recovery path
-- SAVE-05: Save transfer between Vortex profiles on Linux
+# Vortex Linux Support — v4.0 Shipped
 
 ## Current State
 
-**Shipped v3.0 on 2026-04-01.** gamebryo-savegame native addon compiles and loads on Linux CI. Save game manager UI works end-to-end for Skyrim SE and Fallout 4 on Linux. pkexec elevation wired with injectable seam. SteamOS / Steam Deck elevation handled gracefully via `sudo -n` fallback. `.deb` packages ship a branded polkit action file.
+**Shipped v4.0 on 2026-04-07.** Elevation hardening complete: session-scoped polkit rules in `.deb` (AUTH_ADMIN_KEEP), Steam Deck Game Mode failure notification wired, save transfer picks up Wine prefix path casing via transparent fs shim. `resolvePathCase` promoted to vortex-api `util` namespace. `PluginPersistor` per-callsite workaround replaced by shim.
 
-**A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.**
+**A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, manage save games, and transfer saves between profiles — with elevation that works reliably on desktop Linux and fails gracefully on Steam Deck.**
+
+**Human UAT pending** (tracked in Phase 999.1 backlog): ELEV-04 session caching, ELEV-05 desktop Linux E2E, ELEV-06 Steam Deck toast UX, SAVE-05 live save transfer.
 
 ## What This Is
 
-Vortex is an Electron-based mod manager for Nexus Mods, targeting Windows and Linux. v1.0 shipped the Linux boot milestone — `pnpm run start` works on Linux. v2.0 makes Vortex actually usable on Linux: Steam/Proton game detection, distributable packages (AppImage + .deb), and the NXM "Download with Manager" flow. v3.0 completes save game management and elevation for Skyrim SE, Fallout 4, and Steam Deck users.
+Vortex is an Electron-based mod manager for Nexus Mods, targeting Windows and Linux. v1.0 shipped the Linux boot milestone — `pnpm run start` works on Linux. v2.0 makes Vortex actually usable on Linux: Steam/Proton game detection, distributable packages (AppImage + .deb), and the NXM "Download with Manager" flow. v3.0 completes save game management and elevation for Skyrim SE, Fallout 4, and Steam Deck users. v4.0 hardens elevation (persistent polkit token, Steam Deck failure UX), delivers save transfer between profiles, and adds a transparent Wine prefix case-folding shim to the fs layer.
 
 ## Core Value
 
@@ -59,13 +51,17 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 - ✓ **SAVE-04**: `apply-settings` handler awaits `iniPath()` correctly; profile-scoped save comparison fixed — v3.0
 - ✓ **ELEV-02**: `isSteamOS()` detection + `sudo -n` fallback in `runElevated()`; graceful `UserCanceled` on failure — v3.0
 - ✓ **ELEV-03**: `io.nexusmods.vortex.policy` polkit action file shipped in .deb at `/usr/share/polkit-1/actions/` — v3.0
+- ✓ **ELEV-04**: Polkit rules file `10-vortex.rules` grants `AUTH_ADMIN_KEEP`; `.deb` packages it at `/etc/polkit-1/rules.d/`; AppImage deliberately excluded; README documents difference — v4.0 (infrastructure verified; live session caching UAT pending)
+- ✓ **SAVE-05**: Save transfer between Vortex profiles on Linux — `copyAsync`/`renameAsync`/`ensureDirAsync` resolve Wine prefix path casing; empty-state guidance in transfer picker — v4.0 (code-verified; live runtime UAT pending)
+- ✓ **CASE-01**: `resolvePathCase` promoted to `src/renderer/src/util/` and exported as `util.resolvePathCase` from vortex-api — v4.0
+- ✓ **CASE-02**: `readFileAsync`, `writeFileAsync`, `statAsync` on Wine prefix paths auto-resolve on-disk casing via fs shim — v4.0
+- ✓ **CASE-03**: `watch` on Wine prefix paths resolves on-disk casing synchronously before registering watcher — v4.0
+- ✓ **CASE-04**: `PluginPersistor.resolvePluginsFilePath` removed; per-callsite workaround replaced by transparent fs shim — v4.0
 
-### Active (v4.0)
+### Active (v5.0)
 
-- ✓ **ELEV-04**: Persistent elevation token — `10-vortex.rules` grants `AUTH_ADMIN_KEEP`; wired into `.deb` package; `.deb` vs AppImage difference documented in README — v4.0 (static checks pass; live polkit session caching UAT pending)
-- [ ] **ELEV-05**: All user-triggered elevation operations complete successfully on desktop Linux without crashing or hanging
-- [ ] **ELEV-06**: Steam Deck elevation failure shows actionable error notification with recovery path
-- [ ] **SAVE-05**: Save transfer between Vortex profiles on Linux — pure file copy between Wine prefix paths
+- [ ] **ELEV-05**: All user-triggered elevation operations complete successfully on desktop Linux without crashing or hanging — code-complete (Phase 12); hardware UAT pending (Phase 999.1)
+- [ ] **ELEV-06**: Steam Deck elevation failure shows actionable error notification with recovery path — code-complete (Phase 12); end-to-end Electron UX UAT pending (Phase 999.1)
 
 ### Deferred (v5.0+)
 
@@ -84,22 +80,19 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 
 ## Context
 
-**Shipped v3.0 on 2026-04-01.** All 7 v3.0 requirements validated (SAVE-01–04, ELEV-01–03).
+**Shipped v4.0 on 2026-04-07.** 4 phases, 5 plans, 73 files changed (+3,164/−8,037 lines). All CASE-01–04 satisfied; ELEV-04 and SAVE-05 code-complete (hardware UAT pending); ELEV-05/ELEV-06 code-complete (hardware UAT in Phase 999.1 backlog).
 
-**Phase 11 complete (2026-04-07).** ELEV-04 polkit rules file shipped in `.deb`; persistent session token infrastructure in place.
+**Technical state after v4.0:**
+- Elevation: `.deb` installs `build/linux/10-vortex.rules` to `/etc/polkit-1/rules.d/` granting `AUTH_ADMIN_KEEP`; AppImage excluded (no persistent token); `_setNotifier`/`rejectWithSteamOSNotification` in `elevated.ts` fires Redux notification on SteamOS Game Mode failure; 21 Vitest tests pass
+- fs layer: `isWinePrefixPath()` + `resolveCaseIfWinePrefix()` in `fs.ts` wraps `readFileAsync`, `writeFileAsync`, `statAsync`, `watch`, `copyAsync`, `renameAsync`, `ensureDirAsync` — Wine prefix paths only; `resolvePathCase` in `src/renderer/src/util/` exported via `util` namespace in vortex-api
+- Save transfer: `transferSavegames.ts` → `fs.copyAsync`/`fs.renameAsync` → fs shim → `resolvePathCase`; `SavegameList.tsx` shows empty-state message when no eligible profiles
+- Plugin persistence: `PluginPersistor.resolvePluginsFilePath` removed; `serialize`/`deserialize` use `path.join` directly; `fileName.toLowerCase()` watch fix retained (inotify events outside shim reach)
+- Distribution: `packages/vortex-api/lib/api.d.ts` stale — `util.resolvePathCase` absent from generated declarations (source + runtime intact; regenerate at next build)
+- Test coverage: `elevated.test.ts` (21 Vitest); `fs.test.ts` (22 Vitest); `resolvePathCase.test.ts` (6 Vitest); `tsconfig.json` excludes `__mocks__/`
 
-**Phase 14 complete (2026-04-07).** `resolvePathCase` promoted to `src/renderer/src/util/`, exported as `util.resolvePathCase` from vortex-api. `fs.ts` now transparently resolves Wine prefix path casing for `readFileAsync`, `writeFileAsync`, `statAsync`, and `watch` on Linux. `PluginPersistor.resolvePluginsFilePath` workaround removed. CASE-01–04 satisfied.
+**Platform guard pattern:** `if (process.platform === 'linux') { ... }` and `isWinePrefixPath()` used consistently — Windows paths always pass through unchanged.
 
-**Technical state after v3.0:**
-- Save game management: `mygamesPath()` and `iniPath()` are async with Linux Proton branch; `getSteamEntry()` uses `GameStoreHelper.getGameStore('steam')` (bundled extension constraint); `ILocalSteamEntry` local interface since `ISteamEntry` not exported by vortex-api
-- Elevation: `runElevated()` has pkexec Linux branch with injectable spawner seam; socket-before-spawn enforced; `isSteamOS()` cached after first read; `sudo -n` fallback on SteamOS before pkexec
-- Distribution: `.deb` includes `io.nexusmods.vortex.policy` polkit action at `/usr/share/polkit-1/actions/` via `electron-builder extraFiles`
-- Test coverage: `elevated.test.ts` (7 Vitest tests); `gameSupport.test.ts` (vitest config + mocks); `tsconfig.json` excludes `__mocks__/` from production typecheck
-- CI: ubuntu-latest and windows-latest both green throughout all 3 milestones; no Windows build regressions
-
-**Platform guard pattern:** `if (process.platform === 'linux') { ... }` before Windows path — used consistently across all phases.
-
-**Known UAT pending:** PROT-01/PROT-02 live runtime tests (AppImage + browser, KDE Plasma) — code-verified but not exercised on physical hardware yet.
+**Known UAT pending:** PROT-01/PROT-02 live runtime tests; ELEV-04/05/06 hardware tests; SAVE-05 live transfer on Linux.
 
 ## Constraints
 
@@ -137,6 +130,14 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 | polkit action uses auth_admin (not auth_admin_keep) | Prompt every time — no persistent token risk; simpler security model | ✓ Done — D-10 decision validated |
 | SteamOS: sudo -n before pkexec | pkexec hangs without polkit agent in Game Mode; sudo -n is lightweight first check | ✓ Done — ELEV-02 satisfied |
 | tsconfig.json excludes __mocks__/ | TS6307 error: __mocks__ outside src/ causes TS to traverse test infrastructure in production typecheck | ✓ Done — production build clean |
+| 10-vortex.rules: no isInGroup guard | Simpler than group-based; consistent with .policy auth_admin semantics; all active desktop users may cache credential | ✓ Done — v4.0 Phase 11 |
+| deb.extraFiles for rules (not linux.extraFiles) | AppImage must not receive the rules file — degraded elevation is correct for AppImage | ✓ Done — v4.0 Phase 11 |
+| _setNotifier injectable seam (not global state) | Mirrors _setSpawner pattern; testable without mocking module internals; optional chaining prevents pre-init failure | ✓ Done — v4.0 Phase 12 |
+| rejectWithSteamOSNotification helper DRYs both SteamOS paths | Both close (non-zero exit) and error (ENOENT spawn) paths must fire notification — shared helper prevents divergence | ✓ Done — v4.0 Phase 12 |
+| isWinePrefixPath() three-way conjunction | platform===linux AND /compatdata/ AND /pfx/ — prevents false positives on non-Wine Linux paths | ✓ Done — v4.0 Phase 14 |
+| resolvePathCase promoted to util/ (not @vortex/shared) | Avoids new shared package churn; util/ already exported via vortex-api; mod_management and bundled extensions can both import | ✓ Done — v4.0 Phase 14 |
+| fs shim wraps at fs.ts level (not per-callsite) | 7+ callsites would each need patching; shim at source guarantees all future callers get case-folding automatically | ✓ Done — v4.0 Phase 14 |
+| fileName.toLowerCase() in watch handler retained permanently | inotify event filenames arrive from OS, outside shim reach — toLowerCase fix must stay in watch handler | ✓ Done — v4.0 Phase 14 D-11 |
 
 ## Evolution
 
@@ -156,4 +157,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-01 after v3.0 milestone — Save Games + Elevation*
+*Last updated: 2026-04-07 after v4.0 milestone — Elevation Hardening + Save Transfer*
