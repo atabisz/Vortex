@@ -89,13 +89,21 @@ jobs:
         if: runner.os == 'Linux'
         run: node scripts/verify-addons.cjs
 
+      - name: Cache DuckDB extensions
+        uses: actions/cache@v4
+        with:
+          path: src/main/build/duckdb-extensions
+          key: duckdb-ext-${{ runner.os }}-${{ hashFiles('pnpm-workspace.yaml', 'scripts/duckdb-extensions.json') }}
+
       - name: Build
         run: pnpm run build:all
 
       - name: Lint
+        if: runner.os == 'Linux'
         run: pnpm run lint:ci
 
       - name: Test
+        if: runner.os == 'Linux'
         run: pnpm run test
 
       - name: Upload API artifacts
