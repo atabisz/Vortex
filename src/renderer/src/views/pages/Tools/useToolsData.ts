@@ -47,7 +47,7 @@ export const useToolsData = () => {
       state.settings.gameMode.discovered?.[gameMode]?.tools ?? {},
   );
   const toolsOrder = useSelector(
-    (state: IState) => state.settings.interface.tools.order?.[gameMode],
+    (state: IState) => state.settings.interface.tools?.order?.[gameMode],
   );
   const primaryTool = useSelector(
     (state: IState) => state.settings.interface.primaryTool?.[gameMode],
