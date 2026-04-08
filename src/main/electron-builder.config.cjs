@@ -84,9 +84,21 @@ const config = {
   // The native .node binary is not needed at runtime and causes an EEXIST
   // conflict when electron-builder's asarUnpack "**/*.node" and its native
   // module handler both try to process the same file.
+  //
+  // However, external packages (e.g. permissions/index.js) unconditionally
+  // require('winapi-bindings') at load time, even when they only use it on
+  // Windows. We inject a plain-JS stub into node_modules/winapi-bindings/
+  // inside the asar so those require() calls succeed on Linux.
   files:
     process.platform === "linux"
-      ? ["**/*", "!**/winapi-bindings/**"]
+      ? [
+          "**/*",
+          "!**/winapi-bindings/**",
+          {
+            from: "../../build/linux/winapi-bindings-stub",
+            to: "node_modules/winapi-bindings",
+          },
+        ]
       : ["**/*"],
   asar: true,
   asarUnpack: [
