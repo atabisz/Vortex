@@ -1,4 +1,8 @@
 #!/bin/sh
+# Fix Electron SUID sandbox permissions
+chown root:root /opt/Vortex/chrome-sandbox
+chmod 4755 /opt/Vortex/chrome-sandbox
+
 mkdir -p /etc/polkit-1/rules.d
 cat > /etc/polkit-1/rules.d/10-vortex.rules << 'EOF'
 polkit.addRule(function(action, subject) {
