@@ -6,6 +6,36 @@ Linux builds (AppImage + .deb) are published as [releases on this fork](../../re
 
 ---
 
+## Installing
+
+**Stable release** (latest tagged version):
+
+| Package | Download |
+|---|---|
+| AppImage (recommended) | [vortex-setup.AppImage](https://github.com/atabisz/Vortex/releases/latest/download/vortex-setup.AppImage) |
+| Debian/Ubuntu .deb | [vortex_amd64.deb](https://github.com/atabisz/Vortex/releases/latest/download/vortex_amd64.deb) |
+
+**Rolling build** (latest master commit, may be less stable):
+
+| Package | Download |
+|---|---|
+| AppImage (recommended) | [vortex-setup.AppImage](https://github.com/atabisz/Vortex/releases/download/latest-linux/vortex-setup.AppImage) |
+| Debian/Ubuntu .deb | [vortex_amd64.deb](https://github.com/atabisz/Vortex/releases/download/latest-linux/vortex_amd64.deb) |
+
+**AppImage:**
+```sh
+chmod +x vortex-setup.AppImage
+./vortex-setup.AppImage
+```
+> Ubuntu 22.04+ users: `sudo apt install libfuse2` first.
+
+**Debian/Ubuntu (.deb):**
+```sh
+sudo apt install ./vortex_amd64.deb
+```
+
+> **Elevation note (.deb vs AppImage):** The `.deb` package installs a polkit rules file (`/etc/polkit-1/rules.d/10-vortex.rules`) that caches your admin credential for the desktop session. This means elevation operations (mod deployment, symlink creation) only prompt for your password once. AppImage builds do not include this rule — you will be prompted each time Vortex needs elevated privileges.
+
 ## What Works
 
 **As of v4.0 (shipped 2026-04-07):**
@@ -49,36 +79,6 @@ Linux builds (AppImage + .deb) are published as [releases on this fork](../../re
 - NXM handler via Steam Browser overlay on Steam Deck
 - AppImage delta auto-update on SteamOS
 - Steam Deck Flatpak distribution
-
-## Installing
-
-**Stable release** (latest tagged version):
-
-| Package | Download |
-|---|---|
-| AppImage (recommended) | [vortex-setup.AppImage](https://github.com/atabisz/Vortex/releases/latest/download/vortex-setup.AppImage) |
-| Debian/Ubuntu .deb | [vortex_amd64.deb](https://github.com/atabisz/Vortex/releases/latest/download/vortex_amd64.deb) |
-
-**Rolling build** (latest master commit, may be less stable):
-
-| Package | Download |
-|---|---|
-| AppImage (recommended) | [vortex-setup.AppImage](https://github.com/atabisz/Vortex/releases/download/latest-linux/vortex-setup.AppImage) |
-| Debian/Ubuntu .deb | [vortex_amd64.deb](https://github.com/atabisz/Vortex/releases/download/latest-linux/vortex_amd64.deb) |
-
-**AppImage:**
-```sh
-chmod +x vortex-setup.AppImage
-./vortex-setup.AppImage
-```
-> Ubuntu 22.04+ users: `sudo apt install libfuse2` first.
-
-**Debian/Ubuntu (.deb):**
-```sh
-sudo apt install ./vortex_amd64.deb
-```
-
-> **Elevation note (.deb vs AppImage):** The `.deb` package installs a polkit rules file (`/etc/polkit-1/rules.d/10-vortex.rules`) that caches your admin credential for the desktop session. This means elevation operations (mod deployment, symlink creation) only prompt for your password once. AppImage builds do not include this rule — you will be prompted each time Vortex needs elevated privileges.
 
 ## Building from Source
 
