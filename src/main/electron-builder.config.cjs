@@ -1,4 +1,7 @@
 // @ts-check
+const fs = require("fs");
+const path = require("path");
+
 /** @type {import('electron-builder').Configuration} */
 const config = {
   $schema:
@@ -80,26 +83,40 @@ const config = {
       to: "locales",
     },
   ],
-  // On Linux, winapi-bindings is replaced at bundle time by a JS shim.
-  // The native .node binary is not needed at runtime and causes an EEXIST
-  // conflict when electron-builder's asarUnpack "**/*.node" and its native
-  // module handler both try to process the same file.
-  //
-  // However, external packages (e.g. permissions/index.js) unconditionally
-  // require('winapi-bindings') at load time, even when they only use it on
-  // Windows. We inject a plain-JS stub into node_modules/winapi-bindings/
-  // inside the asar so those require() calls succeed on Linux.
-  files:
-    process.platform === "linux"
-      ? [
-          "**/*",
-          "!**/winapi-bindings/**",
-          {
-            from: "../../build/linux/winapi-bindings-stub",
-            to: "node_modules/winapi-bindings",
-          },
-        ]
-      : ["**/*"],
+  // On Linux, the native winapi-bindings .node binary is replaced with a
+  // plain-JS stub before electron-builder scans the app directory (see
+  // beforePack below). The stub satisfies unconditional require() calls from
+  // packages like permissions/index.js that only use winapi on Windows.
+  // No exclusion pattern needed — the directory contains only JS after the swap.
+  files: ["**/*"],
+
+  beforePack: async (context) => {
+    if (process.platform !== "linux") return;
+
+    // __dirname is src/main/; the app directory is src/main/dist/
+    const winapiDir = path.join(
+      __dirname,
+      "dist",
+      "node_modules",
+      "winapi-bindings",
+    );
+    const stubDir = path.resolve(
+      __dirname,
+      "../../build/linux/winapi-bindings-stub",
+    );
+
+    // Replace the installed native package with the plain-JS stub so that:
+    // 1. No .node binary ends up in the asar (avoids asarUnpack conflicts)
+    // 2. require('winapi-bindings') from external packages resolves at runtime
+    fs.rmSync(winapiDir, { recursive: true, force: true });
+    fs.mkdirSync(winapiDir, { recursive: true });
+    for (const file of fs.readdirSync(stubDir)) {
+      fs.copyFileSync(
+        path.join(stubDir, file),
+        path.join(winapiDir, file),
+      );
+    }
+  },
   asar: true,
   asarUnpack: [
     "LICENSE.md",
