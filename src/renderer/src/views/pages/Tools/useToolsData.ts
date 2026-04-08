@@ -54,7 +54,7 @@ export const useToolsData = () => {
   );
   const pinnedToolsMap = useSelector(
     (state: IState) =>
-      state.settings.interface.tools.pinned?.[gameMode] ?? {},
+      state.settings.interface.tools?.pinned?.[gameMode] ?? {},
   );
   const toolsRunning = useSelector(
     (state: IState) => state.session.base.toolsRunning,
