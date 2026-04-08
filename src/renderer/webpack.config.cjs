@@ -73,6 +73,7 @@ const config = {
                 loader: "ts-loader",
                 exclude: /node_modules/,
                 options: {
+                    transpileOnly: true,
                     configFile: path.resolve(__dirname, "tsconfig.json"),
                     compilerOptions: {
                         composite: false,
