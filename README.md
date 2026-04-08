@@ -50,7 +50,7 @@ makepkg -si
 
 ## What Works
 
-**As of v4.0 (shipped 2026-04-07):**
+**As of v1.16.8 (2026-04-07):**
 
 - **Launches on Linux** — `pnpm run start` works on Linux without crashing; all native addons (bsatk, esptk, loot, vortexmt, xxhash-addon, bsdiff-node) compile and load
 - **FOMOD installer** — C#/.NET FOMOD installers work via native Linux binaries (no Wine dependency)
@@ -77,7 +77,7 @@ makepkg -si
 
 ## Roadmap
 
-### v4.0 — Elevation Hardening + Save Transfer (shipped 2026-04-07)
+### v1.16.8 — Elevation Hardening + Save Transfer (2026-04-07)
 
 - Persistent elevation token via polkit session-scoped rules (.deb only)
 - End-to-end validation of all elevation operations on desktop Linux
