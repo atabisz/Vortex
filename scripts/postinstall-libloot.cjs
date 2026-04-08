@@ -36,6 +36,106 @@ if (fs.existsSync(cargoBin) && !(process.env.PATH || "").includes(cargoBin)) {
 
 const LIBLOOT_VERSION = "0.29.1";
 
+// ---------------------------------------------------------------------------
+// Step 1: compile libloot_wstring_stub.so from source
+//
+// node-loot's napi_helpers.cpp defines fromNAPI<std::wstring> only on Windows.
+// On Linux the symbol is absent from node-loot.node, so we supply it via a
+// small shared library that is LD_PRELOAD'd at loot subprocess startup.
+//
+// This always runs on Linux (even on re-installs) because it is fast (~1s)
+// and the .so is .gitignored so it may be absent after a fresh checkout.
+// ---------------------------------------------------------------------------
+(function buildWstringStub() {
+  const stubSrc = path.resolve(
+    __dirname,
+    "..",
+    "extensions",
+    "gamebryo-plugin-management",
+    "src",
+    "wstring_stub.cpp",
+  );
+  const stubOut = path.resolve(
+    __dirname,
+    "..",
+    "extensions",
+    "gamebryo-plugin-management",
+    "src",
+    "libloot_wstring_stub.so",
+  );
+
+  if (!fs.existsSync(stubSrc)) {
+    console.warn(
+      "postinstall-libloot: wstring_stub.cpp not found, skipping stub build",
+    );
+    return;
+  }
+
+  // Find node-addon-api include dir (napi.h).
+  // pnpm stores packages in node_modules/.pnpm/node-addon-api@X.Y.Z/node_modules/node-addon-api/
+  // so we can't use require.resolve — scan the .pnpm store directly.
+  const projectRoot = path.resolve(__dirname, "..");
+  const pnpmStore = path.join(projectRoot, "node_modules", ".pnpm");
+  let napiIncludeDir;
+  try {
+    const entries = fs.readdirSync(pnpmStore);
+    const napiEntry = entries.find((e) => e.startsWith("node-addon-api@"));
+    if (napiEntry) {
+      const candidate = path.join(
+        pnpmStore,
+        napiEntry,
+        "node_modules",
+        "node-addon-api",
+      );
+      if (fs.existsSync(path.join(candidate, "napi.h"))) {
+        napiIncludeDir = candidate;
+      }
+    }
+  } catch {
+    // pnpm store not found or unreadable
+  }
+  if (!napiIncludeDir) {
+    console.warn(
+      "postinstall-libloot: node-addon-api not found, skipping stub build",
+    );
+    return;
+  }
+
+  // Find Node.js C headers (node_api.h).
+  const nodeHeaderCandidates = [
+    path.join(path.dirname(process.execPath), "..", "include", "node"),
+    path.join(path.dirname(process.execPath), "include", "node"),
+    "/usr/include/node",
+    "/usr/local/include/node",
+  ];
+  const nodeIncludeDir = nodeHeaderCandidates.find((d) =>
+    fs.existsSync(path.join(d, "node_api.h")),
+  );
+  if (!nodeIncludeDir) {
+    console.warn(
+      "postinstall-libloot: Node.js headers not found, skipping stub build",
+    );
+    return;
+  }
+
+  try {
+    execSync(
+      `g++ -std=c++17 -shared -fPIC -o "${stubOut}" "${stubSrc}" -I"${napiIncludeDir}" -I"${nodeIncludeDir}"`,
+      { stdio: "inherit" },
+    );
+    console.log(`postinstall-libloot: libloot_wstring_stub.so compiled`);
+  } catch (err) {
+    console.warn(
+      "postinstall-libloot: wstring stub compile failed (loot will not work on Linux):",
+      err.message || err,
+    );
+  }
+})();
+
+// ---------------------------------------------------------------------------
+// Step 2: build libloot from source (skipped if already present)
+// ---------------------------------------------------------------------------
+
 // Locate the loot npm package dynamically using require.resolve so we are
 // independent of the pnpm store content-hash path.
 //

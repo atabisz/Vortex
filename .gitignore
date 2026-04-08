@@ -114,3 +114,6 @@ test-results/
 
 .codemogger
 .planning/
+
+# Compiled Linux wstring ABI shim — built from source by postinstall-libloot.cjs
+extensions/gamebryo-plugin-management/src/libloot_wstring_stub.so
