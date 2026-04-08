@@ -1,18 +1,21 @@
 name: Release Linux (AppImage + deb)
 
-# Runs on this fork only (master branch). Not intended for upstream.
-# Triggered automatically on every master push (rolling latest-linux release)
-# or manually by pushing a version tag, e.g.: git tag v1.0.0-linux-beta && git push --tags
+# Runs on this fork only. Not intended for upstream.
+# Chains after Main workflow on master (via workflow_run) for rolling latest-linux release.
+# Also triggered directly by version tags, e.g.: git tag v1.0.0-linux-beta && git push --tags
 
 on:
+  workflow_run:
+    workflows: ["Main"]
+    types: [completed]
+    branches: [master]
   push:
-    branches:
-      - master
     tags:
       - "v*"
 
 jobs:
   build-linux:
+    if: github.event_name == 'push' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-22.04
     env:
       DEBUG: electron-builder
@@ -27,6 +30,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+
+      - name: Cache Rust/Cargo artifacts
+        uses: Swatinem/rust-cache@v2
 
       - name: Install Linux build dependencies
         run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev cmake liblz4-dev
