@@ -52,10 +52,19 @@ Linux builds (AppImage + .deb) are published as [releases on this fork](../../re
 
 ## Installing
 
+**Stable release** (latest tagged version):
+
 | Package | Download |
 |---|---|
 | AppImage (recommended) | [vortex-setup.AppImage](https://github.com/atabisz/Vortex/releases/latest/download/vortex-setup.AppImage) |
 | Debian/Ubuntu .deb | [vortex_amd64.deb](https://github.com/atabisz/Vortex/releases/latest/download/vortex_amd64.deb) |
+
+**Rolling build** (latest master commit, may be less stable):
+
+| Package | Download |
+|---|---|
+| AppImage (recommended) | [vortex-setup.AppImage](https://github.com/atabisz/Vortex/releases/download/latest-linux/vortex-setup.AppImage) |
+| Debian/Ubuntu .deb | [vortex_amd64.deb](https://github.com/atabisz/Vortex/releases/download/latest-linux/vortex_amd64.deb) |
 
 **AppImage:**
 ```sh
