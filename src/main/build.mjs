@@ -19,6 +19,11 @@ const linuxAlias =
 const config = createConfig(INPUT, OUTPUT, "cjs", [], (id) => {
   if (id.startsWith("@vortex/shared")) return false;
 
+  // Never mark aliased modules external — they must be inlined by rolldown.
+  // (External resolution runs before alias substitution, so aliased IDs must
+  // be explicitly excluded here or the alias never fires.)
+  if (linuxAlias && id in linuxAlias) return false;
+
   if (id.startsWith(".")) return false;
   if (path.isAbsolute(id)) return false;
 
