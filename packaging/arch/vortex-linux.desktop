@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Vortex
+GenericName=Mod Manager
+Comment=The elegant, powerful, and open-source mod manager from Nexus Mods
+Exec=/usr/lib/vortex-linux/vortex-setup.AppImage %u
+Icon=vortex-linux
+Terminal=false
+Type=Application
+Categories=Game;Utility;
+MimeType=x-scheme-handler/nxm;
+StartupWMClass=Vortex

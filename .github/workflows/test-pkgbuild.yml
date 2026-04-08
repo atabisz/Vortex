@@ -1,0 +1,33 @@
+name: Validate Arch PKGBUILD
+
+# Fork-only: validates the AUR packaging artifacts in packaging/arch/.
+# Does NOT build or install — runs namcap to check PKGBUILD policy compliance.
+
+on:
+  push:
+    paths:
+      - "packaging/arch/**"
+  pull_request:
+    paths:
+      - "packaging/arch/**"
+
+jobs:
+  namcap:
+    name: namcap lint
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux/archlinux:base-devel
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install namcap
+        run: pacman -Sy --noconfirm namcap
+
+      - name: Validate PKGBUILD with namcap
+        working-directory: packaging/arch
+        run: namcap PKGBUILD
+
+      - name: Validate desktop file with namcap
+        working-directory: packaging/arch
+        run: namcap vortex-linux.desktop || true  # desktop-file warnings are informational

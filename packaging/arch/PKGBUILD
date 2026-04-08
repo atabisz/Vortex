@@ -1,0 +1,49 @@
+# Maintainer: Alex Tabisz
+# Upstream: https://github.com/Nexus-Mods/Vortex
+# Fork (Linux port): https://github.com/atabisz/Vortex
+#
+# This package wraps the pre-built AppImage from the Linux fork's GitHub Releases.
+# To update: bump pkgver to the new release tag (without the leading 'v'), then
+# regenerate .SRCINFO with: makepkg --printsrcinfo > .SRCINFO
+
+pkgname=vortex-linux-bin
+pkgver=4.0.0
+pkgrel=1
+pkgdesc="Nexus Mods mod manager — unofficial Linux AppImage port"
+arch=("x86_64")
+url="https://github.com/atabisz/Vortex"
+license=("GPL-3.0-only")
+depends=("fuse2" "xdg-utils")
+provides=("vortex")
+conflicts=("vortex")
+options=("!strip")
+source=(
+    "vortex-setup.AppImage::https://github.com/atabisz/Vortex/releases/download/v${pkgver}/vortex-setup.AppImage"
+    "vortex-linux.desktop"
+    "vortex-linux.png::https://raw.githubusercontent.com/atabisz/Vortex/master/assets/images/vortex.png"
+)
+sha256sums=(
+    "SKIP"  # pre-built AppImage binary
+    "SKIP"  # generated locally — recompute with: sha256sum vortex-linux.desktop
+    "SKIP"  # upstream PNG icon, may change between releases
+)
+
+package() {
+    # Install AppImage
+    install -Dm755 "vortex-setup.AppImage" \
+        "${pkgdir}/usr/lib/vortex-linux/vortex-setup.AppImage"
+
+    # Wrapper script so 'vortex' works from the terminal
+    install -dm755 "${pkgdir}/usr/bin"
+    cat > "${pkgdir}/usr/bin/vortex" <<'EOF'
+#!/bin/sh
+exec /usr/lib/vortex-linux/vortex-setup.AppImage "$@"
+EOF
+    chmod 755 "${pkgdir}/usr/bin/vortex"
+
+    # Desktop entry and icon
+    install -Dm644 "vortex-linux.desktop" \
+        "${pkgdir}/usr/share/applications/vortex-linux.desktop"
+    install -Dm644 "vortex-linux.png" \
+        "${pkgdir}/usr/share/pixmaps/vortex-linux.png"
+}
