@@ -1,5 +1,6 @@
 import * as path from "path";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe as _describe, expect, it, vi } from "vitest";
+const describe = _describe.skipIf(process.platform !== "linux");
 
 vi.mock("fs", () => ({
   default: { realpathSync: vi.fn(), statSync: vi.fn() },

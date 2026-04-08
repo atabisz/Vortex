@@ -1,4 +1,5 @@
-import { describe, test, expect } from "vitest";
+import { describe as _describe, test, expect } from "vitest";
+const describe = _describe.skipIf(process.platform !== "linux");
 
 import {
   escapeDesktopExecFilePath,
