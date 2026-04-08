@@ -34,15 +34,8 @@ chmod +x vortex-setup.AppImage
 sudo apt install ./vortex_amd64.deb
 ```
 
-**Arch Linux (AUR):**
+**Arch Linux:**
 
-Using an AUR helper:
-```sh
-yay -S vortex-linux-bin
-# or: paru -S vortex-linux-bin
-```
-
-Manual install:
 ```sh
 git clone https://github.com/atabisz/Vortex
 cd Vortex/packaging/arch
@@ -51,7 +44,7 @@ makepkg -si
 
 > Requires `fuse2` (`sudo pacman -S fuse2`). The package installs the AppImage to `/usr/lib/vortex-linux/` and adds a `vortex` command to your PATH. NXM download links are registered automatically via the desktop entry.
 
-> **Note:** I'm not an Arch user and don't plan to publish this to the AUR myself. The PKGBUILD is here for anyone who wants to package it, or for Nexus Mods to adopt if they choose to take this Linux port official.
+> **Note:** This package is not published on the AUR. I'm not an Arch user — the PKGBUILD is provided for anyone who wants to use it, and in the hope that Nexus Mods adopts this Linux port officially and handles distribution themselves.
 
 > **Elevation note (.deb vs AppImage):** The `.deb` package installs a polkit rules file (`/etc/polkit-1/rules.d/10-vortex.rules`) that caches your admin credential for the desktop session. This means elevation operations (mod deployment, symlink creation) only prompt for your password once. AppImage builds do not include this rule — you will be prompted each time Vortex needs elevated privileges.
 
