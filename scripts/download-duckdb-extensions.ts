@@ -175,7 +175,7 @@ async function main(): Promise<void> {
 // Only run when executed directly (not when imported for testing)
 const isMain =
   typeof process.argv[1] === "string" &&
-  import.meta.url === `file:///${process.argv[1].replace(/\\/g, "/")}`;
+  fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
 
 if (isMain) {
   main().catch((err: unknown) => {
