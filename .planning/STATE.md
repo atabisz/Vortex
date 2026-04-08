@@ -159,6 +159,7 @@ None.
 | 260407-icu | Remove Linux-disabled guard from NXM toggle in Settings.tsx | 2026-04-07 | b3c474bcc | [260407-icu-remove-the-linux-disabled-guard-from-the](./quick/260407-icu-remove-the-linux-disabled-guard-from-the/) |
 | 260407-iv0 | Patch Firefox profiles with nxm expose pref during Linux NXM registration | 2026-04-07 | 35ba35ccb | [260407-iv0-patch-firefox-profiles-with-nxm-expose-p](./quick/260407-iv0-patch-firefox-profiles-with-nxm-expose-p/) |
 | 260407-h9r | Clear Firefox handlers.json nxm entry on registration | 2026-04-07 | e08518b20 | — |
+| 260408-haq | Set deb/AppImage version to major.minor.YYYYMMDDHHMM | 2026-04-08 | 53033d808 | [260408-haq-set-deb-package-version-to-major-minor-f](./quick/260408-haq-set-deb-package-version-to-major-minor-f/) |
 
 ## Session Continuity
 
