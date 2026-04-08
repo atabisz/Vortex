@@ -121,6 +121,7 @@ const config = {
   asarUnpack: [
     "LICENSE.md",
     "bundledPlugins",
+    "duckdb-extensions/**",
     "node_modules/7z-bin",
     "node_modules/bootstrap-sass/assets/stylesheets",
     "node_modules/react-select/scss",
