@@ -160,9 +160,11 @@ None.
 | 260407-iv0 | Patch Firefox profiles with nxm expose pref during Linux NXM registration | 2026-04-07 | 35ba35ccb | [260407-iv0-patch-firefox-profiles-with-nxm-expose-p](./quick/260407-iv0-patch-firefox-profiles-with-nxm-expose-p/) |
 | 260407-h9r | Clear Firefox handlers.json nxm entry on registration | 2026-04-07 | e08518b20 | — |
 | 260408-haq | Set deb/AppImage version to major.minor.YYYYMMDDHHMM | 2026-04-08 | 53033d808 | [260408-haq-set-deb-package-version-to-major-minor-f](./quick/260408-haq-set-deb-package-version-to-major-minor-f/) |
+| 260408-mvp | Speed up GH Actions builds: rust cache, workflow_run chain, paths-ignore | 2026-04-08 | 30436ef73 | [260408-mvp-speed-up-gh-actions-builds-rust-cache-wo](./quick/260408-mvp-speed-up-gh-actions-builds-rust-cache-wo/) |
+| 260408-ms8 | Update planning docs with current state after v4.0 backlog analysis | 2026-04-08 | — | [260408-ms8-update-planning-docs-with-current-state-](./quick/260408-ms8-update-planning-docs-with-current-state-/) |
 
 ## Session Continuity
 
-Last session: 2026-04-07T10:32:16.462Z
-Stopped at: Phase 12 context gathered
-Resume file: .planning/phases/12-elevation-end-to-end-validation-steam-deck-error-ux/12-CONTEXT.md
+Last session: 2026-04-08
+Stopped at: v4.0 backlog analysis complete — 9 items in PROJECT.md Active (v5.0), ready to /gsd-new-milestone
+Resume file: .planning/PROJECT.md

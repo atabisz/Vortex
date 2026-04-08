@@ -62,6 +62,13 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 
 - [ ] **ELEV-05**: All user-triggered elevation operations complete successfully on desktop Linux without crashing or hanging — code-complete (Phase 12); hardware UAT pending (Phase 999.1)
 - [ ] **ELEV-06**: Steam Deck elevation failure shows actionable error notification with recovery path — code-complete (Phase 12); end-to-end Electron UX UAT pending (Phase 999.1)
+- [ ] **D1**: Plugins tab behavioral difference between pnpm dev and .deb install — needs investigation
+- [ ] **B1**: Regenerate `packages/vortex-api/lib/api.d.ts` — `resolvePathCase` missing from generated declarations
+- [ ] **A1**: ELEV-05 hardware UAT — Phase 999.1 ready, needs real hardware execution
+- [ ] **A2**: ELEV-04 live session caching test — AUTH_ADMIN_KEEP in .deb, no live test yet
+- [ ] **A3**: PROT-01 live NXM download test on real AppImage/deb hardware
+- [ ] **A4**: SAVE-05 live save transfer on real Proton/Linux install
+- [ ] **E1**: Submit upstream PR from `linux-port` branch — commit classification completed 2026-04-08
 
 ### Deferred (v5.0+)
 
@@ -157,4 +164,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-07 after v4.0 milestone — Elevation Hardening + Save Transfer*
+*Last updated: 2026-04-08 after v4.0 backlog analysis — v5.0 items identified*
