@@ -66,6 +66,12 @@ jobs:
       - name: Verify native addons load
         run: node scripts/verify-addons.cjs
 
+      - name: Set package version
+        run: |
+          BASE_VERSION=$(node -e "const v = require('./package.json').version.split('.'); process.stdout.write(v[0] + '.' + v[1])")
+          STAMP=$(date -u +%Y%m%d%H%M)
+          echo "VORTEX_VERSION=${BASE_VERSION}.${STAMP}" >> "$GITHUB_ENV"
+
       - name: Build AppImage and deb
         run: pnpm run package:nosign
 
