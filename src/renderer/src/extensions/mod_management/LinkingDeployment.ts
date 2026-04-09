@@ -182,6 +182,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
     let contentChanged: string[];
 
     let errorCount: number = 0;
+    const errorCodes: Set<string> = new Set();
 
     this.mDirCache = new Set<string>();
     this.mReaddirCache = new Map<string, string[]>();
@@ -225,6 +226,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
               link: context.newDeployment[key].relPath,
               error: getErrorMessageOrDefault(err),
             });
+            errorCodes.add(getErrorCode(err) ?? "UNKNOWN");
             ++errorCount;
           },
         ),
@@ -241,6 +243,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
                 link: context.newDeployment[key].relPath,
                 error: getErrorMessageOrDefault(err),
               });
+              errorCodes.add(getErrorCode(err) ?? "UNKNOWN");
               ++errorCount;
               sourceChanged.splice(idx, 1);
             }),
@@ -258,6 +261,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
                 link: context.newDeployment[key].relPath,
                 error: getErrorMessageOrDefault(err),
               });
+              errorCodes.add(getErrorCode(err) ?? "UNKNOWN");
               ++errorCount;
               contentChanged.splice(idx, 1);
             }),
@@ -278,6 +282,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
                   if (getErrorCode(err) !== "ENOENT") {
                     // if the source file doesn't exist it must have been deleted
                     // in the mean time. That's not really our problem.
+                    errorCodes.add(getErrorCode(err) ?? "UNKNOWN");
                     ++errorCount;
                   }
                 })
@@ -298,6 +303,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
                     error: getErrorMessageOrDefault(err),
                   });
                   if (getErrorCode(err) !== "ENOENT") {
+                    errorCodes.add(getErrorCode(err) ?? "UNKNOWN");
                     ++errorCount;
                   }
                 })
@@ -312,11 +318,14 @@ abstract class LinkingActivator implements IDeploymentMethod {
                 type: "error",
                 title: this.mApi.translate("Deployment failed"),
                 message: this.mApi.translate(
-                  "{{count}} files were not correctly deployed (see log for details).\n" +
-                    "The most likely reason is that files were locked by external applications " +
-                    "so please ensure no other application has a mod file open, then repeat " +
-                    "deployment.",
-                  { replace: { count: errorCount } },
+                  "{{count}} files were not correctly deployed " +
+                    "(errors: {{errors}}, see log for details).",
+                  {
+                    replace: {
+                      count: errorCount,
+                      errors: Array.from(errorCodes).join(", "),
+                    },
+                  },
                 ),
               }),
             );

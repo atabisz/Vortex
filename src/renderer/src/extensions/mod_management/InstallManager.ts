@@ -354,6 +354,90 @@ async function normalizeBackslashPaths(basePath: string): Promise<void> {
   }
 }
 
+/**
+ * On Linux, archives may contain entries with case-conflicting directory paths
+ * (e.g. both "Data/SKSE/plugins/" and "data/SKSE/plugins/"). Since Linux has a
+ * case-sensitive filesystem, 7z extracts these as separate directories. This
+ * function merges any case-conflicting directories by moving all files into the
+ * first-seen (canonical) directory and removing the now-empty duplicates.
+ *
+ * On Windows this is a no-op because the filesystem is case-insensitive.
+ */
+async function mergeCaseConflictingDirs(basePath: string): Promise<void> {
+  if (process.platform === "win32") {
+    return;
+  }
+
+  let entries: string[];
+  try {
+    entries = await fs.readdirAsync(basePath);
+  } catch {
+    return;
+  }
+
+  // Group directory entries by their lowercased name to find conflicts.
+  const dirGroups = new Map<string, string[]>();
+  for (const entry of entries) {
+    const fullPath = path.join(basePath, entry);
+    try {
+      const stat = await fs.statAsync(fullPath);
+      if (stat.isDirectory()) {
+        const key = entry.toLowerCase();
+        const group = dirGroups.get(key);
+        if (group !== undefined) {
+          group.push(entry);
+        } else {
+          dirGroups.set(key, [entry]);
+        }
+      }
+    } catch {
+      // Ignore stat errors (e.g. file removed during iteration).
+    }
+  }
+
+  for (const [, names] of dirGroups) {
+    const canonical = names[0];
+    const canonicalPath = path.join(basePath, canonical);
+    // Recurse into canonical dir first.
+    await mergeCaseConflictingDirs(canonicalPath);
+
+    for (const other of names.slice(1)) {
+      const otherPath = path.join(basePath, other);
+      await mergeCaseConflictingDirs(otherPath);
+
+      let otherEntries: string[];
+      try {
+        otherEntries = await fs.readdirAsync(otherPath);
+      } catch {
+        continue;
+      }
+
+      for (const file of otherEntries) {
+        const src = path.join(otherPath, file);
+        const dst = path.join(canonicalPath, file);
+        try {
+          await fs.statAsync(dst);
+          // Canonical already has this file — discard the duplicate.
+        } catch {
+          // Canonical does not have this file — move it over.
+          try {
+            await fs.renameAsync(src, dst);
+          } catch {
+            // Best-effort; leave the file in place if the move fails.
+          }
+        }
+      }
+
+      // Remove the (now-empty) duplicate directory.
+      try {
+        await fs.rmdirAsync(otherPath);
+      } catch {
+        // Not empty — some files could not be moved; leave the directory.
+      }
+    }
+  }
+}
+
 async function buildFileList(basePath: string): Promise<string[]> {
   const fileList: string[] = [];
   await walk(basePath, (iterPath, stats) => {
@@ -1210,6 +1294,7 @@ class InstallManager {
         }
       })
       .then(() => normalizeBackslashPaths(tempPath))
+      .then(() => mergeCaseConflictingDirs(tempPath))
       .then(() => buildFileList(tempPath))
       .then((result) => { fileList.push(...result); })
       .then(() => {
@@ -4087,6 +4172,7 @@ class InstallManager {
         }
       })
       .then(() => normalizeBackslashPaths(tempPath))
+      .then(() => mergeCaseConflictingDirs(tempPath))
       .then(() => buildFileList(tempPath))
       .then((result) => { fileList.push(...result); })
       .then(async () => {
