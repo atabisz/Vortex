@@ -1,7 +1,6 @@
 import * as path from "path";
 import { beforeEach, describe as _describe, expect, it, vi } from "vitest";
 const describe = _describe.skipIf(process.platform !== "linux");
->>>>>>> a5add0243754819e598cc3e4d572ee584a239b70
 
 vi.mock("fs", () => ({
   default: { realpathSync: vi.fn(), statSync: vi.fn() },
@@ -60,11 +59,17 @@ describe("getLinuxSteamPaths", () => {
       ),
     );
     expect(paths).toContain(
-      path.join("/home/testuser", "snap", "steam", "common", ".local", "share", "Steam"),
+      path.join(
+        "/home/testuser",
+        "snap",
+        "steam",
+        "common",
+        ".local",
+        "share",
+        "Steam",
+      ),
     );
-    expect(paths).toContain(
-      path.join("/home/testuser", ".steam", "steam"),
-    );
+    expect(paths).toContain(path.join("/home/testuser", ".steam", "steam"));
   });
 
   it("places the resolved symlink path first in the array", () => {
