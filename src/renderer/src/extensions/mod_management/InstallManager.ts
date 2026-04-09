@@ -4509,7 +4509,32 @@ class InstallManager {
     if (unsupported.length === 0) {
       return;
     }
-    const missing = unsupported.map((instruction) => instruction.source);
+
+    // On Linux, C# script FOMADs emit a specific "CSharpScript" unsupported
+    // instruction. This is a known platform limitation, not a bug — show a
+    // clear message instead of the generic "unimplemented" dialog.
+    const csharpUnsupported = unsupported.filter(
+      (instr) => instr.source === "CSharpScript",
+    );
+    const otherUnsupported = unsupported.filter(
+      (instr) => instr.source !== "CSharpScript",
+    );
+
+    if (csharpUnsupported.length > 0 && process.platform !== "win32") {
+      api.sendNotification({
+        type: "warning",
+        message:
+          "This mod uses a C# installer script that cannot run on Linux. " +
+          "The mod was installed using basic file mapping. Some optional " +
+          "components may be missing.",
+      });
+    }
+
+    // Fall through to existing logic for any other unsupported instructions
+    if (otherUnsupported.length === 0) {
+      return;
+    }
+    const missing = otherUnsupported.map((instruction) => instruction.source);
     const makeReport = () =>
       api
         .genMd5Hash(archivePath)
