@@ -55,7 +55,7 @@
 **Goal:** Deliver clean, PR-ready Linux fixes in the local fomod-installer fork and apply corresponding Vortex cleanup so the end-to-end FOMOD story is correct on Linux without workarounds.
 **Context:** Local fork at `/home/alex/src/fomod-installer` is linked via pnpm overrides. Parser10 path normalization already implemented. Remaining gaps: CSharpScript runtime OS guard, CI Linux IPC build pipeline, source-path case normalization in XmlScriptInstaller. Vortex needs: unsupported-instruction warning for Linux, redundant replaceAll removal, and vortex-api declaration regeneration.
 **Requirements:** FOMD-15-01, FOMD-15-02, FOMD-15-03, FOMD-15-04, FOMD-15-05, FOMD-15-06, FOMD-15-07
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 15-01-PLAN.md — fomod-installer source path normalization + verify existing OS guard and CI
@@ -89,4 +89,4 @@ Plans:
 | 12. Elevation End-to-End Validation + Steam Deck Error UX | v4.0 | 1/1 | Complete | 2026-04-07 |
 | 13. Save Transfer | v4.0 | 1/1 | Complete | 2026-04-07 |
 | 14. Linux Case-Folding fs Wrapper | v4.0 | 2/2 | Complete | 2026-04-07 |
-| 15. fomod-installer Linux Fixes + Vortex Cleanup | v5.0 | 3/3 | Complete | 2026-04-09 |
+| 15. fomod-installer Linux Fixes + Vortex Cleanup | v5.0 | 3/3 | Complete    | 2026-04-09 |
