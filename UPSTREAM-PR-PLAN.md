@@ -43,6 +43,21 @@ Key issues they raised:
 
 ---
 
+## fomod-installer Dependency Chain
+
+Some PR-F commits depend on fomod-installer PRs landing first. Precise relationships:
+
+| Vortex commit | Depends on | Status | Action |
+|---|---|---|---|
+| `ca8e99941` normalize backslashes in copy source/destination | fi-1 (XML parse normalization) | **Redundant after fi-1 merges** | Drop from PR-F once fi-1 is merged |
+| `cbff6b891` resolve FOMOD paths case-insensitively in extractArchive | fi-2 (archive-case emission) | **Defensive — submit now, works best after fi-2** | Include in PR-F; keep as fallback even after fi-2 |
+| `0ac7942ca` CSharpScript unsupported warning in reportUnsupported | fi-3 (warning emission) | **Load-bearing — handler for fi-3's warning** | Hold until fi-3 merges; submit as separate small PR or split PR-F |
+| `673d0629f` Linux FOMD binary asarUnpack + exe resolution | fi-4 (Linux IPC ELF binary) | **Load-bearing — binary must exist** | Hold until fi-4 merges AND `@nexusmods/fomod-installer-ipc` dep is bumped in Vortex |
+
+**Result: PR-F splits into three parts** (see PR-F below).
+
+---
+
 ## PR Sequence
 
 ### Wave 1 — Submit Now (standalone, no overlap risk)
@@ -85,10 +100,17 @@ Key issues they raised:
   - `3a6488b9b` prepend loot lib dir to LD_LIBRARY_PATH at startup
   - `3bbdd99a9` restore libloot.so.0 and wstring_stub copy in _native
 
-- [ ] **PR-F: FOMOD Linux support** ⚠️ rebase onto master before submitting (upstream #22320 added preserveChoices to InstallManager.ts — no logic conflict, line shifts only)
-  - `673d0629f` add Linux FOMOD binary asarUnpack entries and fix exe resolution
-  - `ca8e99941` normalize backslashes in FOMOD copy source/destination paths
-  - `cbff6b891` resolve FOMOD source paths case-insensitively in extractArchive
+- [ ] **PR-F1: FOMOD path fixes** ⚠️ rebase onto master before submitting (upstream #22320 added preserveChoices to InstallManager.ts — no logic conflict, line shifts only)
+  - `cbff6b891` resolve FOMOD source paths case-insensitively in extractArchive ← defensive; works best after fomod-installer fi-2 merges
+  - ~~`ca8e99941`~~ normalize backslashes in copy source/destination ← **drop once fomod-installer fi-1 merges**; include only if submitting before fi-1 lands
+
+- [ ] **PR-F2: CSharpScript unsupported warning handler** ⛔ hold until fomod-installer fi-3 merges
+  - `0ac7942ca` Linux-specific CSharpScript unsupported warning in reportUnsupported
+  > fi-3 emits the warning; this is the Vortex-side handler. No point submitting without fi-3 merged.
+
+- [ ] **PR-F3: Linux FOMD binary wiring** ⛔ hold until fomod-installer fi-4 merges + `@nexusmods/fomod-installer-ipc` dep bumped in Vortex
+  - `673d0629f` add Linux FOMD binary asarUnpack entries and fix exe resolution
+  > Linux ELF binary must exist in the npm package before this lands. Bump the dep first, then submit.
 
 - [ ] **PR-G: Steam/Proton game discovery**
   - `36e7416e0` add findAllLinuxSteamPaths() and wire multi-root Steam scanning
@@ -180,7 +202,7 @@ Suggested sequence (each is independent, submit in order):
 
 | PR | Title | Commits | Status |
 |---|---|---|---|
-| fi-1 | fix: normalize XML path separators at parse time | `c17366b` | ready |
+| fi-1 | fix: normalize XML path separators at parse time | `c17366b` | **draft PR submitted** — [fomod-installer#45](https://github.com/Nexus-Mods/fomod-installer/pull/45) |
 | fi-2 | fix: emit real archive case in copy instructions | `17d3785`, `b44d7e7` | ready (depends fi-1) |
 | fi-3 | feat: C# script guard + UnsupportedFunctionalityWarning with reason/platform | `e9669a9`, `a53ae6b`, `28b4fe5`, `ffb9ca9`, `c7efe62`, `e6abf2e`, `cd0e68a` | ready |
 | fi-4 | ci: Linux IPC build pipeline + platform-aware process cleanup | `57711a9`, `92f54f3`, `27609c2`, `test updates` | ready |
@@ -197,7 +219,9 @@ Suggested sequence (each is independent, submit in order):
 | C | winapi shim | pending | |
 | D | IPC path utility | pending | |
 | E | loot native addon | pending | |
-| F | FOMOD | pending | |
+| F1 | FOMOD path fixes | pending | submit when ready; drop ca8e99941 after fi-1 merges |
+| F2 | CSharpScript warning handler | HOLD | wait for fomod-installer fi-3 |
+| F3 | FOMD binary wiring | HOLD | wait for fomod-installer fi-4 + dep bump |
 | G | Steam/Proton discovery | pending | |
 | H | NXM + packaging | pending | |
 | I | exe-version | pending | |
