@@ -94,6 +94,17 @@ makepkg -si
 
 ## Building from Source
 
+Ubuntu/Debian build prerequisites:
+
+```sh
+sudo apt-get update
+sudo apt-get install -y git python3 make g++ cmake libfontconfig1-dev liblz4-dev zlib1g-dev
+curl https://sh.rustup.rs -sSf | sh
+. "$HOME/.cargo/env"
+```
+
+These packages are required for the native Node addons built during `pnpm install` on Linux. In particular, `libfontconfig1-dev` is needed by `font-scanner`, `liblz4-dev` is needed by Gamebryo-related native modules, and Rust is required because `libloot` is built from source during install.
+
 ```sh
 volta install node@22
 pnpm install
