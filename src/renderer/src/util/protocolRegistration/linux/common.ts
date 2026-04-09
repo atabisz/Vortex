@@ -29,9 +29,9 @@
  * @module Linux protocol registration helpers
  */
 import { spawnSync } from "child_process";
-import * as os from "os";
 import * as path from "path";
 
+import { xdgDataHome } from "../../linux/xdg";
 import { log } from "../../log";
 
 interface ICommandResult {
@@ -45,12 +45,22 @@ interface ICommandResult {
  * Resolve the writable Linux applications directory used for local desktop entries.
  */
 export function applicationsDirectory(): string {
-  const xdgDataHome = process.env.XDG_DATA_HOME;
-  const dataHome =
-    xdgDataHome != null && xdgDataHome.length > 0
-      ? xdgDataHome
-      : path.join(os.homedir(), ".local", "share");
-  return path.join(dataHome, "applications");
+  return path.join(xdgDataHome(), "applications");
+}
+
+/**
+ * Refresh the KDE Plasma service cache after desktop entry changes.
+ * On non-KDE desktops, kbuildsycoca6 will not be available (ENOENT) and is silently skipped.
+ */
+function refreshKdeDesktopDatabase(): void {
+  const command = "kbuildsycoca6";
+  const args = ["--noincremental"];
+  const result = runCommand(command, args);
+  if (result.error?.code === "ENOENT") {
+    log("debug", "kbuildsycoca6 not available (not KDE)", { command });
+    return;
+  }
+  logCommandFailure(command, args, result);
 }
 
 /**
@@ -62,6 +72,7 @@ export function refreshDesktopDatabase(applicationsDir: string): void {
   const args = [applicationsDir];
   const result = runCommand(command, args);
   logCommandFailure(command, args, result);
+  refreshKdeDesktopDatabase();
 }
 
 /**
