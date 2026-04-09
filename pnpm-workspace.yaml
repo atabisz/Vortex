@@ -303,7 +303,6 @@ overrides:
   "@types/react": "16"
   "@types/react-dom": "16"
   node-addon-api: 8.5.0
-  7z-bin: "git+https://github.com/Nexus-Mods/7z-bin#3298c42e69e3220dc39694bc2f610c077c3e213a"
 patchedDependencies:
   exe-version@2.3.0: patches/exe-version@2.3.0.patch
   gamebryo-savegame@2.1.2: patches/gamebryo-savegame@2.1.2.patch
