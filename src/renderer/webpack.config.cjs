@@ -47,6 +47,16 @@ const config = {
     resolve: {
         plugins: [new TsconfigPathsPlugin()],
         extensions: [".js", ".jsx", ".ts", ".tsx", ".json"],
+        ...(process.platform === "linux" && {
+            alias: {
+                "winapi-bindings": path.resolve(
+                    __dirname,
+                    "src",
+                    "util",
+                    "winapi-shim.ts",
+                ),
+            },
+        }),
     },
     // NOTE(erri120): disable polyfills for browser because nodeIntegration is enabled
     node: { __filename: false, __dirname: false },
@@ -63,6 +73,7 @@ const config = {
                 loader: "ts-loader",
                 exclude: /node_modules/,
                 options: {
+                    transpileOnly: true,
                     configFile: path.resolve(__dirname, "tsconfig.json"),
                     compilerOptions: {
                         composite: false,

@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, readdir } from "node:fs/promises";
 import { resolve, dirname, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -137,6 +137,30 @@ async function buildWorkspacePackageMap(packagePaths) {
   const map = {};
 
   for (const pkgPath of packagePaths) {
+    if (pkgPath.endsWith("/*")) {
+      // Expand single-level glob by listing the directory
+      const dirPath = resolve(ROOT_DIR, pkgPath.slice(0, -2));
+      try {
+        const entries = await readdir(dirPath, { withFileTypes: true });
+        for (const entry of entries) {
+          if (!entry.isDirectory()) continue;
+          const pkgJsonPath = resolve(dirPath, entry.name, "package.json");
+          try {
+            const raw = await readFile(pkgJsonPath, "utf8");
+            const pkg = JSON.parse(raw);
+            if (pkg.name) {
+              map[pkg.name] = resolve(dirPath, entry.name);
+            }
+          } catch {
+            // Skip packages whose package.json cannot be read
+          }
+        }
+      } catch {
+        // Skip unreadable directories
+      }
+      continue;
+    }
+
     if (pkgPath.includes("*")) continue;
 
     const pkgDir = resolve(ROOT_DIR, pkgPath);
@@ -169,7 +193,9 @@ async function createMinimalPackageJson(workspacePackageMap, catalog) {
     version: process.env.VORTEX_VERSION || "1.0.0",
     main: mainPkg.main.replace(/^out\//, ""),
     author: "Black Tree Gaming Ltd.",
-    description: "Vortex",
+    description:
+      "The elegant, powerful, and open-source mod manager from Nexus Mods",
+    homepage: "https://www.nexusmods.com/site/mods/1",
     license: "GPL-3.0",
     type: mainPkg.type,
     packageManager: rootPkg.packageManager,
@@ -238,7 +264,11 @@ async function preparePNPM(rawWorkspaceYaml) {
   const overrides = extractOverridesBlock(rawWorkspaceYaml);
 
   const minimalYaml =
-    (overrides ? overrides + "\n" : "") + catalog + "\n" + allowBuilds + "\n";
+    (overrides ? overrides + "\n" : "") +
+    catalog +
+    "\n" +
+    allowBuilds +
+    "\n";
 
   await writeFile(resolve(DIST_DIR, "pnpm-workspace.yaml"), minimalYaml);
   console.log("✔  Created dist/pnpm-workspace.yaml");
