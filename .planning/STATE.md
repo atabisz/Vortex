@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
 milestone: v5.0
-milestone_name: — fomod-installer Linux Fixes
-status: completed
-stopped_at: v4.0 backlog analysis complete — 9 items in PROJECT.md Active (v5.0), ready to /gsd-new-milestone
-last_updated: "2026-04-09T12:30:00.366Z"
+milestone_name: fomod-installer Linux Fixes
+status: archived
+stopped_at: v5.0 milestone archived — run /gsd-new-milestone to start v6.0
+last_updated: "2026-04-09T00:00:00.000Z"
 last_activity: 2026-04-09
 progress:
   total_phases: 2

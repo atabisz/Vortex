@@ -1,5 +1,16 @@
 # Milestones
 
+## v5.0 fomod-installer Linux Fixes (Shipped: 2026-04-09)
+
+**Phases completed:** 1 phases, 3 plans, 6 tasks
+
+**Key accomplishments:**
+
+- File:
+- vortex-api lib/api.d.ts regenerated via API Extractor to include resolvePathCase; REQUIREMENTS.md created with all 7 FOMD-15-xx entries
+
+---
+
 ## v4.0 Elevation Hardening + Save Transfer (Shipped: 2026-04-07)
 
 **Phases completed:** 5 phases, 5 plans, 5 tasks

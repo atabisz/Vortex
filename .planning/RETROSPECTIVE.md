@@ -202,6 +202,52 @@
 
 ---
 
+## Milestone: v5.0 — fomod-installer Linux Fixes
+
+**Shipped:** 2026-04-09
+**Phases:** 1 | **Plans:** 3 | **Tasks:** 6
+
+### What Was Built
+
+- `XmlScriptInstaller.cs` source path normalized via `TextUtil.NormalizePath(matchedFiles[0], false, true)` — lowercase forward-slash paths, consistent with destination
+- Linux-specific CSharpScript unsupported warning in `reportUnsupported` (`InstallManager.ts`) — `type:warning` notification with actionable message on non-Windows; Windows behavior unchanged
+- Redundant `copy.source.replaceAll("\\", "/")` removed — Parser10 normalizes upstream; destination replaceAll retained for belt-and-suspenders
+- `packages/vortex-api/lib/api.d.ts` regenerated via API Extractor — `resolvePathCase` now in public API surface (2 occurrences); `etc/vortex.api.md` updated
+- FOMD-15-01 (CSharpScript OS guard) and FOMD-15-03 (CI linux-x64 IPC build) confirmed pre-existing — no code changes needed
+
+### What Worked
+
+- **Plan 03 addressed the v4.0 lesson immediately.** The "regenerate .d.ts when promoting to vortex-api" lesson from v4.0 was explicitly built into Plan 03 as a task — the lesson fed forward and the gap was closed in the same milestone cycle.
+- **Pre-existing confirmations reduced scope.** Two of 7 requirements (FOMD-15-01, FOMD-15-03) were confirmed pre-existing by Plan 01 inspection — no code changes needed, scope was accurately bounded.
+- **Single-phase milestone executed cleanly.** 3 plans, 3 SUMMARY.md files, 6 tasks — no integration complexity; straightforward execution.
+- **process.platform !== "win32" guard.** Forward-compatible platform guard (not `=== 'linux'`) applied consistently — future platforms (macOS, BSD) will get the warning automatically.
+
+### What Was Inefficient
+
+- **REQUIREMENTS.md statuses not updated during execution.** REQUIREMENTS.md was created in Plan 03 with "Planned" statuses but never updated to "Complete" as Plans 01 and 02 delivered their requirements. The archive required a manual correction pass at milestone close.
+- **gsd-tools one-liner extraction blank again.** `summary-extract --fields one_liner` returned empty for Plans 01 and 02 — same schema gap from v4.0. YAML frontmatter uses `decisions:` not `one_liner:` field. Fifth milestone with this gap.
+- **worktree node_modules issue in Plan 03.** The executor worktree had no `node_modules`; had to run `api:build` in the main repo and copy artifacts. Worktree setup for build-heavy plans needs explicit node_modules handling.
+
+### Patterns Established
+
+- **REQUIREMENTS.md update discipline.** When plans complete requirements, update the status in REQUIREMENTS.md inline — don't batch-update at archive time.
+- **`git add -f` for gitignored build artifacts.** `packages/vortex-api/lib/` is gitignored via `packages/.gitignore` — force-add for tracked build artifacts that consumers depend on for types.
+- **API Extractor pipeline.** `pnpm -F @vortex/renderer run api:build && api:docs` regenerates both `packages/vortex-api/lib/api.d.ts` and `etc/vortex.api.md` — must run in the main repo (not a worktree without node_modules).
+
+### Key Lessons
+
+1. **REQUIREMENTS.md is a living document during execution.** Update requirement statuses as plans complete — don't leave them as "Planned" for the archive to clean up. The archive should record truth, not planning intent.
+2. **one_liner field — fifth milestone with this gap.** This is a systemic issue. The gsd-tools summary-extract expects a `one_liner:` YAML field but summaries use `provides:` or inline headers. Fix gsd-tools extraction or mandate `one_liner:` in the SUMMARY.md schema.
+3. **Build-heavy plans need node_modules in the worktree.** Any plan that runs `pnpm` build commands should either (a) install node_modules in the worktree first, or (b) explicitly note it runs builds in the main repo. Document this in the plan's environment section.
+
+### Cost Observations
+
+- Model mix: Sonnet 4.6 (primary execution)
+- Sessions: 1 session (2026-04-09)
+- Notable: Smallest milestone in the project — 1 phase, 3 plans, ~17 minutes total execution. Lean scope from pre-existing confirmations.
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -212,6 +258,7 @@
 | v2.0 | ~4 | 3 | CONTEXT.md quality drove Phase 8 precision; SUMMARY.md enforcement gap surfaced |
 | v3.0 | ~3 | 2 | Research-driven design eliminated all execution surprises; injectable seam pattern for testability |
 | v4.0 | ~4 | 4 | Fs shim pattern over per-callsite fixes; TDD RED/GREEN commit pairs; integration checker confirmed all wiring |
+| v5.0 | 1 | 1 | Smallest milestone; pre-existing confirmations reduced scope; v4.0 lesson (regenerate .d.ts) applied immediately |
 
 ### Cumulative Quality
 
@@ -221,6 +268,7 @@
 | v2.0 | 16 (desktop escaping) + main process suite | 3 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
 | v3.0 | 7 (elevated.test.ts) + gameSupport stubs | 2 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
 | v4.0 | 21 (elevated) + 22 (fs) + 6 (resolvePathCase) = 49 | 4 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
+| v5.0 | 0 new (fomod-installer C# only; verify-warning.spec.ts pre-existing) | 1 phase, 0 Windows regressions | ubuntu-latest + windows-latest |
 
 ### Top Lessons (Verified Across Milestones)
 
@@ -231,4 +279,5 @@
 5. **Research-driven design eliminates surprises** — pitfalls documented in CONTEXT.md/RESEARCH.md before coding are pitfalls avoided; all v3.0 major pitfalls were pre-documented
 6. **Injectable seams for OS-calling code** — spawner parameter in `runElevated()` enables clean Vitest coverage without mock pollution; generalises to any platform-dependent utility
 7. **Transparent shims > per-callsite fixes** — when a cross-cutting problem affects N callsites, design the shim layer first; per-callsite workarounds become obsolete automatically
-8. **SUMMARY.md one-liner field** — four milestones with blank one-liners due to schema mismatch; standardise `one_liner:` field or update gsd-tools extraction before v5.0
+8. **SUMMARY.md one-liner field** — five milestones with blank one-liners due to schema mismatch; standardise `one_liner:` field or fix gsd-tools extraction before v6.0
+9. **REQUIREMENTS.md is a living document** — update statuses inline as plans complete; archiving stale "Planned" statuses defeats the tracking purpose

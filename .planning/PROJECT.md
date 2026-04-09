@@ -2,7 +2,7 @@
 
 ## Current State
 
-**Shipped v5.0 on 2026-04-09.** Phase 15 complete: fomod-installer source path normalization (`TextUtil.NormalizePath` on `matchedFiles[0]`), Linux-specific CSharpScript unsupported warning in `reportUnsupported`, redundant `replaceAll` removed from copy source path, `vortex-api` declarations regenerated with `resolvePathCase`.
+**Shipped v5.0 on 2026-04-09.** Phase 15 complete: fomod-installer source path normalization (`TextUtil.NormalizePath` on `matchedFiles[0]`), Linux-specific CSharpScript unsupported warning in `reportUnsupported`, redundant `replaceAll` removed from copy source path, `vortex-api` declarations regenerated with `resolvePathCase`. All 7 FOMD-15-xx requirements satisfied. FOMOD end-to-end story on Linux is clean — no workarounds remain in Vortex; fork is PR-ready.
 
 **Shipped v4.0 on 2026-04-07.** Elevation hardening complete: session-scoped polkit rules in `.deb` (AUTH_ADMIN_KEEP), Steam Deck Game Mode failure notification wired, save transfer picks up Wine prefix path casing via transparent fs shim. `resolvePathCase` promoted to vortex-api `util` namespace. `PluginPersistor` per-callsite workaround replaced by shim.
 
@@ -12,7 +12,7 @@
 
 ## What This Is
 
-Vortex is an Electron-based mod manager for Nexus Mods, targeting Windows and Linux. v1.0 shipped the Linux boot milestone — `pnpm run start` works on Linux. v2.0 makes Vortex actually usable on Linux: Steam/Proton game detection, distributable packages (AppImage + .deb), and the NXM "Download with Manager" flow. v3.0 completes save game management and elevation for Skyrim SE, Fallout 4, and Steam Deck users. v4.0 hardens elevation (persistent polkit token, Steam Deck failure UX), delivers save transfer between profiles, and adds a transparent Wine prefix case-folding shim to the fs layer.
+Vortex is an Electron-based mod manager for Nexus Mods, targeting Windows and Linux. v1.0 shipped the Linux boot milestone — `pnpm run start` works on Linux. v2.0 makes Vortex actually usable on Linux: Steam/Proton game detection, distributable packages (AppImage + .deb), and the NXM "Download with Manager" flow. v3.0 completes save game management and elevation for Skyrim SE, Fallout 4, and Steam Deck users. v4.0 hardens elevation (persistent polkit token, Steam Deck failure UX), delivers save transfer between profiles, and adds a transparent Wine prefix case-folding shim to the fs layer. v5.0 closes the FOMD story: fomod-installer source path normalization, CSharpScript Linux warning, and regenerated vortex-api declarations — fork is upstream PR-ready.
 
 ## Core Value
 
@@ -59,13 +59,19 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 - ✓ **CASE-02**: `readFileAsync`, `writeFileAsync`, `statAsync` on Wine prefix paths auto-resolve on-disk casing via fs shim — v4.0
 - ✓ **CASE-03**: `watch` on Wine prefix paths resolves on-disk casing synchronously before registering watcher — v4.0
 - ✓ **CASE-04**: `PluginPersistor.resolvePluginsFilePath` removed; per-callsite workaround replaced by transparent fs shim — v4.0
+- ✓ **FOMD-15-01**: CSharpScript OS guard in `ModFormatManager.cs` — confirmed pre-existing — v5.0
+- ✓ **FOMD-15-02**: `XmlScriptInstaller` source path normalized via `TextUtil.NormalizePath(matchedFiles[0], false, true)` — v5.0
+- ✓ **FOMD-15-03**: CI Linux IPC build pipeline (`build-packages.yml` linux-x64 matrix) — confirmed pre-existing — v5.0
+- ✓ **FOMD-15-04**: Linux-specific CSharpScript unsupported warning in `reportUnsupported` — v5.0
+- ✓ **FOMD-15-05**: Redundant `replaceAll("\\\\", "/")` on copy source path removed — v5.0
+- ✓ **FOMD-15-06**: `vortex-api` `lib/api.d.ts` regenerated — `resolvePathCase` in public API surface — v5.0
+- ✓ **B1**: `packages/vortex-api/lib/api.d.ts` regenerated with `resolvePathCase` — v5.0
 
-### Active (v5.0)
+### Active (v6.0)
 
 - [ ] **ELEV-05**: All user-triggered elevation operations complete successfully on desktop Linux without crashing or hanging — code-complete (Phase 12); hardware UAT pending (Phase 999.1)
 - [ ] **ELEV-06**: Steam Deck elevation failure shows actionable error notification with recovery path — code-complete (Phase 12); end-to-end Electron UX UAT pending (Phase 999.1)
 - [ ] **D1**: Plugins tab behavioral difference between pnpm dev and .deb install — needs investigation
-- [ ] **B1**: Regenerate `packages/vortex-api/lib/api.d.ts` — `resolvePathCase` missing from generated declarations
 - [ ] **A1**: ELEV-05 hardware UAT — Phase 999.1 ready, needs real hardware execution
 - [ ] **A2**: ELEV-04 live session caching test — AUTH_ADMIN_KEEP in .deb, no live test yet
 - [ ] **A3**: PROT-01 live NXM download test on real AppImage/deb hardware
@@ -89,15 +95,18 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 
 ## Context
 
-**Shipped v4.0 on 2026-04-07.** 4 phases, 5 plans, 73 files changed (+3,164/−8,037 lines). All CASE-01–04 satisfied; ELEV-04 and SAVE-05 code-complete (hardware UAT pending); ELEV-05/ELEV-06 code-complete (hardware UAT in Phase 999.1 backlog).
+**Shipped v5.0 on 2026-04-09.** 1 phase, 3 plans, 7/7 FOMD requirements satisfied. fomod-installer fork is PR-ready with source path normalization; Vortex has clean Linux CSharpScript UX; vortex-api declarations up to date.
 
-**Technical state after v4.0:**
-- Elevation: `.deb` installs `build/linux/10-vortex.rules` to `/etc/polkit-1/rules.d/` granting `AUTH_ADMIN_KEEP`; AppImage excluded (no persistent token); `_setNotifier`/`rejectWithSteamOSNotification` in `elevated.ts` fires Redux notification on SteamOS Game Mode failure; 21 Vitest tests pass
-- fs layer: `isWinePrefixPath()` + `resolveCaseIfWinePrefix()` in `fs.ts` wraps `readFileAsync`, `writeFileAsync`, `statAsync`, `watch`, `copyAsync`, `renameAsync`, `ensureDirAsync` — Wine prefix paths only; `resolvePathCase` in `src/renderer/src/util/` exported via `util` namespace in vortex-api
-- Save transfer: `transferSavegames.ts` → `fs.copyAsync`/`fs.renameAsync` → fs shim → `resolvePathCase`; `SavegameList.tsx` shows empty-state message when no eligible profiles
-- Plugin persistence: `PluginPersistor.resolvePluginsFilePath` removed; `serialize`/`deserialize` use `path.join` directly; `fileName.toLowerCase()` watch fix retained (inotify events outside shim reach)
-- Distribution: `packages/vortex-api/lib/api.d.ts` stale — `util.resolvePathCase` absent from generated declarations (source + runtime intact; regenerate at next build)
-- Test coverage: `elevated.test.ts` (21 Vitest); `fs.test.ts` (22 Vitest); `resolvePathCase.test.ts` (6 Vitest); `tsconfig.json` excludes `__mocks__/`
+**Technical state after v5.0:**
+- fomod-installer: `XmlScriptInstaller.cs` normalizes source path via `TextUtil.NormalizePath(matchedFiles[0], false, true)` — lowercase forward-slash paths consistent with destination
+- CSharpScript guard: `ModFormatManager.cs` wraps `CSharpScriptType` registration in `IsOSPlatform(OSPlatform.Windows)` at 2 call sites (pre-existing, confirmed)
+- Vortex UX: `reportUnsupported` in `InstallManager.ts` separates CSharpScript instructions from generic unsupported; fires `type:warning` notification on non-Windows with actionable message
+- Cleanup: `copy.source.replaceAll("\\", "/")` removed — Parser10 normalizes upstream; destination replaceAll retained
+- vortex-api: `packages/vortex-api/lib/api.d.ts` regenerated — `resolvePathCase` appears in public API surface (2 occurrences); `etc/vortex.api.md` updated
+- CI: `build-packages.yml` linux-x64 dotnet publish matrix confirmed (pre-existing)
+- Elevation: `.deb` installs `build/linux/10-vortex.rules` to `/etc/polkit-1/rules.d/` granting `AUTH_ADMIN_KEEP`; AppImage excluded; `rejectWithSteamOSNotification` fires Redux notification on SteamOS Game Mode failure
+- fs layer: `isWinePrefixPath()` + `resolveCaseIfWinePrefix()` wraps `readFileAsync`, `writeFileAsync`, `statAsync`, `watch`, `copyAsync`, `renameAsync`, `ensureDirAsync` — Wine prefix paths only
+- Test coverage: `elevated.test.ts` (21 Vitest); `fs.test.ts` (22 Vitest); `resolvePathCase.test.ts` (6 Vitest)
 
 **Platform guard pattern:** `if (process.platform === 'linux') { ... }` and `isWinePrefixPath()` used consistently — Windows paths always pass through unchanged.
 
@@ -166,4 +175,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-09 after v5.0 Phase 15 completion — FOMD Linux fixes shipped*
+*Last updated: 2026-04-09 after v5.0 milestone completion — FOMD Linux fixes shipped, fork upstream PR-ready*
