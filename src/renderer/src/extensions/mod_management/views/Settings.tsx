@@ -1,6 +1,7 @@
 import type * as Redux from "redux";
 import type { ThunkDispatch } from "redux-thunk";
 
+import PromiseBB from "bluebird";
 import * as path from "path";
 import * as React from "react";
 import {
@@ -86,6 +87,7 @@ import getText from "../texts";
 import { getSupportedActivators } from "../util/deploymentMethods";
 import { NoDeployment } from "../util/exceptions";
 import getInstallPath, { getInstallPathPattern } from "../util/getInstallPath";
+import { resolveExternalChangesBeforePurge } from "../util/deploy";
 
 interface IBaseProps {
   activators: IDeploymentMethod[];
@@ -581,9 +583,20 @@ class Settings extends ComponentEx<IProps, IComponentState> {
         : Promise.resolve();
 
     this.nextState.progress = 0;
-    this.nextState.busy = t("Calculating required disk space");
+    // Resolve any external changes before showing any blocking modal. The modal
+    // backdrop prevents interaction with the External Changes dialog, which
+    // would cause a permanent freeze if dealWithExternalChanges tried to show
+    // it while the modal is up.
     let deleteOldDestination = true;
-    return testPathTransfer(oldInstallPath, newInstallPath)
+    return PromiseBB.resolve(
+      oldInstallPath !== newInstallPath
+        ? resolveExternalChangesBeforePurge(this.context.api)
+        : undefined
+    )
+      .then(() => {
+        this.nextState.busy = t("Calculating required disk space");
+        return testPathTransfer(oldInstallPath, newInstallPath);
+      })
       .then(() => fs.ensureDirAsync(newInstallPath))
       .then(() => this.checkTargetEmpty(oldInstallPath, newInstallPath))
       .then(() => {
