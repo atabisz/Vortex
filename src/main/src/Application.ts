@@ -16,7 +16,7 @@ import {
 import { currentStatePath } from "@vortex/shared/state";
 import crashDump from "crash-dump";
 import { app, dialog, ipcMain, protocol, shell } from "electron";
-import contextMenu from "electron-context-menu";
+import type contextMenuType from "electron-context-menu";
 import isAdmin from "is-admin";
 import * as _ from "lodash";
 import { mkdirSync, statSync } from "node:fs";
@@ -128,6 +128,7 @@ class Application {
   private mFirstStart: boolean = false;
   private mStartupLogPath: string;
   private mDeinitCrashDump: () => void;
+  private mPendingDownload: string | undefined;
 
   constructor(args: IParameters) {
     this.mArgs = args;
@@ -170,6 +171,15 @@ class Application {
   }
 
   private setupContextMenu() {
+    if (process.platform === "linux") {
+      // electron-context-menu requires('electron') at module load time,
+      // which resolves to the npm package (a string) via pnpm symlinks on
+      // Linux instead of the Electron built-in API, causing a crash.
+      // Context menus are not needed for Phase 1 boot on Linux.
+      return;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const contextMenu = require("electron-context-menu") as typeof contextMenuType;
     contextMenu({
       showCopyImage: false,
       showLookUpSelection: false,
@@ -447,6 +457,9 @@ class Application {
     log("info", "Vortex Version", app.getVersion());
     log("info", "Parameters", process.argv.join(" "));
 
+    // Buffer cold-start NXM URL for application after UI is ready (PROT-01)
+    this.mPendingDownload = args.download;
+
     this.testUserEnvironment();
     await this.validateFiles();
 
@@ -518,6 +531,15 @@ class Application {
     log("debug", "waiting for user interface");
     await this.awaitMainWindowReady();
 
+    // Apply buffered cold-start NXM URL now that renderer is ready (PROT-01)
+    if (this.mPendingDownload !== undefined) {
+      const pendingUrl = this.mPendingDownload;
+      this.mPendingDownload = undefined;
+      await this.applyArguments({ download: pendingUrl } as IParameters).catch(
+        (err: unknown) => log("warn", "failed to apply pending download", err),
+      );
+    }
+
     log("debug", "setting up tray icon");
     this.createTray();
 
@@ -584,14 +606,20 @@ class Application {
      *
      */
 
-    try {
-      await stat(
-        path.join(getVortexPath("application"), "Uninstall Vortex.exe"),
-      );
-      // Collect metadata - renderer will dispatch the action
-      this.mAppMetadata.installType = "regular";
-    } catch {
-      this.mAppMetadata.installType = "managed";
+    if (process.platform === "linux") {
+      // AppImage sets APPIMAGE env var; treat as "regular" (auto-updater enabled)
+      // Other installs (dev, zip, deb) are "managed" (no auto-updater)
+      this.mAppMetadata.installType = process.env.APPIMAGE ? "regular" : "managed";
+    } else {
+      try {
+        await stat(
+          path.join(getVortexPath("application"), "Uninstall Vortex.exe"),
+        );
+        // Collect metadata - renderer will dispatch the action
+        this.mAppMetadata.installType = "regular";
+      } catch {
+        this.mAppMetadata.installType = "managed";
+      }
     }
   }
 

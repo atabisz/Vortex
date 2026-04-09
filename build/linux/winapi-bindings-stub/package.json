@@ -1,0 +1,6 @@
+{
+  "name": "winapi-bindings",
+  "version": "0.0.1",
+  "description": "Linux stub — satisfies require() calls from packages that guard all winapi usage behind process.platform checks",
+  "main": "index.js"
+}
