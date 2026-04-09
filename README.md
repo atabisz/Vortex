@@ -106,10 +106,31 @@ curl https://sh.rustup.rs -sSf | sh
 These packages are required for the native Node addons built during `pnpm install` on Linux. In particular, `libfontconfig1-dev` is needed by `font-scanner`, `liblz4-dev` is needed by Gamebryo-related native modules, and Rust is required because `libloot` is built from source during install.
 
 ```sh
-volta install node@22
+curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+nvm install 22.22.1
+nvm alias default 22.22.1
+npm install -g pnpm@10.33.0
+pnpm config set store-dir "$HOME/.local/share/pnpm/store/v10" --global
 pnpm install
-pnpm run build
+pnpm run build:all
 pnpm run start
+```
+
+Known-good toolchain on Ubuntu:
+
+- `node v22.22.1`
+- `pnpm 10.33.0`
+- `pnpm store path` -> `~/.local/share/pnpm/store/v10`
+- `python3 3.12.x` preferred
+
+If your distro ships Python 3.13+ instead of 3.12, some legacy `node-gyp` consumers in this repo still expect `distutils`. In that case, create a user-local shim once and export it before `pnpm install`/`pnpm run build:all`:
+
+```sh
+python3 -m venv "$HOME/.local/share/vortex-node-gyp-python"
+"$HOME/.local/share/vortex-node-gyp-python/bin/pip" install setuptools
+export npm_config_python="$HOME/.local/share/vortex-node-gyp-python/bin/python"
 ```
 
 See [AGENTS.md](AGENTS.md) for the full dev setup.
