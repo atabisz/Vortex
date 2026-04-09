@@ -24,6 +24,7 @@ import { getGame, UserCanceled } from "../../util/api";
 import * as fs from "../../util/fs";
 import { activeGameId } from "../../util/selectors";
 import { truthy } from "../../util/util";
+import { resolvePathCase } from "../../util/resolvePathCase";
 
 export interface IDeployment {
   [relPath: string]: IDeployedFile;
@@ -88,6 +89,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
   private mQueue: Promise<void> = Promise.resolve();
   private mContext: IDeploymentContext;
   private mDirCache: Set<string>;
+  private mReaddirCache: Map<string, string[]>;
 
   constructor(
     id: string,
@@ -180,8 +182,10 @@ abstract class LinkingActivator implements IDeploymentMethod {
     let contentChanged: string[];
 
     let errorCount: number = 0;
+    const errorCodes: Set<string> = new Set();
 
     this.mDirCache = new Set<string>();
+    this.mReaddirCache = new Map<string, string[]>();
 
     // unlink all files that were removed or changed
     ({ added, removed, sourceChanged, contentChanged } = this.diffActivation(
@@ -222,6 +226,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
               link: context.newDeployment[key].relPath,
               error: getErrorMessageOrDefault(err),
             });
+            errorCodes.add(getErrorCode(err) ?? "UNKNOWN");
             ++errorCount;
           },
         ),
@@ -238,6 +243,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
                 link: context.newDeployment[key].relPath,
                 error: getErrorMessageOrDefault(err),
               });
+              errorCodes.add(getErrorCode(err) ?? "UNKNOWN");
               ++errorCount;
               sourceChanged.splice(idx, 1);
             }),
@@ -255,6 +261,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
                 link: context.newDeployment[key].relPath,
                 error: getErrorMessageOrDefault(err),
               });
+              errorCodes.add(getErrorCode(err) ?? "UNKNOWN");
               ++errorCount;
               contentChanged.splice(idx, 1);
             }),
@@ -275,6 +282,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
                   if (getErrorCode(err) !== "ENOENT") {
                     // if the source file doesn't exist it must have been deleted
                     // in the mean time. That's not really our problem.
+                    errorCodes.add(getErrorCode(err) ?? "UNKNOWN");
                     ++errorCount;
                   }
                 })
@@ -295,6 +303,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
                     error: getErrorMessageOrDefault(err),
                   });
                   if (getErrorCode(err) !== "ENOENT") {
+                    errorCodes.add(getErrorCode(err) ?? "UNKNOWN");
                     ++errorCount;
                   }
                 })
@@ -309,11 +318,14 @@ abstract class LinkingActivator implements IDeploymentMethod {
                 type: "error",
                 title: this.mApi.translate("Deployment failed"),
                 message: this.mApi.translate(
-                  "{{count}} files were not correctly deployed (see log for details).\n" +
-                    "The most likely reason is that files were locked by external applications " +
-                    "so please ensure no other application has a mod file open, then repeat " +
-                    "deployment.",
-                  { replace: { count: errorCount } },
+                  "{{count}} files were not correctly deployed " +
+                    "(errors: {{errors}}, see log for details).",
+                  {
+                    replace: {
+                      count: errorCount,
+                      errors: Array.from(errorCodes).join(", "),
+                    },
+                  },
                 ),
               }),
             );
@@ -356,6 +368,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
         })
         .finally(() => {
           this.mDirCache = undefined;
+          this.mReaddirCache = undefined;
         })
     );
   }
@@ -732,7 +745,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
     return Object.values(changeMap);
   }
 
-  private removeDeployedFile(
+  private async removeDeployedFile(
     installationPath: string,
     dataPath: string,
     key: string,
@@ -741,10 +754,16 @@ abstract class LinkingActivator implements IDeploymentMethod {
     if (this.mContext.previousDeployment[key] === undefined) {
       return Promise.reject(new Error(`failed to remove "${key}"`));
     }
-    const outputPath = path.join(
-      dataPath,
-      this.mContext.previousDeployment[key].target || "",
+    const relOutputPath = [
+      this.mContext.previousDeployment[key].target || null,
       this.mContext.previousDeployment[key].relPath,
+    ]
+      .filter((i) => truthy(i))
+      .join(path.sep);
+    const outputPath = await resolvePathCase(
+      dataPath,
+      relOutputPath,
+      this.mReaddirCache,
     );
     const sourcePath = path.join(
       installationPath,
@@ -787,7 +806,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
       });
   }
 
-  private deployFile(
+  private async deployFile(
     key: string,
     installPathStr: string,
     dataPath: string,
@@ -799,13 +818,17 @@ abstract class LinkingActivator implements IDeploymentMethod {
       this.mContext.newDeployment[key].source,
       this.mContext.newDeployment[key].relPath,
     ].join(path.sep);
-    const fullOutputPath = [
-      dataPath,
+    const relOutputPath = [
       this.mContext.newDeployment[key].target || null,
       this.mContext.newDeployment[key].relPath,
     ]
       .filter((i) => i !== null)
       .join(path.sep);
+    const fullOutputPath = await resolvePathCase(
+      dataPath,
+      relOutputPath,
+      this.mReaddirCache,
+    );
 
     const backupProm: Promise<void> = replace
       ? Promise.resolve()

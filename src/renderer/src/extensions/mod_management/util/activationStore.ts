@@ -208,6 +208,65 @@ function queryPurge(
     });
 }
 
+/**
+ * Detect whether a deployment manifest was created by a Wine/Proton-based
+ * Vortex instance. Returns true only on Linux when the manifest's stagingPath
+ * or targetPath contains a Windows drive-letter prefix (e.g. "Z:\").
+ */
+function isWineEraManifest(manifest: IDeploymentManifest): boolean {
+  if (process.platform !== "linux") {
+    return false;
+  }
+  const winDriveLetter = /^[A-Za-z]:\\/;
+  return (
+    winDriveLetter.test(manifest.stagingPath ?? "") ||
+    winDriveLetter.test(manifest.targetPath ?? "")
+  );
+}
+
+function queryPurgeWineEra(
+  api: IExtensionApi,
+  basePath: string,
+  files: IDeployedFile[],
+): Promise<void> {
+  const t = api.translate;
+  return Promise.resolve(
+    api.store.dispatch(
+      showDialog(
+        "info",
+        t("Wine/Proton deployment detected"),
+        {
+          text: t(
+            "A previous Wine or Proton-based Vortex deployment was found for this game. " +
+            "Mods deployed through Wine/Proton must be purged before the native Linux " +
+            "version of Vortex can manage this game. " +
+            "The purge will remove deployed mod files from the game directory using the " +
+            "existing manifest. Unmodified files will be removed; changed files will be kept.",
+          ),
+        },
+        [{ label: "Cancel" }, { label: "Purge" }],
+      ),
+    ),
+  ).then((result) => {
+    if (result.action === "Purge") {
+      const normalizedFiles = files.map((file) => ({
+        ...file,
+        relPath: file.relPath.replace(/\\/g, "/"),
+      }));
+      return purgeDeployedFiles(basePath, normalizedFiles).catch(
+        (err: unknown) => {
+          api.showErrorNotification("Purging failed", err, {
+            allowReport: false,
+          });
+          return Promise.reject(new UserCanceled());
+        },
+      );
+    } else {
+      return Promise.reject(new UserCanceled());
+    }
+  });
+}
+
 function readManifestFile(filePath: string): Promise<any> {
   return Promise.resolve(fs.readFileAsync(filePath, "utf8")).then((data) => readManifest(data));
 }
@@ -231,7 +290,22 @@ function getManifestImpl(
       const errObj = unknownToError(err);
       const code = getErrorCode(err);
       if (code === "ENOENT") {
-        return emptyManifest(instanceId);
+        // Primary manifest missing — check backup files before giving up.
+        // This handles Wine/Proton-era deployments where the primary JSON was
+        // never written to the game directory but the msgpack backup exists in
+        // the staging folder.
+        return readManifestFileBinary(backup2Path)
+          .catch((inner: unknown) => {
+            if (getErrorCode(inner) === "ENOENT") {
+              return readManifestFile(backupPath).catch((backupErr: unknown) => {
+                if (getErrorCode(backupErr) === "ENOENT") {
+                  return emptyManifest(instanceId);
+                }
+                throw backupErr;
+              });
+            }
+            throw inner;
+          });
       }
       if (code === "EPERM") {
         errObj.message =
@@ -493,7 +567,21 @@ export function loadActivation(
     tagBackup2Path,
   ).then((tagObject) => {
     let result: Promise<IDeployedFile[]>;
-    if (tagObject.instance !== instanceId && tagObject.files.length > 0) {
+    if (isWineEraManifest(tagObject) && tagObject.files.length > 0) {
+      result = queryPurgeWineEra(api, deployPath, tagObject.files)
+        .then(() =>
+          saveActivation(
+            gameId,
+            modType,
+            state.app.instanceId,
+            deployPath,
+            stagingPath,
+            [],
+            activator.id,
+          ),
+        )
+        .then(() => Promise.resolve([]));
+    } else if (tagObject.instance !== instanceId && tagObject.files.length > 0) {
       let safe = true;
       if (tagObject.deploymentMethod !== undefined) {
         const previousActivator = getActivator(tagObject.deploymentMethod);

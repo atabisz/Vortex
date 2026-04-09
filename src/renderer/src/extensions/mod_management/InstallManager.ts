@@ -205,6 +205,7 @@ import testModReference, {
   referenceEqual,
   testRefByIdentifiers,
 } from "./util/testModReference";
+import { resolvePathCase } from "../../util/resolvePathCase";
 
 // Interface for tracking active installation information
 interface IActiveInstallation {
@@ -319,6 +320,124 @@ class InstructionGroups {
   public rule: IInstruction[] = [];
   public enableallplugins: IInstruction[] = [];
 }
+
+/**
+ * On Linux, p7zip extracts ZIP entries that use Windows-style backslash path
+ * separators (e.g. "Data\SKSE\Plugins\file.dll") as literal files whose name
+ * contains the backslash character, rather than creating a nested directory
+ * tree.  This function walks the extraction root and moves any such files into
+ * the correct directory structure so that the file list and FOMOD installer
+ * see the expected paths.
+ */
+async function normalizeBackslashPaths(basePath: string): Promise<void> {
+  if (process.platform === "win32") {
+    return;
+  }
+  const entries = await fs.readdirAsync(basePath);
+  for (const entry of entries) {
+    const fullPath = path.join(basePath, entry);
+    if (entry.includes("\\")) {
+      const normalizedRel = entry.replace(/\\/g, "/");
+      const destPath = path.join(basePath, normalizedRel);
+      await fs.ensureDirAsync(path.dirname(destPath));
+      await fs.renameAsync(fullPath, destPath);
+    } else {
+      try {
+        const stat = await fs.statAsync(fullPath);
+        if (stat.isDirectory()) {
+          await normalizeBackslashPaths(fullPath);
+        }
+      } catch {
+        // ignore stat errors for entries that disappear during iteration
+      }
+    }
+  }
+}
+
+/**
+ * On Linux, archives may contain entries with case-conflicting directory paths
+ * (e.g. both "Data/SKSE/plugins/" and "data/SKSE/plugins/"). Since Linux has a
+ * case-sensitive filesystem, 7z extracts these as separate directories. This
+ * function merges any case-conflicting directories by moving all files into the
+ * first-seen (canonical) directory and removing the now-empty duplicates.
+ *
+ * On Windows this is a no-op because the filesystem is case-insensitive.
+ */
+async function mergeCaseConflictingDirs(basePath: string): Promise<void> {
+  if (process.platform === "win32") {
+    return;
+  }
+
+  let entries: string[];
+  try {
+    entries = await fs.readdirAsync(basePath);
+  } catch {
+    return;
+  }
+
+  // Group directory entries by their lowercased name to find conflicts.
+  const dirGroups = new Map<string, string[]>();
+  for (const entry of entries) {
+    const fullPath = path.join(basePath, entry);
+    try {
+      const stat = await fs.statAsync(fullPath);
+      if (stat.isDirectory()) {
+        const key = entry.toLowerCase();
+        const group = dirGroups.get(key);
+        if (group !== undefined) {
+          group.push(entry);
+        } else {
+          dirGroups.set(key, [entry]);
+        }
+      }
+    } catch {
+      // Ignore stat errors (e.g. file removed during iteration).
+    }
+  }
+
+  for (const [, names] of dirGroups) {
+    const canonical = names[0];
+    const canonicalPath = path.join(basePath, canonical);
+    // Recurse into canonical dir first.
+    await mergeCaseConflictingDirs(canonicalPath);
+
+    for (const other of names.slice(1)) {
+      const otherPath = path.join(basePath, other);
+      await mergeCaseConflictingDirs(otherPath);
+
+      let otherEntries: string[];
+      try {
+        otherEntries = await fs.readdirAsync(otherPath);
+      } catch {
+        continue;
+      }
+
+      for (const file of otherEntries) {
+        const src = path.join(otherPath, file);
+        const dst = path.join(canonicalPath, file);
+        try {
+          await fs.statAsync(dst);
+          // Canonical already has this file — discard the duplicate.
+        } catch {
+          // Canonical does not have this file — move it over.
+          try {
+            await fs.renameAsync(src, dst);
+          } catch {
+            // Best-effort; leave the file in place if the move fails.
+          }
+        }
+      }
+
+      // Remove the (now-empty) duplicate directory.
+      try {
+        await fs.rmdirAsync(otherPath);
+      } catch {
+        // Not empty — some files could not be moved; leave the directory.
+      }
+    }
+  }
+}
+
 
 async function buildFileList(basePath: string): Promise<string[]> {
   const fileList: string[] = [];
@@ -1175,6 +1294,8 @@ class InstallManager {
           return Promise.resolve();
         }
       })
+      .then(() => normalizeBackslashPaths(tempPath))
+      .then(() => mergeCaseConflictingDirs(tempPath))
       .then(() => buildFileList(tempPath))
       .then((result) => { fileList.push(...result); })
       .then(() => {
@@ -4051,6 +4172,8 @@ class InstallManager {
           await this.queryContinue(api, errors, archivePath);
         }
       })
+      .then(() => normalizeBackslashPaths(tempPath))
+      .then(() => mergeCaseConflictingDirs(tempPath))
       .then(() => buildFileList(tempPath))
       .then((result) => { fileList.push(...result); })
       .then(async () => {
@@ -4386,7 +4509,32 @@ class InstallManager {
     if (unsupported.length === 0) {
       return;
     }
-    const missing = unsupported.map((instruction) => instruction.source);
+
+    // On Linux, C# script FOMADs emit a specific "CSharpScript" unsupported
+    // instruction. This is a known platform limitation, not a bug — show a
+    // clear message instead of the generic "unimplemented" dialog.
+    const csharpUnsupported = unsupported.filter(
+      (instr) => instr.source === "CSharpScript",
+    );
+    const otherUnsupported = unsupported.filter(
+      (instr) => instr.source !== "CSharpScript",
+    );
+
+    if (csharpUnsupported.length > 0 && process.platform !== "win32") {
+      api.sendNotification({
+        type: "warning",
+        message:
+          "This mod uses a C# installer script that cannot run on Linux. " +
+          "The mod was installed using basic file mapping. Some optional " +
+          "components may be missing.",
+      });
+    }
+
+    // Fall through to existing logic for any other unsupported instructions
+    if (otherUnsupported.length === 0) {
+      return;
+    }
+    const missing = otherUnsupported.map((instruction) => instruction.source);
     const makeReport = () =>
       api
         .genMd5Hash(archivePath)
@@ -7809,6 +7957,7 @@ class InstallManager {
     const dirs = new Set<string>();
     const jobs: Array<{ src: string; dst: string; rel: string }> = [];
     const missingFiles = new Set<string>();
+    const dirCache = new Map<string, string[]>();
 
     const copyAsyncWrap = async (src: string, dst: string) => {
       try {
@@ -7826,14 +7975,16 @@ class InstallManager {
 
     const folderCopies: string[] = [];
     for (const copy of sorted) {
-      if (copy.source.endsWith("/") || copy.source.endsWith("\\")) {
-        folderCopies.push(copy.source);
+      const source = copy.source;
+      const destination = copy.destination.replaceAll("\\", "/");
+      if (source.endsWith("/")) {
+        folderCopies.push(source);
         continue;
       }
-      const src = path.join(tempPath, copy.source);
-      const dst = path.join(destinationPath, copy.destination);
+      const src = await resolvePathCase(tempPath, source, dirCache);
+      const dst = path.join(destinationPath, destination);
       dirs.add(path.dirname(dst));
-      jobs.push({ src, dst, rel: copy.destination });
+      jobs.push({ src, dst, rel: destination });
     }
     if (folderCopies.length > 0) {
       log("warn", "installer generated copy instructions for directories, these will be skipped", {
