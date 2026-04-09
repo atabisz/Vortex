@@ -7946,7 +7946,7 @@ class InstallManager {
 
     const folderCopies: string[] = [];
     for (const copy of sorted) {
-      const source = copy.source.replaceAll("\\", "/");
+      const source = copy.source;
       const destination = copy.destination.replaceAll("\\", "/");
       if (source.endsWith("/")) {
         folderCopies.push(source);
