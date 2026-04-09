@@ -3995,6 +3995,9 @@ importers:
       '@vortex/adaptor-api':
         specifier: workspace:*
         version: link:../../packages/adaptor-api
+      '@vortex/fs':
+        specifier: workspace:*
+        version: link:../../packages/fs
       bbcode-to-react:
         specifier: 'catalog:'
         version: https://codeload.github.com/TanninOne/bbcode-to-react/tar.gz/c67356006470e5066ea447e04a3968dca367339d(react@16.14.0)
