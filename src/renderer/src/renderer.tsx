@@ -126,7 +126,6 @@ import { GameEntryNotFound } from "./types/IGameStore";
 import { relaunch } from "./util/commandLine";
 import { _setNotifier } from "./util/elevated";
 import { ProcessCanceled, UserCanceled } from "./util/CustomErrors";
-import { _setNotifier } from "./util/elevated";
 import {
   recordErrorSpan,
   setOutdated,
