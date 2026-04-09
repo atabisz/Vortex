@@ -93,7 +93,7 @@ import { symlinkSync } from 'original-fs';
 import type { TFunction as TFunction_2 } from 'i18next';
 import type { ThunkDispatch } from 'redux-thunk';
 import type { TOptions } from 'i18next';
-import { watch } from 'original-fs';
+import { watch as watch_2 } from 'original-fs';
 import type { WithTranslation } from 'react-i18next';
 import { writeFileSync } from 'original-fs';
 import { WriteStream } from 'fs';
@@ -1092,6 +1092,7 @@ export class FormTextItem extends React_2.Component<IFormItemProps, {}> {
 
 declare namespace fs {
     export {
+        watch,
         setTFunction,
         genFSWrapperAsync,
         isDirectoryAsync,
@@ -1130,7 +1131,6 @@ declare namespace fs {
         readFileSync,
         statSync,
         symlinkSync,
-        watch,
         writeFileSync,
         writeSync,
         ILinkFileOptions,
@@ -3218,7 +3218,7 @@ interface IRegisteredExtension {
 // @public (undocumented)
 interface IRegisterProtocol {
     // (undocumented)
-    (protocol: string, def: boolean, callback: (url: string, install: boolean) => void): any;
+    (protocol: string, def: boolean, callback: (url: string, install: boolean) => void): Promise<boolean>;
 }
 
 // @public (undocumented)
@@ -4757,6 +4757,9 @@ function resolveCategoryName(category: string | number, state: IState): string;
 function resolveCategoryPath(category: string | number, state: IState): string;
 
 // @public
+function resolvePathCase(rootDir: string, relPath: string, dirCache?: Map<string, string[]>): Promise<string>;
+
+// @public
 type Revertability = "yes" | "never" | "invalid";
 
 // @public (undocumented)
@@ -6125,6 +6128,7 @@ declare namespace util {
         ProcessCanceled,
         ReduxProp,
         readExtensibleDir,
+        resolvePathCase,
         relativeTime,
         removeMods,
         modName as renderModName,
@@ -6231,6 +6235,9 @@ export class VisibilityProxy extends React_2.PureComponent<any, {}> {
 //
 // @public
 function walk(target: string, callback: (iterPath: string, stats: fs.Stats) => PromiseLike<any>, options?: IWalkOptions): Promise<void>;
+
+// @public (undocumented)
+function watch(filename: string, ...args: any[]): ReturnType<typeof watch_2>;
 
 // Warning: (ae-forgotten-export) The symbol "IWebviewProps" needs to be exported by the entry point api.d.ts
 // Warning: (ae-forgotten-export) The symbol "IWebView" needs to be exported by the entry point api.d.ts

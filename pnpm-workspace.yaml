@@ -12,6 +12,7 @@ packages:
 
 allowBuilds:
   "@nexusmods/fomod-installer-native": true
+  "@electron/rebuild": true
   "@parcel/watcher": true
   ba2tk: true
   bsatk: true
@@ -42,6 +43,7 @@ catalog:
   "@babel/preset-typescript": 7.16.7
   "@babel/register": 7.16.8
   "@duckdb/node-api": 1.5.1-r.1
+  "@electron/rebuild": 4.0.3
   "@electron/remote": ^2.0.12
   "@eslint-react/eslint-plugin": 2.3.7
   "@eslint/js": 9.39.1
@@ -199,8 +201,6 @@ catalog:
   json-loader: ^0.5.7
   json-socket: git+https://github.com/foi/node-json-socket#d56c8e2938fa4284c4001b815d9b6e4a92b5c07b
   jsonwebtoken: ^9.0.0
-  leveldown: 5.6.0
-  levelup: 4.4.0
   limiter: ^3.0.0
   lodash: ^4.17.21
   loot: git+https://github.com/Nexus-Mods/node-loot#04a77fcae028b0838b5e0c53cfcdc65898c49727
@@ -304,4 +304,7 @@ overrides:
   "@types/react-dom": "16"
   node-addon-api: 8.5.0
 patchedDependencies:
+  exe-version@2.3.0: patches/exe-version@2.3.0.patch
+  gamebryo-savegame@2.1.2: patches/gamebryo-savegame@2.1.2.patch
   playwright-core@1.58.2: patches/playwright-core@1.58.2.patch
+  loot@6.2.1: patches/loot@6.2.1.patch
