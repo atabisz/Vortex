@@ -21,7 +21,10 @@ import type { IExtensionApi } from "../types/IExtensionContext";
 import { GameEntryNotFound } from "../types/IGameStore";
 import getVortexPath from "./getVortexPath";
 import { getErrorMessageOrDefault } from "@vortex/shared";
-import { findLinuxSteamPath } from "./linux/steamPaths";
+import {
+  findAllLinuxSteamPaths,
+  findLinuxSteamPath,
+} from "./linux/steamPaths";
 import {
   getProtonInfo,
   buildProtonEnvironment,
@@ -250,44 +253,63 @@ class Steam implements IGameStore {
         return PromiseBB.resolve([]);
       }
 
-      const steamPaths: string[] = [basePath];
-      return fs
-        .readFileAsync(path.resolve(basePath, "config", "libraryfolders.vdf"))
-        .then((data: Buffer) => {
-          if (data === undefined) {
-            return PromiseBB.resolve(steamPaths);
-          }
-          let parsedObj;
-          try {
-            parsedObj = parse(data.toString());
-          } catch (err) {
-            log("warn", "unable to parse steamfolders.vdf", err);
-            return PromiseBB.resolve(steamPaths);
-          }
-          const libObj: any = getSafeCI(parsedObj, ["libraryfolders"], {});
-          let counter = libObj.hasOwnProperty("0") ? 0 : 1;
-          while (libObj.hasOwnProperty(`${counter}`)) {
-            const libPath = libObj[`${counter}`]["path"];
-            if (libPath && !steamPaths.includes(libPath)) {
-              steamPaths.push(libObj[`${counter}`]["path"]);
+      const steamRoots: string[] =
+        process.platform === "linux" ? findAllLinuxSteamPaths() : [basePath];
+
+      if (steamRoots.length === 0) {
+        return PromiseBB.resolve([]);
+      }
+
+      // Read libraryfolders.vdf from every valid Steam root and merge all
+      // game library paths. Reading only from basePath misses secondary
+      // libraries when the detected basePath isn't the real installation
+      // (e.g. ~/.local/share/Steam found before ~/.steam/debian-installation).
+      const allPaths = new Set<string>(steamRoots);
+
+      const readVdf = (root: string): PromiseBB<void> =>
+        fs
+          .readFileAsync(path.resolve(root, "config", "libraryfolders.vdf"))
+          .then((data: Buffer) => {
+            if (!data) return;
+            let parsedObj;
+            try {
+              parsedObj = parse(data.toString());
+            } catch (err) {
+              log("warn", "unable to parse libraryfolders.vdf", {
+                root,
+                err,
+              });
+              return;
             }
-            ++counter;
-          }
-          log("debug", "found steam install folders", { steamPaths });
-          return PromiseBB.resolve(steamPaths);
-        })
-        .catch((err) => {
-          // A Steam update has changed the way we resolve the steam library paths
-          //  (we used to get these from config.vdf) the libraryfolders.vdf file
-          //  appears to at times hold a reference to _all_ library folders; other times
-          //  it only holds the path to the alternate steam libraries (the ones that aren't
-          //  part of the base Steam installation folder)
-          log("warn", "failed to read steam library folders file", err);
-          const code = getErrorMessageOrDefault(err);
-          return ["EPERM", "ENOENT"].includes(code)
-            ? PromiseBB.resolve(steamPaths)
-            : PromiseBB.reject(err);
-        });
+            const libObj: any = getSafeCI(
+              parsedObj,
+              ["libraryfolders"],
+              {},
+            );
+            let counter = libObj.hasOwnProperty("0") ? 0 : 1;
+            while (libObj.hasOwnProperty(`${counter}`)) {
+              const libPath = libObj[`${counter}`]["path"];
+              if (libPath) {
+                allPaths.add(libPath);
+              }
+              ++counter;
+            }
+          })
+          .catch((err) => {
+            const code = getErrorMessageOrDefault(err);
+            if (!["EPERM", "ENOENT"].includes(code)) {
+              log("warn", "failed to read steam library folders file", {
+                root,
+                err,
+              });
+            }
+          });
+
+      return PromiseBB.mapSeries(steamRoots, readVdf).then(() => {
+        const steamPaths = Array.from(allPaths);
+        log("debug", "found steam install folders", { steamPaths });
+        return PromiseBB.resolve(steamPaths);
+      });
     });
   }
 
@@ -379,6 +401,7 @@ class Steam implements IGameStore {
                     basePath,
                     steamAppsPath,
                     entry.appid,
+                    entry.manifestData?.["AppState"]?.["oslist"],
                   );
                   entry.usesProton = protonInfo.usesProton;
                   entry.compatDataPath = protonInfo.compatDataPath;
@@ -415,6 +438,14 @@ class Steam implements IGameStore {
             [],
           ),
         )
+        .then((games: ISteamEntry[]) => {
+          const seen = new Set<string>();
+          return games.filter((entry) => {
+            if (seen.has(entry.appid)) return false;
+            seen.add(entry.appid);
+            return true;
+          });
+        })
         .tap(() => {
           log("info", "done reading steam libraries");
         }),

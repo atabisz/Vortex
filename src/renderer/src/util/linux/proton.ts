@@ -10,6 +10,28 @@ export interface IProtonInfo {
 }
 
 /**
+ * Canonical Wine prefix username. Steam/Proton always uses "steamuser"
+ * regardless of the Linux system username. Never use os.userInfo().username.
+ */
+export const PROTON_USERNAME = "steamuser";
+
+/**
+ * Get the "My Games" path inside a Proton Wine prefix.
+ * Returns: compatDataPath/pfx/drive_c/users/steamuser/Documents/My Games
+ */
+export function getMyGamesPath(compatDataPath: string): string {
+  return path.join(
+    compatDataPath,
+    "pfx",
+    "drive_c",
+    "users",
+    PROTON_USERNAME,
+    "Documents",
+    "My Games",
+  );
+}
+
+/**
  * Check if a game uses Proton by looking for its compatdata folder
  */
 export async function detectProtonUsage(
@@ -204,21 +226,38 @@ export async function findLatestProton(
 }
 
 /**
- * Get full Proton info for a game
+ * Get full Proton info for a game.
+ *
+ * When oslist is provided (from the ACF manifest's AppState/oslist field),
+ * it is used as the primary signal for Proton detection. A game needs Proton
+ * if oslist does NOT contain "linux" (i.e., it is a Windows-only game).
+ * This allows detection of never-launched games that have no compatdata yet.
+ *
+ * When oslist is absent, falls back to checking compatdata directory existence.
  */
 export async function getProtonInfo(
   steamPath: string,
   steamAppsPath: string,
   appId: string,
+  oslist?: string,
 ): Promise<IProtonInfo> {
-  const usesProton = await detectProtonUsage(steamAppsPath, appId);
-  if (!usesProton) {
+  const compatDataExists = await detectProtonUsage(steamAppsPath, appId);
+  const compatDataPath = getCompatDataPath(steamAppsPath, appId);
+
+  // Game needs Proton if:
+  // 1. compatdata directory exists (game has been launched with Proton before), OR
+  // 2. oslist field does NOT contain "linux" (Windows-only game, will use Proton)
+  const needsProton = oslist
+    ? !oslist.toLowerCase().includes("linux")
+    : compatDataExists;
+
+  if (!needsProton) {
     return { usesProton: false };
   }
 
-  const compatDataPath = getCompatDataPath(steamAppsPath, appId);
-
-  // Try to get configured Proton, fall back to latest
+  // For never-launched games (no compatdata), still return usesProton: true
+  // with a pre-populated compatDataPath. protonPath may be undefined if no
+  // Proton version is installed yet.
   const protonName = await getConfiguredProtonName(steamPath, appId);
   let protonPath: string | undefined;
 
