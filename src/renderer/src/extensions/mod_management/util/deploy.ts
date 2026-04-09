@@ -353,6 +353,67 @@ async function purgeModsImpl(
   }
 }
 
+/**
+ * Checks for external changes and presents the resolution dialog to the user
+ * without running a full purge. Call this before showing any blocking UI overlay
+ * so the user can interact with the dialog.
+ */
+export async function resolveExternalChangesBeforePurge(
+  api: IExtensionApi,
+  gameId?: string,
+): Promise<void> {
+  const state = api.store.getState();
+  const profile =
+    gameId !== undefined
+      ? profileById(state, lastActiveProfileForGame(state, gameId))
+      : activeProfile(state);
+
+  if (profile === undefined) {
+    return;
+  }
+
+  const effectiveGameId = gameId ?? profile.gameId;
+  const gameDiscovery = discoveryByGame(state, effectiveGameId);
+
+  if (gameDiscovery?.path === undefined) {
+    return;
+  }
+
+  const activator = getCurrentActivator(state, effectiveGameId, false);
+  if (activator === undefined) {
+    return;
+  }
+
+  const game = getGame(effectiveGameId);
+  if (game === undefined) {
+    return;
+  }
+
+  const modPaths = game.getModPaths(gameDiscovery.path);
+  const stagingPath = installPathForGame(state, effectiveGameId);
+
+  if (stagingPath === undefined) {
+    return;
+  }
+
+  const deployments = await loadAllManifests(
+    api,
+    activator,
+    effectiveGameId,
+    modPaths,
+    stagingPath,
+  );
+
+  await dealWithExternalChanges(
+    api,
+    activator,
+    profile.id,
+    stagingPath,
+    modPaths,
+    deployments,
+  );
+}
+
 export function purgeModsInPath(
   api: IExtensionApi,
   gameId: string,
