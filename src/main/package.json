@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@vortex/adaptor-api": "workspace:*",
+    "@vortex/fs": "workspace:*",
     "@electron/remote": "catalog:",
     "@headlessui/react": "catalog:",
     "@mdi/js": "catalog:",
