@@ -493,12 +493,6 @@ catalogs:
     jsonwebtoken:
       specifier: ^9.0.0
       version: 9.0.3
-    leveldown:
-      specifier: 5.6.0
-      version: 5.6.0
-    levelup:
-      specifier: 4.4.0
-      version: 4.4.0
     limiter:
       specifier: ^3.0.0
       version: 3.0.0
@@ -777,6 +771,9 @@ patchedDependencies:
   exe-version@2.3.0:
     hash: 91e00f57460903f38a25b5a4ac079b466d8ef8cb8e3352c9e611de0f2e2266b6
     path: patches/exe-version@2.3.0.patch
+  gamebryo-savegame@2.1.2:
+    hash: 13dfacf7de67dcd9115b21f2b44af06545b1e211c07f00314e8ab23aab358d30
+    path: patches/gamebryo-savegame@2.1.2.patch
   loot@6.2.1:
     hash: 3d4c1edc7a442f9db9c091845b9f808f1d84517b03a9612fef4e41bd141f47bc
     path: patches/loot@6.2.1.patch
@@ -1755,7 +1752,7 @@ importers:
     optionalDependencies:
       gamebryo-savegame:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/f060df62b04aa53e0d2fa7e6de0c9df423bbd44c
+        version: https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/f060df62b04aa53e0d2fa7e6de0c9df423bbd44c(patch_hash=13dfacf7de67dcd9115b21f2b44af06545b1e211c07f00314e8ab23aab358d30)
 
   extensions/gamebryo-test-settings:
     devDependencies:
@@ -3998,9 +3995,6 @@ importers:
       '@vortex/adaptor-api':
         specifier: workspace:*
         version: link:../../packages/adaptor-api
-      '@vortex/fs':
-        specifier: workspace:*
-        version: link:../../packages/fs
       bbcode-to-react:
         specifier: 'catalog:'
         version: https://codeload.github.com/TanninOne/bbcode-to-react/tar.gz/c67356006470e5066ea447e04a3968dca367339d(react@16.14.0)
@@ -4061,9 +4055,6 @@ importers:
       electron-updater:
         specifier: 'catalog:'
         version: 4.6.5
-      encoding-down:
-        specifier: 'catalog:'
-        version: 6.3.0
       exe-version:
         specifier: 'catalog:'
         version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=91e00f57460903f38a25b5a4ac079b466d8ef8cb8e3352c9e611de0f2e2266b6)
@@ -4112,12 +4103,6 @@ importers:
       jsonwebtoken:
         specifier: 'catalog:'
         version: 9.0.3
-      leveldown:
-        specifier: 'catalog:'
-        version: 5.6.0
-      levelup:
-        specifier: 'catalog:'
-        version: 4.4.0
       limiter:
         specifier: 'catalog:'
         version: 3.0.0
@@ -18207,7 +18192,7 @@ snapshots:
       string.fromcodepoint: 0.2.1
       string.prototype.codepointat: 0.2.1
 
-  gamebryo-savegame@https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/f060df62b04aa53e0d2fa7e6de0c9df423bbd44c:
+  gamebryo-savegame@https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/f060df62b04aa53e0d2fa7e6de0c9df423bbd44c(patch_hash=13dfacf7de67dcd9115b21f2b44af06545b1e211c07f00314e8ab23aab358d30):
     dependencies:
       autogypi: 0.2.2
       copyfiles: 2.4.1

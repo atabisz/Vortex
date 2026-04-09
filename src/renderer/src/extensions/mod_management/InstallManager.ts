@@ -438,6 +438,7 @@ async function mergeCaseConflictingDirs(basePath: string): Promise<void> {
   }
 }
 
+
 async function buildFileList(basePath: string): Promise<string[]> {
   const fileList: string[] = [];
   await walk(basePath, (iterPath, stats) => {

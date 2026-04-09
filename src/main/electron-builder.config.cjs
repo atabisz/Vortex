@@ -47,7 +47,7 @@ const config = {
   },
   linux: {
     target: ["AppImage", "deb"],
-    artifactName: "vortex-setup.${ext}",
+    artifactName: "vortex-setup-${version}.${ext}",
     icon: "../../assets/images/vortex.png",
     category: "Network;Development;Game;",
     synopsis: "Mod Manager",
