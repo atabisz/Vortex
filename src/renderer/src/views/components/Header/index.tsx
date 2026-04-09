@@ -53,7 +53,7 @@ export const Header: FC = () => {
 
   return (
     <div
-      className="flex h-11 items-center justify-between overflow-hidden pl-4.5"
+      className="flex h-11 items-center justify-between pl-4.5"
       style={{ WebkitAppRegion: "drag" }}
     >
       <div

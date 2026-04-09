@@ -17,6 +17,7 @@ import type { Normalize } from "../../../util/getNormalizeFunc";
 import getNormalizeFunc from "../../../util/getNormalizeFunc";
 import getVortexPath from "../../../util/getVortexPath";
 import { log } from "../../../util/log";
+import { resolvePathCase } from "../../../util/resolvePathCase";
 import StarterInfo from "../../../util/StarterInfo";
 import { getSafe } from "../../../util/storeHelper";
 import { truthy } from "../../../util/util";
@@ -494,10 +495,16 @@ function verifyToolDir(tool: ITool, testPath: string): Bluebird<void> {
     // our fs overload would try to acquire access to the directory if it's locked, which
     // is not something we want at this point because we don't even know yet if the user
     // wants to manage the game at all.
-    (fileName: string) =>
-      fsExtra.stat(path.join(testPath, fileName)).catch((err) => {
+    // On Linux (case-sensitive fs) resolve the actual on-disk casing before
+    // stat-ing so that game extensions whose requiredFiles use a different case
+    // than the real executable (e.g. "oblivion.exe" vs "Oblivion.exe") don't
+    // spuriously fail and clear the active profile.
+    async (fileName: string) => {
+      const resolvedPath = await resolvePathCase(testPath, fileName);
+      return fsExtra.stat(resolvedPath).catch((err) => {
         return Bluebird.reject(err);
-      }),
+      });
+    },
   ).then(() => undefined);
 }
 
