@@ -287,6 +287,15 @@ class SavegameList extends ComponentEx<Props, IComponentState> {
             this.renderProfilesOption(profileId),
           )}
         </FormControl>
+        {profileOptions.length === 0 && !activeHasLocalSaves ? (
+          <div style={{ marginTop: 4 }}>
+            <i>
+              {t(
+                "No profiles with local saves found. Enable local saves in Profile Settings to use save transfer.",
+              )}
+            </i>
+          </div>
+        ) : null}
         <tooltip.IconButton
           id="btn-transfer-save-cancel"
           tooltip={t("Cancel")}
