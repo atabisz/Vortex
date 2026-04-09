@@ -7,6 +7,9 @@ settings:
 
 catalogs:
   default:
+    7z-bin:
+      specifier: git+https://github.com/Nexus-Mods/7z-bin#3298c42e69e3220dc39694bc2f610c077c3e213a
+      version: 24.0.1
     '@babel/polyfill':
       specifier: 7.12.1
       version: 7.12.1
@@ -765,7 +768,6 @@ overrides:
   '@types/react': '16'
   '@types/react-dom': '16'
   node-addon-api: 8.5.0
-  7z-bin: git+https://github.com/Nexus-Mods/7z-bin#3298c42e69e3220dc39694bc2f610c077c3e213a
 
 patchedDependencies:
   exe-version@2.3.0:
@@ -969,7 +971,7 @@ importers:
   extensions/collections:
     devDependencies:
       7z-bin:
-        specifier: git+https://github.com/Nexus-Mods/7z-bin#3298c42e69e3220dc39694bc2f610c077c3e213a
+        specifier: 'catalog:'
         version: https://codeload.github.com/Nexus-Mods/7z-bin/tar.gz/3298c42e69e3220dc39694bc2f610c077c3e213a
       '@nexusmods/nexus-api':
         specifier: 'catalog:'
@@ -2846,7 +2848,7 @@ importers:
   extensions/mod-content:
     devDependencies:
       7z-bin:
-        specifier: git+https://github.com/Nexus-Mods/7z-bin#3298c42e69e3220dc39694bc2f610c077c3e213a
+        specifier: 'catalog:'
         version: https://codeload.github.com/Nexus-Mods/7z-bin/tar.gz/3298c42e69e3220dc39694bc2f610c077c3e213a
       '@types/i18next':
         specifier: 'catalog:'
@@ -3520,7 +3522,7 @@ importers:
   extensions/script-extender-error-check:
     devDependencies:
       7z-bin:
-        specifier: git+https://github.com/Nexus-Mods/7z-bin#3298c42e69e3220dc39694bc2f610c077c3e213a
+        specifier: 'catalog:'
         version: https://codeload.github.com/Nexus-Mods/7z-bin/tar.gz/3298c42e69e3220dc39694bc2f610c077c3e213a
       '@types/i18next':
         specifier: 'catalog:'
@@ -3566,7 +3568,7 @@ importers:
         version: 7.7.4
     devDependencies:
       7z-bin:
-        specifier: git+https://github.com/Nexus-Mods/7z-bin#3298c42e69e3220dc39694bc2f610c077c3e213a
+        specifier: 'catalog:'
         version: https://codeload.github.com/Nexus-Mods/7z-bin/tar.gz/3298c42e69e3220dc39694bc2f610c077c3e213a
       '@nexusmods/nexus-api':
         specifier: 'catalog:'
@@ -3668,7 +3670,7 @@ importers:
   extensions/test-setup:
     devDependencies:
       7z-bin:
-        specifier: git+https://github.com/Nexus-Mods/7z-bin#3298c42e69e3220dc39694bc2f610c077c3e213a
+        specifier: 'catalog:'
         version: https://codeload.github.com/Nexus-Mods/7z-bin/tar.gz/3298c42e69e3220dc39694bc2f610c077c3e213a
       '@types/bluebird':
         specifier: 'catalog:'
@@ -3773,7 +3775,7 @@ importers:
   extensions/titlebar-launcher:
     devDependencies:
       7z-bin:
-        specifier: git+https://github.com/Nexus-Mods/7z-bin#3298c42e69e3220dc39694bc2f610c077c3e213a
+        specifier: 'catalog:'
         version: https://codeload.github.com/Nexus-Mods/7z-bin/tar.gz/3298c42e69e3220dc39694bc2f610c077c3e213a
       '@types/node':
         specifier: 'catalog:'
@@ -19594,7 +19596,7 @@ snapshots:
 
   node-7z@https://codeload.github.com/Nexus-Mods/node-7z/tar.gz/b75def8d0d7d81a03f4526c52b8ada9a34a06479:
     dependencies:
-      7z-bin: https://codeload.github.com/Nexus-Mods/7z-bin/tar.gz/3298c42e69e3220dc39694bc2f610c077c3e213a
+      7z-bin: https://codeload.github.com/Nexus-Mods/7z-bin/tar.gz/025786f01319526b56400b0410af6268adc1125c
       bluebird: 3.7.2
 
   node-abi@3.89.0:
