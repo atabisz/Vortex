@@ -3,6 +3,10 @@ name: Main
 on:
   push:
     branches: [master]
+    paths-ignore:
+      - ".planning/**"
+      - "packaging/**"
+      - "*.md"
   pull_request:
     branches: [master]
   workflow_dispatch:
@@ -44,20 +48,62 @@ jobs:
           echo "GYP_MSVS_VERSION=2022" >> $env:GITHUB_ENV
 
       # NOTE(erri120): fontconfig required by font-scanner required by theme-switcher
-      - name: Install fontconfig
+      # cmake and liblz4-dev required for native addon compilation on Linux
+      - name: Install Linux build dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev cmake liblz4-dev zlib1g-dev
+
+      # Rust toolchain required by libloot 0.29.1 (rewritten in Rust at 0.25+)
+      # Must run before "Install dependencies" because postinstall-libloot.cjs
+      # builds libloot from source during pnpm install on Linux
+      - name: Install Rust toolchain
+        if: runner.os == 'Linux'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Cache Rust/Cargo artifacts
+        if: runner.os == 'Linux'
+        uses: Swatinem/rust-cache@v2
 
       - name: Install dependencies
         run: pnpm install
+
+      - name: Rebuild native addons for Electron
+        if: runner.os == 'Linux'
+        run: npx @electron/rebuild -f -v 39.8.0
+
+      # @electron/rebuild doesn't traverse pnpm's isolated store, so it misses loot.
+      # Loot's own postinstall fails during pnpm install because libloot.so is built
+      # by the root postinstall-libloot.cjs which runs after all package postinstalls.
+      # By this step libloot.so exists — rebuild loot explicitly.
+      - name: Rebuild loot addon for Electron
+        if: runner.os == 'Linux'
+        run: |
+          LOOT_DIR=$(node -e "process.stdout.write(require('path').dirname(require.resolve('loot/package.json', {paths: ['extensions/gamebryo-plugin-management/node_modules', 'node_modules']})))")
+          echo "Rebuilding loot at: $LOOT_DIR"
+          cd "$LOOT_DIR"
+          npx node-gyp rebuild --target=39.8.0 --arch=x64 --dist-url=https://electronjs.org/headers
+
+      - name: Verify native addons load
+        if: runner.os == 'Linux'
+        run: node scripts/verify-addons.cjs
+
+      - name: Cache DuckDB extensions
+        uses: actions/cache@v4
+        with:
+          path: src/main/build/duckdb-extensions
+          key: duckdb-ext-${{ runner.os }}-${{ hashFiles('pnpm-workspace.yaml', 'scripts/duckdb-extensions.json') }}
 
       - name: Build
         run: pnpm run build:all
 
       - name: Lint
+        if: runner.os == 'Linux'
         run: pnpm run lint:ci
 
       - name: Test
+        if: runner.os == 'Linux'
         run: pnpm run test
 
       - name: Upload API artifacts
@@ -72,7 +118,7 @@ jobs:
 
   api:
     needs: build
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    if: github.repository == 'Nexus-Mods/Vortex' && github.ref == 'refs/heads/master' && github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
