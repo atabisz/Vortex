@@ -1,6 +1,7 @@
 import * as os from "node:os";
 import { afterEach, beforeEach, describe as _describe, expect, it, vi } from "vitest";
 const describe = _describe.skipIf(process.platform !== "linux");
+>>>>>>> a5add0243754819e598cc3e4d572ee584a239b70
 
 import { xdgCacheHome, xdgConfigHome, xdgDataHome, xdgStateHome } from "./xdg";
 
