@@ -70,19 +70,19 @@ Some PR-F commits depend on fomod-installer PRs landing first. Precise relations
   - `e69ee23b5` fix app startup when launched from VSCode or other Electron apps
   > Note: crafted as clean patch on origin/master (2 commits); cherry-pick not used due to accumulated changes on shared files
 
-- [ ] **PR-B: XDG path support in localAppData**
+- [ ] **PR-B: XDG path support in localAppData** — [Nexus-Mods/Vortex#22342](https://github.com/Nexus-Mods/Vortex/pull/22342) | branch: `pr-b-xdg-path-support`
   - `a5f0f5da3` implement Linux XDG path in localAppData with unit tests
-  - `da093b6d8` fix path.posix.join in XDG fallback paths
   - `7fd6fdebe` adapt @vortex/fs XDG path constants into linux port
+  - `da093b6d8` fix path.posix.join in XDG fallback paths
 
-- [ ] **PR-C: winapi-bindings Linux shim**
+- [ ] **PR-C: winapi-bindings Linux shim** — [Nexus-Mods/Vortex#22343](https://github.com/Nexus-Mods/Vortex/pull/22343) | branch: `pr-c-winapi-shim`
   - `2aa42b9c1` implement winapi-bindings Linux shim with full export coverage
   - `946940e76` add Linux winapi-bindings alias to webpack and rolldown build configs
   - `a3682b49a` remove dead winapi-bindings require from Fallout 4
   - `c0c4bf2a8` add winapi-bindings to neverBuiltDependencies on Linux
   - `754784cd8` exclude winapi-bindings from dist package.json on Linux
 
-- [ ] **PR-D: IPC pipe path abstraction**
+- [ ] **PR-D: IPC pipe path abstraction** — [Nexus-Mods/Vortex#22344](https://github.com/Nexus-Mods/Vortex/pull/22344) | branch: `pr-d-ipc-path-utility`
   - `5b8a552c3` add getIPCPath platform utility with Vitest tests
   - `ecef5fafc` patch all IPC pipe path sites to use getIPCPath()
   - `8fd69eab9` add Linux IPC path guard to loot package patch
@@ -215,9 +215,9 @@ Suggested sequence (each is independent, submit in order):
 | PR | Title | Status | Notes |
 |----|-------|--------|-------|
 | A | devcontainer bootstrap | **submitted** | [#22310](https://github.com/Nexus-Mods/Vortex/pull/22310) |
-| B | XDG paths | pending | |
-| C | winapi shim | pending | |
-| D | IPC path utility | pending | |
+| B | XDG paths | **draft** | [#22342](https://github.com/Nexus-Mods/Vortex/pull/22342) |
+| C | winapi shim | **draft** | [#22343](https://github.com/Nexus-Mods/Vortex/pull/22343) |
+| D | IPC path utility | **draft** | [#22344](https://github.com/Nexus-Mods/Vortex/pull/22344) |
 | E | loot native addon | pending | |
 | F1 | FOMOD path fixes | pending | submit when ready; drop ca8e99941 after fi-1 merges |
 | F2 | CSharpScript warning handler | HOLD | wait for fomod-installer fi-3 |
