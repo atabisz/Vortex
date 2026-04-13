@@ -1,16 +1,9 @@
-import { access, constants } from "fs";
-import { stat as fsStat } from "fs/promises";
-import * as path from "path";
-import * as nodeUtil from "util";
-
-import Promise from "bluebird";
-import I18next from "i18next";
-import * as Redux from "redux";
-import { createSelector } from "reselect";
-import { actions, fs, log, selectors, types, util } from "vortex-api";
-
 /* eslint-disable */
-import { setPluginEnabled, setPluginOrder, updatePluginOrder } from "./actions/loadOrder";
+import {
+  setPluginEnabled,
+  setPluginOrder,
+  updatePluginOrder,
+} from "./actions/loadOrder";
 import {
   clearNewPluginCounter,
   incrementNewPluginCounter,
@@ -18,17 +11,13 @@ import {
   setPluginList,
   updatePluginWarnings,
 } from "./actions/plugins";
-import { clearUserlist, removeGroupRule, setGroup } from "./actions/userlist";
+import { removeGroupRule, setGroup } from "./actions/userlist";
 import { openGroupEditor, setCreateRule } from "./actions/userlistEdit";
-import LootInterface from "./autosort";
-import { ESPFile } from "./esp/ESPFile";
 import { loadOrderReducer } from "./reducers/loadOrder";
 import { pluginsReducer } from "./reducers/plugins";
 import { settingsReducer } from "./reducers/settings";
 import userlistReducer from "./reducers/userlist";
 import userlistEditReducer from "./reducers/userlistEdit";
-import { GHOST_EXT, NAMESPACE } from "./statics";
-import { IESPFile } from "./types/IESPFile";
 import { ILoadOrder } from "./types/ILoadOrder";
 import { ILOOTList, ILootReference, ILOOTSortApiCall } from "./types/ILOOTList";
 import { IPlugin, IPluginCombined, IPlugins } from "./types/IPlugins";
@@ -51,7 +40,6 @@ import {
   supportsESL,
   supportsMediumMasters,
 } from "./util/gameSupport";
-import { isMasterlistOutdated, masterlistExists, masterlistFilePath } from "./util/masterlist";
 import { markdownToBBCode } from "./util/mdtobb";
 import PluginHistory from "./util/PluginHistory";
 import PluginPersistor from "./util/PluginPersistor";
@@ -59,10 +47,29 @@ import toPluginId from "./util/toPluginId";
 import UserlistPersistor from "./util/UserlistPersistor";
 import Connector from "./views/Connector";
 import GroupEditor from "./views/GroupEditor";
-import { getPluginFlags } from "./views/PluginFlags";
 import PluginList from "./views/PluginList";
 import Settings from "./views/Settings";
 import UserlistEditor from "./views/UserlistEditor";
+
+import LootInterface from "./autosort";
+import { GHOST_EXT, NAMESPACE } from "./statics";
+
+import Promise from "bluebird";
+import ESPFile from "esptk";
+import { access, constants } from "fs";
+import I18next from "i18next";
+import * as path from "path";
+import * as Redux from "redux";
+import * as nodeUtil from "util";
+import { actions, fs, log, selectors, types, util } from "vortex-api";
+import { getPluginFlags } from "./views/PluginFlags";
+import { createSelector } from "reselect";
+import { IESPFile } from "./types/IESPFile";
+import {
+  isMasterlistOutdated,
+  masterlistExists,
+  masterlistFilePath,
+} from "./util/masterlist";
 
 type TranslationFunction = typeof I18next.t;
 
@@ -93,18 +100,27 @@ function isFile(fileName: string): Promise<boolean> {
   );
 }
 
-function isPlugin(filePath: string, fileName: string, gameMode: string): Promise<boolean> {
+function isPlugin(
+  filePath: string,
+  fileName: string,
+  gameMode: string,
+): Promise<boolean> {
   if (path.extname(fileName) === GHOST_EXT) {
     fileName = path.basename(fileName, GHOST_EXT);
   }
 
   if (
     !fileName ||
-    pluginExtensions(gameMode).indexOf(path.extname(path.basename(fileName)).toLowerCase()) === -1
+    pluginExtensions(gameMode).indexOf(
+      path.extname(path.basename(fileName)).toLowerCase(),
+    ) === -1
   ) {
     return Promise.resolve(false);
   }
-  return isFile(path.join(filePath, fileName)).catch(util.UserCanceled, () => false);
+  return isFile(path.join(filePath, fileName)).catch(
+    util.UserCanceled,
+    () => false,
+  );
 }
 
 /**
@@ -120,14 +136,23 @@ function updatePluginListImpl(
   const pluginSources: { [pluginName: string]: string } = {};
   const pluginStates: IPlugins = {};
 
-  const setPluginState = (basePath: string, fileName: string, deployed: boolean) => {
-    const modId = pluginSources[fileName] !== undefined ? pluginSources[fileName] : "";
+  const setPluginState = (
+    basePath: string,
+    fileName: string,
+    deployed: boolean,
+  ) => {
+    const modId =
+      pluginSources[fileName] !== undefined ? pluginSources[fileName] : "";
     const pluginId = toPluginId(fileName);
     pluginStates[pluginId] = {
       modId,
       filePath: path.join(basePath, fileName),
       isNative: isNativePlugin(gameId, fileName),
-      warnings: util.getSafe(state, ["session", "plugins", "pluginList", pluginId, "warnings"], {}),
+      warnings: util.getSafe(
+        state,
+        ["session", "plugins", "pluginList", pluginId, "warnings"],
+        {},
+      ),
       deployed,
     };
     return Promise.resolve();
@@ -167,12 +192,16 @@ function updatePluginListImpl(
       return;
     }
     const isOverriden = (fileName: string) =>
-      (mod.fileOverrides ?? []).some((override) => path.basename(override) === fileName);
+      (mod.fileOverrides ?? []).some(
+        (override) => path.basename(override) === fileName,
+      );
     const modInstPath = path.join(installBasePath, mod.installationPath);
     return fs
       .readdirAsync(modInstPath)
       .map((fileName) =>
-        activator !== undefined ? (activator as any).getDeployedPath(fileName) : fileName,
+        activator !== undefined
+          ? (activator as any).getDeployedPath(fileName)
+          : fileName,
       )
       .filter((fileName: string) =>
         isPlugin(modInstPath, fileName, gameId).then((res) =>
@@ -212,29 +241,37 @@ function updatePluginListImpl(
       // game mode management will notice this as well.
       return fs.readdirAsync(modPath).catch((err) => []);
     })
-    .then(async (fileNames: string[]) => {
+    .then((fileNames: string[]) => {
       return Promise.filter(fileNames, (val) => isPlugin(modPath, val, gameId))
         .each((fileName: string) => setPluginState(modPath, fileName, true))
-        .then(async () => {
+        .then(() => {
           store.dispatch(setPluginList(pluginStates));
           if (Object.keys(pluginStates).length > 0) {
             const notDeployed = Object.keys(pluginStates).find(
               (key) => !pluginStates[key].deployed,
             );
             if (notDeployed !== undefined) {
-              store.dispatch((actions as any).setDeploymentNecessary(gameId, true));
+              store.dispatch(
+                (actions as any).setDeploymentNecessary(gameId, true),
+              );
             }
-            const knownPlugins = Object.keys(pluginStates).reduce((prev, pluginId) => {
-              prev[pluginId] = path.basename(pluginStates[pluginId].filePath);
-              return prev;
-            }, {});
+            const knownPlugins = Object.keys(pluginStates).reduce(
+              (prev, pluginId) => {
+                prev[pluginId] = path.basename(pluginStates[pluginId].filePath);
+                return prev;
+              },
+              {},
+            );
             if (pluginPersistor !== undefined) {
               let blueprintIds: Set<string> | undefined;
               if (supportsBlueprintPlugins(gameId)) {
                 blueprintIds = new Set<string>();
                 for (const pluginId of Object.keys(pluginStates)) {
                   try {
-                    const esp = await ESPFile.open(pluginStates[pluginId].filePath, gameId);
+                    const esp = new ESPFile(
+                      pluginStates[pluginId].filePath,
+                      gameId,
+                    );
                     if (esp.isBlueprint) {
                       blueprintIds.add(pluginId);
                     }
@@ -266,7 +303,11 @@ function withActivity<T>(
   });
 }
 
-function updatePluginList(store: Redux.Store<any>, newModList: IModStates, gameId: string) {
+function updatePluginList(
+  store: Redux.Store<any>,
+  newModList: IModStates,
+  gameId: string,
+) {
   return withActivity(store, "plugins", "update-plugin-list", () =>
     updatePluginListImpl(store, newModList, gameId),
   );
@@ -302,7 +343,10 @@ function renamePlugin(
 }
 
 interface IExtensionContextExt extends types.IExtensionContext {
-  registerProfileFile: (gameId: string, filePath: string | (() => PromiseLike<string[]>)) => void;
+  registerProfileFile: (
+    gameId: string,
+    filePath: string | (() => PromiseLike<string[]>),
+  ) => void;
 }
 
 let pluginPersistor: PluginPersistor;
@@ -313,7 +357,12 @@ let refreshTimer: NodeJS.Timeout;
 let deploying = false;
 
 function makeSetPluginGhost(api: types.IExtensionApi) {
-  return (pluginId: string, gameMode: string, ghosted: boolean, enabled: boolean) => {
+  return (
+    pluginId: string,
+    gameMode: string,
+    ghosted: boolean,
+    enabled: boolean,
+  ) => {
     const state = api.store.getState();
     const { pluginList } = state.session.plugins;
     const plugin: IPluginCombined = pluginList?.[pluginId];
@@ -364,7 +413,10 @@ function register(
     reducers: {},
   });
   context.registerReducer(["settings", "plugins"], settingsReducer);
-  context.registerReducer(["session", "pluginDependencies"], userlistEditReducer);
+  context.registerReducer(
+    ["session", "pluginDependencies"],
+    userlistEditReducer,
+  );
 
   const pluginActivity = new util.ReduxProp(
     context.api,
@@ -372,26 +424,34 @@ function register(
     (activity: string[]) => activity !== undefined && activity.length > 0,
   );
 
-  const isMaster = (filePath: string, flag: boolean, gameMode: string): boolean => {
+  const isMaster = (
+    filePath: string,
+    flag: boolean,
+    gameMode: string,
+  ): boolean => {
     if (path.extname(filePath) === GHOST_EXT) {
       filePath = path.basename(filePath, GHOST_EXT);
     }
     const masterExts = supportsESL(gameMode) ? [".esm", ".esl"] : [".esm"];
-    return flag || masterExts.indexOf(path.extname(filePath).toLowerCase()) !== -1;
+    return (
+      flag || masterExts.indexOf(path.extname(filePath).toLowerCase()) !== -1
+    );
   };
 
-  const isMediumMaster = async (
+  const isMediumMaster = (
     filePath: string,
     flag: boolean,
     gameMode: string,
-  ) => {
+  ): boolean => {
     if (path.extname(filePath) === GHOST_EXT) {
       filePath = path.basename(filePath, GHOST_EXT);
     }
     const masterExts = [".esm"];
-    const file = await ESPFile.open(filePath, gameMode);
+    const file = new ESPFile(filePath, gameMode);
     return (
-      flag || (masterExts.indexOf(path.extname(filePath).toLowerCase()) !== -1 && file.isMedium)
+      flag ||
+      (masterExts.indexOf(path.extname(filePath).toLowerCase()) !== -1 &&
+        file.isMedium)
     );
   };
 
@@ -405,10 +465,11 @@ function register(
     return flag || path.extname(filePath).toLowerCase() === ".esl";
   };
 
-  const openLOOTSite = () => util.opn("https://loot.github.io/").catch(() => null);
+  const openLOOTSite = () =>
+    util.opn("https://loot.github.io/").catch(() => null);
 
-  const parseESPFile = async (filePath: string, gameMode: string) => {
-    const fileInfo = await ESPFile.open(filePath, gameMode);
+  const parseESPFile = (filePath: string, gameMode: string): IESPFile => {
+    const fileInfo = new ESPFile(filePath, gameMode);
     return {
       isMaster: fileInfo.isMaster,
       isLight: fileInfo.isLight,
@@ -427,19 +488,23 @@ function register(
   };
 
   const loadOrder = (state) => state.loadOrder;
-  const enabledPlugins = createSelector(loadOrder, selectors.activeGameId, (order, gameId) => {
-    if (!gameSupported(gameId)) {
-      return new Set<string>([]);
-    }
-    return new Set<string>(
-      [].concat(
-        nativePlugins(gameId),
-        Object.keys(order)
-          .filter((pluginName: string) => order[pluginName].enabled)
-          .map((pluginName: string) => pluginName.toLowerCase()),
-      ),
-    );
-  });
+  const enabledPlugins = createSelector(
+    loadOrder,
+    selectors.activeGameId,
+    (order, gameId) => {
+      if (!gameSupported(gameId)) {
+        return new Set<string>([]);
+      }
+      return new Set<string>(
+        [].concat(
+          nativePlugins(gameId),
+          Object.keys(order)
+            .filter((pluginName: string) => order[pluginName].enabled)
+            .map((pluginName: string) => pluginName.toLowerCase()),
+        ),
+      );
+    },
+  );
 
   const pluginCounter = new util.ReduxProp(
     context.api,
@@ -473,7 +538,9 @@ function register(
       forceListUpdate,
       safeBasename,
       installedPlugins,
-      nativePlugins: gameSupported(selectors.activeGameId(context.api.store.getState()))
+      nativePlugins: gameSupported(
+        selectors.activeGameId(context.api.store.getState()),
+      )
         ? nativePlugins(selectors.activeGameId(context.api.store.getState()))
         : [],
       onRefreshPlugins: () => updateCurrentProfile(context.api),
@@ -493,15 +560,6 @@ function register(
     );
   }
 
-  context.registerProfileFeature(
-    "local_loot_rules",
-    "boolean",
-    "connection",
-    "LOOT Rules",
-    "This profile has its own plugin rules and groups",
-    () => gameSupported(selectors.activeGameId(context.api.store.getState())),
-  );
-
   context.registerSettings("Workarounds", Settings, undefined, () => {
     const state = context.api.store.getState();
     const gameMode = selectors.activeGameId(state);
@@ -514,7 +572,10 @@ function register(
       const { pluginFilePaths, onSortCallback } = sortCall;
       if (!Array.isArray(pluginFilePaths) || onSortCallback === undefined) {
         log("error", "incorrect lootSortAsync call parameters");
-        onSortCallback(new Error("incorrect lootSortAsync call parameters"), []);
+        onSortCallback(
+          new Error("incorrect lootSortAsync call parameters"),
+          [],
+        );
         return;
       }
       const profile = selectors.activeProfile(context.api.store.getState());
@@ -523,7 +584,11 @@ function register(
         if (!masterListExists) {
           await loot.downloadMasterlist(profile.gameId);
         }
-        await updatePluginList(context.api.store, profile.modState, profile.gameId);
+        await updatePluginList(
+          context.api.store,
+          profile.modState,
+          profile.gameId,
+        );
         await new Promise((resolve, reject) => {
           const pluginList = util.getSafe(
             context.api.getState(),
@@ -543,7 +608,9 @@ function register(
           }
           const sortedLO = context.api.getState()?.["loadOrder"] || {};
           const sortedList = Object.keys(sortedLO)
-            .sort((lhs, rhs) => sortedLO[lhs].loadOrder - sortedLO[rhs].loadOrder)
+            .sort(
+              (lhs, rhs) => sortedLO[lhs].loadOrder - sortedLO[rhs].loadOrder,
+            )
             .map((pluginName: string) => pluginName.toLowerCase());
 
           onSortCallback(null, sortedList);
@@ -557,48 +624,40 @@ function register(
     { minArguments: 1 },
   );
 
-  context.registerAction("gamebryo-plugin-icons", 100, "connection", {}, "Manage Rules", () => {
-    context.api.store.dispatch(setCreateRule(undefined, undefined, undefined));
-  });
+  context.registerAction(
+    "gamebryo-plugin-icons",
+    100,
+    "connection",
+    {},
+    "Manage Rules",
+    () => {
+      context.api.store.dispatch(
+        setCreateRule(undefined, undefined, undefined),
+      );
+    },
+  );
 
-  context.registerAction("gamebryo-plugin-icons", 105, "groups", {}, "Manage Groups", () => {
-    context.api.store.dispatch(openGroupEditor(true));
-  });
+  context.registerAction(
+    "gamebryo-plugin-icons",
+    105,
+    "groups",
+    {},
+    "Manage Groups",
+    () => {
+      context.api.store.dispatch(openGroupEditor(true));
+    },
+  );
 
-  context.registerAction("gamebryo-plugin-icons", 200, "history", {}, "History", () => {
-    context.api.ext.showHistory?.("plugins");
-  });
-
-  context.registerAction("gamebryo-plugin-icons", 300, "undo", {}, "Reset Plugin Rules", () => {
-    context.api
-      .showDialog(
-        "question",
-        "Reset Plugin Rules",
-        {
-          text:
-            "This will remove ALL custom plugin rules, plugin group assignments, " +
-            "and custom groups. Only rules from the LOOT masterlist will remain.\n\n" +
-            "This cannot be undone.",
-        },
-        [{ label: "Cancel" }, { label: "Reset" }],
-      )
-      .then((result: types.IDialogResult) => {
-        if (result.action === "Reset") {
-          const state: IStateWithGamebryo = context.api.store.getState();
-          const userlist = state.userlist;
-          // explicitly unset group assignments so the UI updates
-          const unsetGroups = (userlist?.plugins ?? [])
-            .filter((plugin) => plugin.group !== undefined)
-            .map((plugin) => setGroup(plugin.name, undefined));
-          util.batchDispatch(context.api.store, [...unsetGroups, clearUserlist()]);
-          context.api.sendNotification({
-            type: "success",
-            message: "Plugin rules have been reset to defaults",
-            displayMS: 3000,
-          });
-        }
-      });
-  });
+  context.registerAction(
+    "gamebryo-plugin-icons",
+    200,
+    "history",
+    {},
+    "History",
+    () => {
+      context.api.ext.showHistory?.("plugins");
+    },
+  );
 
   context.registerActionCheck(
     "GAMEBRYO_SET_PLUGIN_MANAGEMENT_ENABLED",
@@ -608,7 +667,11 @@ function register(
       if (process.type === "renderer") {
         const { profileId, enabled } = action.payload;
         const profile = selectors.profileById(state, profileId);
-        const currentState = util.getSafe(state, ["pluginManagementEnabled", profileId], false);
+        const currentState = util.getSafe(
+          state,
+          ["pluginManagementEnabled", profileId],
+          false,
+        );
         if (currentState !== enabled) {
           if (enabled) {
             syncGameSupport(profile.gameId, getGameSupport()[profile.gameId]);
@@ -622,23 +685,29 @@ function register(
     },
   );
 
-  context.registerActionCheck("ADD_USERLIST_RULE", (state: any, action: any) => {
-    const { pluginId, reference, type } = action.payload;
+  context.registerActionCheck(
+    "ADD_USERLIST_RULE",
+    (state: any, action: any) => {
+      const { pluginId, reference, type } = action.payload;
 
-    const plugin = (state.userlist.plugins ?? []).find((iter) => iter.name === pluginId);
-    if (plugin !== undefined) {
-      if ((plugin[type] || []).indexOf(reference) !== -1) {
-        return `Duplicate rule "${pluginId} ${type} ${reference}"`;
+      const plugin = (state.userlist.plugins ?? []).find(
+        (iter) => iter.name === pluginId,
+      );
+      if (plugin !== undefined) {
+        if ((plugin[type] || []).indexOf(reference) !== -1) {
+          return `Duplicate rule "${pluginId} ${type} ${reference}"`;
+        }
       }
-    }
 
-    return undefined;
-  });
+      return undefined;
+    },
+  );
 
   const pluginInfoCache = new PluginInfoCache(context.api);
 
   // Cross-extension API: lets other extensions (e.g. game-starfield) query
-  // Blueprint-plugin status without depending on the ESP parser directly.
+  // Blueprint-plugin status without having to take a native-addon dependency
+  // on esptk themselves.
   //
   // Takes an absolute plugin file path so the lookup is self-contained — the
   // API never depends on Vortex's pluginList Redux state being populated, and
@@ -650,13 +719,13 @@ function register(
   // as a no-op and not assume anything about blueprint-ness.
   context.registerAPI(
     "isBlueprintPlugin",
-    async (pluginFilePath: string) => {
+    (pluginFilePath: string): boolean => {
       const gameMode = selectors.activeGameId(context.api.getState());
       if (!supportsBlueprintPlugins(gameMode)) {
         return false;
       }
       try {
-        return (await pluginInfoCache.getInfo(pluginFilePath)).isBlueprint;
+        return pluginInfoCache.getInfo(pluginFilePath).isBlueprint;
       } catch (err) {
         log("warn", "isBlueprintPlugin parse failed", {
           pluginFilePath,
@@ -705,7 +774,11 @@ function register(
  * the store
  */
 function initPersistor(context: IExtensionContextExt) {
-  const onError = (message: string, detail: Error, options?: types.IErrorOptions) => {
+  const onError = (
+    message: string,
+    detail: Error,
+    options?: types.IErrorOptions,
+  ) => {
     context.api.showErrorNotification(message, detail, options);
   };
 
@@ -746,83 +819,18 @@ function updateCurrentProfile(api: types.IExtensionApi): Promise<void> {
 
   return new Promise<void>(async (resolve, reject) => {
     await updatePluginList(api.store, profile.modState, profile.gameId);
-    const pluginList = util.getSafe(api.getState(), ["session", "plugins", "pluginList"], {});
-    api.events.emit("plugin-details", profile.gameId, Object.keys(pluginList ?? {}), resolve);
+    const pluginList = util.getSafe(
+      api.getState(),
+      ["session", "plugins", "pluginList"],
+      {},
+    );
+    api.events.emit(
+      "plugin-details",
+      profile.gameId,
+      Object.keys(pluginList ?? {}),
+      resolve,
+    );
   });
-}
-
-/**
- * swap the userlist.yaml file between profiles when the local_loot_rules
- * feature toggle is enabled. Called after persistors are disabled to prevent
- * stale writes.
- */
-async function swapUserlistForProfile(
-  oldProfile: types.IProfile | undefined,
-  newProfile: types.IProfile | undefined,
-) {
-  const oldHasLocal = oldProfile?.features?.local_loot_rules === true;
-  const newHasLocal = newProfile?.features?.local_loot_rules === true;
-
-  if (!oldHasLocal && !newHasLocal) {
-    return;
-  }
-
-  const gameId = oldProfile?.gameId ?? newProfile?.gameId;
-  if (gameId === undefined) {
-    return;
-  }
-
-  const userDataPath = util.getVortexPath("userData");
-  const activeFile = path.join(userDataPath, gameId, "userlist.yaml");
-  const globalBackup = path.join(userDataPath, gameId, "userlist.yaml.global");
-
-  const getProfileDir = (profile: types.IProfile) =>
-    path.join(userDataPath, gameId, "profiles", profile.id);
-  const getProfileFile = (profile: types.IProfile) =>
-    path.join(getProfileDir(profile), "userlist.yaml");
-
-  const copyIgnoringMissing = async (src: string, dest: string) => {
-    try {
-      await fs.copyAsync(src, dest, { noSelfCopy: true });
-    } catch (err) {
-      if (err.code !== "ENOENT") {
-        throw err;
-      }
-    }
-  };
-
-  // save old profile's rules to its profile directory
-  if (oldHasLocal && oldProfile?.pendingRemove !== true) {
-    await fs.ensureDirAsync(getProfileDir(oldProfile));
-    await copyIgnoringMissing(activeFile, getProfileFile(oldProfile));
-
-    if (!newHasLocal) {
-      // restore global backup
-      await copyIgnoringMissing(globalBackup, activeFile);
-    }
-  }
-
-  // load new profile's rules from its profile directory
-  if (newHasLocal) {
-    if (!oldHasLocal) {
-      // back up the current global userlist
-      await copyIgnoringMissing(activeFile, globalBackup);
-    }
-
-    try {
-      await fs.statAsync(getProfileFile(newProfile));
-      // profile has a saved copy — restore it
-      await fs.copyAsync(getProfileFile(newProfile), activeFile, { noSelfCopy: true });
-    } catch (err) {
-      if (err.code === "ENOENT") {
-        // first time: seed the profile dir from the current file
-        await fs.ensureDirAsync(getProfileDir(newProfile));
-        await copyIgnoringMissing(activeFile, getProfileFile(newProfile));
-      } else {
-        throw err;
-      }
-    }
-  }
 }
 
 let watcher: fs.FSWatcher;
@@ -834,7 +842,10 @@ function stopSync(): Promise<void> {
   }
 
   if (pluginPersistor === undefined) {
-    log("debug", "stopSync: pluginPersistor is undefined, resolving immediately");
+    log(
+      "debug",
+      "stopSync: pluginPersistor is undefined, resolving immediately",
+    );
     return Promise.resolve();
   }
 
@@ -877,7 +888,9 @@ function startSync(api: types.IExtensionApi): Promise<void> {
     if (modPath === undefined) {
       // can this even happen?
       log("error", "mod path unknown", {
-        discovery: nodeUtil.inspect(selectors.currentGameDiscovery(store.getState())),
+        discovery: nodeUtil.inspect(
+          selectors.currentGameDiscovery(store.getState()),
+        ),
       });
       return;
     }
@@ -896,7 +909,11 @@ function startSync(api: types.IExtensionApi): Promise<void> {
           return;
         }
 
-        if (pluginExtensions(gameId).indexOf(path.extname(fileName).toLowerCase()) === -1) {
+        if (
+          pluginExtensions(gameId).indexOf(
+            path.extname(fileName).toLowerCase(),
+          ) === -1
+        ) {
           // ignore non-plugins
           return;
         }
@@ -1023,7 +1040,10 @@ function testMissingGroupsImpl(
     automaticFix: () => {
       const missingSet = new Set<string>(missing);
       (state.userlist.plugins || [])
-        .filter((plugin) => plugin.group !== undefined && missingSet.has(plugin.group))
+        .filter(
+          (plugin) =>
+            plugin.group !== undefined && missingSet.has(plugin.group),
+        )
         .forEach((plugin) => {
           store.dispatch(setGroup(plugin.name, undefined));
         });
@@ -1084,7 +1104,11 @@ function testUserlistInvalid(
     return false;
   });
   if (duplicate !== undefined) {
-    const userlistPath = path.join(util.getVortexPath("userData"), gameMode, "userlist.yaml");
+    const userlistPath = path.join(
+      util.getVortexPath("userData"),
+      gameMode,
+      "userlist.yaml",
+    );
     return Promise.resolve({
       description: {
         short: "Duplicate entries",
@@ -1108,11 +1132,17 @@ function testUserlistInvalid(
   // search for duplicate after rules
   let duplicateAfter: string | ILootReference;
   const plugin = (userlist.plugins || []).find((iter) => {
-    duplicateAfter = (iter.after || []).find((val, idx) => iter.after.indexOf(val, idx + 1) !== -1);
+    duplicateAfter = (iter.after || []).find(
+      (val, idx) => iter.after.indexOf(val, idx + 1) !== -1,
+    );
     return duplicateAfter !== undefined;
   });
   if (plugin !== undefined) {
-    const userlistPath = path.join(util.getVortexPath("userData"), gameMode, "userlist.yaml");
+    const userlistPath = path.join(
+      util.getVortexPath("userData"),
+      gameMode,
+      "userlist.yaml",
+    );
     return Promise.resolve({
       description: {
         short: "Duplicate dependencies",
@@ -1124,7 +1154,10 @@ function testUserlistInvalid(
           {
             replace: {
               plugin: plugin.name,
-              reference: typeof duplicateAfter === "string" ? duplicateAfter : duplicateAfter.name,
+              reference:
+                typeof duplicateAfter === "string"
+                  ? duplicateAfter
+                  : duplicateAfter.name,
               userlistPath,
             },
           },
@@ -1157,10 +1190,10 @@ function testMasterlistOutdated(
   );
 }
 
-async function testExceededPluginLimit(
+function testExceededPluginLimit(
   api: types.IExtensionApi,
   infoCache: PluginInfoCache,
-) {
+): Promise<types.ITestResult> {
   const { translate, store } = api;
   const state = store.getState();
   const gameMode = selectors.activeGameId(state);
@@ -1169,29 +1202,35 @@ async function testExceededPluginLimit(
   }
   const loadOrder = util.getSafe(state, ["loadOrder"], {});
   const pluginList = state.session.plugins.pluginList ?? {};
-  const plugins: Record<string, any> = {};
-  for (const key of Object.keys(pluginList)) {
+  const plugins = Object.keys(pluginList).reduce((accum, key) => {
     if (util.getSafe(loadOrder, [key, "enabled"], false)) {
       let isLight;
       try {
-        isLight = (await infoCache.getInfo(pluginList[key].filePath)).isLight;
+        isLight = infoCache.getInfo(pluginList[key].filePath).isLight;
       } catch (err) {
         // We won't log this as the error will most definitely
         //  be raised somewhere else -> nop
         isLight = false;
       }
-      plugins[key] = { ...pluginList[key], isLight };
+      accum[key] = { ...pluginList[key], isLight };
     }
-  }
+    return accum;
+  }, {});
 
   const isValid = (id: string) => {
     const plugin = plugins[id];
     return plugin?.deployed || plugin?.isNative;
   };
 
-  const regular = Object.keys(plugins).filter((id) => isValid(id) && !plugins[id].isLight);
-  const light = Object.keys(plugins).filter((id) => isValid(id) && plugins[id].isLight);
-  const medium = Object.keys(plugins).filter((id) => isValid(id) && plugins[id].isMedium);
+  const regular = Object.keys(plugins).filter(
+    (id) => isValid(id) && !plugins[id].isLight,
+  );
+  const light = Object.keys(plugins).filter(
+    (id) => isValid(id) && plugins[id].isLight,
+  );
+  const medium = Object.keys(plugins).filter(
+    (id) => isValid(id) && plugins[id].isMedium,
+  );
 
   const eslGame = supportsESL(gameMode);
   const mediumGame = supportsMediumMasters(gameMode);
@@ -1237,12 +1276,12 @@ class PluginInfoCache {
     this.mAPI = api;
   }
 
-  public async getInfo(filePath: string) {
+  public getInfo(filePath: string): IESPInfo {
     const id = this.fileId(filePath);
     let mtime: number;
     let ino: bigint;
     try {
-      const stat = await fsStat(filePath, { bigint: true });
+      const stat = fs.statSync(filePath, { bigint: true });
       mtime = Number(stat.mtimeMs);
       ino = stat.ino;
     } catch (err) {
@@ -1255,13 +1294,14 @@ class PluginInfoCache {
       mtime !== this.mCache[id].lastModified ||
       ino !== this.mCache[id].lastINO
     ) {
-      const info = await ESPFile.open(filePath, activeGameMode);
+      const info = new ESPFile(filePath, activeGameMode);
       this.mCache[id] = {
         lastModified: mtime,
         lastINO: ino,
         info: {
           isLight: info.isLight,
-          isBlueprint: supportsBlueprintPlugins(activeGameMode) && info.isBlueprint,
+          isBlueprint:
+            supportsBlueprintPlugins(activeGameMode) && info.isBlueprint,
           masterList: info.masterList,
         },
       };
@@ -1284,10 +1324,10 @@ function testTriggerSort(api: types.IExtensionApi): Promise<types.ITestResult> {
   });
 }
 
-async function testMissingMasters(
+function testMissingMasters(
   api: types.IExtensionApi,
   infoCache: PluginInfoCache,
-) {
+): Promise<types.ITestResult> {
   const { translate, store } = api;
   const state = store.getState();
   const gameMode = selectors.activeGameId(state);
@@ -1301,22 +1341,26 @@ async function testMissingMasters(
   const enabledPlugins = Object.keys(loadOrder).filter(
     (plugin: string) => loadOrder[plugin].enabled || natives.has(plugin),
   );
-  const pluginDetails: { name: string; masterList: string[] }[] = [];
-  for (const plugin of enabledPlugins) {
-    if (pluginList[plugin] === undefined) continue;
-    try {
-      const info = await infoCache.getInfo(pluginList[plugin].filePath);
-      pluginDetails.push({ name: plugin, masterList: info.masterList });
-    } catch (err) {
-      log("warn", "failed to parse esp file", {
-        name: pluginList[plugin].filePath,
-        err: err.message,
-      });
-      pluginDetails.push({ name: plugin, masterList: [] });
-    }
-  }
+  const pluginDetails = enabledPlugins
+    .filter((name: string) => pluginList[name] !== undefined)
+    .map((plugin) => {
+      try {
+        return {
+          name: plugin,
+          masterList: infoCache.getInfo(pluginList[plugin].filePath).masterList,
+        };
+      } catch (err) {
+        log("warn", "failed to parse esp file", {
+          name: pluginList[plugin].filePath,
+          err: err.message,
+        });
+        return { name: plugin, masterList: [] };
+      }
+    });
 
-  const activePlugins = new Set<string>(pluginDetails.map((plugin) => plugin.name));
+  const activePlugins = new Set<string>(
+    pluginDetails.map((plugin) => plugin.name),
+  );
 
   const broken = pluginDetails.reduce((prev, plugin) => {
     const missing = plugin.masterList.filter(
@@ -1324,12 +1368,21 @@ async function testMissingMasters(
     );
     const oldWarn = util.getSafe(
       state,
-      ["session", "plugins", "pluginList", plugin.name, "warnings", "missing-master"],
+      [
+        "session",
+        "plugins",
+        "pluginList",
+        plugin.name,
+        "warnings",
+        "missing-master",
+      ],
       false,
     );
     const newWarn = missing.length > 0;
     if (oldWarn !== newWarn) {
-      store.dispatch(updatePluginWarnings(plugin.name, "missing-master", newWarn));
+      store.dispatch(
+        updatePluginWarnings(plugin.name, "missing-master", newWarn),
+      );
     }
 
     if (missing.length > 0) {
@@ -1348,13 +1401,16 @@ async function testMissingMasters(
       description: {
         short: "Missing Masters",
         long:
-          translate("Some of the enabled plugins depend on others that are not enabled:") +
+          translate(
+            "Some of the enabled plugins depend on others that are not enabled:",
+          ) +
           "[table][tbody]" +
           Object.keys(broken)
             .map((plugin) => {
               const missing = broken[plugin].map(link).join("[br][/br]");
               const detail = pluginList[plugin];
-              const name = detail !== undefined ? path.basename(detail.filePath) : plugin;
+              const name =
+                detail !== undefined ? path.basename(detail.filePath) : plugin;
               return (
                 "[tr]" +
                 [link(name), translate("depends on"), missing]
@@ -1375,7 +1431,13 @@ async function testMissingMasters(
               const gameModeNow = selectors.activeGameId(stateNow);
               if (gameSupported(gameModeNow)) {
                 api.events.emit("show-main-page", "gamebryo-plugins");
-                store.dispatch(actions.setAttributeFilter("gamebryo-plugins", "name", pluginName));
+                store.dispatch(
+                  actions.setAttributeFilter(
+                    "gamebryo-plugins",
+                    "name",
+                    pluginName,
+                  ),
+                );
               }
             },
           },
@@ -1391,10 +1453,10 @@ async function testMissingMasters(
  * plugin as a master. The game strips Blueprint masters from non-Blueprint
  * plugins in memory, which destroys references and produces unresolved FormIDs.
  */
-async function testBlueprintMasters(
+function testBlueprintMasters(
   api: types.IExtensionApi,
   infoCache: PluginInfoCache,
-) {
+): Promise<types.ITestResult> {
   const { translate, store } = api;
   const state = store.getState();
   const gameMode = selectors.activeGameId(state);
@@ -1415,54 +1477,54 @@ async function testBlueprintMasters(
     masterList: string[];
   }
 
-  const pluginDetails: IParsedPlugin[] = [];
-  for (const plugin of enabledPlugins) {
-    if (pluginList[plugin] === undefined) continue;
-    try {
-      const info = await infoCache.getInfo(pluginList[plugin].filePath);
-      pluginDetails.push({
-        name: plugin,
-        isBlueprint: info.isBlueprint,
-        masterList: info.masterList,
-      });
-    } catch (err) {
-      log("warn", "failed to parse esp file", {
-        name: pluginList[plugin].filePath,
-        err: err.message,
-      });
-      pluginDetails.push({ name: plugin, isBlueprint: false, masterList: [] });
-    }
-  }
+  const pluginDetails: IParsedPlugin[] = enabledPlugins
+    .filter((name: string) => pluginList[name] !== undefined)
+    .map((plugin) => {
+      try {
+        const info = infoCache.getInfo(pluginList[plugin].filePath);
+        return {
+          name: plugin,
+          isBlueprint: info.isBlueprint,
+          masterList: info.masterList,
+        };
+      } catch (err) {
+        log("warn", "failed to parse esp file", {
+          name: pluginList[plugin].filePath,
+          err: err.message,
+        });
+        return { name: plugin, isBlueprint: false, masterList: [] };
+      }
+    });
 
   const blueprintPlugins = new Set<string>(
-    pluginDetails.filter((plugin) => plugin.isBlueprint).map((plugin) => plugin.name),
+    pluginDetails
+      .filter((plugin) => plugin.isBlueprint)
+      .map((plugin) => plugin.name),
   );
 
   if (blueprintPlugins.size === 0) {
     return Promise.resolve(undefined);
   }
 
-  const broken = pluginDetails.reduce(
-    (prev, plugin) => {
-      if (plugin.isBlueprint) {
-        return prev;
-      }
-      const offendingMasters = plugin.masterList.filter((master) =>
-        blueprintPlugins.has(master.toLowerCase()),
-      );
-      if (offendingMasters.length > 0) {
-        prev[plugin.name] = offendingMasters;
-      }
+  const broken = pluginDetails.reduce((prev, plugin) => {
+    if (plugin.isBlueprint) {
       return prev;
-    },
-    {} as { [pluginName: string]: string[] },
-  );
+    }
+    const offendingMasters = plugin.masterList.filter((master) =>
+      blueprintPlugins.has(master.toLowerCase()),
+    );
+    if (offendingMasters.length > 0) {
+      prev[plugin.name] = offendingMasters;
+    }
+    return prev;
+  }, {} as { [pluginName: string]: string[] });
 
   if (Object.keys(broken).length === 0) {
     return Promise.resolve(undefined);
   }
 
-  const link = (pluginName: string) => `[link="cb://showplugin/${pluginName}"]${pluginName}[/link]`;
+  const link = (pluginName: string) =>
+    `[link="cb://showplugin/${pluginName}"]${pluginName}[/link]`;
 
   return Promise.resolve({
     description: {
@@ -1479,7 +1541,8 @@ async function testBlueprintMasters(
           .map((plugin) => {
             const offending = broken[plugin].map(link).join("[br][/br]");
             const detail = pluginList[plugin];
-            const name = detail !== undefined ? path.basename(detail.filePath) : plugin;
+            const name =
+              detail !== undefined ? path.basename(detail.filePath) : plugin;
             return (
               "[tr]" +
               [link(name), translate("has Blueprint master"), offending]
@@ -1498,7 +1561,13 @@ async function testBlueprintMasters(
             const gameModeNow = selectors.activeGameId(stateNow);
             if (gameSupported(gameModeNow)) {
               api.events.emit("show-main-page", "gamebryo-plugins");
-              store.dispatch(actions.setAttributeFilter("gamebryo-plugins", "name", pluginName));
+              store.dispatch(
+                actions.setAttributeFilter(
+                  "gamebryo-plugins",
+                  "name",
+                  pluginName,
+                ),
+              );
             }
           },
         },
@@ -1508,7 +1577,9 @@ async function testBlueprintMasters(
   });
 }
 
-function testRulesUnfulfilled(api: types.IExtensionApi): Promise<types.ITestResult> {
+function testRulesUnfulfilled(
+  api: types.IExtensionApi,
+): Promise<types.ITestResult> {
   const { translate: t, store } = api;
 
   const state = store.getState();
@@ -1517,7 +1588,8 @@ function testRulesUnfulfilled(api: types.IExtensionApi): Promise<types.ITestResu
     return Promise.resolve(undefined);
   }
 
-  const pluginInfo: { [id: string]: IPluginCombined } = state.session.plugins?.pluginInfo || {};
+  const pluginInfo: { [id: string]: IPluginCombined } =
+    state.session.plugins?.pluginInfo || {};
 
   const discovery = selectors.discoveryByGame(state, gameMode);
 
@@ -1525,7 +1597,8 @@ function testRulesUnfulfilled(api: types.IExtensionApi): Promise<types.ITestResu
   const loadOrder: { [plugin: string]: ILoadOrder } = state.loadOrder;
   const enabledPlugins = Object.keys(loadOrder).filter(
     (plugin: string) =>
-      pluginInfo[plugin] !== undefined && (loadOrder[plugin].enabled || natives.has(plugin)),
+      pluginInfo[plugin] !== undefined &&
+      (loadOrder[plugin].enabled || natives.has(plugin)),
   );
 
   interface IEntry {
@@ -1551,7 +1624,11 @@ function testRulesUnfulfilled(api: types.IExtensionApi): Promise<types.ITestResu
   const reqCheck: ICheckMap = {};
   const incCheck: ICheckMap = {};
 
-  const addCheck = (target: ICheckMap, source: string, entry: ILootReference) => {
+  const addCheck = (
+    target: ICheckMap,
+    source: string,
+    entry: ILootReference,
+  ) => {
     if (typeof entry !== "string" && entry.condition !== undefined) {
       // evaluation of condition not supported atm
       // return;
@@ -1568,7 +1645,9 @@ function testRulesUnfulfilled(api: types.IExtensionApi): Promise<types.ITestResu
 
   // for each enabled plugin, go through their list of required and incompatble files.
   enabledPlugins.forEach((pluginId: string) => {
-    (pluginInfo[pluginId]?.requirements || []).forEach((req) => addCheck(reqCheck, pluginId, req));
+    (pluginInfo[pluginId]?.requirements || []).forEach((req) =>
+      addCheck(reqCheck, pluginId, req),
+    );
     (pluginInfo[pluginId]?.incompatibilities || []).forEach((inc) =>
       addCheck(incCheck, pluginId, inc),
     );
@@ -1691,15 +1770,26 @@ function notifyMultiplePlugins(
           const gameModeNow = selectors.activeGameId(stateNow);
           if (gameModeNow === profile.gameId) {
             api.events.emit("show-main-page", "gamebryo-plugins");
-            store.dispatch(actions.setAttributeVisible("gamebryo-plugins", "modName", true));
-            store.dispatch(actions.setAttributeFilter("gamebryo-plugins", "modName", modName));
+            store.dispatch(
+              actions.setAttributeVisible("gamebryo-plugins", "modName", true),
+            );
+            store.dispatch(
+              actions.setAttributeFilter(
+                "gamebryo-plugins",
+                "modName",
+                modName,
+              ),
+            );
           } else {
             api.sendNotification({
               type: "info",
-              message: t('Please activate "{{ gameId }}" to enable plugins manually', {
-                replace: { gameId: profile.gameId },
-                ns: NAMESPACE,
-              }),
+              message: t(
+                'Please activate "{{ gameId }}" to enable plugins manually',
+                {
+                  replace: { gameId: profile.gameId },
+                  ns: NAMESPACE,
+                },
+              ),
             });
           }
 
@@ -1709,7 +1799,9 @@ function notifyMultiplePlugins(
       {
         title: "Enable all",
         action: (dismiss) => {
-          plugins.forEach((plugin) => api.store.dispatch(setPluginEnabled(plugin, true)));
+          plugins.forEach((plugin) =>
+            api.store.dispatch(setPluginEnabled(plugin, true)),
+          );
           dismiss();
         },
       },
@@ -1717,7 +1809,10 @@ function notifyMultiplePlugins(
   });
 }
 
-function onDidDeploy(api: types.IExtensionApi, profileId: string): Promise<void> {
+function onDidDeploy(
+  api: types.IExtensionApi,
+  profileId: string,
+): Promise<void> {
   const state: types.IState = api.getState();
   const profile = state.persistent.profiles[profileId];
   const activeGameId = selectors.activeGameId(state);
@@ -1752,14 +1847,15 @@ function sanitizeForIPC(obj: any) {
   // Omit functions and non-serializeable properties from gameData before sending over IPC
   const sanitizedGameData = Object.fromEntries(
     Object.entries(obj).filter(
-      ([key, value]) => typeof value !== "function" && typeof value !== "symbol",
+      ([key, value]) =>
+        typeof value !== "function" && typeof value !== "symbol",
     ),
   );
   return JSON.parse(JSON.stringify(sanitizedGameData));
 }
 
 function init(context: IExtensionContextExt) {
-  const setPluginLight = async (id: string, enable: boolean) => {
+  const setPluginLight = (id: string, enable: boolean) => {
     const state: IStateWithGamebryo = context.api.getState();
     const profile = selectors.activeProfile(state);
     const plugin: IPlugin = state.session.plugins.pluginList[id];
@@ -1767,9 +1863,18 @@ function init(context: IExtensionContextExt) {
       return;
     }
 
-    const esp = await ESPFile.open(plugin.filePath, profile.gameId);
-    await esp.setLightFlag(enable);
-
+    try {
+      const esp = new ESPFile(plugin.filePath, profile.gameId);
+      esp.setLightFlag(enable);
+    } catch (err) {
+      if (err.nativeCode !== 0) {
+        context.api.showErrorNotification("Failed to set light flag", err, {
+          message: plugin.filePath,
+          allowReport: true,
+        });
+        return;
+      }
+    }
     context.api.ext.addToHistory("plugins", {
       type: "plugin-eslified",
       gameId: profile.gameId,
@@ -1781,7 +1886,11 @@ function init(context: IExtensionContextExt) {
     forceListUpdate[id] = Date.now();
   };
 
-  const history = new PluginHistory(context.api, makeSetPluginGhost(context.api), setPluginLight);
+  const history = new PluginHistory(
+    context.api,
+    makeSetPluginGhost(context.api),
+    setPluginLight,
+  );
 
   register(context, setPluginLight);
   initPersistor(context);
@@ -1805,7 +1914,12 @@ function init(context: IExtensionContextExt) {
 
         context.api.events.on(
           "will-install-dependencies",
-          (gameId: string, modId: string, recommendations: boolean, onCancel: () => void) => {
+          (
+            gameId: string,
+            modId: string,
+            recommendations: boolean,
+            onCancel: () => void,
+          ) => {
             const state: types.IState = context.api.getState();
             if (!gameSupported(gameId)) {
               return;
@@ -1850,14 +1964,19 @@ function init(context: IExtensionContextExt) {
               return;
             }
 
-            const modInstPath = path.join(installBasePath, mod.installationPath);
+            const modInstPath = path.join(
+              installBasePath,
+              mod.installationPath,
+            );
             const activator = util.getCurrentActivator(state, gameId, true);
 
             fs.readdirAsync(modInstPath)
               .map((fileName: string) =>
                 activator ? activator.getDeployedPath(fileName) : fileName,
               )
-              .filter((fileName: string) => isPlugin(modInstPath, fileName, gameId))
+              .filter((fileName: string) =>
+                isPlugin(modInstPath, fileName, gameId),
+              )
               .then((pluginFileNames: string[]) => {
                 if (pluginFileNames.length === 0) {
                   return;
@@ -1888,10 +2007,11 @@ function init(context: IExtensionContextExt) {
                 context.api.store?.dispatch(setPluginList(merged));
               })
               .catch((err: Error) => {
-                log("warn", "failed to update plugin list for collection install", {
-                  modId,
-                  error: err.message,
-                });
+                log(
+                  "warn",
+                  "failed to update plugin list for collection install",
+                  { modId, error: err.message },
+                );
               });
           },
         );
@@ -1907,7 +2027,10 @@ function init(context: IExtensionContextExt) {
             if (!gameSupported(gameId)) {
               return;
             }
-            const profileId = selectors.lastActiveProfileForGame(context.api.getState(), gameId);
+            const profileId = selectors.lastActiveProfileForGame(
+              context.api.getState(),
+              gameId,
+            );
             if (!profileId) {
               return;
             }
@@ -1916,19 +2039,31 @@ function init(context: IExtensionContextExt) {
         );
 
         // this handles the case that the content of a profile changes
-        context.api.onAsync("did-deploy", (profileId, deployment, progressCB, deployOptions) => {
-          deploying = false;
-          if (pluginsChangedQueued) {
-            pluginsChangedQueued = false;
-            context.api.events.emit("trigger-test-run", "plugins-changed", 500);
-          }
-          const activeCollection = selectors.getCollectionActiveSession(context.api.getState());
-          if (activeCollection || deployOptions?.isCollectionPostprocessCall) {
-            // handled in 'collection-postprocess-complete' event
-            return Promise.resolve();
-          }
-          return onDidDeploy(context.api, profileId);
-        });
+        context.api.onAsync(
+          "did-deploy",
+          (profileId, deployment, progressCB, deployOptions) => {
+            deploying = false;
+            if (pluginsChangedQueued) {
+              pluginsChangedQueued = false;
+              context.api.events.emit(
+                "trigger-test-run",
+                "plugins-changed",
+                500,
+              );
+            }
+            const activeCollection = selectors.getCollectionActiveSession(
+              context.api.getState(),
+            );
+            if (
+              activeCollection ||
+              deployOptions?.isCollectionPostprocessCall
+            ) {
+              // handled in 'collection-postprocess-complete' event
+              return Promise.resolve();
+            }
+            return onDidDeploy(context.api, profileId);
+          },
+        );
 
         context.api.onAsync("did-purge", (profileId: string) => {
           return onDidDeploy(context.api, profileId);
@@ -1942,145 +2077,71 @@ function init(context: IExtensionContextExt) {
           }
         });
 
-        context.api.onStateChange(["settings", "gameMode", "discovered"], (previous, current) => {
-          initGameSupport(context.api).then(() => null);
-        });
+        context.api.onStateChange(
+          ["settings", "gameMode", "discovered"],
+          (previous, current) => {
+            initGameSupport(context.api).then(() => null);
+          },
+        );
 
-        context.api.onStateChange(["session", "base", "mainPage"], (previous, current) => {
-          if (previous !== current && current === "gamebryo-plugins") {
-            // TODO: We could theoretically apply filters here to display the plugins that were added.
-            context.api.store.dispatch(clearNewPluginCounter());
-          }
-        });
-
-        // when the user toggles local_loot_rules on the active profile,
-        // immediately back up the global userlist and seed the profile copy
-        context.api.onStateChange(["persistent", "profiles"], (previous, current) => {
-          const activeProfileId = util.getSafe(
-            context.api.store.getState(),
-            ["settings", "profiles", "activeProfileId"],
-            undefined,
-          );
-          if (activeProfileId === undefined) {
-            return;
-          }
-          const prevFeature = previous[activeProfileId]?.features?.local_loot_rules;
-          const currFeature = current[activeProfileId]?.features?.local_loot_rules;
-          if (prevFeature === currFeature) {
-            return;
-          }
-          const profile = current[activeProfileId];
-          if (profile === undefined || !gameSupported(profile.gameId)) {
-            return;
-          }
-          const userDataPath = util.getVortexPath("userData");
-          const activeFile = path.join(userDataPath, profile.gameId, "userlist.yaml");
-          const globalBackup = path.join(userDataPath, profile.gameId, "userlist.yaml.global");
-          const profDir = path.join(userDataPath, profile.gameId, "profiles", profile.id);
-          const profFile = path.join(profDir, "userlist.yaml");
-
-          const copyIgnoringMissing = async (src: string, dest: string) => {
-            try {
-              await fs.copyAsync(src, dest, { noSelfCopy: true });
-            } catch (err) {
-              if (err.code !== "ENOENT") {
-                throw err;
-              }
+        context.api.onStateChange(
+          ["session", "base", "mainPage"],
+          (previous, current) => {
+            if (previous !== current && current === "gamebryo-plugins") {
+              // TODO: We could theoretically apply filters here to display the plugins that were added.
+              context.api.store.dispatch(clearNewPluginCounter());
             }
-          };
+          },
+        );
 
-          if (currFeature && !prevFeature) {
-            // toggled ON: back up global and seed profile copy
-            (async () => {
-              await copyIgnoringMissing(activeFile, globalBackup);
-              await fs.ensureDirAsync(profDir);
-              await copyIgnoringMissing(activeFile, profFile);
-            })().catch((err) => {
-              log("warn", "failed to initialize per-profile userlist", err.message);
-            });
-          } else if (!currFeature && prevFeature) {
-            // toggled OFF: save profile state, restore global backup
-            (async () => {
-              await fs.ensureDirAsync(profDir);
-              await copyIgnoringMissing(activeFile, profFile);
-              await copyIgnoringMissing(globalBackup, activeFile);
-              if (userlistPersistor !== undefined) {
-                await userlistPersistor.loadFiles(profile.gameId);
-              }
-            })().catch((err) => {
-              log("warn", "failed to restore global userlist", err.message);
-            });
-          }
-        });
-
-        context.api.events.on("set-plugin-list", (newPlugins: string[], setEnabled?: boolean) => {
-          const state = context.api.store.getState();
-          store.dispatch(
-            updatePluginOrder(
-              newPlugins.map((name) => name.toLowerCase()),
-              setEnabled !== false,
-              state.settings.plugins.autoEnable,
-            ),
-          );
-        });
+        context.api.events.on(
+          "set-plugin-list",
+          (newPlugins: string[], setEnabled?: boolean) => {
+            const state = context.api.store.getState();
+            store.dispatch(
+              updatePluginOrder(
+                newPlugins.map((name) => name.toLowerCase()),
+                setEnabled !== false,
+                state.settings.plugins.autoEnable,
+              ),
+            );
+          },
+        );
 
         context.api.events.on(
           "profile-will-change",
-          (nextProfileId: string, enqueue: (cb: () => Promise<void>) => void) => {
-            const state = context.api.store.getState();
-            const oldProfileId = util.getSafe(
-              state,
-              ["settings", "profiles", "activeProfileId"],
-              undefined,
-            );
-            const oldProfile = state.persistent.profiles[oldProfileId];
-            const nextProfile =
-              nextProfileId !== undefined ? selectors.profileById(state, nextProfileId) : undefined;
-
+          (
+            nextProfileId: string,
+            enqueue: (cb: () => Promise<void>) => void,
+          ) => {
             if (nextProfileId === undefined) {
               context.api.store.dispatch(setPluginList(undefined));
-              // still need to save per-profile userlist before deactivation
-              if (oldProfile?.features?.local_loot_rules) {
-                enqueue(() =>
-                  stopSync()
-                    .then(() =>
-                      userlistPersistor !== undefined
-                        ? userlistPersistor.disable()
-                        : Promise.resolve(),
-                    )
-                    .then(() =>
-                      masterlistPersistor !== undefined
-                        ? masterlistPersistor.disable()
-                        : Promise.resolve(),
-                    )
-                    .then(() => swapUserlistForProfile(oldProfile, undefined))
-                    .then(() => loot.wait())
-                    .catch((err) => {
-                      context.api.showErrorNotification("Failed to change profile", err);
-                      return Promise.resolve();
-                    }),
-                );
-              }
               return;
             }
+            const state = context.api.store.getState();
             const gameMode = selectors.activeGameId(state);
+            const nextProfile = selectors.profileById(state, nextProfileId);
             if (nextProfile !== undefined && nextProfile.gameId !== gameMode) {
               context.api.store.dispatch(setPluginList(undefined));
             }
             enqueue(() => {
               return stopSync()
                 .then(() =>
-                  userlistPersistor !== undefined ? userlistPersistor.disable() : Promise.resolve(),
+                  userlistPersistor !== undefined
+                    ? userlistPersistor.disable()
+                    : Promise.resolve(),
                 )
                 .then(() =>
                   masterlistPersistor !== undefined
                     ? masterlistPersistor.disable()
                     : Promise.resolve(),
                 )
-                .then(() => swapUserlistForProfile(oldProfile, nextProfile))
                 .then(() => loot.wait())
                 .catch((err) => {
-                  context.api.showErrorNotification("Failed to change profile", err);
+                  context.api.showErrorNotification(
+                    "Failed to change profile",
+                    err,
+                  );
                   return Promise.resolve();
                 });
             });
@@ -2098,7 +2159,10 @@ function init(context: IExtensionContextExt) {
             updatePluginList(store, newProfile.modState, newProfile.gameId)
               .then(() => startSync(context.api))
               .catch((err) => {
-                context.api.showErrorNotification("Failed to change profile", err);
+                context.api.showErrorNotification(
+                  "Failed to change profile",
+                  err,
+                );
               });
           }
         });
@@ -2110,72 +2174,92 @@ function init(context: IExtensionContextExt) {
           }
         });
 
-        context.api.events.on("mod-enabled", (profileId: string, modId: string) => {
-          /* when enabling a mod we automatically enable its plugin, if there is (exactly) one.
-           * if there are more the user gets a notification if he wants to enable all. */
-          const state: types.IState = context.api.store.getState();
-          const currentProfile = selectors.activeProfile(state);
-          if (currentProfile === undefined) {
-            return;
-          }
-
-          if (profileId === currentProfile.id && gameSupported(currentProfile.gameId)) {
-            const mod: types.IMod = state.persistent.mods[currentProfile.gameId][modId];
-            if (mod === undefined) {
-              log("error", "newly activated mod not found", {
-                profileId,
-                modId,
-              });
+        context.api.events.on(
+          "mod-enabled",
+          (profileId: string, modId: string) => {
+            /* when enabling a mod we automatically enable its plugin, if there is (exactly) one.
+             * if there are more the user gets a notification if he wants to enable all. */
+            const state: types.IState = context.api.store.getState();
+            const currentProfile = selectors.activeProfile(state);
+            if (currentProfile === undefined) {
               return;
             }
 
-            fs.readdirAsync(path.join(selectors.installPath(state), mod.installationPath))
-              .catch((err) => {
-                if (err.code === "ENOENT") {
-                  context.api.showErrorNotification(
-                    "A mod could no longer be found on disk. Please don't delete mods manually " +
-                      "but uninstall them through Vortex.",
-                    err,
-                    { allowReport: false },
-                  );
-                  context.api.store.dispatch(actions.removeMod(currentProfile.gameId, modId));
-                  return Promise.reject(new util.ProcessCanceled("mod was deleted"));
-                } else {
-                  return Promise.reject(err);
-                }
-              })
-              .then((files) => {
-                const plugins = files
-                  .filter(
-                    (fileName) =>
-                      pluginExtensions(currentProfile.gameId).indexOf(
-                        path.extname(fileName).toLowerCase(),
-                      ) !== -1,
-                  )
-                  .map((fileName) => path.basename(fileName, GHOST_EXT));
-                if (plugins.length === 1) {
-                  const batched = [
-                    setPluginEnabled(plugins[0], true),
-                    incrementNewPluginCounter(1),
-                  ];
-                  util.batchDispatch(context.api.store, batched);
-                } else if (plugins.length > 1) {
-                  if (mod.attributes?.enableallplugins === true) {
-                    const batched: any = plugins.map((plugin) => setPluginEnabled(plugin, true));
-                    batched.push(incrementNewPluginCounter(batched.length));
-                    util.batchDispatch(context.api.store, batched);
+            if (
+              profileId === currentProfile.id &&
+              gameSupported(currentProfile.gameId)
+            ) {
+              const mod: types.IMod =
+                state.persistent.mods[currentProfile.gameId][modId];
+              if (mod === undefined) {
+                log("error", "newly activated mod not found", {
+                  profileId,
+                  modId,
+                });
+                return;
+              }
+
+              fs.readdirAsync(
+                path.join(selectors.installPath(state), mod.installationPath),
+              )
+                .catch((err) => {
+                  if (err.code === "ENOENT") {
+                    context.api.showErrorNotification(
+                      "A mod could no longer be found on disk. Please don't delete mods manually " +
+                        "but uninstall them through Vortex.",
+                      err,
+                      { allowReport: false },
+                    );
+                    context.api.store.dispatch(
+                      actions.removeMod(currentProfile.gameId, modId),
+                    );
+                    return Promise.reject(
+                      new util.ProcessCanceled("mod was deleted"),
+                    );
                   } else {
-                    notifyMultiplePlugins(context.api, mod, currentProfile, plugins);
+                    return Promise.reject(err);
                   }
-                }
-              })
-              .catch(util.ProcessCanceled, () => undefined)
-              .catch(util.UserCanceled, () => undefined)
-              .catch((err) => {
-                context.api.showErrorNotification("Failed to read mod", err);
-              });
-          }
-        });
+                })
+                .then((files) => {
+                  const plugins = files
+                    .filter(
+                      (fileName) =>
+                        pluginExtensions(currentProfile.gameId).indexOf(
+                          path.extname(fileName).toLowerCase(),
+                        ) !== -1,
+                    )
+                    .map((fileName) => path.basename(fileName, GHOST_EXT));
+                  if (plugins.length === 1) {
+                    const batched = [
+                      setPluginEnabled(plugins[0], true),
+                      incrementNewPluginCounter(1),
+                    ];
+                    util.batchDispatch(context.api.store, batched);
+                  } else if (plugins.length > 1) {
+                    if (mod.attributes?.enableallplugins === true) {
+                      const batched: any = plugins.map((plugin) =>
+                        setPluginEnabled(plugin, true),
+                      );
+                      batched.push(incrementNewPluginCounter(batched.length));
+                      util.batchDispatch(context.api.store, batched);
+                    } else {
+                      notifyMultiplePlugins(
+                        context.api,
+                        mod,
+                        currentProfile,
+                        plugins,
+                      );
+                    }
+                  }
+                })
+                .catch(util.ProcessCanceled, () => undefined)
+                .catch(util.UserCanceled, () => undefined)
+                .catch((err) => {
+                  context.api.showErrorNotification("Failed to read mod", err);
+                });
+            }
+          },
+        );
 
         history.init();
       }),

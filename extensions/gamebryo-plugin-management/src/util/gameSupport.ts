@@ -1,11 +1,12 @@
-import * as path from "path";
-
-import Promise from "bluebird";
-import memoizeOne from "memoize-one";
-import { fs, log, selectors, types, util } from "vortex-api";
-
 /* eslint-disable */
 import { PluginFormat } from "../util/PluginPersistor";
+import memoizeOne from "memoize-one";
+
+import Promise from "bluebird";
+
+import * as path from "path";
+import { fs, log, selectors, types, util } from "vortex-api";
+
 import { patternMatchNativePlugins } from "./patternMatchNativePlugins";
 
 type PluginTXTFormat = "original" | "fallout4";
@@ -158,7 +159,6 @@ const gameSupport = util.makeOverlayableDictionary<string, IGameSupport>(
         "blueprintships-sfbgs050.esm", // Terran Armada (APP-260)
         "sfbgs003.esm",
         "sfbgs004.esm",
-        "sfbgs005.esm",
         "sfbgs006.esm",
         "sfbgs007.esm",
         "sfbgs008.esm",
@@ -166,9 +166,10 @@ const gameSupport = util.makeOverlayableDictionary<string, IGameSupport>(
         "sfbgs047.esm", // Moon Jumper (APP-260)
         "sfbgs050.esm", // Terran Armada (APP-260)
       ],
-      // Match only the sequential DLC range (sfbgs000–sfbgs008); DLCs with
-      // hex-letter IDs are covered by the explicit list above and the .ccc file.
-      nativePluginsPatterns: ["^sfbgs00[0-8]\.esm$"],
+      // SFBGS is Bethesda's reserved namespace for Starfield DLC/Creation Club
+      // plugins; three hex digits covers the known scheme and future DLC
+      // following the same pattern without needing code changes.
+      nativePluginsPatterns: ["^sfbgs[0-9a-f]{3}\\.esm$"],
       supportsESL: true,
       supportsMediumMasters: true,
       supportsBlueprintPlugins: true,
@@ -266,7 +267,8 @@ function applyNativePlugins(
 ): Promise<void> {
   const state = api.store.getState();
   const game = selectors.gameById(state, gameMode);
-  const nativePlugins = game?.details?.nativePlugins || gameSupport[gameMode].nativePlugins;
+  const nativePlugins =
+    game?.details?.nativePlugins || gameSupport[gameMode].nativePlugins;
   const gameNativePlugins = new Set<string>(nativePlugins);
   const discovery = discoveryForGame(gameMode);
   if (discovery?.path === undefined || !game) {
@@ -274,7 +276,9 @@ function applyNativePlugins(
   } else {
     const cccFilePath = path.join(discovery.path, fileName);
     return Promise.resolve()
-      .then(() => patternMatchNativePlugins(gameMode, discovery, gameSupport[gameMode]))
+      .then(() =>
+        patternMatchNativePlugins(gameMode, discovery, gameSupport[gameMode]),
+      )
       .then((patternMatched) => {
         patternMatched.forEach((fileName) => {
           gameNativePlugins.add(fileName.toLowerCase());
@@ -303,7 +307,10 @@ export function getGameSupport() {
   return gameSupport;
 }
 
-export function syncGameSupport(gameId: string, gameSupportData: IGameSupport): void {
+export function syncGameSupport(
+  gameId: string,
+  gameSupportData: IGameSupport,
+): void {
   if (process.type === "browser" && gameSupport.has(gameId)) {
     // Synchronize the game support data in the main thread with the one in the renderer.
     const currentSupportData = gameSupport[gameId];
@@ -312,10 +319,12 @@ export function syncGameSupport(gameId: string, gameSupportData: IGameSupport): 
   }
 }
 
-let discoveryForGame: (gameId: string) => types.IDiscoveryResult = () => undefined;
+let discoveryForGame: (gameId: string) => types.IDiscoveryResult = () =>
+  undefined;
 let getApi: () => types.IExtensionApi = () => undefined;
 export function initGameSupport(api: types.IExtensionApi): Promise<void> {
-  discoveryForGame = (gameId: string) => selectors.discoveryByGame(api.store.getState(), gameId);
+  discoveryForGame = (gameId: string) =>
+    selectors.discoveryByGame(api.store.getState(), gameId);
   getApi = () => api;
   const state: types.IState = api.store.getState();
   const { discovered } = state.settings.gameMode;
@@ -342,7 +351,10 @@ export function initGameSupport(api: types.IExtensionApi): Promise<void> {
         if (dataModType && process.type === "renderer") {
           // The main thread can't deal with most selectors. We rely on the IPC channels
           //  to sync the data over to it.
-          const pluginsPath = selectors.modPathsForGame(state, "oblivionremastered")[dataModType];
+          const pluginsPath = selectors.modPathsForGame(
+            state,
+            "oblivionremastered",
+          )[dataModType];
           gameSupport["oblivionremastered"].pluginsPath = pluginsPath;
           gameSupport["oblivionremastered"].gameDataPath = pluginsPath;
         }
@@ -354,36 +366,9 @@ export function initGameSupport(api: types.IExtensionApi): Promise<void> {
 export function appDataPath(gameMode: string): string {
   const dataPath = gameSupport.get(gameMode, "appDataPath");
 
-  if (process.env.LOCALAPPDATA !== undefined) {
-    return path.join(process.env.LOCALAPPDATA, dataPath);
-  }
-
-  if (process.platform === "linux") {
-    const discovery = discoveryForGame(gameMode);
-    if (discovery?.store === "steam" && discovery?.path !== undefined) {
-      const game = util.getGame(gameMode);
-      const steamAppId = game?.details?.["steamAppId"];
-      if (steamAppId !== undefined) {
-        // Derive steamapps path from game installation path.
-        // Steam games are always under ${steamapps}/common/${gameName}.
-        const steamAppsPath = path.dirname(path.dirname(discovery.path));
-        const wineLocalAppData = path.join(
-          steamAppsPath,
-          "compatdata",
-          steamAppId.toString(),
-          "pfx",
-          "drive_c",
-          "users",
-          "steamuser",
-          "AppData",
-          "Local",
-        );
-        return path.join(wineLocalAppData, dataPath);
-      }
-    }
-  }
-
-  return path.resolve(util.getVortexPath("appData"), "..", "Local", dataPath);
+  return process.env.LOCALAPPDATA !== undefined
+    ? path.join(process.env.LOCALAPPDATA, dataPath)
+    : path.resolve(util.getVortexPath("appData"), "..", "Local", dataPath);
 }
 
 export function gameDataPath(gameMode: string): string {
@@ -421,10 +406,16 @@ export function gameSupported(gameMode: string, sort?: boolean): boolean {
     return gameSupport.has(gameMode);
   }
   const state = getApi().getState();
-  const defaultVal = ["starfield", "oblivionremastered"].includes(gameMode) ? false : true;
+  const defaultVal = ["starfield", "oblivionremastered"].includes(gameMode)
+    ? false
+    : true;
   const profileId = selectors.lastActiveProfileForGame(state, gameMode);
   if (
-    !util.getSafe(state, ["settings", "plugins", "pluginManagementEnabled", profileId], defaultVal)
+    !util.getSafe(
+      state,
+      ["settings", "plugins", "pluginManagementEnabled", profileId],
+      defaultVal,
+    )
   ) {
     return false;
   }
@@ -432,7 +423,9 @@ export function gameSupported(gameMode: string, sort?: boolean): boolean {
 }
 
 export function isNativePlugin(gameMode: string, pluginName: string): boolean {
-  return gameSupport.get(gameMode, "nativePlugins").includes(pluginName.toLowerCase());
+  return gameSupport
+    .get(gameMode, "nativePlugins")
+    .includes(pluginName.toLowerCase());
 }
 
 export function nativePlugins(gameMode: string): string[] {
@@ -454,23 +447,27 @@ export const supportsMediumMasters = memoizeOne((gameMode: string): boolean => {
   if (!gameSupport.has(gameMode)) {
     return false;
   }
-  const supportsMediumMasters = gameSupport.get(gameMode, "supportsMediumMasters") ?? false;
+  const supportsMediumMasters =
+    gameSupport.get(gameMode, "supportsMediumMasters") ?? false;
   if (typeof supportsMediumMasters === "function") {
     return supportsMediumMasters();
   }
   return supportsMediumMasters;
 });
 
-export const supportsBlueprintPlugins = memoizeOne((gameMode: string): boolean => {
-  if (!gameSupport.has(gameMode)) {
-    return false;
-  }
-  const supported = gameSupport.get(gameMode, "supportsBlueprintPlugins") ?? false;
-  if (typeof supported === "function") {
-    return supported();
-  }
-  return supported;
-});
+export const supportsBlueprintPlugins = memoizeOne(
+  (gameMode: string): boolean => {
+    if (!gameSupport.has(gameMode)) {
+      return false;
+    }
+    const supported =
+      gameSupport.get(gameMode, "supportsBlueprintPlugins") ?? false;
+    if (typeof supported === "function") {
+      return supported();
+    }
+    return supported;
+  },
+);
 
 export function pluginExtensions(gameMode: string): string[] {
   return supportsESL(gameMode) ? [".esm", ".esp", ".esl"] : [".esm", ".esp"];
