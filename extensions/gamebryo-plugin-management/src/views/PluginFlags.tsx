@@ -160,6 +160,22 @@ const PluginFlags = (props: IProps): JSX.Element => {
     );
   }
 
+  if (plugin.isBlueprint) {
+    const key = `ico-blueprint-${plugin.id}`;
+    flags.push(
+      <tooltip.Icon
+        id={key}
+        key={key}
+        name="locked"
+        tooltip={t(
+          "Blueprint plugin - force-loaded by the game and pinned to the end " +
+            "of the load order. Managed by the game, not Vortex.",
+          { ns: NAMESPACE },
+        )}
+      />,
+    );
+  }
+
   if (supportsESL(gameMode)) {
     if (plugin.isLight) {
       const key = `ico-light-${plugin.id}`;
