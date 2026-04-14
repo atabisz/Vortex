@@ -71,6 +71,23 @@ try {
         betterIpcRenderer.send("extensions:init-all-main", installType),
     },
 
+    adaptors: {
+      list: () => betterIpcRenderer.invoke("adaptors:list"),
+      call: (
+        adaptorName: string,
+        serviceUri: string,
+        method: string,
+        args: unknown[],
+      ) =>
+        betterIpcRenderer.invoke(
+          "adaptors:call",
+          adaptorName,
+          serviceUri,
+          method,
+          args,
+        ),
+    },
+
     updater: {
       getStatus: () => betterIpcRenderer.invoke("updater:get-status"),
       setChannel: (channel: string, manual: boolean) =>
@@ -175,18 +192,6 @@ try {
         betterIpcRenderer.invoke("window:setAlwaysOnTop", windowId, flag),
       moveTop: (windowId: number) =>
         betterIpcRenderer.invoke("window:moveTop", windowId),
-      onMaximize: (callback) => {
-        const listener = () => callback();
-        ipcRenderer.on("window:event:maximize", listener);
-        return () =>
-          ipcRenderer.removeListener("window:event:maximize", listener);
-      },
-      onUnmaximize: (callback) => {
-        const listener = () => callback();
-        ipcRenderer.on("window:event:unmaximize", listener);
-        return () =>
-          ipcRenderer.removeListener("window:event:unmaximize", listener);
-      },
       onClose: (callback) => {
         const listener = () => callback();
         ipcRenderer.on("window:event:close", listener);

@@ -1,3 +1,6 @@
+import type { CookieJar } from "tough-cookie";
+
+import { DownloadError } from "@vortex/shared/errors";
 import { RateLimiter } from "limiter";
 import PQueue from "p-queue";
 
@@ -9,7 +12,6 @@ import type { RetryStrategy } from "./retry";
 
 import { staticChunker } from "./chunking";
 import { download } from "./downloader";
-import { DownloadError } from "./errors";
 import { ProgressReporter } from "./progress";
 import { defaultRetryStrategy } from "./retry";
 
@@ -43,6 +45,12 @@ export type DownloadManagerOptions = {
 
   /** Optional timeout settings. */
   timeout?: Partial<TimeoutOptions>;
+
+  /** Optional User-Agent header sent on every request. */
+  userAgent?: string;
+
+  /** Optional cookie jar for cookie management. */
+  cookieJar?: CookieJar;
 };
 
 export type DownloadCheckpoint<T = unknown> = {
@@ -56,13 +64,17 @@ export class DownloadManager {
   readonly #downloadQueue: PQueue;
   readonly #rateLimiter: RateLimiter | null;
   readonly #timeout: TimeoutOptions;
+  readonly #userAgent: string | undefined;
+  readonly #cookieJar: CookieJar | undefined;
 
   constructor(options: DownloadManagerOptions) {
     this.#downloadQueue = new PQueue({
       concurrency: options.concurrency,
     });
 
-    const { bytesPerSecond, timeout } = options;
+    const { bytesPerSecond, timeout, userAgent, cookieJar } = options;
+    this.#userAgent = userAgent;
+    this.#cookieJar = cookieJar;
 
     if (bytesPerSecond && !isNaN(bytesPerSecond)) {
       this.#rateLimiter = new RateLimiter({
@@ -128,16 +140,18 @@ export class DownloadManager {
         resource,
         dest,
         {
-          resolver,
           chunker,
-          retry: retry,
           rateLimiter: this.#rateLimiter,
+          resolver,
+          retry: retry,
         },
         {
-          progressReporter,
           abortSignal: abortController.signal,
           checkpoint,
+          cookieJar: this.#cookieJar,
+          progressReporter,
           timeout: this.#timeout,
+          userAgent: this.#userAgent,
         },
       ),
     );

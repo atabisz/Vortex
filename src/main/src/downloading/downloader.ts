@@ -1,18 +1,29 @@
+import type {
+  Got,
+  Headers,
+  Delays as GotTimeoutOptions,
+  ExtendOptions,
+} from "got";
 import type { RateLimiter } from "limiter";
 import type { IncomingHttpHeaders } from "node:http";
+import type { CookieJar } from "tough-cookie";
 
 import { unknownToError } from "@vortex/shared";
-import got, { type Headers, type Delays as GotTimeoutOptions } from "got";
+import { DownloadError } from "@vortex/shared/errors";
+import got from "got";
 import { type FileHandle as NodeFileHandle, open } from "node:fs/promises";
-import { type URL } from "node:url";
 import PQueue from "p-queue";
 
 import type { ByteRange, Chunk, Chunker } from "./chunking";
 import type { ChunkProgress, ProgressReporter } from "./progress";
-import type { Resolver, NormalizedResource } from "./resolver";
+import type {
+  Resolver,
+  NormalizedResource,
+  ResolvedEndpoint,
+} from "./resolver";
 import type { RetryStrategy } from "./retry";
 
-import { isCancellation, toNetworkError, DownloadError } from "./errors";
+import { isCancellation, toNetworkError } from "./errors";
 import { normalize } from "./resolver";
 import { sleep } from "./retry";
 
@@ -51,16 +62,28 @@ export async function download<T>(
     retry?: RetryStrategy;
   },
   options?: {
+    cookieJar?: CookieJar;
     progressReporter?: ProgressReporter;
     abortSignal?: AbortSignal;
     chunkConcurrency?: number;
     checkpoint?: Checkpoint;
     timeout?: TimeoutOptions;
+    userAgent?: string;
   },
 ): Promise<void> {
   if (options?.abortSignal?.aborted) {
     throw new DownloadError({ code: "cancellation" }, "Download cancelled");
   }
+
+  const sessionGot = got.extend({
+    cookieJar: options?.cookieJar,
+    signal: options?.abortSignal,
+    timeout: createGotTimeoutOptions(options?.timeout),
+    retry: { limit: 0 },
+    headers: {
+      "User-Agent": options?.userAgent,
+    },
+  } satisfies ExtendOptions);
 
   let resolved: NormalizedResource;
   try {
@@ -73,10 +96,11 @@ export async function download<T>(
   try {
     probe = await withRetry(
       () =>
-        probeUrl(resolved.probeUrl, options?.checkpoint?.etag ?? null, {
-          abortSignal: options?.abortSignal,
-          timeout: options?.timeout,
-        }),
+        probeUrl(
+          sessionGot,
+          resolved.probeEndpoint,
+          options?.checkpoint?.etag ?? null,
+        ),
       strategy.retry,
       options?.abortSignal,
     );
@@ -89,7 +113,7 @@ export async function download<T>(
       );
     }
 
-    throw toNetworkError(resolved.probeUrl, err);
+    throw toNetworkError(resolved.probeEndpoint, err);
   }
 
   if (probe.etag && options?.progressReporter)
@@ -179,14 +203,20 @@ export async function download<T>(
                   progress.bytesWritten = 0;
                 }
 
-                return downloadChunk(chunk, resolved, probe, handle, {
-                  abortSignal: options?.abortSignal,
-                  rateLimiter: strategy.rateLimiter,
-                  timeout: options?.timeout,
-                  progress: chunkProgress
-                    ? chunkProgress.get(chunk.index)
-                    : undefined,
-                });
+                return downloadChunk(
+                  sessionGot,
+                  chunk,
+                  resolved,
+                  probe,
+                  handle,
+                  {
+                    abortSignal: options?.abortSignal,
+                    rateLimiter: strategy.rateLimiter,
+                    progress: chunkProgress
+                      ? chunkProgress.get(chunk.index)
+                      : undefined,
+                  },
+                );
               },
               strategy.retry,
               options?.abortSignal,
@@ -253,15 +283,20 @@ export async function download<T>(
             expectedRemainingBytes = probe.size - writePosition;
           }
 
-          return downloadStream(resolved.probeUrl, handle, writePosition, {
-            progress: progress,
-            abortSignal: options?.abortSignal,
-            rateLimiter: strategy.rateLimiter,
-            timeout: options?.timeout,
-            etag: probe.etag,
-            chunk: rangeChunk,
-            expectedRemainingBytes,
-          });
+          return downloadStream(
+            sessionGot,
+            resolved.probeEndpoint,
+            handle,
+            writePosition,
+            {
+              progress: progress,
+              abortSignal: options?.abortSignal,
+              rateLimiter: strategy.rateLimiter,
+              etag: probe.etag,
+              chunk: rangeChunk,
+              expectedRemainingBytes,
+            },
+          );
         },
         strategy.retry,
         options?.abortSignal,
@@ -283,19 +318,21 @@ export async function download<T>(
 }
 
 async function probeUrl(
-  url: URL,
+  got: Got,
+  endpoint: ResolvedEndpoint,
   previousETag: string | null,
-  options: {
-    abortSignal?: AbortSignal;
-    timeout?: TimeoutOptions;
-  },
 ): Promise<ProbeResult> {
-  const response = await got.head(url, {
-    signal: options?.abortSignal,
-    headers: createHeaders(previousETag, null),
-    timeout: createGotTimeoutOptions(options.timeout),
-    retry: { limit: 0 },
+  const response = await got.head(endpoint.url, {
+    headers: createHeaders(previousETag, null, endpoint.headers),
   });
+
+  const contentType = response.headers["content-type"] ?? "";
+  if (contentType.startsWith("text/html")) {
+    throw new DownloadError(
+      { code: "is-html", url: endpoint.url },
+      "Server returned an HTML page instead of a file",
+    );
+  }
 
   const size = getSize(response.headers, "content-length");
 
@@ -310,7 +347,7 @@ async function probeUrl(
   // NOTE(erri120): Server has to do the precondition check of the ETag.
   if (etag && previousETag && etag !== previousETag) {
     throw new DownloadError(
-      { code: "protocol-violation", url: url },
+      { code: "protocol-violation", url: endpoint.url },
       "ETag has changed, server didn't validate precondition",
     );
   }
@@ -329,19 +366,15 @@ async function probeUrl(
  * through their own mechanisms.
  */
 function createGotStream(
-  url: URL,
+  got: Got,
+  endpoint: ResolvedEndpoint,
   options: {
-    abortSignal?: AbortSignal;
     etag?: string;
     chunk?: Chunk;
-    timeout?: TimeoutOptions;
   },
 ) {
-  const stream = got.stream(url, {
-    signal: options?.abortSignal,
-    headers: createHeaders(options?.etag, options?.chunk),
-    timeout: createGotTimeoutOptions(options.timeout),
-    retry: { limit: 0 },
+  const stream = got.stream(endpoint.url, {
+    headers: createHeaders(options?.etag, options?.chunk, endpoint.headers),
   });
 
   stream.on("error", () => {});
@@ -380,25 +413,23 @@ async function consumeTokens(
 }
 
 async function downloadStream(
-  url: URL,
+  got: Got,
+  endpoint: ResolvedEndpoint,
   handle: FileHandle,
   writePosition: number,
   options: {
     progress?: { bytesReceived: number; bytesWritten: number };
     abortSignal?: AbortSignal;
     rateLimiter?: RateLimiter;
-    timeout?: TimeoutOptions;
     etag?: string;
     chunk?: Chunk;
     expectedRemainingBytes?: number;
   },
 ): Promise<void> {
   const { progress } = options;
-  const stream = createGotStream(url, {
-    abortSignal: options.abortSignal,
+  const stream = createGotStream(got, endpoint, {
     etag: options.etag,
     chunk: options.chunk,
-    timeout: options.timeout,
   });
 
   let remaining = options.expectedRemainingBytes;
@@ -411,7 +442,7 @@ async function downloadStream(
       if (remaining !== undefined) {
         if (buffer.length > remaining) {
           throw new DownloadError(
-            { code: "protocol-violation", url: url },
+            { code: "protocol-violation", url: endpoint.url },
             `Server sent ${buffer.length} bytes but only ${remaining} were expected; response exceeds requested range`,
           );
         }
@@ -451,6 +482,7 @@ async function downloadStream(
 }
 
 async function downloadChunk(
+  got: Got,
   chunk: Chunk,
   resource: NormalizedResource,
   probe: ProbeResult,
@@ -458,22 +490,20 @@ async function downloadChunk(
   options: {
     progress?: ChunkProgress;
     rateLimiter?: RateLimiter;
-    timeout?: TimeoutOptions;
     abortSignal?: AbortSignal;
   },
 ): Promise<void> {
   options.abortSignal?.throwIfAborted();
 
-  const url = await resource.chunkUrl(chunk);
+  const endpoint = await resource.chunkEndpoint(chunk);
   const expectedRemainingBytes = chunk.range.end - chunk.range.start + 1;
 
-  await downloadStream(url, handle, chunk.range.start, {
+  await downloadStream(got, endpoint, handle, chunk.range.start, {
     chunk,
     expectedRemainingBytes,
     etag: probe.etag,
     progress: options.progress,
     rateLimiter: options.rateLimiter,
-    timeout: options.timeout,
     abortSignal: options.abortSignal,
   });
 }
@@ -507,6 +537,7 @@ async function withRetry<T>(
 function createHeaders(
   etag: string | undefined,
   chunk: Chunk | undefined,
+  additionalHeaders?: Record<string, string>,
 ): Headers {
   const range = chunk
     ? `bytes=${chunk.range.start}-${chunk.range.end}`
@@ -520,6 +551,7 @@ function createHeaders(
   return {
     Range: range,
     "If-Match": ifMatch,
+    ...(additionalHeaders ?? {}),
   };
 }
 
