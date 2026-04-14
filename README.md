@@ -109,8 +109,8 @@ These packages are required for the native Node addons built during `pnpm instal
 curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-nvm install 22.22.1
-nvm alias default 22.22.1
+nvm install 22.22.0
+nvm alias default 22.22.0
 npm install -g pnpm@10.33.0
 pnpm config set store-dir "$HOME/.local/share/pnpm/store/v10" --global
 pnpm install
@@ -120,7 +120,7 @@ pnpm run start
 
 Known-good toolchain on Ubuntu:
 
-- `node v22.22.1`
+- `node v22.22.0`
 - `pnpm 10.33.0`
 - `pnpm store path` -> `~/.local/share/pnpm/store/v10`
 - `python3 3.12.x` preferred
