@@ -31,6 +31,7 @@ export type {
 
 export {
   QualifiedPath,
+  qpath,
   OSPath,
   PathProviderError,
   PathResolverError,
@@ -39,4 +40,5 @@ export {
 export { XDG } from "./paths.linux";
 export type { LinuxPathBase, LinuxPathProvider, XDGBase } from "./paths.linux";
 
+export { WindowsPath } from "./paths.windows";
 export type { WindowsPathBase, WindowsPathProvider } from "./paths.windows";

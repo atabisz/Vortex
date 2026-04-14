@@ -28,6 +28,17 @@ import {
   profileById as profileByIdSelector,
 } from "../../../util/selectors";
 
+// gamebryo-plugin-management augments the settings slice with a `plugins`
+// entry. We don't import IStateWithGamebryo from the extension to avoid a
+// renderer→extension dependency, so we mirror the relevant shape locally.
+interface IStateWithPlugins extends IState {
+  settings: IState["settings"] & {
+    plugins?: {
+      pluginManagementEnabled?: { [profileId: string]: boolean };
+    };
+  };
+}
+
 export type SpineSelection =
   | { type: "home" }
   | { type: "game"; gameId: string }
@@ -52,9 +63,25 @@ export const SpineProvider: FC = ({ children }: { children: ReactNode }) => {
   const { mainPages } = usePagesContext();
   const dispatch = useDispatch();
 
+  const profilesVisible = useSelector(
+    (state: IState) => state.settings.interface.profilesVisible,
+  );
   const lastActiveProfile = useSelector(lastActiveProfilesSelector);
   const activeProfileId = useSelector(activeProfileIdSelector);
   const activeGameId = useSelector(activeGameIdSelector);
+
+  // APP-261: page.visible() predicates owned by extensions read state slices
+  // the Spine does not natively track. Subscribe to this one so the per-game
+  // page memos recompute when the user flips plugin management on/off via
+  // the game-starfield "Load Order Management Method" setting (which always
+  // dispatches GAMEBRYO_SET_PLUGIN_MANAGEMENT_ENABLED alongside its own
+  // management-type action), otherwise the left menu stays stale until a
+  // restart. Typed as `any` because this path lives in the gamebryo-plugin-
+  // management extension and isn't in core IState.
+  const pluginManagementEnabled = useSelector(
+    (state: IStateWithPlugins) =>
+      state.settings.plugins?.pluginManagementEnabled,
+  );
 
   // Tracks the gameId that was active when the user navigated to home.
   // When non-null and matches activeGameId, we show home pages.
@@ -93,7 +120,9 @@ export const SpineProvider: FC = ({ children }: { children: ReactNode }) => {
   }, []);
 
   // activeGameId is included as dependency to re-filter when game changes
-  // since page.visible() checks often depend on the active game
+  // since page.visible() checks often depend on the active game.
+  // pluginManagementEnabled is included so APP-261's stale-menu bug clears
+  // when the user flips the starfield load-order management method.
   const homePages: IMainPage[] = useMemo(
     () =>
       mainPages.filter(
@@ -103,7 +132,7 @@ export const SpineProvider: FC = ({ children }: { children: ReactNode }) => {
           page.id !== "Downloads" &&
           isPageVisible(page),
       ),
-    [mainPages, isPageVisible, activeGameId],
+    [mainPages, isPageVisible, activeGameId, profilesVisible, pluginManagementEnabled],
   );
 
   const gamePages: IMainPage[] = useMemo(
@@ -114,7 +143,7 @@ export const SpineProvider: FC = ({ children }: { children: ReactNode }) => {
           page.id !== "game-downloads" &&
           isPageVisible(page),
       ),
-    [mainPages, isPageVisible, activeGameId],
+    [mainPages, isPageVisible, activeGameId, profilesVisible, pluginManagementEnabled],
   );
 
   const mainPage = useSelector(mainPageSelector);
@@ -193,23 +222,35 @@ export const SpineProvider: FC = ({ children }: { children: ReactNode }) => {
 
   const selectGame = useCallback(
     (gameId: string) => {
-      if (defaultGamePage === undefined) return;
-      const targetPage = lastPageRef.current[gameId] || defaultGamePage;
       const profileId = lastActiveProfile[gameId];
+      const profileExists =
+        profileId !== undefined &&
+        profileByIdSelector(api.getState(), profileId) !== undefined;
+
       setIsDownloadsMode(false);
       setHomeForGameId(null);
-      if (
-        profileId !== undefined &&
-        profileId !== activeProfileId &&
-        profileByIdSelector(api.getState(), profileId) !== undefined
-      ) {
+
+      if (!profileExists) {
+        // No usable last-active profile for this game — ask the
+        // profile_management extension to show the profile picker dialog.
+        // Once the user picks a profile the resulting profile-did-change will
+        // update activeGameId, which re-derives `selection` and the existing
+        // useEffect navigates to the correct game page automatically.
+        api?.events.emit("activate-game", gameId);
+        return;
+      }
+
+      if (defaultGamePage === undefined) return;
+      const targetPage = lastPageRef.current[gameId] || defaultGamePage;
+
+      if (profileId !== activeProfileId) {
         // Profile needs to change - wait for activation before navigating
         dispatch(setNextProfile(profileId));
         api?.events.once("profile-did-change", () => {
           dispatch(setOpenMainPage(targetPage, false));
         });
       } else {
-        // Profile is already active or last profile no longer exists
+        // Profile is already active
         dispatch(setOpenMainPage(targetPage, false));
       }
     },
