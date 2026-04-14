@@ -110,19 +110,20 @@ curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bas
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 nvm install 22.22.0
-nvm alias default 22.22.0
 npm install -g pnpm@10.33.0
-pnpm config set store-dir "$HOME/.local/share/pnpm/store/v10" --global
 pnpm install
 pnpm run build:all
 pnpm run start
 ```
 
+`build:all` is required before `start` — it compiles the TypeScript bundles, builds
+extension packages, and downloads DuckDB extensions and CSS assets. `pnpm run build`
+alone only compiles TypeScript and is not sufficient to launch the app.
+
 Known-good toolchain on Ubuntu:
 
 - `node v22.22.0`
 - `pnpm 10.33.0`
-- `pnpm store path` -> `~/.local/share/pnpm/store/v10`
 - `python3 3.12.x` preferred
 
 If your distro ships Python 3.13+ instead of 3.12, some legacy `node-gyp` consumers in this repo still expect `distutils`. In that case, create a user-local shim once and export it before `pnpm install`/`pnpm run build:all`:
