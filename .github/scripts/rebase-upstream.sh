@@ -38,15 +38,21 @@ fi
 BRANCH="sync/upstream-${UPSTREAM_TAG}"
 git checkout -b "${BRANCH}" master
 
+# Upstream has an 'api' submodule that our master deleted. Without this, git tries
+# to checkout the upstream submodule entry and fails fatally ("does not have a commit
+# checked out"). Using the 'ours' merge driver on that path keeps our deletion instead.
+echo "api merge=ours" > .git/info/attributes
+git config merge.ours.driver true
+
 # Step 5: Attempt merge of upstream tag into the branch — capture conflicts without failing job
 HAS_CONFLICTS=false
 CONFLICT_FILES=""
 if ! git merge "${UPSTREAM_TAG}" --no-edit -m "merge upstream ${UPSTREAM_TAG} into master"; then
   echo "Merge conflicts detected."
   HAS_CONFLICTS=true
-  # Capture conflicted files before staging
+  # Capture conflicted files before staging (excluding submodule paths)
   CONFLICT_FILES=$(git diff --name-only --diff-filter=U 2>/dev/null || echo "(see commit)")
-  # Use -u to stage only tracked files — avoids failing on uninitialized submodules
+  # Stage only tracked files — avoids failing on uninitialized submodule entries
   git add -u
   git commit --no-edit -m "merge upstream ${UPSTREAM_TAG} (conflicts)" || true
 fi
