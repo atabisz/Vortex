@@ -1,8 +1,14 @@
 import { createAction } from "redux-act";
+<<<<<<< HEAD:src/renderer/src/extensions/download_management/actions/state.ts
 
 import type { IChunk } from "../types/IChunk";
 
 import { log } from "../../../logging";
+=======
+import type { IChunk } from "../types/IChunk";
+
+import { log } from "../../../util/log";
+>>>>>>> v1.16.9:src/extensions/download_management/actions/state.ts
 
 export interface IDictionary {
   [key: string]: any;

@@ -1,3 +1,4 @@
+<<<<<<< HEAD:src/renderer/src/extensions/download_management/DownloadObserver.ts
 import type * as Redux from "redux";
 
 import { unknownToError } from "@vortex/shared";
@@ -17,6 +18,11 @@ import type { IDownloadResult } from "./types/IDownloadResult";
 import type { IStartDownloadOptions } from "./types/IStartDownloadOptions";
 import type { ProgressCallback } from "./types/ProgressCallback";
 
+=======
+import { IDialogResult } from "../../types/IDialog";
+import { IExtensionApi } from "../../types/IExtensionContext";
+import { IState } from "../../types/IState";
+>>>>>>> v1.16.9:src/extensions/download_management/DownloadObserver.ts
 import {
   ProcessCanceled,
   TemporaryError,
@@ -60,6 +66,33 @@ import { ensureDownloadsDirectory } from "./util/downloadDirectory";
 import getDownloadGames from "./util/getDownloadGames";
 import { finalizeDownload } from "./util/postprocessDownload";
 
+<<<<<<< HEAD:src/renderer/src/extensions/download_management/DownloadObserver.ts
+=======
+import DownloadManager, {
+  AlreadyDownloaded,
+  DownloadIsHTML,
+  RedownloadMode,
+} from "./DownloadManager";
+
+import Promise from "bluebird";
+import * as path from "path";
+import * as Redux from "redux";
+import { generate as shortid } from "shortid";
+import { getGames } from "../gamemode_management/util/getGame";
+import { util } from "../..";
+import {
+  ModsDownloadStartedClientEvent,
+  ModsDownloadCompletedEvent,
+  ModsDownloadFailedEvent,
+  ModsDownloadCancelledEvent,
+  CollectionsDownloadCompletedEvent,
+  CollectionsDownloadCancelledEvent,
+  CollectionsDownloadFailedEvent,
+} from "../analytics/mixpanel/MixpanelEvents";
+import { nexusIdsFromDownloadId } from "../nexus_integration/selectors";
+import { makeModAndFileUIDs } from "../nexus_integration/util/UIDs";
+
+>>>>>>> v1.16.9:src/extensions/download_management/DownloadObserver.ts
 function progressUpdate(
   store: Redux.Store<IState>,
   dlId: string,
@@ -551,9 +584,14 @@ export class DownloadObserver {
               callback,
             ),
           ),
+<<<<<<< HEAD:src/renderer/src/extensions/download_management/DownloadObserver.ts
       { root: true },
     ).catch((unknownErr) => {
       const err = unknownToError(unknownErr);
+=======
+        ),
+    ).catch((err) => {
+>>>>>>> v1.16.9:src/extensions/download_management/DownloadObserver.ts
       log("error", "unhandled error starting download", {
         id,
         error: err.message,
@@ -680,7 +718,10 @@ export class DownloadObserver {
           } else {
             // This is a bundled mod - bye!
           }
+<<<<<<< HEAD:src/renderer/src/extensions/download_management/DownloadObserver.ts
 
+=======
+>>>>>>> v1.16.9:src/extensions/download_management/DownloadObserver.ts
           /**
            * Community extensions have been using the "start-download" event
            * with a callback to trigger installation after the download finishes.
@@ -705,13 +746,25 @@ export class DownloadObserver {
           try {
             callback?.(null, id);
           } finally {
+<<<<<<< HEAD:src/renderer/src/extensions/download_management/DownloadObserver.ts
             this.mApi.events.removeListener("start-install-download", onInstallFromCallback);
+=======
+            this.mApi.events.removeListener(
+              "start-install-download",
+              onInstallFromCallback,
+            );
+>>>>>>> v1.16.9:src/extensions/download_management/DownloadObserver.ts
           }
           if (
             !installTriggeredByCallback &&
             ((state.settings.automation?.install && allowInstall === true) ||
+<<<<<<< HEAD:src/renderer/src/extensions/download_management/DownloadObserver.ts
             allowInstall === "force" ||
             download.modInfo?.["startedAsUpdate"] === true)
+=======
+              allowInstall === "force" ||
+              download.modInfo?.["startedAsUpdate"] === true)
+>>>>>>> v1.16.9:src/extensions/download_management/DownloadObserver.ts
           ) {
             this.mApi.events.emit("start-install-download", id);
           }
@@ -838,7 +891,11 @@ export class DownloadObserver {
         }
       };
 
+<<<<<<< HEAD:src/renderer/src/extensions/download_management/DownloadObserver.ts
       const onceStopped = (): PromiseBB<void> => {
+=======
+      const onceStopped = (): Promise<void> => {
+>>>>>>> v1.16.9:src/extensions/download_management/DownloadObserver.ts
         if (truthy(download.localPath) && truthy(download.game)) {
           // this is a workaround required as of 1.3.5. Previous versions (1.3.4 and 1.3.5)
           // would put manually added downloads into the download root if no game was being managed.
@@ -886,7 +943,11 @@ export class DownloadObserver {
               ? removeDownloadSilent(downloadId)
               : removeDownload(downloadId),
           );
+<<<<<<< HEAD:src/renderer/src/extensions/download_management/DownloadObserver.ts
           return PromiseBB.resolve();
+=======
+          return Promise.resolve();
+>>>>>>> v1.16.9:src/extensions/download_management/DownloadObserver.ts
         }
       };
 
@@ -1087,9 +1148,13 @@ export class DownloadObserver {
                 );
             }
           },
+<<<<<<< HEAD:src/renderer/src/extensions/download_management/DownloadObserver.ts
           {},
         ).catch((unknownErr) => {
           const err = unknownToError(unknownErr);
+=======
+        ).catch((err) => {
+>>>>>>> v1.16.9:src/extensions/download_management/DownloadObserver.ts
           log("error", "unhandled error resuming download", {
             downloadId,
             error: err.message,

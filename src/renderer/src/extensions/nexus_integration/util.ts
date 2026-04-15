@@ -635,6 +635,7 @@ export function getInfoGraphQL(
             }
             const fileInfo = transformGraphQLFileToIFileInfo(fileResult[0]);
             const modInfo = transformGraphQLModToIModInfo(fileResult[0]);
+<<<<<<< HEAD:src/renderer/src/extensions/nexus_integration/util.ts
             const result = { modInfo, fileInfo };
             modInfoCache[cacheKey] = {
               data: result,
@@ -646,6 +647,13 @@ export function getInfoGraphQL(
             const error = unknownToError(err);
             error["attachLogOnReport"] = true;
             return reject(error);
+=======
+            return resolve({ modInfo, fileInfo });
+          })
+          .catch((err) => {
+            err["attachLogOnReport"] = true;
+            return reject(err);
+>>>>>>> v1.16.9:src/extensions/nexus_integration/util.ts
           });
       }),
   );

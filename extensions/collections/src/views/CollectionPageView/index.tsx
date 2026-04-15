@@ -179,8 +179,13 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
     this.initState({
       modsEx: {},
       modSelection: [],
+<<<<<<< HEAD
       currentTab: "instructions",
       driverStep: props.driver?.step ?? "prepare",
+=======
+      currentTab: 'instructions',
+      driverStep: props.driver?.step ?? 'prepare',
+>>>>>>> v1.16.9
     });
 
     this.mModActions = [
@@ -454,15 +459,21 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
   }
 
   public async componentDidMount() {
-    const { collection, userInfo } = this.props;
+    const { collection, driver, userInfo } = this.props;
 
     const { attributes } = collection ?? {};
     const { revisionId, collectionSlug, revisionNumber } = attributes ?? {};
+<<<<<<< HEAD
     if (
       (revisionId !== undefined || collectionSlug !== undefined) &&
       userInfo !== undefined
     ) {
       const { infoCache } = this.props.driver;
+=======
+    if (((revisionId !== undefined) || (collectionSlug !== undefined))
+        && (userInfo !== undefined)) {
+      const { infoCache } = driver;
+>>>>>>> v1.16.9
       try {
         await infoCache.getRevisionInfo(
           revisionId,
@@ -482,7 +493,11 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
     const modsEx = this.initModsEx(this.props);
     this.nextState.modsEx = modsEx;
 
+<<<<<<< HEAD
     this.props.driver.onUpdate(() => {
+=======
+    driver.onUpdate(() => {
+>>>>>>> v1.16.9
       const state: types.IState = this.context.api.getState();
       const gameId = this.props.profile?.gameId;
       if (gameId === undefined) {
@@ -491,32 +506,52 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
       const currentMods = state.persistent.mods[gameId] ?? {};
       const currentDownloads = state.persistent.downloads.files;
       if ((currentMods !== this.props.mods)
+<<<<<<< HEAD
         || (currentDownloads !== this.props.downloads)) {
+=======
+          || (currentDownloads !== this.props.downloads)) {
+>>>>>>> v1.16.9
         this.nextState.modsEx = this.updateModsEx(this.props, {
           ...this.props,
           mods: currentMods,
           downloads: currentDownloads,
         });
       }
+<<<<<<< HEAD
       if (this.props.driver.step !== this.state.driverStep) {
         this.nextState.driverStep = this.props.driver.step;
+=======
+      if (driver.step !== this.state.driverStep) {
+        this.nextState.driverStep = driver.step;
+>>>>>>> v1.16.9
       }
     });
   }
 
+<<<<<<< HEAD
   public async UNSAFE_componentWillReceiveProps(
     newProps: ICollectionPageProps,
   ) {
+=======
+  public async UNSAFE_componentWillReceiveProps(newProps: ICollectionPageProps) {
+>>>>>>> v1.16.9
     // Note: notification changes are intentionally NOT checked here because
     // updateModsEx() is expensive (multiple iterations over all mods) and
     // notification updates fire very frequently during collection installation.
     // Per-mod progress is already updated when mods/downloads change.
+<<<<<<< HEAD
     if (
       this.props.mods !== newProps.mods ||
       this.props.profile !== newProps.profile ||
       this.props.collection !== newProps.collection ||
       this.props.downloads !== newProps.downloads
     ) {
+=======
+    if ((this.props.mods !== newProps.mods)
+        || (this.props.profile !== newProps.profile)
+        || (this.props.collection !== newProps.collection)
+        || (this.props.downloads !== newProps.downloads)) {
+>>>>>>> v1.16.9
       this.nextState.modsEx = this.updateModsEx(this.props, newProps);
       const { collection } = this.props;
       const { attributes } = collection;
@@ -540,6 +575,7 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
     }
   }
 
+<<<<<<< HEAD
   public shouldComponentUpdate(
     newProps: ICollectionPageProps & IConnectedProps,
     newState: IComponentState,
@@ -559,6 +595,23 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
       this.state.modsEx !== newState.modsEx ||
       this.state.driverStep !== newState.driverStep
     ) {
+=======
+  public shouldComponentUpdate(newProps: ICollectionPageProps & IConnectedProps,
+                               newState: IComponentState) {
+    if ((this.props.mods !== newProps.mods)
+        || (this.props.profile !== newProps.profile)
+        || (this.props.downloads !== newProps.downloads)
+        || (this.props.collection !== newProps.collection)
+        || this.installingNotificationsChanged(this.props, newProps)
+        || (this.props.activity.mods !== newProps.activity.mods)
+        || (this.props.revisionInfo !== newProps.revisionInfo)
+        || (this.props.showUpvoteResponse !== newProps.showUpvoteResponse)
+        || (this.props.showDownvoteResponse !== newProps.showDownvoteResponse)
+        || (this.state.currentTab !== newState.currentTab)
+        || (this.state.modSelection !== newState.modSelection)
+        || (this.state.modsEx !== newState.modsEx)
+        || (this.state.driverStep !== newState.driverStep)) {
+>>>>>>> v1.16.9
       return true;
     }
     return false;
@@ -696,11 +749,19 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
             </Tab>
           </Tabs>
         </FlexLayout.Flex>
+<<<<<<< HEAD
         {(driver.step !== "review" || driver.collection?.id !== collection?.id) && (
           <FlexLayout.Fixed>
             <CollectionProgress
               t={t}
               showPremiumAd={this.props.showPremiumAd}
+=======
+        {(driver.step !== 'review' || driver.collection?.id !== collection?.id) && (
+          <FlexLayout.Fixed>
+            <CollectionProgress
+              t={t}
+              isPremium={userInfo?.isPremium}
+>>>>>>> v1.16.9
               mods={modsEx}
               profile={profile}
               downloads={downloads}
@@ -708,6 +769,7 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
               activity={activity}
               onCancel={this.cancel}
               onPause={this.mInstalling ? this.pause : undefined}
+<<<<<<< HEAD
               onResume={
                 this.mInstalling
                   ? undefined
@@ -715,6 +777,13 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
                     ? null // installing something else
                     : this.resume
               }
+=======
+              onResume={this.mInstalling
+                ? undefined
+                : (driver.collection !== undefined) && !driver.installDone
+                  ? null // installing something else
+                  : this.resume}
+>>>>>>> v1.16.9
             />
           </FlexLayout.Fixed>
         )}
@@ -977,8 +1046,13 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
     const { collection } = this.props;
     const { modsEx } = this.state;
     const rules = modIds
+<<<<<<< HEAD
       .filter((modId) => modsEx[modId] !== undefined)
       .map((modId) => modsEx[modId].collectionRule);
+=======
+      .filter(modId => modsEx[modId] !== undefined)
+      .map(modId => modsEx[modId].collectionRule);
+>>>>>>> v1.16.9
     this.props.onInstallManually(collection.id, rules);
   };
 
@@ -1073,6 +1147,7 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
         )
           .then(() => {
             if (removeArchive) {
+<<<<<<< HEAD
               archiveIds.forEach((archiveId) => {
                 this.context.api.events.emit(
                   "remove-download",
@@ -1080,6 +1155,10 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
                   undefined,
                   { confirmed: true },
                 );
+=======
+              archiveIds.forEach(archiveId => {
+                this.context.api.events.emit('remove-download', archiveId, undefined, { confirmed: true });
+>>>>>>> v1.16.9
               });
             }
             return Bluebird.resolve();
@@ -1280,14 +1359,25 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
           };
         }
       } else {
+<<<<<<< HEAD
         const match = pendingFinish.find((iter) =>
           util.testModReference(mod, modsEx[iter].collectionRule.reference),
         );
+=======
+        let match = pendingFinish.find(iter =>
+          util.testModReference(mod, modsEx[iter].collectionRule.reference));
+        // fallback: if the download finished and the mod installed in the same update
+        // cycle, the entry may still be in pendingInstall (at 'downloading'/'downloaded')
+        if (match === undefined) {
+          match = pendingInstall.find(iter =>
+            util.testModReference(mod, modsEx[iter].collectionRule.reference));
+        }
+>>>>>>> v1.16.9
         if (match !== undefined) {
           result[match] = {
             ...mod,
             ...(profile.modState || {})[mod.id],
-            collectionRule: modsEx[match].collectionRule,
+            collectionRule: (result[match] ?? modsEx[match]).collectionRule,
           };
         }
       }
@@ -1342,11 +1432,16 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
           };
 
           const dl = newProps.downloads[result[ruleId]?.archiveId];
+<<<<<<< HEAD
           if (
             ["finished", "failed"].includes(dl.state) &&
             !pendingFinish.includes(ruleId)
           ) {
             result[ruleId].state = "downloaded";
+=======
+          if (['finished', 'failed'].includes(dl?.state) && !pendingFinish.includes(ruleId)) {
+            result[ruleId].state = 'downloaded';
+>>>>>>> v1.16.9
           }
         }
       });

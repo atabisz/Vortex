@@ -1,5 +1,10 @@
 import path from "path";
+<<<<<<< HEAD:src/renderer/src/extensions/installer_fomod_ipc/installer.ts
 import { SecurityLevel } from "@nexusmods/fomod-installer-ipc";
+=======
+import shortid from "shortid";
+import { SecurityLevel } from "fomod-installer-ipc";
+>>>>>>> v1.16.9:src/extensions/installer_fomod_ipc/installer.ts
 import { CSharpDelegates } from "./delegates/CSharpDelegates";
 import { VortexIPCConnection } from "./utils/VortexIPCConnection";
 import { createConnectionStrategies } from "./utils/connectionStrategy";
@@ -147,6 +152,22 @@ export const install = async (
 
     if (!result) {
       throw new UserCanceled();
+    }
+
+    if (
+      result.instructions.length === 1 &&
+      (result.instructions[0].type as string) === "enableallplugins"
+    ) {
+      const generateResult: IInstallResult = {
+        instructions: [
+          {
+            type: "generatefile",
+            data: "This is a placeholder file generated because the mod had no files to copy.",
+            destination: `placeholder_${shortid()}.txt`,
+          },
+        ],
+      };
+      return generateResult;
     }
 
     log("info", "FOMOD installation completed", { gameId });

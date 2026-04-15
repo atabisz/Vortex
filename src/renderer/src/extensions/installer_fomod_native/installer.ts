@@ -54,16 +54,31 @@ export const install = async (
     // visible benefit since the dialog is never shown.
     const isUnattended = unattended === true && fomodChoices != null;
 
+<<<<<<< HEAD:src/renderer/src/extensions/installer_fomod_native/installer.ts
     // When attended (manual reinstall) with saved choices, pass them as a
     // preset with preselect=true so the C# engine pre-selects options in
     // the dialog while still showing it for user modification.
     const preselect = !isUnattended && fomodChoices != null;
+=======
+    // When attended (manual reinstall) with saved choices, don't pass them to
+    // the C# engine — it would auto-advance through matching steps without
+    // showing the dialog. Instead, pass them as "attended presets" so the
+    // DialogManager can pre-select options in the UI while still showing the
+    // dialog for user modification.
+    const attendedPresets =
+      !isUnattended && fomodChoices != null ? fomodChoices : undefined;
+    const enginePreset = isUnattended ? fomodChoices : undefined;
+>>>>>>> v1.16.9:src/extensions/installer_fomod_native/installer.ts
 
     const modInstaller = await VortexModInstaller.create(
       api,
       instanceId,
       gameId,
       isUnattended,
+<<<<<<< HEAD:src/renderer/src/extensions/installer_fomod_native/installer.ts
+=======
+      attendedPresets,
+>>>>>>> v1.16.9:src/extensions/installer_fomod_native/installer.ts
     );
 
     const result = await modInstaller.installAsync(
@@ -71,13 +86,33 @@ export const install = async (
       stopPatterns,
       pluginPath,
       scriptPath,
+<<<<<<< HEAD:src/renderer/src/extensions/installer_fomod_native/installer.ts
       fomodChoices,
       preselect,
+=======
+      enginePreset,
+>>>>>>> v1.16.9:src/extensions/installer_fomod_native/installer.ts
       validate,
     );
 
     if (!result) {
       throw new UserCanceled();
+    }
+
+    if (
+      result.instructions.length === 1 &&
+      (result.instructions[0].type as string) === "enableallplugins"
+    ) {
+      const generateResult: IInstallResult = {
+        instructions: [
+          {
+            type: "generatefile",
+            data: "This is a placeholder file generated because the mod had no files to copy.",
+            destination: `placeholder_${shortid()}.txt`,
+          },
+        ],
+      };
+      return generateResult;
     }
 
     const choices = getChoicesFromState(api, instanceId);

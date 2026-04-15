@@ -1,5 +1,9 @@
 import { createHash } from "node:crypto";
+<<<<<<< HEAD:src/renderer/src/util/genHash.ts
 import type { IError } from "../types/IError";
+=======
+import { IError } from "../types/IError";
+>>>>>>> v1.16.9:src/util/genHash.ts
 import { getApplication } from "./application";
 
 // remove the file names from stack lines because they contain local paths

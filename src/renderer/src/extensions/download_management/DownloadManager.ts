@@ -410,8 +410,12 @@ class DownloadWorker {
         jobUrlString = decoded;
       }
       referer = refererIn;
+<<<<<<< HEAD:src/renderer/src/extensions/download_management/DownloadManager.ts
     } catch (unknownErr) {
       const err = unknownToError(unknownErr);
+=======
+    } catch (err) {
+>>>>>>> v1.16.9:src/extensions/download_management/DownloadManager.ts
       const errorMsg = `Invalid URL format: ${err.message} (URL: ${jobUrlString}, original type: ${typeof jobUrl})`;
       log("error", "URL parsing failed in startDownload", {
         workerId: job.workerId || "unknown",

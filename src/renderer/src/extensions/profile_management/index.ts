@@ -66,6 +66,11 @@ import {
 } from "../../util/selectors";
 import { getSafe } from "../../util/storeHelper";
 import { batchDispatch, truthy } from "../../util/util";
+<<<<<<< HEAD:src/renderer/src/extensions/profile_management/index.ts
+=======
+
+import { IExtension, IExtensionDownloadInfo } from "../extension_manager/types";
+>>>>>>> v1.16.9:src/extensions/profile_management/index.ts
 import { readExtensions } from "../extension_manager/util";
 import {
   getGame,

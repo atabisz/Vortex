@@ -146,7 +146,13 @@ class OAuth {
         // State token not found — the callback arrived after the login flow was
         // already completed or abandoned (e.g. the user clicked login twice).
         // Silently ignore, matching the behavior of the local HTTP server path.
+<<<<<<< HEAD:src/renderer/src/extensions/nexus_integration/util/oauth.ts
         log('debug', 'ignoring OAuth callback with unknown state token', { state });
+=======
+        log("debug", "ignoring OAuth callback with unknown state token", {
+          state,
+        });
+>>>>>>> v1.16.9:src/extensions/nexus_integration/util/oauth.ts
         return;
       }
       try {

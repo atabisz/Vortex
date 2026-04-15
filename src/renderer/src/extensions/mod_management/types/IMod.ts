@@ -73,9 +73,12 @@ export interface ICommonModAttributes {
   updatedTimestamp?: number;
 
   // Installation tracking
+<<<<<<< HEAD:src/renderer/src/extensions/mod_management/types/IMod.ts
   // Note: callers may set this as a Date object, but it is always serialized
   // to an ISO string during persistence (via JSON.stringify) and rehydrated
   // as a string on the next startup.
+=======
+>>>>>>> v1.16.9:src/extensions/mod_management/types/IMod.ts
   installTime?: string | Date;
   installedAsDependency?: boolean;
   referenceTag?: string;

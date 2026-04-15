@@ -288,8 +288,12 @@ export function dealWithExternalChanges(
               prevInner.merged.push(change);
               return prevInner;
             }
+<<<<<<< HEAD:src/renderer/src/extensions/mod_management/util/externalChanges.ts
             if (isInstallingCollection
                 || recentInstalls?.has(change.source)) {
+=======
+            if (isInstallingCollection || recentInstalls?.has(change.source)) {
+>>>>>>> v1.16.9:src/extensions/mod_management/util/externalChanges.ts
               prevInner.autoResolved.push(change);
               return prevInner;
             }
