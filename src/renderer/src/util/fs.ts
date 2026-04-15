@@ -34,6 +34,9 @@ import * as path from "path";
 import rimraf from "rimraf";
 import { generate as shortid } from "shortid";
 import * as tmp from "tmp";
+import { execFile as execFileNative } from "child_process";
+import * as fsPromises from "node:fs/promises";
+import type { INotification } from "../types/INotification";
 
 import type { TFunction } from "./i18n";
 
@@ -55,6 +58,160 @@ const permission: typeof permissionT = lazyRequire(() =>
   require("permissions"),
 );
 const wholocks: typeof whoLocksT = lazyRequire(() => require("wholocks"));
+
+// --- chattr+F casefold support (Phase 16) ---
+
+const EXT4_MAGIC = 0xef53;
+
+type ExecFileFn = (
+  cmd: string,
+  args: string[],
+  callback: (err: Error | null, stdout: string, stderr: string) => void,
+) => void;
+
+let _chattr: ExecFileFn = execFileNative;
+
+/** @internal Override the execFile function for testing. Do not call in production. */
+export function _setChattr(fn: ExecFileFn): void {
+  _chattr = fn;
+}
+
+type NotifierFn = (notification: INotification) => void;
+let _chattrNotifier: NotifierFn | undefined;
+
+/** @internal Register a notification handler for casefold info messages. */
+export function _setChattrNotifier(fn: NotifierFn | undefined): void {
+  _chattrNotifier = fn;
+}
+
+const ext4CasefoldCache = new Map<string, boolean>();
+let hasShownCasefoldNotification = false;
+
+/** @internal Reset chattr state between tests. Do not call in production. */
+export function _resetChattrState(): void {
+  ext4CasefoldCache.clear();
+  hasShownCasefoldNotification = false;
+}
+
+async function isExt4Filesystem(dirPath: string): Promise<boolean> {
+  if (ext4CasefoldCache.has(dirPath)) {
+    return ext4CasefoldCache.get(dirPath)!;
+  }
+  try {
+    const stats = await fsPromises.statfs(dirPath);
+    const result = stats.type === EXT4_MAGIC;
+    ext4CasefoldCache.set(dirPath, result);
+    return result;
+  } catch {
+    ext4CasefoldCache.set(dirPath, false);
+    return false;
+  }
+}
+
+async function verifyCasefold(dirPath: string): Promise<boolean> {
+  const verifyFileName = "__VORTEX_CASEFOLD_VERIFY";
+  const upperFile = path.join(dirPath, verifyFileName);
+  const lowerFile = path.join(dirPath, verifyFileName.toLowerCase());
+  try {
+    await fsPromises.writeFile(upperFile, "");
+    await fsPromises.access(lowerFile);
+    return true;
+  } catch {
+    return false;
+  } finally {
+    fsPromises.unlink(upperFile).catch(() => {});
+  }
+}
+
+/**
+ * Apply kernel casefold (chattr +F) to a freshly created, empty directory
+ * on ext4 filesystems. Always resolves — never rejects. Falls back silently
+ * to the existing Wine-prefix userspace shim on all unsupported configs.
+ *
+ * @internal Exported for testing only.
+ */
+export async function applyChattrCasefold(
+  dirPath: string,
+): Promise<void> {
+  // D-04: Platform guard
+  if (process.platform !== "linux") {
+    return;
+  }
+  // D-05: Flatpak guard
+  if (process.env.FLATPAK_ID) {
+    return;
+  }
+  // D-03: Non-empty directory guard
+  try {
+    const entries = await fsPromises.readdir(dirPath);
+    if (entries.length > 0) {
+      return;
+    }
+  } catch {
+    return;
+  }
+  // D-06: ext4 detection via statfs magic number
+  const isExt4 = await isExt4Filesystem(dirPath);
+  if (!isExt4) {
+    log("debug", "chattr+F skipped: filesystem is not ext4", { dirPath });
+    return;
+  }
+  // D-08/D-09: Pre-flight check then invoke chattr
+  return new Promise<void>((resolve) => {
+    _chattr("which", ["chattr"], (whichErr) => {
+      if (whichErr) {
+        log("debug", "chattr not available in PATH, using shim", {
+          dirPath,
+        });
+        resolve();
+        return;
+      }
+      _chattr("chattr", ["+F", dirPath], (chattrErr) => {
+        if (chattrErr) {
+          // D-10: Any non-zero exit -> silent fallback
+          // D-13: Notify once if ext4 lacks casefold feature
+          if (!hasShownCasefoldNotification) {
+            hasShownCasefoldNotification = true;
+            _chattrNotifier?.({
+              type: "info",
+              id: "casefold-unavailable",
+              title: "Kernel casefold unavailable",
+              message:
+                "Your mod staging directory is on an ext4 filesystem " +
+                "without the casefold feature. Case-insensitive mod " +
+                "filenames will use the compatibility fallback. To " +
+                "enable kernel-level casefold, reformat with " +
+                "mkfs.ext4 -O casefold.",
+            });
+          }
+          log("debug", "chattr+F failed, falling back to shim", {
+            dirPath,
+            code: (chattrErr as NodeJS.ErrnoException).code,
+          });
+          resolve();
+          return;
+        }
+        // D-11: Verify casefold is actually active
+        verifyCasefold(dirPath).then((active) => {
+          if (active) {
+            log("info", "chattr+F casefold enabled for staging directory", {
+              dirPath,
+            });
+          } else {
+            log(
+              "debug",
+              "chattr+F verify failed (false positive?), using shim",
+              { dirPath },
+            );
+          }
+          resolve();
+        });
+      });
+    });
+  });
+}
+
+// --- end chattr+F casefold support ---
 
 const showMessageBox = async (
   options: Electron.MessageBoxOptions,
@@ -1230,6 +1387,7 @@ export function ensureDirWritableAsync(
   }
   const stackErr = new Error();
   return PromiseBB.resolve(fs.ensureDir(dirPath))
+    .then(() => applyChattrCasefold(dirPath))
     .then(() => {
       const canary = path.join(dirPath, "__vortex_canary");
       return ensureFileAsync(canary).then(() => removeAsync(canary));
