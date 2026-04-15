@@ -1,728 +1,803 @@
-# Pitfalls Research
+# Domain Pitfalls
 
-**Domain:** chattr+F case-folding filesystem layer + GitHub Actions upstream rebase automation
-**Researched:** 2026-04-15
-**Confidence:** HIGH — grounded in codebase audit of `fs.ts`, `stagingDirectory.ts`, and existing CI workflows
+**Domain:** Linux-native first-run onboarding wizard added to a Windows-first Electron/React/Redux app
+**Researched:** 2026-04-16
+**Confidence:** HIGH — grounded in codebase audit of onboarding_dashlet, firststeps_dashlet, stagingDirectory.ts, Steam.ts, fs.ts, nativeErrors.ts, winapi-shim.ts, and dialogs.scss
 
-> **Scope note:** This document covers one specific milestone: adding (1) chattr+F dual-path
-> filesystem layer to complement the existing Wine prefix case-folding shim in `fs.ts`, and
-> (2) a GitHub Actions workflow for automated upstream rebase PRs. The v3.0 pitfalls
-> (pkexec elevation, gamebryo-savegame C++ compilation) are documented in the prior
-> `PITFALLS.md` (v3.0 scope). Cross-references made where a prior decision creates a
-> new-milestone trap.
+> **Scope:** This document covers the v7.0 milestone specifically: adding Linux-native first-run
+> onboarding to an existing codebase where all the underlying Linux infrastructure (Steam detection,
+> elevation, casefold, FOMOD, NXM) is already shipped. Pitfalls for prior milestones are in
+> the archived `.planning/` history.
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that require rewrites or block entire feature areas.
+Mistakes that cause silent regressions on Windows, block the first-run flow entirely, or require
+structural rewrites to fix.
 
 ---
 
-### Pitfall 1: chattr+F requires the filesystem to be mounted with the `casefold` feature — this is almost never true for user home directories
+### Pitfall 1: Editing i18n strings without a platform guard silently breaks Windows wording
 
 **What goes wrong:**
-`chattr +F <directory>` will return `Operation not supported` (EOPNOTSUPP) on any
-filesystem not mounted with the `casefold` feature enabled at mount time. The casefold
-feature must be enabled when the filesystem is *created* (e2fsck/mkfs.ext4 with
-`-O casefold`) or added via `tune2fs -O casefold` on an unmounted filesystem. It cannot
-be enabled on a live, in-use filesystem without unmounting it.
+The string resources in `texts.ts`, `firststeps_dashlet/todos.tsx`, and `symlink_activator_elevate/
+index.ts` are shared across all platforms — there is no per-platform i18n branch in the build.
+If a developer changes "Run as Administrator" to something Linux-friendly without a runtime
+`process.platform === 'linux'` guard, the changed wording shows on Windows too.
 
-On a typical Linux desktop (Ubuntu 22.04, Fedora 39, SteamOS), the `/home` partition is
-an ext4 filesystem formatted *without* the casefold feature. The user's staging directory
-(`~/.local/share/Vortex/mods/<game>/`) lives on this filesystem. `chattr +F` on that
-path will silently fail or return EOPNOTSUPP — and Node.js's `child_process.exec('chattr
-+F ...')` will receive a non-zero exit code that, if not explicitly checked, is discarded.
+The `t()` call in `symlink_activator_elevate/index.ts` line 121 reads:
+`"Symlink Deployment (Run as Administrator)"` — this is the constructor argument passed as the
+human-visible display name, not a translatable string key. Changing it in place changes the
+Windows UX permanently.
 
-The failure is **silent at the call site** if the error is swallowed: the directory exists,
-deployment proceeds, but case-insensitive lookup is never active. The user gets no feedback.
-
-**Why it happens:**
-Developers test on a system they control (e.g., a dev VM with casefold enabled on the test
-partition) and assume the feature is universally available. The `chattr` man page does not
-prominently warn that casefold is an opt-in filesystem feature. The EOPNOTSUPP error from
-`chattr` is identical to other "not supported on this platform" errors, making it easy to
-treat as "not Linux" rather than "not this filesystem."
-
-**How to avoid:**
-1. Treat chattr+F as **best-effort with graceful fallback**: check the `chattr +F` exit code
-   explicitly. If it returns EOPNOTSUPP, log at `debug` level and fall back to the existing
-   case-folding shim in `fs.ts` (the `resolvePathCase` / `resolveCaseIfWinePrefix` mechanism).
-2. Never assume chattr+F succeeded. After the `chattr +F` call, verify with `lsattr -d
-   <directory>` and parse the output for the `F` flag before reporting the feature active.
-3. Do **not** gate deployment on chattr+F success. The shim already handles the common case;
-   chattr+F is a performance optimization, not a correctness requirement.
-4. Add a Node.js helper `async function trySetCasefold(dir: string): Promise<boolean>` that
-   shells out to `chattr +F`, checks exit code, and returns `true`/`false` cleanly. Never
-   fire-and-forget a shell command that sets filesystem attributes.
-
-**Warning signs:**
-- `chattr +F` exits with code 1 and message `Operation not supported while setting flags on <path>`
-- The staging directory lives on a partition that `tune2fs -l <device> | grep features` shows
-  does NOT include `casefold` in the feature list
-- User reports case-insensitive lookup working on one machine and failing on another (different
-  filesystem formatting at install time)
-
-**Phase to address:** chattr+F implementation phase. The fallback path to `fs.ts`'s shim must
-be in place before any deployment code that calls `chattr +F`.
-
----
-
-### Pitfall 2: chattr+F can only be set on **empty** directories — applying it to an existing staging folder fails
-
-**What goes wrong:**
-The chattr man page is explicit: *"This attribute can only be changed in empty directories."*
-Attempting `chattr +F` on a non-empty directory returns `Operation not supported` or
-`Inappropriate ioctl for device` depending on kernel version.
-
-The Vortex staging directory (`ensureStagingDirectory` in `stagingDirectory.ts`) may already
-exist and contain mods from previous sessions. In that case, chattr+F cannot be applied
-retroactively. The code in `stagingDirectory.ts` calls `ensureDirWritableAsync` and
-`writeStagingTag` — these succeed, but there is no hook to apply chattr+F to the pre-existing
-directory.
-
-Additionally, even if the directory is initially empty when first created, the moment
-`writeStagingTag` writes the `__vortex_staging_folder` marker file, the directory is no
-longer empty — if chattr+F is called after tag creation rather than before, it will fail.
+Additionally, `mod_management/texts.ts` contains the `downloadspath` and `modspath` help texts
+with `C:\\Users\\Mike\\AppData\\Roaming\\Vortex\\Downloads\\` as an example path. These are
+passed through the `t()` wrapper, which means i18next caches the English source string as the
+key. If you change the source string (removing the Windows path), the old key in any user's
+persisted locale cache becomes stale and falls back to the raw key string instead of the
+translated value — a different Windows regression.
 
 **Why it happens:**
-Developers write the "happy path" — new game, new staging dir, apply chattr+F before any
-files exist. But returning users already have a populated staging directory. The timing of
-the `chattr +F` call relative to staging directory population is not obvious.
+The codebase uses inline string literals as i18next keys throughout the renderer (not
+key-based lookup). Any edit to an existing translated string breaks the key for users who have
+a non-English locale cached, and any platform-neutral edit changes Windows wording.
 
-**How to avoid:**
-1. Call `chattr +F` **immediately after `fs.mkdirAsync` or `fs.ensureDirAsync`** creates the
-   directory, *before* any files are written into it (including the `__vortex_staging_folder`
-   tag). The correct sequence is: `mkdir → chattr +F → write tag`.
-2. For **existing staging directories** (the migration case): skip chattr+F silently. Do not
-   attempt to apply it to a non-empty directory. Fall back to the fs.ts shim for all existing
-   directories. Log a one-time notification: "Case-insensitive filesystem optimization not
-   available for existing staging folders. New staging folders will use it automatically."
-3. If a fresh staging directory is created by `ensureStagingDirectory` (the
-   `mods === undefined` branch at line 183 of `stagingDirectory.ts`), hook the chattr+F call
-   into that newly-created-only code path.
+**Consequences:**
+- Windows users see Linux-specific instructions in the staging-folder settings help text
+- Windows users lose the "Run as Administrator" label that correctly describes what UAC does
+- Non-English locale users see raw English strings (fallback) where there was a translation
+- Nexus support load increases from confused Windows users
 
-**Warning signs:**
-- `chattr +F` exits non-zero for a directory that already has mods in it
-- Developer tests with a fresh game installation (empty dir) but users report failure because
-  they have existing mod libraries
-- The `__vortex_staging_folder` tag file write precedes the `chattr +F` call in the call stack
-
-**Phase to address:** chattr+F implementation phase. The `mkdir → chattr+F → write-tag`
-ordering must be enforced in the same commit that introduces the feature.
-
----
-
-### Pitfall 3: chattr+F does **not** cascade to subdirectories — and Vortex's staging layout is deeply nested
-
-**What goes wrong:**
-Setting chattr+F on the staging root (`~/.local/share/Vortex/mods/skyrimse/`) does not
-automatically make subdirectories case-insensitive. Each subdirectory created after the
-parent is set casefold **will** inherit the flag automatically (kernel ≥ 5.2) — but only
-if the parent already had the `F` attribute when the subdirectory was created. Pre-existing
-subdirectories and subdirectories created before the parent gets `F` are **not** retroactively
-case-insensitive.
-
-The Vortex staging layout creates a per-mod subdirectory for each installed mod:
-`<stagingRoot>/<modId>/`. If the staging root gets chattr+F after mod directories already
-exist, those existing mod directories operate in case-sensitive mode while new ones are
-case-insensitive. Mixed behavior in the same staging folder is a recipe for inconsistent
-deployment results.
-
-**Why it happens:**
-The inheritance rule is subtle: *new* subdirectories created under a casefold directory
-inherit the flag; *existing* ones do not. Developers testing with a freshly-created staging
-root and immediately installing mods see everything working. A migration scenario where
-mods already exist produces inconsistency.
-
-**How to avoid:**
-1. Apply chattr+F only to new staging directories (see Pitfall 2). Do not attempt retroactive
-   application.
-2. After applying chattr+F to the staging root, verify that newly created mod subdirectories
-   inherit the flag: `lsattr -d <stagingRoot>/<newModDir>` should show `F`. Add this as a
-   test assertion in the integration test for the feature.
-3. Do not rely on chattr+F for individual mod subdirectory lookups when the staging root was
-   created before the feature shipped. The fs.ts shim remains the safety net for all
-   pre-existing directories.
-
-**Warning signs:**
-- `lsattr -d <modSubdir>` does not show `F` even though `<stagingRoot>` has `F`
-- Mod directories created in the same session as staging root creation show `F`, but
-  directories from a prior session do not
-- Case-insensitive lookup fails for older mods but works for newly installed ones
-
-**Phase to address:** chattr+F implementation phase and the integration test spec.
-
----
-
-### Pitfall 4: chattr+F silently does nothing on btrfs — the error is identical to "filesystem feature not enabled"
-
-**What goes wrong:**
-btrfs does not support the chattr `F` attribute (casefold). On btrfs, `chattr +F` returns:
-`chattr: Operation not supported while setting flags on <path>`. This is the same error text
-as an ext4 filesystem without the casefold feature enabled. The code cannot distinguish
-"ext4 without casefold" from "btrfs" from "xfs" from "tmpfs" without additional filesystem
-type detection.
-
-SteamOS uses btrfs for the main partition. Some Linux users use btrfs home partitions
-(Fedora 33+ defaults to btrfs for home). Docker volumes, CI environments, and many NAS
-mounts are also btrfs or NFS.
-
-Attempting `chattr +F` on btrfs produces EOPNOTSUPP. If the code treats this as a
-non-fatal warning and falls back to the shim, behavior is correct. If the code attempts
-a retry or escalation, it will loop forever.
-
-**Why it happens:**
-The casefold feature in the Linux VFS was initially implemented for ext4 and later added
-to f2fs. btrfs has its own case-insensitive mount option (`-o suid,noexec,relatime,
-space_cache=v2,subvol=/@ -o noatime,compress=zstd`) but does NOT support the chattr `F`
-attribute — it uses a different kernel path.
-
-**How to avoid:**
-1. Before attempting `chattr +F`, detect the filesystem type using `statfs()` or by reading
-   `/proc/mounts`. If the filesystem type is `btrfs` (magic `0x9123683e`), `xfs`, `tmpfs`,
-   `nfs`, or `fuse.*`, skip chattr+F immediately without attempting the call.
-2. A simpler approach: attempt `chattr +F` and treat any non-zero exit code as "feature
-   unavailable on this filesystem." Do NOT retry. Log at `debug` level and activate fallback.
-3. Never expose a user-facing error for chattr+F failure. It is a transparent optimization.
-
-**Warning signs:**
-- SteamOS deployment always falls back to shim (expected — btrfs)
-- Fedora users on btrfs home partition always use shim (expected)
-- CI environments (typically tmpfs or overlayfs) never test the chattr+F code path — add
-  an ext4-specific integration test with a loopback device if critical path verification needed
-
-**Phase to address:** chattr+F implementation phase. The btrfs/non-ext4 guard should be
-in the first commit.
-
----
-
-### Pitfall 5: chattr+F requires the `e2fsprogs` `chattr` binary — not available in all Docker/container environments
-
-**What goes wrong:**
-The `chattr` binary comes from the `e2fsprogs` package. On a minimal Docker image (e.g.,
-`node:22-slim` or `node:22-alpine`), `chattr` is not installed. Calling `child_process
-.exec('chattr +F ...')` in a container environment will fail with `ENOENT` (command not
-found) rather than EOPNOTSUPP.
-
-The Vortex CI runs on `ubuntu-latest` (a GitHub-hosted runner) where `e2fsprogs` is
-pre-installed. But if integration tests are ever run in a Docker container, or if a user
-runs Vortex inside a container for some reason, the `chattr` binary may be absent.
-
-**Why it happens:**
-Developers test on full Linux desktop systems where `e2fsprogs` is part of the base install.
-Container images strip non-essential packages by default.
-
-**How to avoid:**
-1. Before the first chattr+F call, check for the `chattr` binary with `which chattr` or
-   equivalent. If not found, skip and activate fallback silently.
-2. Add `which chattr` to the Node.js helper `trySetCasefold()` as a pre-flight check:
+**Prevention:**
+1. Do NOT edit existing i18n string literals. Add NEW strings alongside existing ones.
+2. For platform-divergent wording, use a runtime branch:
    ```typescript
-   async function trySetCasefold(dir: string): Promise<boolean> {
-     if (process.platform !== 'linux') return false;
-     if (!await commandExists('chattr')) return false;
-     const { code } = await exec(`chattr +F "${dir}"`);
-     return code === 0;
+   const label = process.platform === 'linux'
+     ? t("Symlink Deployment (requires pkexec)")
+     : t("Symlink Deployment (Run as Administrator)");
+   ```
+3. Guard every new Linux-specific string addition inside `process.platform === 'linux'` at
+   the render site, not in a translation file.
+4. Run the Windows CI build and visually diff any affected component before merging.
+
+**Detection:**
+- Windows CI build passes (no type errors) but Windows UAT shows changed UI wording
+- A string in `texts.ts` that previously contained a Windows path no longer does
+- `git diff --stat` shows edits to existing `t("...")` literals rather than additions
+
+**Phase:** Address in any phase that touches error messages. Prevention must be in the initial
+diff, not a fixup later.
+
+---
+
+### Pitfall 2: `firststeps_dashlet/todos.tsx` calls `winapi.GetVolumePathName` unconditionally — crashes on Linux without the shim alias
+
+**What goes wrong:**
+`firststeps_dashlet/todos.tsx` imports `* as winapi from "winapi-bindings"` and calls both
+`winapi.GetDiskFreeSpaceEx(checkPath)` and `winapi.GetVolumePathName(props.dlPath)` in the
+`value` functions for the "download-location" and "mod-location" todo items. The webpack
+alias `winapi-bindings → winapi-shim.ts` is already in place (v1.0), so these calls resolve
+to the Linux shim at runtime.
+
+However, the shim's `GetVolumePathName` walks the directory tree using `fs.statSync` to find
+the mount point. If the `dlPath` or `instPath` stored in Redux state is an invalid or
+nonexistent path (which is common on a brand-new Linux install before onboarding completes),
+`GetVolumePathName` throws inside `value()` — and the component re-throws it as an uncaught
+exception from a Redux selector callback.
+
+The existing Windows code already handles this with a `try/catch` that calls `t("<Invalid
+Drive>")` — the Linux shim's `GetVolumePathName` has a catch block too, but the `try { statSync
+}` inside `GetVolumePathName` only handles `ENOENT` by falling back to `path.parse(p).root`.
+Any path that is partially valid (parent exists, child doesn't) still throws.
+
+**Why it happens:**
+The first-run context starts with no game selected and no staging path set. State values are
+`undefined` or point to a default `{USERDATA}` template string that contains a `{USERDATA}`
+macro not yet resolved. The todo item's `condition` function checks `props.instPath` for
+`undefined` but the `value` function is called regardless by the dashlet render path when the
+todo is visible.
+
+**Consequences:**
+- The ToDo List dashlet crashes on first render on a fresh Linux install
+- The entire dashboard page goes blank (React error boundary triggered)
+- User sees a blank dashboard, has no onboarding guidance, cannot proceed
+
+**Prevention:**
+1. Wrap the `winapi.GetVolumePathName(props.instPath)` call in the `value` function with a
+   `try/catch` that returns `t("<No staging folder>")` on any error — the existing catch
+   already does this but only for `GetVolumePathName` exceptions from invalid drives; extend
+   it to cover `undefined` path:
+   ```typescript
+   value: (t, props) => {
+     if (props.instPath === undefined) return t("<No staging folder>");
+     try {
+       return winapi.GetVolumePathName(props.instPath);
+     } catch { return t("<Invalid Drive>"); }
    }
    ```
-3. Do not add `e2fsprogs` as a runtime dependency of Vortex. It is a system package.
-   The presence check handles the absence case.
+2. Confirm the `condition` function for both disk-space todo items returns `false` when the
+   path is `undefined`, preventing the `value` call entirely.
+3. Add a Vitest test that renders the firststeps_dashlet with an undefined `instPath` and
+   verifies no exception is thrown.
 
-**Warning signs:**
-- `ENOENT` or `command not found` when shelling out to `chattr` in a container
-- CI test environment reports chattr+F working even though the underlying test filesystem
-  is tmpfs (chattr binary present but the test is incorrectly asserting success)
+**Detection:**
+- Dashboard page blank on fresh Linux run; browser DevTools shows "TypeError: Cannot read
+  properties of undefined" in winapi-shim.ts `GetVolumePathName`
+- `git log` shows the todo item condition added `props.instPath !== undefined` but the value
+  function still runs (race condition between condition evaluation and render)
 
-**Phase to address:** chattr+F implementation phase. The `commandExists` guard must
-be in the initial implementation.
+**Phase:** Phase 1 (first-run wizard foundation). Must be addressed before any other dashboard
+work lands.
 
 ---
 
-### Pitfall 6: NFS and FUSE mounts silently ignore chattr+F — Wine prefix paths are frequently on network or FUSE mounts
+### Pitfall 3: `ensureStagingDirectory` calls `winapi.GetVolumePathName` on the drive-check path — unconditional on Linux
 
 **What goes wrong:**
-chattr+F silently returns success (exit code 0) on some NFS configurations and FUSE
-filesystems, but the attribute is NOT actually stored on the remote filesystem and case-
-insensitive lookup does not function. This is the most dangerous failure mode: the code
-believes casefold is enabled, skips the shim, and case-sensitive lookup failures surface
-as mysterious "file not found" errors during deployment.
+In `stagingDirectory.ts` line 157, `ensureStagingDirectoryImpl` calls:
+```typescript
+winapi.GetVolumePathName(instPath);
+```
+to check whether a partition exists. On Windows this checks if the drive letter is valid; the
+shim's `GetVolumePathName` on Linux walks parent dirs via `statSync`, which is different
+behaviour.
 
-The risk is highest for users who store Steam libraries on a NAS (NFS mount), an external
-drive with NTFS-fuse, or in a Flatpak sandbox (OverlayFS). Vortex staging directories
-placed on these mounts will fail silently.
+More critically, the `partitionExists` boolean is set to `false` only when
+`isErrorWithSystemCode(err) && err.systemCode === 2` — this checks for Windows error code 2
+(ERROR_FILE_NOT_FOUND). The Linux shim never sets `systemCode` on the error it throws; it
+throws a generic JS Error. So on Linux, any `GetVolumePathName` failure leaves `partitionExists
+= true` (initial value), and the wrong dialog branch is taken when the staging folder doesn't
+exist — the user sees "Mod Staging Folder missing!" with instructions referencing removable
+drives, not a Linux-appropriate message.
 
-Note: For Wine prefix paths specifically, `fs.ts` already has `isWinePrefixPath()` which
-guards `resolvePathCase` calls. The chattr+F feature primarily targets staging directories,
-not Wine prefix directories. However, if staging directories are placed on a NFS/FUSE mount,
-the failure described above applies.
+This call path fires on every game activation, not just during first run.
 
 **Why it happens:**
-NFS filesystems report themselves as capable of extended attributes but do not necessarily
-pass chattr `F` through to the server. FUSE filesystems vary — ext4-in-a-FUSE-layer may
-support casefold, while `ntfs-3g` does not. There is no reliable way to distinguish
-"chattr+F accepted" from "chattr+F silently accepted but not active" without a runtime test.
+The Windows-specific `systemCode === 2` check was never updated to account for the Linux shim's
+error shape. The shim was added for compilation; the error semantics at call sites weren't
+audited.
 
-**How to avoid:**
-1. After applying `chattr +F`, immediately create a test file with an uppercase name and
-   attempt to read it with a lowercase name. If the read succeeds, casefold is active. If
-   it fails, fall back to the shim and remove the test file.
+**Consequences:**
+- Wrong dialog shown when staging folder is missing on Linux (drive-not-found error → shows
+  "removable drive" message instead of "create new staging folder" message)
+- `partitionExists = false` path (which has the correct "Invalid/Missing partition" handling
+  in the `fallbackPurge` catch) is never taken on Linux
+
+**Prevention:**
+1. Platform-guard the `winapi.GetVolumePathName` partition check:
    ```typescript
-   async function verifyCasefoldActive(dir: string): Promise<boolean> {
-     const testFile = path.join(dir, '__VORTEX_CASEFOLD_TEST__');
-     await fs.writeFileAsync(testFile, '');
-     try {
-       await fs.statAsync(path.join(dir, '__vortex_casefold_test__'));
-       return true;
-     } catch {
-       return false;
-     } finally {
-       await fs.removeAsync(testFile).catch(() => {});
+   if (process.platform === 'win32') {
+     try { winapi.GetVolumePathName(instPath); }
+     catch (err) {
+       if (isErrorWithSystemCode(err) && err.systemCode === 2) partitionExists = false;
+     }
+   }
+   // On Linux: assume partition exists if the path root exists
+   else {
+     try { await fs.statAsync(path.parse(instPath).root); }
+     catch { partitionExists = false; }
+   }
+   ```
+2. Add platform-specific error handling for the Linux case.
+
+**Detection:**
+- On Linux with a deleted staging folder, user sees "removable drive" dialog text rather than
+  the simpler "create new" path
+- `git log` shows no platform guard around the `winapi.GetVolumePathName` call in
+  `stagingDirectory.ts`
+
+**Phase:** Phase 2 (staging directory selection). Must be addressed in the same phase that
+wires up staging detection in the wizard.
+
+---
+
+### Pitfall 4: Staging path persisted in Redux state uses `{USERDATA}` macro — resolving it at wizard time vs. at use time is a race condition
+
+**What goes wrong:**
+When a staging path is set in the wizard, it may be stored as the raw macro string
+`{USERDATA}/{game}/mods` rather than the resolved absolute path. The state hive (`settings.mods.
+installPath[gameId]`) stores whatever string the wizard dispatches. The resolution from
+`{USERDATA}` to `/home/user/.local/share/Vortex/...` happens later via `resolveInstallPath`
+in `mod_management/util/getInstallPath.ts`.
+
+If the wizard dispatches `setInstallPath(gameId, rawMacroString)` and then immediately calls
+`ensureDirWritableAsync(rawMacroString)`, the directory creation fails because the OS doesn't
+understand `{USERDATA}` as a path. There is also a second timing issue: if the Redux state is
+hydrated asynchronously (via the `persist:hydrate` IPC channel), a wizard step that reads
+`installPathForGame(state, gameId)` right after dispatch may get the old undefined value from
+the pre-hydration snapshot.
+
+**Why it happens:**
+The `installPathMode === "suggested"` branch in `ensureStagingDirectoryImpl` calls
+`resolveInstallPath(await suggestStagingPath(api, gameId), gameId)` — resolving macros —
+before dispatching `setInstallPath`. But the wizard's direct-dispatch path bypasses
+`suggestStagingPath`. If the wizard dispatches the unresolved string, the path stored in
+LevelDB is a macro, and `ensureDirWritableAsync` is called with the macro.
+
+**Consequences:**
+- `ensureDirWritableAsync("{USERDATA}/mods/skyrimse")` throws ENOENT immediately
+- The chattr+F casefold check runs against `{USERDATA}` as a literal path, fails, and the
+  once-per-session notification fires with a confusing path in the message
+- If the wizard completes "successfully" with the macro stored, the staging dir is never
+  actually created until the next game activation — a silent deferred failure
+
+**Prevention:**
+1. Always resolve macros before calling any filesystem function or dispatching to Redux:
+   ```typescript
+   import { resolveInstallPath } from '../mod_management/util/getInstallPath';
+   const resolved = resolveInstallPath(wizardSelectedPath, gameId);
+   api.store.dispatch(setInstallPath(gameId, resolved));
+   await fs.ensureDirWritableAsync(resolved);
+   ```
+2. In `ensureStagingDirectoryImpl`, add an assertion that `instPath` does not contain
+   `{USERDATA}` or `{game}` before calling `ensureDirWritableAsync`.
+3. Add a Vitest test that the wizard-path dispatch stores a resolved absolute path.
+
+**Detection:**
+- `{USERDATA}` appears as a literal string in the LevelDB state dump after wizard completion
+- `ENOENT` in `ensureDirWritableAsync` on first game activation after wizard
+- chattr+F notification shows `{USERDATA}` in the path field
+
+**Phase:** Phase 2 (staging directory selection wizard step). Prevention must be in the same
+commit as the wizard dispatch.
+
+---
+
+### Pitfall 5: Steam `mCache` is module-singleton and populated once at constructor time — first-run wizard finds no games if Steam is still launching
+
+**What goes wrong:**
+`Steam.ts` holds `mCache: PromiseBB<ISteamEntry[]>` as an instance variable. `allGames()` sets
+`mCache = this.parseManifests()` on first call and returns the same promise on all subsequent
+calls. `parseManifests()` reads `libraryfolders.vdf` and `.acf` manifest files synchronously
+at the time it is first invoked.
+
+On a fresh Linux desktop boot, when the user launches Vortex immediately and goes through first
+run, Steam may not have finished writing its library state to disk (Steam itself may be in the
+middle of loading). `parseManifests()` may find zero `.acf` files in `steamapps/` because Steam
+hasn't placed them yet, or `libraryfolders.vdf` may be partially written.
+
+The wizard calls `allGames()` once during the game-selection step. If the cache was populated
+at app start with an empty result, the wizard shows "No games found" even though Steam has
+hundreds of games installed. The user has no way to trigger a cache refresh without restarting
+Vortex.
+
+**Why it happens:**
+The cache was designed for a Windows use case where Steam is a persistent background process
+and VDF files are fully written well before Vortex is typically launched. On Linux, especially
+on first boot after installing both Vortex and Steam, the timing is unpredictable.
+
+**Consequences:**
+- First-run wizard game-selection step shows empty game list
+- User thinks Vortex doesn't detect their Steam library
+- User must restart Vortex (not obvious) to get games to appear
+- Creates a support burden and "Vortex broken on Linux" perception
+
+**Prevention:**
+1. Add a "Refresh" / "Re-scan" button to the game detection step in the wizard that calls
+   `steam.reloadGames()` and re-renders the list.
+2. In the wizard's game detection step, attempt `allGames()` and if the result is empty on
+   Linux, automatically retry once with a 2-second delay before showing the empty state:
+   ```typescript
+   let games = await steam.allGames();
+   if (games.length === 0 && process.platform === 'linux') {
+     await new Promise(resolve => setTimeout(resolve, 2000));
+     await steam.reloadGames();
+     games = await steam.allGames();
+   }
+   ```
+3. Show an explicit loading state during the refresh, not a blank list.
+4. `reloadGames()` already exists in `Steam.ts` — use it.
+
+**Detection:**
+- Wizard shows "No games found" on first run; restarting Vortex shows games correctly
+- `git log` shows wizard game-detection step calls `allGames()` with no retry logic
+
+**Phase:** Phase 1 (first-run wizard foundation / game detection). The retry must be in the
+initial wizard implementation.
+
+---
+
+### Pitfall 6: `suggestStagingPath` takes the non-Linux branch when `process.platform !== "win32"` — but the Linux branch doesn't check whether `{USERDATA}` drive equals the game drive
+
+**What goes wrong:**
+`gamemode_management/util/discovery.ts` line 859:
+```typescript
+if (statModPath.dev === statUserData.dev || process.platform !== "win32") {
+  suggestion = path.join("{USERDATA}", "{game}", "mods");
+}
+```
+On Linux, this always takes the first branch and suggests `{USERDATA}/{game}/mods` — regardless
+of whether the game and user data are on the same filesystem. This is correct behaviour on a
+typical single-drive Linux system.
+
+However, it masks a subtler issue: if the user has their Steam library on an external drive
+(e.g., `/mnt/storage/SteamLibrary`) and their home on the system SSD, the staging folder
+will be suggested on the system SSD even though the game files are on the external drive. This
+causes the hard-link deployment method to fail (hard links cannot cross filesystem boundaries),
+forcing a slower copy or symlink deployment without explaining why.
+
+The fallback branch (`winapi.GetVolumePathName(modPaths[""])`) correctly handles this on Windows
+but is unreachable on Linux due to the `process.platform !== "win32"` condition.
+
+**Why it happens:**
+The platform guard was added to skip the Windows-specific `GetVolumePathName` call on Linux,
+but it collapsed the logic to always suggest userdata, losing the cross-drive detection.
+
+**Consequences:**
+- Wizard suggests a staging path that guarantees hard-link deployment will fail for external
+  Steam library games
+- Deployment silently falls back to copy or symlink, which is slower and uses more disk space
+- No warning is shown to the user that the staging path and game path are on different devices
+
+**Prevention:**
+1. Add a Linux-aware cross-device check using `statSync`:
+   ```typescript
+   if (process.platform === 'linux') {
+     const gameRoot = path.parse(modPaths[""]).root; // mount-point walk needed
+     const userDataRoot = path.parse(getVortexPath("userData")).root;
+     if (statModPath.dev !== statUserData.dev) {
+       // suggest on the same device as the game
+       const volume = winapi.GetVolumePathName(modPaths[""]); // shim handles this
+       suggestion = path.join(volume, state.settings.mods.suggestInstallPathDirectory, "{game}");
+     } else {
+       suggestion = path.join("{USERDATA}", "{game}", "mods");
      }
    }
    ```
-2. Cache the result of this verification per staging directory (keyed by absolute path) so
-   the test runs once per session, not on every file operation.
-3. If verification fails even after `chattr +F` appeared to succeed, treat the directory
-   as case-sensitive and activate the shim.
+2. In the wizard's staging-folder step, show a warning if the user manually selects a path
+   on a different device than the game path.
 
-**Warning signs:**
-- User stores Steam library on a NAS or external drive
-- `lsattr -d <dir>` shows `F` but creating `TEST.txt` and reading `test.txt` returns ENOENT
-- Deployment completes but game reports missing DLLs that Vortex claims are deployed
+**Detection:**
+- User with Steam on external drive reports hard-link deployment failing
+- `suggestStagingPath` returns a path on `/home` for a game on `/mnt/storage`
+- No warning in wizard about device mismatch
 
-**Phase to address:** chattr+F implementation phase. The verification step is mandatory
-before advertising the feature as active.
+**Phase:** Phase 2 (staging directory selection). The device check should be in the same
+phase as the path suggestion logic.
 
 ---
 
-### Pitfall 7: Rebase CI opens duplicate PRs on every scheduled run if the branch already exists
-
-**What goes wrong:**
-If the rebase workflow runs on a schedule (e.g., daily) and an upstream-rebase PR is already
-open from a previous run, a naive implementation will push a new branch or update the same
-branch and attempt to create a second PR. The result is either:
-- A GitHub API error `"A pull request already exists for..."` that surfaces as a workflow
-  failure (non-zero exit), spamming the maintainer with CI failure notifications
-- If error is swallowed, multiple open PRs for the same upstream rebase accumulate
-
-The existing cherry-pick workflow in `.github/scripts/cherry-pick.sh` already handles this
-correctly for cherry-picks (lines 62-66: `gh pr list --head "$BRANCH" ... | grep -q .`).
-The rebase workflow must implement the same idempotency check.
-
-**Why it happens:**
-Developers implement the "create PR" step first and test it manually (once). The duplicate
-case only manifests on the second scheduled run.
-
-**How to avoid:**
-1. Before pushing the rebase branch, check if a PR already exists with the same head and
-   base using `gh pr list --head <branch> --base master --state open`. If one exists, only
-   push an update to the branch (force-push if needed) but do NOT create a new PR.
-2. Use a **fixed, predictable branch name** for the rebase PR: `upstream-rebase/main` or
-   `upstream-rebase/$(date +%Y-%m)`. A fixed name makes the "PR exists?" check deterministic.
-   Do not include a timestamp in the branch name — that creates a new branch (and a new PR)
-   on every run.
-3. If the upstream is already up to date (rebase is a no-op), delete the rebase branch (if
-   it exists from a previous run) and close any open PR with a comment: "Upstream is now
-   up to date with this fork — no rebase needed."
-
-**Warning signs:**
-- Multiple open PRs titled "Upstream rebase" or "Sync with nexus-mods/Vortex"
-- Workflow fails every run after the first with "pull request already exists" error
-- The branch name includes a timestamp or run ID component
-
-**Phase to address:** Rebase CI implementation phase. The idempotency check must be in the
-initial workflow, not a follow-up fix.
+## Moderate Pitfalls
 
 ---
 
-### Pitfall 8: "Already up to date" rebase exits 0 but must not create a PR — distinguishing no-op from real changes
+### Pitfall 7: `nativeErrors.ts` only decodes Windows system codes — Linux EPERM gets an uninformative generic error dialog
 
 **What goes wrong:**
-`git rebase origin/master` exits 0 whether or not there were any changes to rebase. If the
-fork's master is already up to date with the upstream, the rebase is a no-op. A workflow
-that unconditionally pushes the rebase branch and creates a PR after a no-op rebase will:
-- Push an empty branch (no new commits)
-- Create a PR that, when viewed, shows 0 commits and no diff
-- Generate a merge conflict with an empty PR
+`decodeSystemError` in `nativeErrors.ts` returns `undefined` for any error where
+`process.platform !== 'win32'` (line 13 explicit check). When `ensureDirWritableAsync`
+encounters EPERM or EACCES on Linux (e.g., the user selected `/mnt/usbdrive` which is
+mounted read-only), the calling code gets `undefined` from `decodeSystemError` and falls back
+to a generic "Access denied" message that tells the user to "Run as Administrator" — because
+that's the fallback text in `mod_management/index.ts` for permission errors.
 
-The maintainer must manually close these empty PRs, which generates noise and erodes trust
-in the automation.
+The user on Linux is told to "Run as Administrator" for a staging folder permission error.
+This is the primary source of Windows-specific error text that ONBRD-03 requires to be
+purged.
 
 **Why it happens:**
-`git rebase` exit code 0 does not distinguish "rebased N commits" from "nothing to rebase."
-Developers test with a diverged fork where the rebase is always non-trivial.
+`decodeSystemError` was written entirely for Windows error codes. The `process.platform !==
+'win32'` early return means no Linux-specific decoding was ever added. The callers of
+`decodeSystemError` fall through to generic English text that was written assuming Windows.
 
-**How to avoid:**
-Before pushing the rebase branch, check whether any new commits were added:
-```bash
-UPSTREAM_HEAD=$(git rev-parse origin/upstream-master)
-FORK_HEAD=$(git rev-parse HEAD)
-if git merge-base --is-ancestor "$UPSTREAM_HEAD" "$FORK_HEAD"; then
-  echo "Fork is already up to date with upstream. No PR needed."
-  exit 0
-fi
+**Prevention:**
+1. Add a Linux arm to `decodeSystemError` (or add a new `decodeLinuxError` function) that
+   translates EPERM/EACCES into actionable Linux-specific messages:
+   - EPERM/EACCES on a staging path → "You don't have write permission to this directory. Try
+     a location in your home folder (e.g. ~/Vortex/mods)."
+   - EROFS → "This location is on a read-only filesystem. Choose a writable location."
+2. Platform-guard any fallback message that says "Run as Administrator" to show
+   "requires elevated privileges (pkexec)" on Linux.
+3. Search the entire codebase for the literal string "Administrator" and audit each site for
+   platform context.
+
+**Phase:** Phase 1 (error message purge) or alongside staging directory setup in Phase 2.
+
+---
+
+### Pitfall 8: Help URL routing — `open-knowledge-base` event has zero listeners on Linux until the nexus_integration extension is fully initialized
+
+**What goes wrong:**
+The `More.tsx` component's `wikiId` prop triggers the `open-knowledge-base` event via
+`api.events.emit("open-knowledge-base", wikiId)`. The `haveKnowledgeBase` function in
+`More.tsx` caches whether any listener is registered:
+```typescript
+value = api.events.listenerCount("open-knowledge-base") > 0;
 ```
-Or more directly: check the commit count between the upstream and the fork's master before
-attempting the rebase at all. If `git log --oneline upstream/master..origin/master` returns
-empty, skip the entire workflow.
+This check is done once and cached. If the onboarding wizard renders before the
+`nexus_integration` extension (which registers the `open-knowledge-base` listener) has fully
+initialized, `haveKnowledgeBase` returns `false`, the "Learn more" link is hidden, and the
+result is cached permanently for the session.
 
-**Warning signs:**
-- PRs created with 0 commits and no diff
-- Workflow creates a PR on every scheduled run even when no upstream changes occurred
-- The rebase branch push results in an empty diff against master
+The extension initialization order is non-deterministic because extensions load via dynamic
+`import()` during `renderer.tsx` bootstrapping. On a slow system or with a large number of
+extensions, `nexus_integration` may not register its listener before the wizard's first
+render.
 
-**Phase to address:** Rebase CI implementation phase.
+**Why it happens:**
+The cache in `haveKnowledgeBase` was added for performance (`is this expensive? Is it worth
+caching?` — line 14 in More.tsx). But a cache populated during initialization rather than at
+stable state creates a TOCTOU problem.
+
+**Prevention:**
+1. Remove the cached value in `haveKnowledgeBase` and check `listenerCount` on each render.
+   The `api.events.listenerCount` call is O(1) and not actually expensive.
+2. Alternatively, add the `open-knowledge-base` listener in a core extension (not
+   `nexus_integration`) so it's guaranteed to be present before any component renders.
+3. For Linux-specific "Get Help" links in the wizard, use `opn(url)` directly rather than
+   routing through the knowledge-base event, which eliminates the dependency entirely.
+
+**Detection:**
+- "Learn more" links in the wizard are missing on first launch; appear after restart
+- `api.events.listenerCount("open-knowledge-base")` returns 0 during wizard render
+- The `haveKnowledgeBase` closure has `value = false` on first wizard render and never updates
+
+**Phase:** Phase 3 (help links). Noted here as a risk; direct `opn(url)` is the safe
+alternative.
 
 ---
 
-### Pitfall 9: Rebase conflicts in CI must create a draft PR — not fail the workflow with a non-zero exit code
+### Pitfall 9: Help URLs baked into string literals are NOT i18next-translatable — locale variants for Linux docs need a different mechanism
 
 **What goes wrong:**
-`git rebase` exits non-zero when there are merge conflicts. If the workflow uses `set -e` or
-the default GitHub Actions behavior (fail on non-zero step exit), the workflow job fails, no
-PR is created, and the maintainer only gets a "CI failed" notification with no actionable
-information about which files have conflicts.
+Help URLs appear in three forms in the codebase:
+1. Direct `opn(url)` calls with hardcoded `https://wiki.nexusmods.com/...` strings
+2. `wikiId` props that route through `open-knowledge-base` → Nexus knowledge base
+3. `NEXUS_DOMAIN` constant interpolation
 
-The correct behavior (matching the cherry-pick workflow pattern in `.github/scripts/
-cherry-pick.sh`) is to commit conflict markers, push the branch, and create a **draft PR**
-with a warning body. The maintainer then gets a draft PR they can open and manually resolve.
+For Linux-specific documentation URLs, a developer might be tempted to add something like:
+```typescript
+opn(`https://wiki.nexusmods.com/linux/${articleId}`)
+```
+If the Linux docs article doesn't exist yet at that URL, the user lands on a 404. Nexus wiki
+articles may not have a stable permanent URL at the time of shipping.
+
+Additionally, if the URL is stored in Redux state (e.g., as a setting or in a notification
+action), it persists in LevelDB. If the URL later changes (redirected, deprecated), users
+who already ran through onboarding have the old URL cached in their persisted notifications.
 
 **Why it happens:**
-The natural instinct is to treat rebase failure as an error. But in an automated workflow,
-conflict detection is expected and must be surfaced as a reviewable artifact, not a silent
-failure.
+URLs in source code are treated as stable constants, but wiki/documentation URLs change more
+often than code. Linux documentation for Vortex didn't exist before v1.0 — it's being created
+in parallel with the code.
 
-**How to avoid:**
-```bash
-HAS_CONFLICTS=false
-if ! git rebase upstream/master; then
-  # Conflict: accept the partial state and commit markers
-  git rebase --abort
-  # Use merge instead for the conflict case
-  git merge upstream/master || true
-  git add -A
-  git commit -m "upstream-rebase: unresolved conflicts require manual resolution"
-  HAS_CONFLICTS=true
-fi
+**Prevention:**
+1. Use a stable redirect URL pattern: route through `https://nexus.gg/vortex-linux-help` or
+   a GitHub wiki anchor (`https://github.com/atabisz/Vortex/wiki/linux-setup`) that the
+   maintainer controls and can update without a code release.
+2. Never store help URLs in Redux persistent state — only in component code. If a
+   notification includes an action URL, verify the URL exists before shipping.
+3. Add a `platform` parameter to the URL helper: `getHelpUrl("staging-folder", "linux")` →
+   returns platform-appropriate URL. This isolates all URL changes to one file.
+4. For the "Get Help" button, use `opn()` directly (not `open-knowledge-base`) so it opens
+   the OS default browser reliably on both KDE and GNOME without depending on knowledge-base
+   event registration.
 
-# Push regardless
-git push --force origin upstream-rebase/main
+**Phase:** Phase 3 (help links). All Linux help URLs should be defined in one constants file,
+not scattered across component files.
 
-# Create PR as draft if conflicts, normal if clean
-if [ "$HAS_CONFLICTS" = "true" ]; then
-  gh pr create --draft --title "Upstream rebase (conflicts)" \
-    --body "Conflicts detected. Manual resolution required."
-else
-  gh pr create --title "Upstream rebase" \
-    --body "Automated rebase of upstream nexus-mods/Vortex onto fork master."
-fi
+---
+
+### Pitfall 10: 1280×800 layout — `.modal-dialog` has `max-width: 60%` but no max-height, causing buttons to clip below the viewport
+
+**What goes wrong:**
+The existing `.common-dialog-regular` and `.common-dialog-wide` CSS classes in `dialogs.scss`
+do not constrain modal height. At 1280×800, the browser window is 800px tall. After subtracting
+the OS taskbar (~40px), window chrome (~30px), and the Vortex toolbar/navbar (~105px from
+`.toolbar-app-region`), the usable content area is approximately 625px.
+
+A wizard dialog with 4+ steps, each containing:
+- A header/title (~60px)
+- Step description text (~80px)
+- A directory input/browse button (~60px)
+- A filesystem detection status block (~80px)
+- Navigation buttons (Back/Next/Finish, ~60px)
+
+...totals approximately 340px in isolation, but Bootstrap's `.modal-dialog` stacks these inside
+a `.modal-content` that starts at the top of the viewport. If the modal has `height: 80%`
+(from `.common-dialog-wide`) that is 640px, and the visible viewport is only 625px, the bottom
+of the modal (including the navigation buttons) is clipped by 15-20px — exactly enough to hide
+the bottom row of buttons.
+
+Users cannot click "Next" or "Finish" without scrolling, and because `.layout-flex` has
+`overflow: hidden`, there is no scrollbar to discover.
+
+**Why it happens:**
+The existing dialogs were designed for Windows where the default Vortex window size is larger
+(typically 1920×1080 or at minimum 1280×900 for desktops). The 1280×800 constraint is specific
+to Steam Deck Desktop Mode, which is the target resolution for ONBRD-05.
+
+**Prevention:**
+1. Set an explicit `max-height` on the wizard modal that accounts for the full UI chrome:
+   ```scss
+   .wizard-dialog {
+     .modal-dialog {
+       max-height: calc(100vh - 160px); // 105px toolbar + 40px nav + 15px margin
+       display: flex;
+       flex-direction: column;
+     }
+     .modal-content {
+       height: 100%;
+       overflow-y: auto;
+     }
+     .modal-footer {
+       flex-shrink: 0; // navigation buttons never scroll off-screen
+     }
+   }
+   ```
+2. Make the wizard footer (Back/Next/Finish buttons) `position: sticky; bottom: 0` or use
+   `flex-shrink: 0` so it is always visible regardless of content height.
+3. Test at exactly 800px browser height by setting `BrowserWindow` height to 800 in the
+   dev config and visually inspecting all wizard steps.
+4. Do not put content in `.common-dialog-wide` — that class sets `height: 80%` which equals
+   640px at 800px viewport, leaving almost no margin.
+
+**Phase:** Every wizard-building phase. Must be verified by visual inspection at 1280×800.
+
+---
+
+### Pitfall 11: Bootstrap 3 modal `overflow: visible` on `.modal-dialog` means content that overflows is invisible, not scrollable
+
+**What goes wrong:**
+Bootstrap 3's modal system (used in Vortex) does NOT automatically add scrollbars to modal
+content. The `.modal-body` has no `overflow-y: auto` by default in Bootstrap 3. If wizard
+content is taller than the visible area, it simply overflows below the fold with no
+indication to the user.
+
+The `.layout-flex` class has `overflow: hidden` — so if the wizard renders inside a flex
+container, overflowing content is invisibly clipped, not scrollable.
+
+Specific risk: the filesystem detection step may show a table of detected filesystems and
+their casefold status. On a system with many mount points, this table can be long. At 800px,
+any table with more than 4-5 rows will clip below the visible area.
+
+**Why it happens:**
+Bootstrap 3 was designed for desktop web at 1024px+ minimum viewport. Modal overflow was not
+a concern at typical desktop resolutions. The Steam Deck 1280×800 constraint is tighter.
+
+**Prevention:**
+1. Always add `overflow-y: auto` to the `.modal-body` of any wizard step that may have
+   variable-length content.
+2. For lists in wizard steps (detected games, mount points), add `max-height: 200px;
+   overflow-y: auto` to the list container specifically.
+3. Never use `height: 80%` or fixed pixel heights inside wizard step content — use
+   `max-height` with `overflow-y: auto` instead.
+4. Add `flex-shrink: 0` to any fixed-height element (buttons, headers) so the flex layout
+   never squishes them in favor of scrollable content.
+
+**Phase:** Every wizard-building phase. A visual checklist at 800px height is mandatory.
+
+---
+
+### Pitfall 12: Staging directory filesystem detection — `statfs()` must be called on an existing path, not the target path before creation
+
+**What goes wrong:**
+`applyChattrCasefold` in `fs.ts` calls `fsPromises.statfs(dirPath)` to detect the filesystem
+type. But `ensureDirWritableAsync` creates the directory before calling `applyChattrCasefold`:
+```typescript
+return PromiseBB.resolve(fs.ensureDir(dirPath))
+  .then(() => applyChattrCasefold(dirPath))
 ```
 
-**Warning signs:**
-- Workflow job red (failed) but no PR created — conflicts are swallowed
-- `git rebase` exit code 1 propagates to the Actions step and terminates the job
-- The maintainer sees only "step failed: rebase upstream" without any PR to inspect
+During a wizard-guided staging directory setup, if the user types a path like
+`/home/user/newdir/mods/skyrimse` where `newdir` does not yet exist, `ensureDir` creates all
+intermediate directories first — and `statfs` correctly identifies the filesystem. This works.
 
-**Phase to address:** Rebase CI implementation phase. The conflict-to-draft-PR path must
-be implemented from the start, not added after the first real conflict occurs.
+However, if the wizard validates the path in a preview step before creation (e.g., showing the
+filesystem type to the user with a "Your staging folder will be on ext4" message), the `statfs`
+call happens on a path that doesn't exist yet. `statfs` on a non-existent path throws ENOENT on
+older Node versions (Node 22+ falls back to the nearest existing parent, but this is not
+documented behavior).
 
----
-
-### Pitfall 10: GITHUB_TOKEN cannot push to a fork's protected `master` branch — bot pushes are blocked by branch protection rules
-
-**What goes wrong:**
-If the fork's `master` branch has branch protection rules enabled (required PR reviews,
-required status checks, or "Restrict who can push to matching branches"), `GITHUB_TOKEN`
-from a workflow job CANNOT push directly to `master`. Attempting to do so fails with
-`remote: error: GH006: Protected branch update failed`.
-
-For the rebase workflow, the bot only needs to push to a **new** rebase branch (e.g.,
-`upstream-rebase/main`), not to `master` directly. Pushing to a non-protected branch does
-not require bypass permissions. Only the final merge of the rebase PR goes to `master`,
-which happens via the normal PR merge mechanism (human-approved).
-
-The confusion arises when developers test the workflow by trying to push to `master` to
-verify it works, not realizing the workflow should only ever push to a side branch.
+The ext4 detection cache keyed by `dirPath` will cache the `false` result from the ENOENT
+fallback, and the wizard will incorrectly report "casefold not available" even on an ext4+casefold
+system.
 
 **Why it happens:**
-Developers confuse "push the rebased code to master" with "push the rebased code to a
-branch and open a PR." The correct workflow never touches `master` directly from CI.
+The wizard wants to show the user what will happen before committing (good UX), but the
+detection logic assumes the path exists.
 
-**How to avoid:**
-1. The rebase workflow must push to `upstream-rebase/main` (or a similar non-protected
-   branch name) only. Never attempt to push to `master` from the workflow.
-2. Ensure `contents: write` and `pull-requests: write` permissions are declared in the
-   workflow YAML:
-   ```yaml
-   permissions:
-     contents: write
-     pull-requests: write
+**Prevention:**
+1. For wizard preview, call `statfs` on the nearest existing ancestor of the target path, not
+   the target path itself:
+   ```typescript
+   async function existingAncestor(p: string): Promise<string> {
+     try { await fsPromises.stat(p); return p; }
+     catch { return existingAncestor(path.dirname(p)); }
+   }
+   const detectPath = await existingAncestor(targetStagingPath);
+   const isExt4 = await isExt4Filesystem(detectPath);
    ```
-3. The `GITHUB_TOKEN` has `contents: write` permission to push to non-protected branches
-   by default when granted in the workflow definition. No PAT is needed for this use case.
-4. If branch protection is accidentally configured to require human review for ALL branches
-   (including side branches), the workflow will fail. Check: branch protection rules should
-   apply to `master` and `v*` only, not to `upstream-rebase/*`.
+2. Do not cache the preview-time result in `ext4CasefoldCache`. The cache should only be
+   populated after directory creation succeeds.
+3. The actual `applyChattrCasefold` call (after directory creation) will use the correct path.
 
-**Warning signs:**
-- `remote: error: GH006: Protected branch update failed` in workflow output
-- Workflow tries to push to `master` directly instead of a side branch
-- `gh pr create` succeeds but the branch doesn't exist (push was blocked silently)
-
-**Phase to address:** Rebase CI implementation phase. Verify permissions in the first
-workflow run against a non-protected branch.
+**Phase:** Phase 2 (staging directory step). If filesystem preview is added to the wizard, this
+prevention must be in the same commit.
 
 ---
 
-### Pitfall 11: Rebase workflow triggered by `push` to `master` creates a feedback loop
+### Pitfall 13: Wizard "complete" state stored in Redux `settings.firststeps.steps` — hydration race means wizard reshows on next launch if persisted state hasn't flushed
 
 **What goes wrong:**
-If the rebase workflow is triggered by `on: push: branches: [master]` and the workflow
-then pushes a branch derived from `master`, subsequent merges of the rebase PR back into
-`master` trigger the workflow again — creating a loop. Depending on the workflow logic,
-this can result in:
-- A new rebase PR opened immediately after the previous one is merged
-- An "already up to date" no-op loop (if Pitfall 8's guard is in place, this is harmless
-  but wasteful)
-- A genuine loop if the rebase commits differ from what was merged (e.g., due to squash
-  merging changing commit hashes)
+The `firststeps_dashlet` extension registers `context.registerReducer(["settings",
+"firststeps"], settingsReducer)` and the `completeStep` action writes to `state.settings.
+firststeps.steps[id] = true`. State in the `settings` hive is persisted to LevelDB via the
+`persistDiffMiddleware` on a diff-debounce cycle.
+
+If the user completes the wizard and Vortex is closed quickly (within the debounce window,
+typically 1-2 seconds), the `completeStep` actions may not have flushed to LevelDB before the
+process exits. On the next launch, the wizard reshows from step 1.
+
+This is particularly likely on Steam Deck where users close applications by pressing the Steam
+button, which sends a rapid SIGTERM to the process.
 
 **Why it happens:**
-`on: push` to the main branch fires for every push including bot-merged PRs. The trigger
-is too broad.
+The persist middleware debounces writes to reduce LevelDB I/O. The wizard completion action
+dispatched in the last second before close may not have triggered a flush.
 
-**How to avoid:**
-1. Use `schedule` (e.g., `on: schedule: cron: '0 2 * * *'`) or `workflow_dispatch` as the
-   primary trigger for the rebase workflow, not `push`. A daily schedule is sufficient for
-   upstream sync; the maintainer can trigger manually when they know an upstream release
-   just dropped.
-2. If a `push` trigger is desired, use `workflow_run` chaining (trigger on completion of the
-   `Main` workflow) combined with the "already up to date" guard (Pitfall 8). The guard
-   ensures the workflow exits cleanly when there's nothing to do.
-3. Add an `if` condition to the workflow job to skip runs triggered by the rebase bot itself:
-   ```yaml
-   if: github.actor != 'github-actions[bot]'
+**Consequences:**
+- User repeats onboarding wizard on every launch
+- Staging directory may be recreated or reconfigured, triggering chattr+F again
+- `completeStep` action fires again for already-completed steps, causing duplicate LevelDB
+  writes on subsequent starts
+
+**Prevention:**
+1. After dispatching `completeStep(wizardId)`, call a "force flush" API or dispatch an
+   action that triggers an immediate persist cycle:
+   ```typescript
+   api.store.dispatch(completeStep('linux-onboarding'));
+   // Force persist before the user might close
+   await api.store.dispatch({ type: '__force_persist' });
    ```
-   This prevents self-triggered runs.
+2. Alternatively, use a session-state flag to suppress the wizard for the current session
+   and only show it on next launch if the settings hive doesn't include the completion flag.
+   This prevents the repeated-wizard problem without requiring a synchronous flush.
+3. Listen for the Electron `before-quit` event in the renderer (via preload IPC) and call
+   a synchronous persist before allowing the quit.
 
-**Warning signs:**
-- Multiple rebase PRs opened within minutes of each other
-- Workflow run history shows back-to-back runs triggered by bot commits
-- `github.actor` in the trigger event is `github-actions[bot]`
-
-**Phase to address:** Rebase CI implementation phase. Use `schedule` as the primary trigger.
+**Phase:** Phase 1 (wizard state management). Must be addressed in the same commit as
+wizard completion tracking.
 
 ---
 
-### Pitfall 12: Accumulating unmerged rebase PRs — the "stale rebase" problem
+### Pitfall 14: Installing a mod before staging directory is fully initialized — `deploy.ts` throws `NoDeployment` with no Linux-specific guidance
 
 **What goes wrong:**
-If the rebase PR is not merged before the next scheduled run, two scenarios arise:
-1. **Fixed branch name**: The next run force-pushes the rebase branch and updates the existing
-   PR. This is correct behavior — one PR, always current.
-2. **Timestamped/rotating branch name**: A new branch and a new PR are created alongside the
-   old one. Over time, N unmerged rebase PRs accumulate, all with different upstream snapshots.
-   The maintainer must manually close stale PRs and figure out which one is current.
+`mod_management/util/deploy.ts` line 206:
+```typescript
+if (activator === undefined || stagingPath === undefined) {
+  throw new NoDeployment();
+}
+```
+`NoDeployment` surfaces as a generic error notification in the UI. The user who has just
+completed the first-run wizard but whose staging directory setup is still in-flight (the
+`ensureDirWritableAsync` promise is pending because chattr+F is running) gets this error if
+they immediately click "Install" on a mod from the Browse page.
 
-Additionally, if the maintainer is slow to merge (e.g., a major upstream release creates
-conflicts that need careful resolution), the rebase PRs accumulate a backlog that becomes
-increasingly hard to resolve because each new upstream commit adds more potential conflicts.
+The timing window is small but real: `chattr +F` is a synchronous subprocess spawn; on an
+older system it can take 200-500ms. If the user is fast and the wizard "completes" before the
+directory setup coroutine resolves, a race condition exists.
 
 **Why it happens:**
-The workflow treats each run as independent and doesn't check for or clean up prior runs.
-Using timestamped branch names (common in "just make it work" initial implementations) is
-the root cause.
+The wizard dispatches `setInstallPath` before the filesystem setup coroutine completes.
+`installPathForGame` returns the path immediately after dispatch, so `stagingPath` is defined
+— but the directory doesn't physically exist yet and the activator hasn't confirmed it.
+`NoDeployment` is thrown for a different reason (activator not selected) but manifests at the
+same call site.
 
-**How to avoid:**
-1. Always use a fixed branch name for rebase PRs. One branch, one PR, always updated in
-   place. The `git push --force origin upstream-rebase/main` pattern from Pitfall 7 ensures
-   this.
-2. Add a workflow step to close stale rebase PRs before creating a new one:
-   ```bash
-   # Close any open rebase PRs that point to a different (old) branch
-   gh pr list --label "upstream-rebase" --state open --json number,headRefName \
-     | jq -r '.[] | select(.headRefName != "upstream-rebase/main") | .number' \
-     | xargs -I{} gh pr close {} --comment "Superseded by new rebase PR"
+**Consequences:**
+- User gets cryptic "No deployment method available" error immediately after completing wizard
+- No actionable guidance in the error dialog for Linux users
+- User must wait a few seconds and retry, which is not obvious
+
+**Prevention:**
+1. After the wizard's final step, dispatch a "staging directory initializing" session flag and
+   block the mod-install entry point:
+   ```typescript
+   // In wizard final step
+   api.store.dispatch(setStagingInitializing(true));
+   await ensureStagingDirectory(api, resolvedPath, gameId);
+   api.store.dispatch(setStagingInitializing(false));
    ```
-3. Add a `upstream-rebase` label to all rebase PRs so they're easy to query and manage.
+2. In the deployment entry point, check this flag and show a "Setup in progress, please wait"
+   notification instead of the cryptic `NoDeployment` error.
+3. Alternatively, show a modal spinner in the wizard's final step while directory setup
+   completes, so the wizard does not dismiss until setup is done.
 
-**Warning signs:**
-- Multiple open PRs with "upstream rebase" in the title
-- Branch names include dates: `upstream-rebase-2026-01-15`, `upstream-rebase-2026-02-01`
-- Maintainer manually closes stale PRs after every rebase cycle
-
-**Phase to address:** Rebase CI implementation phase. The fixed-branch + label pattern
-must be established in the first workflow version.
+**Phase:** Phase 4 (mod install round-trip). The timing guard should be implemented when
+integrating the wizard with the install flow.
 
 ---
 
-### Pitfall 13: Windows CI build breaks because chattr+F code is not platform-guarded
+## Minor Pitfalls
+
+---
+
+### Pitfall 15: `GetDiskFreeSpaceEx` in the shim calls `statfsSync` — throws if path is on an unmounted removable drive during first-run
 
 **What goes wrong:**
-The existing `fs.ts` correctly gates case-folding logic behind `process.platform === "linux"`
-checks in `isWinePrefixPath()`. New chattr+F code that calls `child_process.exec('chattr +F
-...')` or shells out to `lsattr` will throw `ENOENT` on Windows because `chattr` does not
-exist on Windows. If the `process.platform` guard is missing or in the wrong place, the
-Windows CI job (`runs-on: windows-latest` in `main.yml`) will fail.
+`winapi-shim.ts` `GetDiskFreeSpaceEx` calls `fs.statfsSync(filePath)`. Unlike Windows
+`GetDiskFreeSpaceEx` which returns a structured error for unmounted drives, `statfsSync` throws
+ENOENT synchronously. The `firststeps_dashlet` calls `GetDiskFreeSpaceEx` inside a condition
+function that's called on every Redux state change. An ENOENT that isn't caught returns `false`
+from the `minDiskSpace` condition (because the outer try/catch returns false on any error) — so
+this is not a crash, but it means disk-space warnings are silently suppressed for any path on
+an unmounted or unavailable device.
 
-The `main.yml` workflow explicitly runs build on both `ubuntu-latest` and `windows-latest`
-with a matrix. Windows build failures block PRs.
+**Prevention:**
+The existing try/catch in `todos.tsx` correctly swallows errors from `GetDiskFreeSpaceEx` and
+returns `false`. No action needed unless disk-space warnings are a v7.0 requirement. Note this
+for the test plan.
 
-**Why it happens:**
-Developers add the `process.platform === 'linux'` guard at the top of a function but
-forget that TypeScript module-level imports or side-effect-free require calls still execute
-on Windows. If `chattr` invocation is at module scope rather than inside the platform guard,
-Windows will fail on import.
-
-**How to avoid:**
-1. All chattr+F code must be inside `if (process.platform === 'linux')` blocks — no
-   exceptions. This mirrors the existing pattern in `fs.ts` (`isWinePrefixPath` returns
-   false on non-Linux and all case-folding code is gated on it).
-2. The CI matrix at `main.yml` line 16 runs both OS builds in parallel. A Windows build
-   failure blocks the PR. Run the PR CI (not just local testing) before considering the
-   feature complete.
-3. Add an explicit test in `fs.test.ts` that `trySetCasefold()` returns `false` on non-Linux
-   platforms (mock `process.platform`).
-
-**Warning signs:**
-- Windows CI job fails with `ENOENT` or "command not found" for `chattr` or `lsattr`
-- The PR build shows one green (Linux) and one red (Windows) job
-- `process.platform` check added to the function body but the module-level import already
-  ran on Windows
-
-**Phase to address:** chattr+F implementation phase. The platform guard is a day-one
-requirement per the project's cross-platform invariant.
+**Phase:** Not a blocker. Document in test plan.
 
 ---
 
-## Technical Debt Patterns
+### Pitfall 16: `opn()` on Linux opens the URL in the OS default browser — but under Steam Deck Desktop Mode the default browser may not be set
 
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|----------------|-----------------|
-| Fire-and-forget `exec('chattr +F ...')` without checking exit code | Simple to write | Silent failure — casefold not active but code thinks it is | Never — always check exit code and verify with lsattr or runtime test |
-| Apply chattr+F to staging root only (not per-mod dirs) | Single call point | Subdirectory inheritance breaks for pre-existing mod dirs (Pitfall 3) | Acceptable if documented — new dirs inherit, old dirs use shim |
-| Timestamped rebase branch names | Avoids stale branch | Accumulate unmerged PRs, maintainer churn | Never for a scheduled workflow — always use fixed names |
-| Trigger rebase workflow on `push` to `master` | React immediately to local changes | Feedback loop when rebase PR is merged back | Acceptable only if combined with `github.actor != 'github-actions[bot]'` guard AND "already up to date" early exit |
-| Using PAT instead of GITHUB_TOKEN for rebase workflow | Can bypass branch protection | PAT scopes are too broad, expires and breaks workflow | Only if GITHUB_TOKEN insufficient — prefer GITHUB_TOKEN with explicit `permissions: contents: write` |
-| Skipping the `verifyCasefoldActive` runtime test (Pitfall 6) | Faster startup | NFS/FUSE users silently get no casefold benefit but believe it's active | Never — the runtime test is the only reliable way to detect the NFS/FUSE silent-success case |
+**What goes wrong:**
+`opn()` calls `getPreloadApi().shell.openUrl(url)` which delegates to Electron's
+`shell.openExternal()`. Under SteamOS Desktop Mode, `xdg-open` is used as the bridge. If the
+user has not set a default browser (common on a fresh SteamOS install), `xdg-open` opens the
+URL in Discover (the software center) or fails silently.
 
----
+**Prevention:**
+Show the URL as clickable text in a dialog as a fallback if `shell.openUrl` does not confirm
+success. Electron's `shell.openExternal` returns a Promise that rejects if the handler is not
+found — catch the rejection and fall back to showing the URL inline:
+```typescript
+opn(url).catch(() => {
+  api.showDialog("info", "Help Link", { text: `Visit: ${url}` }, [{ label: "OK" }]);
+});
+```
 
-## Integration Gotchas
-
-| Integration | Common Mistake | Correct Approach |
-|-------------|----------------|------------------|
-| `chattr +F` + ext4 without casefold | Assume EOPNOTSUPP means "Linux doesn't support it" | It means THIS filesystem wasn't formatted with casefold; treat as best-effort, fall back to shim |
-| `chattr +F` + non-empty staging dir | Call chattr on existing dir, expect it to work | Only call on empty dir; skip for existing dirs and use shim |
-| `chattr +F` + btrfs (SteamOS) | Test on ext4 dev machine only; ship to SteamOS users who get EOPNOTSUPP | Guard with filesystem type detection OR treat all non-zero exit as fallback-to-shim |
-| `chattr +F` + NFS/FUSE | Trust chattr exit code 0 as confirmation | Verify with runtime test (create uppercase file, read lowercase) |
-| Rebase workflow + protected master | Try to push rebased commits directly to master | Only push to a non-protected side branch; the PR merge goes to master manually |
-| Rebase workflow + GITHUB_TOKEN | Omit `permissions` block and wonder why push fails | Always declare `contents: write` and `pull-requests: write` in the workflow YAML |
-| Rebase PR + conflict markers | Let the workflow fail on `git rebase` exit 1 | Catch the conflict, commit markers, push, open draft PR with warning body |
-| `chattr` binary + minimal container | No guard for binary absence; `ENOENT` crash | Check `which chattr` before invoking; skip gracefully if absent |
+**Phase:** Phase 3 (help links). Add the fallback in the same commit as help URL wiring.
 
 ---
 
-## Performance Traps
+## Phase-Specific Warnings
 
-| Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|------------|----------------|
-| Calling `lsattr` on every file operation to check if casefold is active | Deployment lag; extra syscall per file | Cache `trySetCasefold()` result per staging directory path at session start | At first deployment with any significant mod count |
-| Forking a child process (`exec('chattr +F ...')`) for every new mod subdirectory | Spawn overhead; mod install slowdown | Apply chattr+F only to staging root; subdir inheritance handles the rest | With 100+ mod installs in a session |
-| Rebase workflow fetches entire upstream history on every run | Long workflow duration | Use `--depth=1` for the upstream remote fetch; only need the latest commit | When upstream repo has years of history |
-
----
-
-## Security Mistakes
-
-| Mistake | Risk | Prevention |
-|---------|------|------------|
-| Shell-interpolating user-controlled staging path into `chattr +F "<path>"` | Path injection if staging path contains shell metacharacters (spaces, backticks) | Use `execFile('chattr', ['+F', dir])` (argument array) instead of `exec('chattr +F "' + dir + '"')` |
-| Storing PAT for rebase workflow in workflow file or repo secrets visible to fork PRs | PAT exfiltration via `pull_request` trigger | Use `GITHUB_TOKEN` with explicit permissions; if PAT needed, use `pull_request_target` (not `pull_request`) and never print secrets in workflow output |
-| Rebase workflow with `pull_request_target` trigger and untrusted code execution | Supply chain attack via upstream PR that modifies workflow files | Rebase workflow should use `schedule` or `workflow_dispatch` only; never trigger on `pull_request_target` |
-
----
-
-## "Looks Done But Isn't" Checklist
-
-- [ ] **chattr+F active:** `chattr +F` exit code 0 does not mean casefold is working — verify with
-  the runtime uppercase/lowercase test (Pitfall 6). Missing: the runtime verification step.
-- [ ] **chattr+F on new dirs only:** The staging root creation code path has the `mkdir → chattr+F →
-  write-tag` sequence, but the migration path (existing dirs) silently skips — confirm with
-  a test that existing staging dirs do NOT have chattr+F attempted on them.
-- [ ] **Windows build green:** Platform guard exists in the function body but the PR's Windows CI
-  job is the authoritative check. Verify both matrix jobs pass before merging.
-- [ ] **Rebase PR idempotent:** Run the workflow twice in succession without merging the PR.
-  Second run should push an update to the existing branch and NOT create a second PR.
-- [ ] **Conflict path creates draft PR:** Artificially inject a conflict (add a conflicting commit
-  to master before the rebase runs) and verify the workflow creates a draft PR with conflict
-  body, not a failed CI job.
-- [ ] **"Already up to date" is a no-op:** When the fork is already up to date with upstream,
-  the workflow must exit 0 cleanly without creating a PR. Verify by running the workflow
-  immediately after merging a rebase PR.
-- [ ] **chattr+F binary absent:** Test in an environment without `e2fsprogs` (or mock the
-  `which chattr` check) and confirm Vortex falls back to the shim without errors.
-
----
-
-## Recovery Strategies
-
-| Pitfall | Recovery Cost | Recovery Steps |
-|---------|---------------|----------------|
-| chattr+F called on non-casefold filesystem — feature silently inactive | LOW | Add EOPNOTSUPP guard + fallback activation; no data loss, shim was always there |
-| chattr+F called on non-empty dir — returns error, staging dir unusable | LOW | Wrap in try/catch; log and fall back; staging dir still works case-sensitively via shim |
-| Duplicate rebase PRs accumulate | LOW | `gh pr list --label upstream-rebase --state open | xargs gh pr close`; add fixed branch name to workflow |
-| Rebase CI fails on conflict, no PR created | MEDIUM | Add conflict-to-draft-PR path; maintainer must manually rebase and push once to unblock |
-| Windows CI broken by missing platform guard | MEDIUM | Add `process.platform === 'linux'` guard around all chattr/lsattr calls; re-run CI |
-| Path injection via shell interpolation of staging dir | HIGH | Refactor to `execFile` with argument array; audit all child_process calls in the new code |
-| Rebase workflow feedback loop (self-triggering) | LOW | Add `if: github.actor != 'github-actions[bot]'` condition; change trigger to `schedule` |
-
----
-
-## Pitfall-to-Phase Mapping
-
-| Pitfall | Prevention Phase | Verification |
-|---------|------------------|--------------|
-| chattr+F on non-casefold filesystem (EOPNOTSUPP) | chattr+F implementation | `trySetCasefold()` returns false gracefully on ext4 without casefold; shim activates |
-| chattr+F on non-empty directory | chattr+F implementation | Test with pre-populated staging dir; chattr call skipped; shim active |
-| chattr+F cascade behavior misunderstood | chattr+F implementation | New mod subdirs show `F` in lsattr; existing subdirs do not; both deploy correctly |
-| btrfs/NFS/FUSE silent failure | chattr+F implementation | Runtime casefold verification test passes on ext4+casefold, fails and activates shim on btrfs |
-| `chattr` binary absent in container | chattr+F implementation | `commandExists('chattr')` pre-check; graceful skip verified in test |
-| Windows build broken by missing platform guard | chattr+F implementation | Both matrix jobs in main.yml pass green |
-| Duplicate rebase PRs | Rebase CI implementation | Run workflow twice without merging — second run updates existing PR, not create new |
-| "Already up to date" creates empty PR | Rebase CI implementation | Run workflow when fork is current — workflow exits 0, no PR created |
-| Conflict not surfaced as draft PR | Rebase CI implementation | Inject conflict; verify draft PR with warning body created; workflow exits 0 |
-| Branch protection blocks bot push | Rebase CI implementation | First workflow run pushes to `upstream-rebase/main` branch cleanly |
-| Feedback loop from push trigger | Rebase CI implementation | Merge rebase PR; verify no new rebase workflow run is triggered by the merge commit |
-| Stale rebase PR accumulation | Rebase CI implementation | Run workflow 3 times without merging; confirm exactly 1 open PR throughout |
+| Phase Topic | Likely Pitfall | Mitigation |
+|-------------|---------------|------------|
+| Error message purge (ONBRD-03) | Editing i18n string literals changes Windows wording | Platform-guard new strings; never edit existing `t("...")` literals |
+| Error message purge (ONBRD-03) | `nativeErrors.ts` returns undefined on Linux, callers show "Run as Administrator" | Add Linux arm to error decoder or add platform-guarded fallback text at call sites |
+| First-run wizard foundation | `winapi.GetVolumePathName` in firststeps_dashlet crashes on undefined path | Wrap in try/catch with `undefined` guard before call |
+| First-run wizard foundation | Wizard completion state not flushed to LevelDB before rapid close | Force-persist after completing wizard steps |
+| Steam library auto-detection (ONBRD-01) | `mCache` populated with empty list if Steam not ready at Vortex start | Add retry with delay and "Refresh" button in game-selection step |
+| Staging directory setup (ONBRD-02) | `{USERDATA}` macro dispatched to Redux without resolving, then passed to `ensureDir` | Always call `resolveInstallPath` before dispatch and filesystem calls |
+| Staging directory setup (ONBRD-02) | `winapi.GetVolumePathName` partition check uses Windows error code, misbehaves on Linux | Platform-guard the partition-exists check |
+| Staging directory setup (ONBRD-02) | `suggestStagingPath` always returns userdata path on Linux regardless of device layout | Add Linux-aware cross-device check using `statSync.dev` |
+| Staging directory setup (ONBRD-02) | `statfs` called on non-existent preview path, caches false result | Walk to nearest existing ancestor before calling `statfs` |
+| 1280×800 layout (ONBRD-05) | Bootstrap 3 modal has no max-height; buttons clip below viewport | `max-height: calc(100vh - 160px)` on wizard modal; `flex-shrink: 0` on footer |
+| 1280×800 layout (ONBRD-05) | Variable-length content (game list, mount table) overflows without scrollbar | Add `max-height` + `overflow-y: auto` to list containers in wizard |
+| Help links (ONBRD-06) | `haveKnowledgeBase` cached as false before nexus_integration listener registers | Use `opn()` directly for Linux help links; remove the cache |
+| Help links (ONBRD-06) | `opn()` silent failure under SteamOS (no default browser) | Add rejection handler that shows URL inline as fallback |
+| Mod install round-trip (ONBRD-04) | Mod install attempted before staging dir setup coroutine resolves | Session-state "staging initializing" flag; block install entry point while set |
 
 ---
 
 ## Sources
 
-- Codebase audit (HIGH confidence):
-  - `/home/alex/src/Vortex/src/renderer/src/util/fs.ts` — `isWinePrefixPath()`, `resolveCaseIfWinePrefix()`, `resolvePathCaseSync()`: existing case-folding shim pattern
-  - `/home/alex/src/Vortex/src/renderer/src/extensions/mod_management/stagingDirectory.ts` — `ensureStagingDirectoryImpl()`: staging dir creation code path, `STAGING_DIR_TAG`, ordering of dir creation vs tag write
-  - `/home/alex/src/Vortex/.github/workflows/main.yml` — Windows/Linux CI matrix; `runs-on: windows-latest` is active
-  - `/home/alex/src/Vortex/.github/workflows/cherry-pick.yml` — existing cherry-pick workflow pattern for branch naming and PR idempotency check
-  - `/home/alex/src/Vortex/.github/scripts/cherry-pick.sh` — `gh pr list --head ... | grep -q .` idempotency pattern; conflict-to-draft-PR pattern
-  - `/home/alex/src/Vortex/.github/workflows/release-linux.yml` — existing Linux release workflow structure
-- chattr man page (HIGH confidence, fetched 2026-04-15):
-  - `chattr +F` requires empty directory
-  - `F` attribute enables case-insensitive path lookups
-  - Requires filesystem-level casefold feature enabled at mkfs time
-  - No explicit root privilege requirement for `F` (unlike `i`, `a`, `j` attributes)
-- Linux kernel casefold behavior (HIGH confidence):
-  - Subdirectory inheritance: new subdirs under a casefold parent inherit the flag; existing subdirs do not
-  - btrfs does not support chattr `F` — EOPNOTSUPP returned
-  - NFS/FUSE may accept chattr `F` silently without activating the feature
-- GitHub Actions permissions (MEDIUM confidence, fetched 2026-04-15):
-  - `contents: write` required to push branches
-  - `pull-requests: write` required to create PRs
-  - GITHUB_TOKEN cannot bypass branch protection rules on protected branches
-  - When any permission is explicitly set, all others default to `none`
+- Codebase audit (HIGH confidence, 2026-04-16):
+  - `src/renderer/src/extensions/onboarding_dashlet/` — step reducer, actions, index
+  - `src/renderer/src/extensions/firststeps_dashlet/todos.tsx` — `winapi.GetVolumePathName` calls, disk-space conditions
+  - `src/renderer/src/extensions/mod_management/stagingDirectory.ts` — `ensureStagingDirectoryImpl`, `winapi.GetVolumePathName` partition check
+  - `src/renderer/src/extensions/gamemode_management/util/discovery.ts` — `suggestStagingPath` Linux shortcut
+  - `src/renderer/src/extensions/symlink_activator_elevate/index.ts` — "Run as Administrator" string
+  - `src/renderer/src/extensions/mod_management/texts.ts` — Windows path examples in i18n strings
+  - `src/renderer/src/util/nativeErrors.ts` — Windows-only `decodeSystemError`
+  - `src/renderer/src/util/Steam.ts` — `mCache` singleton, `findLinuxSteamPath()` at constructor
+  - `src/renderer/src/util/winapi-shim.ts` — `GetVolumePathName` walk, `GetDiskFreeSpaceEx` statfsSync
+  - `src/renderer/src/util/opn.ts` — `shell.openUrl` delegation
+  - `src/renderer/src/util/fs.ts` — `applyChattrCasefold`, `isExt4Filesystem`, `ext4CasefoldCache`
+  - `src/renderer/src/store/hydration.ts` — persist:hydrate IPC, debounced flush
+  - `src/renderer/src/controls/More.tsx` — `haveKnowledgeBase` cached closure
+  - `src/stylesheets/vortex/dialogs.scss` — `.common-dialog-wide` `height: 80%`
+  - `src/stylesheets/vortex/main-window.scss` — `.toolbar-app-region` 105px height
 
 ---
 
-*Pitfalls research for: Vortex Linux fork — chattr+F staging layer + GitHub Actions upstream rebase CI*
-*Researched: 2026-04-15*
+*Pitfalls research for: Vortex Linux fork v7.0 — First-Run Onboarding Wizard*
+*Researched: 2026-04-16*

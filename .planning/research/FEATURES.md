@@ -1,424 +1,487 @@
-# Feature Research: chattr+F Dual-Path + Rebase CI Automation
+# Feature Research: v7.0 First-Run Onboarding Wizard (Linux)
 
-**Domain:** Electron mod manager — kernel casefold filesystem layer + upstream rebase automation
-**Researched:** 2026-04-15
-**Confidence:** HIGH — claims based on direct codebase inspection and verified kernel/gh-actions knowledge
-**Milestone scope:** Two independent infrastructure capabilities for the Vortex Linux fork
-
----
-
-## Prerequisite: What Is Already Built
-
-Before detailing the new features, these foundations are assumed complete:
-
-- Wine prefix case-folding userspace shim (`fs.ts`): `readFileAsync`, `writeFileAsync`,
-  `statAsync`, `renameAsync`, `copyAsync`, `ensureDirAsync`, `watch` all resolve path casing
-  for `/compatdata/<id>/pfx/` paths on Linux. Source: `src/renderer/src/util/fs.ts`.
-- `resolvePathCase(rootDir, relPath, dirCache?)` in `src/renderer/src/util/resolvePathCase.ts`:
-  userspace per-segment directory walk for case-insensitive resolution.
-- `ensureStagingDirectory()` in `src/renderer/src/extensions/mod_management/stagingDirectory.ts`:
-  creates the staging directory and writes a `__vortex_staging_folder` tag file. Called from
-  `profile_management/index.ts:manageGameDiscovered()` as first-time game management initializer.
-- GitHub Actions `main.yml` CI: builds on `ubuntu-latest` + `windows-latest`, runs lint/tests.
-- GitHub Actions `release-linux.yml`: builds AppImage + .deb on push/tag; does not currently
-  poll or track upstream nexus-mods/Vortex tags.
+**Domain:** Electron mod manager — Linux-native first-run onboarding flow
+**Researched:** 2026-04-16
+**Confidence:** HIGH — all claims based on direct codebase inspection; specific file paths cited
+**Milestone scope:** ONBRD-01 through ONBRD-06 from PROJECT.md
 
 ---
 
-## Feature Domain 1: chattr+F Kernel Casefold Layer
+## What Is Already Built (Relevant Infrastructure)
 
-### Background: What chattr+F Actually Does
+The following pieces are shipped and form the substrate that this milestone wires together:
 
-`chattr +F` sets the `FS_CASEFOLD_FL` inode attribute on a directory. When set on an **empty**
-directory on an ext4 filesystem with the `casefold` feature enabled (requires
-`tune2fs -E encoding=utf8 <device>`), all filename lookups under that directory become
-case-insensitive at the kernel level. The kernel maps all filenames to UTF-8 normalized form
-before storage.
+- Steam library detection: `src/renderer/src/util/Steam.ts` + `src/renderer/src/util/linux/steamPaths.ts`
+  — `findLinuxSteamPath()` / `findAllLinuxSteamPaths()` / VDF parsing via `simple-vdf`.
+  Runs automatically on startup via `GameModeManager.startQuickDiscovery()`.
+- chattr+F filesystem layer: `ensureDirWritableAsync()` in `src/renderer/src/util/fs.ts` calls
+  `applyChattrCasefold()` at staging directory creation time — kernel casefold on ext4,
+  silent fallback to Wine-prefix shim on all other filesystems. This is already wired.
+- Elevation: `runElevated()` in `src/renderer/src/util/elevated.ts` — pkexec on Linux,
+  graceful `UserCanceled` on SteamOS Game Mode.
+- NXM download: `src/extensions/download_management/` + `src/extensions/browse_nexus/` —
+  NXM URL handler registered for AppImage/standard installs via xdg-utils.
+- Save management: `src/renderer/src/extensions/gamemode_management/` — Proton prefix resolution
+  via `{mygames}` macro, `src/renderer/src/util/linux/proton.ts`.
 
-**Key technical facts (HIGH confidence — kernel docs + man pages):**
+---
 
-- Kernel support: ext4 casefold was merged in Linux 5.2 (2019). Ubuntu 20.04+ kernels support it.
-  Ubuntu 22.04 (the CI runner) ships kernel 5.15 — supported.
-- Filesystem requirement: the ext4 partition must have `casefold` feature bit set. This requires
-  running `tune2fs -O casefold <device>` (or formatting with `-O casefold`). Most user ext4
-  partitions do NOT have this enabled by default. SteamOS uses an f2fs root partition but ext4
-  for `/home` — enabling casefold requires remounting which is outside Vortex's scope.
-- chattr +F requires: (a) ext4 with casefold feature, (b) the target directory must be empty,
-  (c) caller must have write permission on the parent.
-- btrfs: btrfs has a separate `chattr +c` (compression) attribute; btrfs case-folding is a
-  different feature (`case_insensitive` mount option, experimental as of kernel 6.x). Do NOT
-  conflate with ext4 casefold. btrfs casefold support is LOW confidence — treat btrfs as
-  "fallback to userspace shim" unless verified on hardware.
-- Detection: `statfs()` returns `f_type`; ext4 magic is `0xEF53`. Alternatively, read
-  `/proc/mounts` or call `ioctl(fd, EXT4_IOC_GETFLAGS, ...)` after attempting chattr.
-- The `chattr` command itself is a userspace wrapper around `ioctl(fd, EXT4_IOC_SETFLAGS, flags)`.
-  In Node.js, this means spawning `chattr +F <dir>` via `child_process.execFile` or implementing
-  the ioctl directly via a native addon. Spawning chattr is simpler and is what Valve uses.
-- When chattr+F fails (EOPNOTSUPP, ENOTSUP, or non-zero exit), the call site must catch the
-  error and fall back to the userspace shim — silently, with a log entry.
+## 1. First-Run Wizard: What Exists and What Is Missing
 
-**What Valve's Proton actually does (MEDIUM confidence — no direct source code, but well-documented
-community knowledge and confirmed via Steam Deck hardware behavior):**
+### What Exists (codified, real code)
 
-Steam/Proton applies `chattr +F` to the Steam library folder (e.g., `steamapps/`) during Steam
-setup on compatible ext4 filesystems. This is what makes Windows games with case-sensitive filename
-references work without a Wine-side shim. The behavior is documented in Steam for Linux changelogs
-(2019) and the SteamOS documentation. Proton itself does not call chattr — Steam client does it
-at library creation time. Proton then relies on the kernel-level case-folding being active on
-the directories it uses.
+Vortex has **no traditional first-run wizard** (no step-through modal, no setup screens).
+The "first-run" experience is dashboard-based, composed of two dashlets:
 
-The implication for Vortex: when the staging directory is on an ext4-with-casefold partition
-(common on SteamOS/Steam Deck), applying chattr+F at staging directory creation eliminates the
-need for the userspace shim entirely for files within that staging directory.
+**`firststeps_dashlet` ("Let's get you set up")**
+Source: `src/renderer/src/extensions/firststeps_dashlet/`
+This is the primary first-run control surface. It renders a todo list that adapts
+as the user completes steps. Defined todos (in `todos.tsx`):
 
-### When the Staging Directory Gets Created
+| Todo ID | Text | Action | Condition |
+|---------|------|--------|-----------|
+| `pick-game` | "Select a game to manage" | Opens Games page | `activeGameId === undefined` |
+| `profile-visibility` | "Profile Management" | Toggles profiles visible | Always shown |
+| `download-location` | "Downloads are on drive" | Opens Settings > Download | Only if disk < 200 GB |
+| `mod-location` | "Mods are staged on drive" | Opens Settings > Mods | Only if disk < 200 GB |
+| `manual-scan` | "Scan for missing games" | Emits `start-discovery` event | `searchPaths !== undefined` |
 
-In the current code, `ensureStagingDirectory()` is called from
-`profile_management/index.ts:manageGameDiscovered()` exactly once — when the user first clicks
-"Manage" on a game. It calls `fs.ensureDirWritableAsync(instPath)` which calls `fs.ensureDir()`.
+**`onboarding_dashlet` ("Get Started")**
+Source: `src/renderer/src/extensions/onboarding_dashlet/`
+This dashlet shows 3 video tutorial cards (YouTube-nocookie iframes):
+1. "Manage your game" — Link account + add games (1:34)
+2. "Browse & install mods" — Install mods through Vortex (2:29)
+3. "Using Profiles in Vortex" — Profiles tutorial (1:23)
 
-The chattr+F call must happen immediately after the directory is created, before any files are
-written. The hook point is: after `fs.ensureDir(instPath)` succeeds and before
-`writeStagingTag()` writes the `__vortex_staging_folder` file. This is within
-`ensureStagingDirectoryImpl()` in `stagingDirectory.ts`.
+Cards can be marked "complete". Once all three are complete, a congratulations banner
+with "Get more mods" appears. The dashlet state is persisted in Redux
+`settings.onboardingsteps`.
 
-The staging path is typically set to something like
-`~/Games/vortex-staging/<gameid>/` or a user-configured path. It must be on an ext4 partition
-with casefold enabled for chattr+F to work. The detection + apply + fallback sequence lives
-inside `ensureStagingDirectoryImpl()`.
+**`NoGameDashlet` ("Welcome to Vortex")**
+Source: `src/renderer/src/extensions/gamemode_management/views/NoGameDashlet.tsx`
+Rendered on first launch: "As this is the first time you start Vortex, please pick a
+game to manage. Afterwards please check the ToDo List below." Shows discovered game
+thumbnails inline. Uses horizontal scroll with overflow-hidden clipping for overflow.
 
-### Table Stakes for chattr+F Feature
+### What Is Missing (Linux gaps)
 
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Detect whether the staging directory's filesystem is ext4 | Required before attempting chattr+F | LOW | `statfs()` via Node.js child process or `@vortex/fs` ioctl; ext4 magic = `0xEF53`. Alternative: attempt chattr+F and catch EOPNOTSUPP |
-| Detect whether ext4 casefold feature is enabled on the partition | chattr+F requires this; will silently fail without it | MEDIUM | Parse `tune2fs -l <device>` output for `casefold` in features list, or read `/proc/fs/ext4/<dev>/options` |
-| Apply `chattr +F` to the staging directory immediately after creation | Kernel-level case-folding for the staging tree | LOW | `execFile('chattr', ['+F', stagingPath])` after `ensureDir`. Must happen before any files are written. |
-| Fall back silently to userspace shim when chattr+F fails or is unsupported | Required for XFS, ZFS, btrfs, non-casefold ext4, and any error condition | LOW | Catch `EOPNOTSUPP`, `ENOTSUP`, non-zero exit from chattr; log to debug; no user notification for normal fallback |
-| Userspace shim remains active and unmodified as fallback | Correctness on non-ext4 systems | LOW | No change to existing `fs.ts` shim — it stays in place and activates when chattr+F is not applied |
-| chattr+F state persisted alongside staging path | Re-check not needed on every launch | LOW | Store a flag (e.g., in the staging tag file or a Redux state key) indicating "casefold: kernel\|userspace" |
-| No error dialog shown when chattr+F silently falls back | UX — normal operation on most filesystems | LOW | Fallback is expected; only log at debug level |
-| Log entry emitted at INFO level when chattr+F is successfully applied | Diagnostic support | LOW | `log("info", "staging dir: kernel casefold active", { path: instPath })` |
-| Log entry emitted at DEBUG level when chattr+F falls back to userspace | Diagnostic support | LOW | `log("debug", "staging dir: casefold fallback to userspace shim", { reason })` |
+- The `firststeps_dashlet` todos call `winapi.GetVolumePathName(props.dlPath)` and
+  `winapi.GetVolumePathName(props.instPath)` to display drive labels. On Linux, winapi
+  is shimmed but these calls return undefined/throw — the `download-location` and
+  `mod-location` todos fail silently or show `<Invalid Drive>`. The todo display value
+  function calls `winapi.GetVolumePathName` with no platform guard.
+  Source: `src/renderer/src/extensions/firststeps_dashlet/todos.tsx:98–129`.
 
-### Differentiators for chattr+F
+- The `download-location` todo has `condition: minDiskSpace(MIN_DISK_SPACE, 'dlPath')`
+  which also calls `winapi.GetDiskFreeSpaceEx`. This throws on Linux (the winapi shim
+  does not implement `GetDiskFreeSpaceEx`). The condition returns `false` on error,
+  which means the disk space todos are never shown on Linux — silently hidden.
+  Source: `src/renderer/src/extensions/firststeps_dashlet/todos.tsx:20–38`.
+
+- Steam auto-detection runs via `GameModeManager.startQuickDiscovery()` which calls
+  `GameStoreHelper.find()` → `Steam.allGames()` → `resolveSteamPaths()` → `findAllLinuxSteamPaths()`.
+  This part works. **The gap**: when Steam detection succeeds, discovered games appear in
+  `NoGameDashlet` as thumbnails. But if the user's Steam install is Flatpak or in a
+  non-standard location, `findAllLinuxSteamPaths()` may return nothing, leaving the
+  "Welcome to Vortex" dashlet empty. There is no diagnostic message explaining why no
+  games were found. The user sees an empty thumbnail row with no guidance.
+
+- The `PathSelection.tsx` modal (for manual game search path entry) defaults to `C:` on
+  win32 and `/` on Linux. Source: `src/renderer/src/extensions/gamemode_management/views/PathSelection.tsx:46`.
+  This part is already handled correctly. No Linux gap here.
+
+- The `symlink_activator_elevate` extension displays "Symlink Deployment (Run as
+  Administrator)" as the deployment method name, and its description says "This is run as
+  administrator and requires your permission every time we deploy."
+  Source: `src/renderer/src/extensions/symlink_activator_elevate/index.ts:121–123`.
+  On Linux, this deployment method is only used if the mod path is not writable by the
+  current user. The string "administrator" in the description is Windows-centric.
+
+- `download_management/views/Settings.tsx:737` shows "This directory is not writable to
+  the current windows user account. Vortex can try to create the directory as administrator
+  but it will then have to give access to it to all logged in users." — always shown when
+  the directory is not writable, regardless of platform. No Linux variant exists.
+
+- `mod_management/texts.ts:96–98` contains Windows-only example text:
+  `"e.g. if your Windows account name is Mike... C:\\Users\\Mike\\AppData\\..."`.
+  This appears in the "mods staging path" help text shown in Settings > Mods.
+
+---
+
+## 2. Steam Library Auto-Detection: Current vs. Required
+
+### What Currently Happens
+
+1. On startup, `GameModeManager` calls `startQuickDiscovery()`.
+2. `quickDiscovery()` calls `GameStoreHelper.find(game.queryArgs)` for each registered game.
+3. `GameStoreHelper.find()` iterates `mKnownGameStores` = `[Steam, EpicGamesLauncher, ...]`.
+4. `Steam.allGames()` → `resolveSteamPaths()`:
+   - Calls `findAllLinuxSteamPaths()` (on Linux).
+   - `findAllLinuxSteamPaths()` checks `~/.steam/root` symlink first, then a hardcoded
+     candidate list: XDG path, `~/.steam/debian-installation`, Flatpak paths, Snap paths.
+   - For each valid Steam root, reads `config/libraryfolders.vdf` and collects all library paths.
+5. Parses `.acf` manifests in each `steamapps/` directory.
+6. Returns a list of `ISteamEntry[]` with `appid`, `name`, `gamePath`, `lastUpdated`.
+7. `quickDiscovery()` tests each game's `queryPath()` or `queryArgs` against the store entries.
+8. `addDiscoveredGame()` is dispatched to Redux state with each discovered game.
+9. `NoGameDashlet` reads `state.settings.gameMode.discovered` and renders thumbnails.
+
+### The Discovery Gap on Linux
+
+The quick discovery fires silently at startup and succeeds in the happy path (native Steam
+at `~/.local/share/Steam`). However:
+
+- If no Steam installation is found, `resolveSteamPaths()` returns `[]`, `allGames()`
+  returns `[]`, and no games are discovered. The user sees the empty "Welcome to Vortex"
+  dashlet with no explanation.
+- The `manual-scan` todo in `firststeps_dashlet` (id `manual-scan`) has
+  `condition: (props) => props.searchPaths !== undefined`. This means it only shows up
+  if search paths are configured — which they are not on a fresh Linux install by default.
+  The manual scan todo is hidden on a fresh install.
+- There is no toast/notification when Steam detection finds nothing. The user must
+  intuit that they need to manually add games.
+
+### What Should Happen (ONBRD-01)
+
+The first-run flow on Linux should:
+1. Run `startQuickDiscovery()` (already happens).
+2. If no games discovered after quick discovery AND platform is Linux: show a
+   contextual notification/dashlet entry explaining that Steam was not found automatically
+   with a direct action to open the Games page and manually locate Steam.
+3. The `manual-scan` todo should appear unconditionally on Linux when no games are found,
+   not gated on `searchPaths !== undefined`.
+
+---
+
+## 3. Mod Install → Deploy → Enable Round-Trip
+
+### Code Path (what exists)
+
+The install → deploy → enable round-trip involves three independent operations:
+
+**Step 1: Install (archive → staging directory)**
+Entry point: User clicks "Install" on a downloaded archive in Downloads page.
+Flow: `mod_management/index.ts` → `installManager.install()` →
+`InstallManager.installMod()` → installer pipeline (fomod, basic, nested, etc.) →
+extracts mod files to `stagingPath/<modId>/`.
+Key file: `src/renderer/src/extensions/mod_management/InstallManager.ts`
+Linux readiness: The staging directory is created with `ensureDirWritableAsync()` which
+now calls `applyChattrCasefold()`. The FOMOD installer IPC pipeline works on Linux (v5.0).
+The basic installer has no platform-specific code.
+
+**Step 2: Deploy**
+Entry point: "Deploy Mods" button or automatic deploy trigger.
+Flow: `mod_management/index.ts:genUpdateModDeployment()` →
+`deployAllModTypes()` → `deployModType()` → `deployMods()` (in `modActivation.ts`) →
+`activator.activate(stagingPath, modPath, files)`.
+The activator is the deployment method: hardlink (same drive), symlink, or move.
+Key files: `src/renderer/src/extensions/hardlink_activator/`, `symlink_activator/`, `move_activator/`.
+On Linux: `hardlink_activator` is available when staging and game are on the same filesystem
+device (`statSync(installPath).dev === statSync(modPath).dev`).
+`symlink_activator` is always available on Linux (no Windows-only code in `isSupported()`).
+`symlink_activator_elevate` is available only on Windows (guarded: `process.platform !== 'linux'`
+at line 49 skips the monitorConsent call, but the class itself is registered without platform guard —
+this needs verification).
+
+**Step 3: Enable**
+"Enable" in the mod list sets `state.persistent.mods[gameId][modId].state = 'enabled'`.
+This does not trigger deployment; deployment is separate. Enable just changes the mod state
+in Redux. The actual deployment of enabled mods happens during the next "Deploy" operation.
+
+### Linux Deployment Status
+
+`hardlink_activator/index.ts:40`: `if (process.platform !== "linux") return;` — this is the
+`init()` function of the hardlink activator, meaning hardlink deployment is **NOT registered
+on Linux at all**. Hardlinks require a Windows compatibility check that is skipped on Linux.
+
+Wait — let me re-read. Line 40 says `if (process.platform !== "linux") return;` — this EXITS
+the init function on non-Linux platforms, which means hardlink activator IS registered on Linux
+and NOT on Windows-only. Actually the condition `!== "linux"` means: if NOT linux, return early.
+So hardlink IS registered on Linux. This is correct behavior (Linux hardlinks work cross-directory
+on the same filesystem device, same as on Windows).
+
+`symlink_activator/index.ts`: no platform guard on registration. Works on Linux.
+
+`move_activator/`: No platform-specific code. Works everywhere.
+
+`symlink_activator_elevate/`: The `monitorConsent()` function has `if (process.platform !== 'win32') return` (line 49). The deployment class itself (`DeploymentMethod extends LinkingDeployment`) is registered regardless of platform. On Linux, the elevated symlink deployment would try to use `runElevated()` (pkexec) — which works on desktop Linux (v3.0) but shows an error toast on SteamOS (v4.0). This deployment method shows "Run as Administrator" in its name on Linux — a Windows-specific label.
+
+### The Round-Trip on Linux: What Works vs. What Needs Attention
+
+| Step | Linux Status | Gap |
+|------|--------------|-----|
+| Download via NXM | Works (PROT-01 verified) | None |
+| Install archive to staging | Works | Staging dir gets chattr+F (v6.0) |
+| Deploy via hardlink | Works if same device | None |
+| Deploy via symlink | Works | None |
+| Deploy via elevated symlink | Works (pkexec) | Name says "Administrator" — misleading on Linux |
+| Enable in mod list | Works | None |
+| Active profile selects deployment method | Works | On new Linux install, deployment method selection dialog may confuse users |
+
+---
+
+## 4. Staging Directory Configuration UI
+
+### What Exists
+
+The staging directory UI lives in **Settings > Mods**. Two places:
+
+**Primary: `mod_management/views/Settings.tsx`**
+This is a full settings panel (719 lines) rendered inside `#settings-tab-pane-Mods`.
+Key elements:
+- Install path input: an `<InputGroup>` with a path text field and "Browse" button.
+- "Automatically use suggested path for staging folder" toggle.
+- Transfer mods to new location option (when path changes).
+- The input field has CSS class `install-path-input` which has `min-width: 40em` in
+  `page-settings.scss:77`. At 1280px viewport width, a 40em (640px) min-width
+  with sidebar (~200px) and padding leaves ~1000px for content — this is OK at 1280px.
+
+**Secondary: `stagingDirectory.ts` error dialogs**
+When the staging directory is missing or invalid on launch, a modal dialog appears:
+- "Mod Staging Folder missing!" with [Quit Vortex] [Reinitialize] [Browse...] actions.
+- "Mod Staging Folder invalid" with [Quit Vortex] [Ignore] [Browse...] actions.
+These dialogs are plain `api.showDialog()` calls — responsive to viewport, no hardcoded sizes.
+
+**The `suggestStagingPath()` function** in `gamemode_management/util/discovery.ts:832`:
+```typescript
+if (statModPath.dev === statUserData.dev || process.platform !== "win32") {
+  suggestion = path.join("{USERDATA}", "{game}", "mods");
+} else {
+  // different drives — calls winapi.GetVolumePathName(modPaths[""])
+  suggestion = path.join(volume, ...);
+}
+```
+On Linux (`process.platform !== "win32"` is always true), the suggestion is always
+`{USERDATA}/{game}/mods` which resolves to `~/.local/share/Vortex/{game}/mods`.
+The winapi call is in the `else` branch — Linux never reaches it. Correct.
+
+**There is no dedicated "staging directory setup" step in the wizard.** It is entirely
+in Settings > Mods, accessible either via the `mod-location` todo link or directly.
+On Linux the todo fires only if disk space < 200GB and `winapi.GetDiskFreeSpaceEx`
+works — which it does not. So the staging directory todo is silently hidden on Linux.
+
+### Filesystem Detection in the UI
+
+There is NO UI showing whether chattr+F is active on the staging directory. The
+`applyChattrCasefold()` function runs silently during directory creation and logs
+to INFO/DEBUG. The notification is only emitted once per session when chattr+F is
+unavailable (via `_chattrNotifier`), but this is an informational toast, not a
+visible indicator in the staging directory settings UI.
+
+For the onboarding milestone, a Linux user needs to:
+1. Know where their staging directory is (suggested: `~/.local/share/Vortex/...`).
+2. Know whether it's on ext4 (and whether casefold is active) — currently not surfaced.
+3. Not need to manually configure it if the suggestion is acceptable.
+
+---
+
+## 5. Steam Deck Desktop Mode at 1280x800: Viewport Risks
+
+### Hardcoded Window Constraints
+
+`src/main/src/MainWindow.ts:387`:
+```typescript
+minWidth: 1024,
+minHeight: MIN_HEIGHT,  // MIN_HEIGHT = 700
+```
+At 1280x800, the window can display at full size. There is no 1280px lower bound that
+would prevent the window from rendering. The min width of 1024px means Vortex can open
+at any size above 1024x700.
+
+### CSS Constraints That Risk Clipping at 1280x800
+
+Key findings from stylesheet audit:
+
+**`dialogs.scss:3`**: `min-width: 400px` on `.modal-dialog`. At 1280px viewport, max-width is
+60% = 768px. This is fine.
+
+**`dialogs.scss:175`**: `min-width: 600px` on a specific dialog class. This one is risky: at
+1280px, a 600px min-width modal with default centering uses 47% of the viewport. If the modal
+is wider than 60% of 1280px (768px), it clips. The 600px min-width is below 768px so it's OK
+at 1280px. Verified: no clipping at 1280px.
+
+**`page-settings.scss:64`**: `.download-path-input { min-width: 40em }` and
+**`page-settings.scss:77`**: `.install-path-input { min-width: 40em }`.
+40em at default 14px base = 560px. At 1280px viewport with sidebar (~200px) and padding,
+the settings panel is ~1000px wide. 560px fits comfortably. Not a clipping risk at 1280px.
+
+**`supertable.scss:235`**: `min-width: 250px` on column containers. Not a viewport risk.
+
+**`gamepicker.scss:133`**: `@media (max-width: 1280px) { ... }` — there is a breakpoint
+specifically at 1280px with some layout adjustments. This suggests the devs tested at
+exactly this breakpoint. The comment-out inside suggests the resize was reverted. Not a risk.
+
+**`starter.scss:235`**: `--grid-item--min-width: 30em`. 30em ≈ 420px. The starter dashlet
+uses CSS grid with `minmax(30em, ...)`. At 1280px minus sidebar (~200px) = 1080px content
+area: two 420px columns fit. Three 420px = 1260px > 1080px so only two columns render.
+This is cosmetic — no clipping.
+
+**`onboarding_dashlet/Overlay.tsx`**: The YouTube iframe has `height: "335"` hardcoded.
+At 1280x800, the overlay panel rendering an iframe of height 335px plus the description
+text plus the "Mark as complete" button — total height could exceed 800px viewport.
+The overlay is rendered in an `instructions_overlay` which has its own positioning logic.
+If the overlay appears near the bottom of the screen, content may be cut off.
+
+**`NoGameDashlet.tsx`**: Uses `style={{ overflowX: "hidden", position: "relative" }}` on
+the inner container with `display: "inline-flex"`. At 1280px with many game thumbnails,
+the horizontal overflow is hidden rather than scrollable. The `refreshMore()` function
+checks if content overflows and shows a "More..." link. This works but requires the link
+to be visible — at 1280px there is enough horizontal space for several thumbnails before
+overflow triggers.
+
+**`dialogs.scss` and modals**: The `min-width: 600px` on the `#new-update-changelog-dialog`
+modal is the riskiest found: at 800px height, a 600px modal with tall content may have the
+action buttons scrolled off-screen. However `dialog-content-html` has overflow auto
+inside the modal body, so scrolling should work.
+
+### Risks Summary
+
+| Location | Risk | Severity |
+|----------|------|----------|
+| `onboarding_dashlet/Overlay.tsx` — iframe 335px + buttons | May push buttons below fold at 800px | MEDIUM |
+| `NoGameDashlet.tsx` — overflowX hidden on thumbnail row | Thumbnails clipped without scroll at narrow width | LOW (More link shown) |
+| `dialogs.scss:175` — `min-width: 600px` specific dialog | Tall dialog may clip action buttons at 800px | LOW |
+| `page-settings.scss` — `min-width: 40em` on path inputs | Not a 1280px problem, fine at full width | NONE |
+| `firststeps_dashlet` todos in sidebar | List items with `min-width: 110px` are fine | NONE |
+
+---
+
+## Table Stakes vs. Differentiators
+
+### Table Stakes (must work, shipping without these = product incomplete on Linux)
+
+| Feature | Why Expected | Complexity | Blocking Gap |
+|---------|--------------|------------|--------------|
+| First-run dashboard renders without broken UI elements | Users expect a working UI | LOW | `winapi.GetVolumePathName` calls in `firststeps_dashlet/todos.tsx` throw on Linux — disk-space todos must platform-guard or use a Linux-compatible disk space check |
+| Steam games auto-detected on first launch, shown in "Welcome to Vortex" dashlet | Core value prop | LOW | Already works; gap is when detection fails silently — need feedback |
+| When no Steam games found, actionable guidance shown (not empty screen) | Users with non-standard Steam installs need guidance | LOW | Add Linux-aware notification when `discoveredGames` is empty post-discovery |
+| Mod staging directory auto-configured to valid Linux path on first game management | Users should not need to touch settings | LOW | `suggestStagingPath()` already returns `{USERDATA}/{game}/mods` on Linux — the gap is the `mod-location` todo being hidden due to broken `GetDiskFreeSpaceEx` call |
+| No "Run as Administrator" text appears in normal first-run flow | Windows text on Linux is confusing | LOW | `symlink_activator_elevate` shows "Administrator" in name; `download_management/Settings.tsx:737` shows Windows-only error text |
+| No `C:\` paths in help text or tooltips | Windows examples confuse Linux users | LOW | `mod_management/texts.ts:96–98` contains `C:\Users\Mike\...` example — needs Linux variant |
+| "Deploy Mods" succeeds for a Proton game without config file editing | Core install round-trip | MEDIUM | Deployment methods work on Linux; gap is ensuring the correct method is selected by default |
+| All modal dialogs have scrollable content at 800px height | Steam Deck Desktop Mode viability | LOW | YouTube iframe in onboarding overlay may push buttons below fold |
+| "Get Help" links are not dead or Windows-only | Users need Linux help resources | LOW | All help links go to `help.nexusmods.com` — currently no Linux-specific documentation links |
+
+### Differentiators (set this milestone apart for Linux users)
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Notification when casefold cannot be enabled on a user-configured ext4 partition | Helps users who formatted incorrectly understand why Windows games may have issues | MEDIUM | Only show if: (a) ext4 detected, (b) casefold feature NOT enabled on partition. "For best Windows game compatibility, your staging directory's filesystem should have casefold enabled." — with documentation link |
-| Abstract behind a `CaseFoldStrategy` interface | Allows future strategies (e.g., overlayfs) without touching callers | MEDIUM | Interface with `apply(dirPath): Promise<'kernel'\|'userspace'>`. Lets staging directory code stay strategy-agnostic |
-| Detect existing staging directories lacking chattr+F and offer to migrate | Users who set up staging before this feature existed | HIGH | Requires detecting non-empty directory (can't apply chattr+F retroactively) — this is a HARD constraint: chattr+F only works on empty dirs. Migration = create new dir, apply chattr+F, copy files. Deferred to v2+ |
+| Filesystem-aware staging setup: show whether chattr+F is active in Settings > Mods | Linux power users want to know if kernel casefold is running | LOW | Surface `casefold: 'kernel' / 'userspace'` from tag file in the staging path UI |
+| "Mods are staged on drive" todo uses Linux-native disk space check | Linux-aware first-run todo | LOW | `fs.statfs()` or `df` subprocess instead of `GetDiskFreeSpaceEx` |
+| When Steam not found: show specific paths checked, offer to browse for Steam install | Contextual troubleshooting for Flatpak/Snap/custom Steam installs | MEDIUM | Currently a silent failure; Linux has diverse Steam install locations |
+| Staging directory auto-configured to same filesystem as game (cross-device hardlink warning) | Prevents hardlink deployment failures on multi-drive setups | MEDIUM | Check if staging is on same device as game's modPath; warn if not |
+| Linux-specific "Get Help" link routing to Linux troubleshooting wiki article | Linux users need platform-specific help | LOW | Add a `process.platform === 'linux'` branch in help URL construction |
+| "Symlink Deployment (Run as Administrator)" renamed on Linux to "Symlink Deployment (Elevated)" | Correct platform terminology | LOW | String change in `symlink_activator_elevate/index.ts:121–123` with platform guard |
 
-### Anti-Features for chattr+F
-
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| Showing a "casefold not active" error on XFS/ZFS/btrfs | These filesystems never support chattr+F; error would be misleading and alarming | Silent fallback to userspace shim with debug log only |
-| Running `tune2fs -O casefold` to enable casefold on user's partition | Destructive filesystem operation; requires unmounting; can corrupt data if done wrong | Never modify filesystem features. Detect and inform only |
-| Calling chattr+F on a non-empty staging directory | Kernel rejects it with ENOTEMPTY/EOPNOTSUPP; would fail silently and leave users confused | Only apply at directory creation time (empty dir). Skip for existing directories |
-| Requiring chattr+F to be present as a hard dependency | chattr may not be installed (e.g., Flatpak sandbox, minimal containers, non-ext4 systems) | Always treat chattr absence as "use userspace shim" — no error, no missing-package prompt |
-| Removing or bypassing the userspace shim once chattr+F is applied | The shim handles Wine prefix paths; chattr+F handles staging paths — different scope | Keep both. They are complementary, not competing |
-| Attempting chattr+F inside a Flatpak sandbox | Flatpak's filesystem namespace prevents ioctl on host filesystem | Detect Flatpak (`FLATPAK_ID` env var present) and skip chattr+F attempt entirely |
-
-### Behavioral Contract: What "Applied at Staging Directory Creation" Means
-
-1. User clicks "Manage" on a game for the first time.
-2. `manageGameDiscovered()` → `ensureStagingDirectory()` → `ensureStagingDirectoryImpl()`.
-3. `fs.ensureDirWritableAsync(instPath)` creates the directory.
-4. Immediately after creation succeeds: detect filesystem type at `instPath`.
-   - If ext4 with casefold feature: spawn `chattr +F instPath`.
-     - Success: log INFO, store `casefold: 'kernel'` in tag/state.
-     - Failure (any error): log DEBUG, store `casefold: 'userspace'`.
-   - If not ext4 or casefold not enabled: log DEBUG, store `casefold: 'userspace'`.
-   - If Flatpak sandbox: skip entirely, log DEBUG, store `casefold: 'userspace'`.
-5. `writeStagingTag()` writes `__vortex_staging_folder` (this can include the casefold field).
-6. Userspace shim in `fs.ts` remains unchanged and continues to intercept Wine prefix paths.
-
-**On subsequent launches:** Read casefold status from tag file. No re-detection needed unless
-staging path changes.
-
-### chattr+F and the Existing Userspace Shim: Scope Boundary
-
-The existing userspace shim (in `fs.ts`) fires for paths containing `/compatdata/<id>/pfx/` —
-i.e., Wine prefix paths. It handles Wine prefix case-folding for files Vortex reads from/writes
-to the game's virtual Windows filesystem.
-
-chattr+F on the staging directory handles a different problem: mod files staged under Vortex's
-own staging directory. These paths do NOT contain `/compatdata/` so the existing shim does NOT
-fire for them. chattr+F is additive — it covers the staging directory scope that the shim misses.
-
-Scope summary:
-- Userspace shim: Wine prefix paths (`/compatdata/<id>/pfx/`) — stays in place, unchanged
-- chattr+F: Vortex staging directory (user-configured, e.g., `~/Games/vortex-staging/`) — new
-
----
-
-## Feature Domain 2: Rebase CI Automation
-
-### Background: The Maintenance Problem
-
-The upstream repository (nexus-mods/Vortex) publishes new releases every 1–4 weeks. Each
-upstream release requires the fork to:
-1. `git fetch upstream`
-2. `git rebase upstream/<tag>` onto the fork's `master`
-3. Resolve conflicts from the Linux platform-guard patch set
-4. Test that the build still passes
-5. Push the rebased `master`
-
-This is 4–8 hours of manual work per cycle. The rebase CI goal: automate steps 1–2 (and
-potentially 3 if conflict-free) with a GitHub Actions workflow that opens a PR.
-
-### Trigger Strategy: Cron Poll
-
-GitHub Actions cannot subscribe to webhooks from external repositories (nexus-mods/Vortex is
-not owned by this fork). The only viable trigger is `schedule` (cron poll).
-
-Recommended: run daily at 09:00 UTC. Cron: `'0 9 * * *'`. This provides next-business-day
-detection of upstream releases without excessive API calls. Weekly is too slow; hourly is
-unnecessary given upstream release cadence.
-
-The workflow queries `gh api repos/Nexus-Mods/Vortex/releases/latest --jq .tag_name`, compares
-against the last-processed tag stored as a file in the repo (or a GitHub Actions variable/secret),
-and exits early if no new tag exists.
-
-### PR Structure
-
-The rebase PR should be opened against `master` of the fork (atabisz/Vortex), not against any
-branch of the upstream. The PR's purpose is: human-reviewed merge of upstream changes + conflict
-resolution, if any.
-
-**Draft status:** Open as a DRAFT PR. Rationale: if the rebase was conflict-free, CI still needs
-to run and a human should verify before merging. Draft communicates "not ready to merge yet."
-If the rebase had conflicts, draft communicates "this needs work." Convert to ready-to-merge only
-after human review + green CI.
-
-**Branch naming convention:** `rebase/upstream-<tag>` where `<tag>` is the upstream release tag
-verbatim (e.g., `rebase/upstream-v1.12.3`). This makes automation-created branches identifiable
-and avoids collision with feature branches.
-
-**Conflict detection:** If `git rebase` exits non-zero (conflicts), the workflow aborts the
-rebase, commits the conflicted state to the branch with a clearly named commit
-`"CONFLICT: upstream rebase <tag>"`, pushes the branch, and opens the PR with a "conflicts
-detected" notice in the body. This gives the human a branch to checkout and resolve.
-
-If `git rebase` exits 0 (clean), the workflow commits and pushes the rebased branch, opens
-the PR, and runs CI normally.
-
-### Table Stakes for Rebase CI
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Cron trigger checks nexus-mods/Vortex for new release tags once daily | Automated detection of upstream releases | LOW | `gh api repos/Nexus-Mods/Vortex/releases/latest --jq .tag_name` |
-| Compare latest upstream tag against last-processed tag; exit early if unchanged | Avoid creating duplicate PRs on every cron run | LOW | Store last-processed tag in a file committed to repo (e.g., `.github/last-upstream-tag`) or use a GitHub Actions variable |
-| Create a branch named `rebase/upstream-<tag>` from current master | Isolated branch for rebase work | LOW | `git checkout -b rebase/upstream-<tag>` after fetching upstream |
-| Perform `git rebase upstream/<tag>` and detect success vs. conflict | Core rebase operation | LOW | Check exit code of `git rebase`; set output variable |
-| On clean rebase: push branch and open DRAFT PR against master | Clean path | LOW | `gh pr create --draft` |
-| On conflicted rebase: abort, push conflicted branch state, open DRAFT PR with conflict notice | Conflict path | MEDIUM | `git rebase --abort`; commit `git diff` of conflict state; push; PR body includes conflict details |
-| PR title: `chore: rebase onto upstream <tag>` | Consistent commit history / PR search | LOW | Include upstream release URL in PR body |
-| PR body contains: upstream tag, upstream release URL, link to upstream changelog, conflict status | Human reviewer needs context to evaluate changes | LOW | Template in workflow HEREDOC |
-| PR body contains fork-specific note pointing to https://github.com/atabisz/Vortex | Per project PR convention (see MEMORY) | LOW | Required by project feedback rule |
-| CI runs automatically on the rebase PR (no special bypass needed) | Validate the rebase didn't break the build | LOW | Standard CI trigger `pull_request: branches: [master]` already in `main.yml` — no change needed |
-| Workflow skips gracefully if a `rebase/upstream-*` PR is already open | Prevent duplicate PRs when cron runs again before the existing PR is merged | LOW | `gh pr list --search "rebase/upstream-<tag>" --state open` check before creating |
-| Workflow only runs on the fork (atabisz/Vortex), not on nexus-mods/Vortex if forked further | Fork-only workflow guard | LOW | `if: github.repository == 'atabisz/Vortex'` condition on job |
-
-### Differentiators for Rebase CI
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| PR body includes diff summary of upstream changes vs. previous tag | Reviewer can immediately see what changed without leaving GitHub | MEDIUM | `gh api repos/Nexus-Mods/Vortex/compare/<prev-tag>...<new-tag>` — list commit titles. Truncate at 50 commits |
-| Auto-label the PR with `upstream-rebase` label | Filtering and tracking in issue tracker | LOW | `gh pr create --label upstream-rebase` (label must be created once in repo settings) |
-| Notify via GitHub issue or PR comment if the last N rebase PRs were all conflicted | Signal that the platform patch set has drifted from upstream significantly | HIGH | Defer — not needed for initial implementation |
-| `workflow_dispatch` manual trigger with optional tag override | Test the workflow or trigger outside cron schedule | LOW | Add `workflow_dispatch: inputs: upstream_tag: {type: string, required: false}` to trigger |
-
-### Anti-Features for Rebase CI
+### Anti-Features (explicitly do not build)
 
 | Anti-Feature | Why Avoid | What to Do Instead |
 |--------------|-----------|-------------------|
-| Auto-merging the rebase PR | Rebase onto upstream always requires human review — upstream may break Linux-specific code paths | Always open as DRAFT; never auto-merge |
-| Using `git merge` instead of `git rebase` | Merge creates a merge commit, polluting history and making upstream diffs harder to read | Always rebase; the flat history is essential for keeping the upstream diff minimal |
-| Storing the GITHUB_TOKEN in a non-secrets location for `gh pr create` | Security risk | Use `${{ secrets.GITHUB_TOKEN }}` standard token — has PR write permission for the fork |
-| Running the entire build matrix in the rebase-check step | Expensive; the conflict check does not require building | The conflict check job just runs git operations + gh CLI — no pnpm install, no build |
-| Committing the `.github/last-upstream-tag` file via the workflow on every run | Commits from CI on every check (even no-op) pollute git log | Only update the last-processed tag file after a PR is successfully opened, not on every cron check |
-| Rebasing directly onto master (non-branch) | Bypasses review; if upstream broke something, it ships immediately | Always into a feature branch + PR, never direct-push to master |
-| Opening a non-draft PR when conflicts exist | Misleads reviewers into thinking it's merge-ready | Conflicts = draft + "needs conflict resolution" label; clean = draft + "ready for review" comment |
-
-### PR Template (Expected Body Content)
-
-```
-## Upstream Rebase: <tag>
-
-**Upstream release:** https://github.com/Nexus-Mods/Vortex/releases/tag/<tag>
-**Upstream changelog:** https://github.com/Nexus-Mods/Vortex/compare/<prev-tag>...<tag>
-
-**Status:** [CLEAN — no conflicts] | [CONFLICTS DETECTED — see below]
-
-### What Changed Upstream (commit titles)
-<list of upstream commit titles, max 50>
-
-### Conflict Details (if any)
-<conflicted files list>
-
----
-
-Fork maintained at: https://github.com/atabisz/Vortex
-```
+| Wizard-style setup modal with forced step-through | Vortex's existing dashboard approach is non-blocking and tested; a modal wizard would be a major architectural addition | Fix the existing `firststeps_dashlet` and `NoGameDashlet` to work correctly on Linux |
+| Steam library path picker during first run | Auto-detection already works; a picker adds friction for the 95% case | Add fallback guidance only when auto-detection fails |
+| Filesystem format explanation UI (explaining ext4 casefold) | Too much complexity for onboarding; users do not care about filesystem internals | A single-line status indicator in Settings > Mods is sufficient |
+| Heroic Launcher detection in this milestone | Deferred to v4.0+ per PROJECT.md | No Heroic code in this milestone |
+| Replacing or bypassing Windows code paths | Compatibility constraint — Windows build must not break | Platform guards only; additive Linux branches |
 
 ---
 
 ## Feature Dependencies
 
 ```
-chattr+F kernel casefold
-  └── requires: empty staging directory at creation time (existing ensureStagingDirectory flow)
-  └── requires: filesystem detection utility (new — statfs or /proc/mounts read)
-  └── falls back to: existing userspace shim in fs.ts (no change to shim required)
-  └── independent of: rebase CI workflow
+ONBRD-01 (Steam auto-detect + first-run feedback)
+  └── depends on: Steam.ts findAllLinuxSteamPaths() — already exists
+  └── requires: empty-state notification when discoveredGames is empty post-quickDiscovery
+  └── requires: unconditional manual-scan todo on Linux (remove searchPaths condition)
 
-Rebase CI
-  └── requires: GITHUB_TOKEN with PR write permission (standard in fork)
-  └── requires: .github/last-upstream-tag tracking file (new)
-  └── depends on: existing main.yml CI triggers (pull_request: master) — no change
-  └── independent of: chattr+F feature
+ONBRD-02 (Staging directory filesystem detection)
+  └── depends on: applyChattrCasefold() in fs.ts — already exists and runs
+  └── requires: surface casefold strategy in Settings > Mods UI
+  └── requires: Linux-native disk space check for mod-location todo
+  └── requires: fix GetDiskFreeSpaceEx guard in firststeps_dashlet/todos.tsx
 
-Userspace casefold shim (existing)
-  └── unchanged — continues to handle Wine prefix paths
-  └── chattr+F does NOT replace the shim — different path scope
+ONBRD-03 (No Windows error text on Linux)
+  └── requires: platform guard in download_management/Settings.tsx:737
+  └── requires: platform guard in mod_management/texts.ts:96–98 (C:\ path example)
+  └── requires: platform guard in symlink_activator_elevate/index.ts:121–123 (name + description)
+  └── independent of: all other ONBRD items
+
+ONBRD-04 (Mod install → deploy → enable round-trip)
+  └── depends on: InstallManager (working), deployment methods (working)
+  └── requires: verify default deployment method selected correctly on Linux
+  └── requires: end-to-end manual test with one Proton game
+
+ONBRD-05 (1280x800 rendering)
+  └── requires: fix onboarding_dashlet/Overlay.tsx iframe height or add scroll wrapper
+  └── requires: audit NoGameDashlet horizontal overflow UX
+  └── independent of: other ONBRD items (CSS/layout only)
+
+ONBRD-06 (Linux-specific help links)
+  └── requires: platform branch in help URL construction
+  └── requires: Linux troubleshooting article to exist at Nexus Mods help center
+  └── lowest risk: if article doesn't exist yet, route to general Vortex help
 ```
-
-### Dependency Notes
-
-- **chattr+F requires empty directory:** The kernel rejects `chattr +F` on non-empty directories.
-  This is a hard kernel constraint, not a code deficiency. The call site must be inside
-  `ensureStagingDirectoryImpl()` immediately after `ensureDir` creates the directory, before
-  `writeStagingTag()` writes the first file. If `ensureDir` found the directory already existed
-  (i.e., returned without creating), chattr+F cannot be applied retroactively — log and move on.
-
-- **Rebase CI depends on last-processed tag tracking:** Without knowing the last-processed tag,
-  the workflow would open a new PR every day even if no upstream changes occurred. The simplest
-  implementation: commit a `.github/last-upstream-tag` file containing just the tag string
-  (e.g., `v1.12.3`). The workflow reads this file, compares to the latest upstream tag, exits
-  early on match. Updates the file only when opening a new PR.
-
-- **Rebase CI does NOT depend on chattr+F:** These are independent infrastructure items.
-  They share a milestone but have zero runtime dependency on each other.
 
 ---
 
 ## MVP Definition
 
-### Launch With (v1 — this milestone)
+### Must Ship (this milestone — ONBRD-01 through ONBRD-06)
 
-- [ ] chattr+F detection + apply at staging directory creation, with fallback to userspace shim
-- [ ] chattr+F: no user-visible notification on fallback (silent to INFO/DEBUG logs only)
-- [ ] chattr+F: casefold strategy stored in staging tag file
-- [ ] Rebase CI: cron workflow that detects new upstream tags and opens a draft PR
-- [ ] Rebase CI: handles clean rebase and conflicted rebase as separate branches
-- [ ] Rebase CI: PR body contains upstream tag, release URL, fork URL, conflict status
-- [ ] Rebase CI: skips if a PR for the same upstream tag already exists
+- [ ] `firststeps_dashlet/todos.tsx`: Platform-guard `GetVolumePathName` and `GetDiskFreeSpaceEx`
+  calls; replace with Linux-native equivalents (statfs or df) for disk-space conditions.
+- [ ] `firststeps_dashlet/todos.tsx`: Show `manual-scan` todo unconditionally on Linux when
+  no games discovered (remove `searchPaths !== undefined` condition gate).
+- [ ] `gamemode_management/views/NoGameDashlet.tsx` or parent: When `discoveredGames` is empty
+  after quick discovery on Linux, show an actionable notification/dashlet entry guiding the
+  user to the Games page or offering a manual Steam path browse.
+- [ ] `symlink_activator_elevate/index.ts:121–123`: Platform-guard "Run as Administrator"
+  → "Elevated Deployment" on Linux.
+- [ ] `download_management/views/Settings.tsx:737`: Platform-guard Windows-specific error text
+  → Linux-appropriate "not writable" message.
+- [ ] `mod_management/texts.ts:96–98`: Platform-guard `C:\Users\Mike\...` example
+  → show Linux equivalent (`~/.local/share/Vortex/...`).
+- [ ] `onboarding_dashlet/Overlay.tsx`: Add overflow-y scroll wrapper around iframe content
+  so the "Mark as complete" button is always accessible at 800px viewport height.
+- [ ] Manual end-to-end UAT: install one mod for a Proton game (Skyrim SE or Fallout 4),
+  deploy, enable, verify game loads mod. Document result in PROJECT.md.
 
-### Add After Validation (v1.x)
+### Differentiators to Add (if bandwidth allows)
 
-- [ ] chattr+F: notification when ext4 staging dir lacks casefold feature (informational, not error)
-- [ ] chattr+F: `CaseFoldStrategy` abstraction interface if a third strategy emerges
-- [ ] Rebase CI: `workflow_dispatch` manual trigger with tag override
-- [ ] Rebase CI: upstream commit diff summary in PR body
+- [ ] Settings > Mods: Show filesystem casefold strategy status (kernel / userspace shim).
+- [ ] Linux-specific help link routing (when Linux troubleshooting doc exists).
+- [ ] Staging directory cross-device hardlink warning UI.
 
-### Future Consideration (v2+)
+### Defer
 
-- [ ] chattr+F: migration path for existing staging directories (create new dir, copy, apply)
-  — blocked by hard kernel constraint (chattr+F requires empty dir)
-- [ ] Rebase CI: drift detection alert after N consecutive conflicted rebases
-- [ ] Rebase CI: auto-resolve known trivial conflicts (e.g., version bumps in package.json)
-
----
-
-## Feature Prioritization Matrix
-
-| Feature | User Value | Implementation Cost | Priority |
-|---------|------------|---------------------|----------|
-| chattr+F: detect + apply at staging creation | HIGH (mod deploy correctness on ext4) | LOW | P1 |
-| chattr+F: silent fallback to userspace shim | HIGH (correctness on non-ext4) | LOW | P1 |
-| chattr+F: persist casefold strategy in tag | MEDIUM (no re-detection on relaunch) | LOW | P1 |
-| chattr+F: Flatpak sandbox detection + skip | MEDIUM (Flatpak is a target platform) | LOW | P1 |
-| Rebase CI: cron poll + draft PR | HIGH (reduces 4–8h maintenance cost/cycle) | LOW | P1 |
-| Rebase CI: conflict-path handling | HIGH (conflicts will happen) | MEDIUM | P1 |
-| Rebase CI: PR body template | MEDIUM (reviewer context) | LOW | P1 |
-| Rebase CI: duplicate PR guard | MEDIUM (prevents spam) | LOW | P1 |
-| chattr+F: "casefold not enabled" notification | LOW (edge case) | MEDIUM | P2 |
-| Rebase CI: workflow_dispatch override | LOW (debugging aid) | LOW | P2 |
-| Rebase CI: upstream commit diff in PR body | LOW (nice to have) | MEDIUM | P2 |
-| chattr+F: migration path for existing dirs | LOW (new installs get it automatically) | HIGH | P3 |
-
-**Priority key:** P1 = must ship in this milestone, P2 = after validation, P3 = future
-
----
-
-## Linux-Specific Behavioral Notes
-
-### chattr+F: Filesystem Detection
-
-The most reliable approach for detecting ext4-with-casefold:
-
-1. **Attempt-and-catch pattern** (recommended): Spawn `chattr +F <dir>` on the newly created
-   empty directory. If it exits 0: kernel casefold is active. If it exits non-zero or the
-   binary is not found: fall back silently. This avoids needing to parse `/proc/mounts` or
-   run `tune2fs` (which requires root on some systems).
-
-2. **Pre-check via statfs** (alternative): Check `f_type === 0xEF53` (ext4) via a native call,
-   then separately check whether casefold is enabled. More code, but avoids spawning chattr
-   only to have it fail.
-
-The attempt-and-catch pattern is simpler, has fewer code paths, and matches how other tools
-(including Steam) handle this feature.
-
-### Rebase CI: Branch Naming and Conflict State
-
-When `git rebase upstream/<tag>` encounters conflicts:
-- `git rebase --abort` is needed to restore the working tree
-- The conflicted files are lost after `--abort`
-- Workaround: before running rebase, capture `git diff upstream/<tag>..HEAD -- <known-conflict-files>`
-  to embed the diff context in the PR body. Or: run rebase in a separate worktree, let it fail,
-  commit the conflicted state before aborting, push those files as a separate "context" commit.
-
-Simplest safe approach: on conflict, push the pre-rebase master as the branch (no rebase
-applied), add a PR comment listing which files will conflict (via `git diff --name-only`),
-and let the human do the rebase manually in a clone. The PR is just the signal — not the work.
-
-### chattr+F: Why Not Just Always Use the Userspace Shim?
-
-The userspace shim has known limitations at scale:
-- It fires per-call on Wine prefix paths, adding a `readdir()` per directory segment on every
-  `readFileAsync`/`statAsync` call.
-- inotify watchers in Vortex bypass the shim — `watch()` is shimmed but third-party code using
-  raw `fs.watch` will not case-fold.
-- Deep mod hierarchies (thousands of files) make the per-call overhead measurable.
-
-chattr+F at the kernel level means: zero overhead per operation, inotify works natively, and
-no code path in Vortex needs to know about case-folding once the directory is created. It is
-strictly better when available. The shim remains as the universal fallback.
+- [ ] Full Flatpak Steam detection diagnostics (complex; Flatpak path already in steamPaths.ts).
+- [ ] Heroic Launcher (v4.0+ per PROJECT.md).
+- [ ] Steam Deck Game Mode specific UI optimizations beyond 1280x800 rendering fix.
 
 ---
 
 ## Sources
 
-- Codebase: `/home/alex/src/Vortex/src/renderer/src/extensions/mod_management/stagingDirectory.ts`
-  (staging directory creation flow — `ensureStagingDirectoryImpl`)
-- Codebase: `/home/alex/src/Vortex/src/renderer/src/extensions/profile_management/index.ts`
-  (call site: `manageGameDiscovered` → `ensureStagingDirectory`)
-- Codebase: `/home/alex/src/Vortex/src/renderer/src/util/fs.ts`
-  (existing userspace casefold shim — isWinePrefixPath, resolveCaseIfWinePrefix)
-- Codebase: `/home/alex/src/Vortex/src/renderer/src/util/resolvePathCase.ts`
-  (per-segment case-resolving implementation)
-- Codebase: `/home/alex/src/Vortex/.github/workflows/main.yml` (CI baseline)
-- Codebase: `/home/alex/src/Vortex/.github/workflows/release-linux.yml` (fork-only workflow pattern)
-- Codebase: `/home/alex/src/Vortex/VORTEX-LINUX.md` (phase 4.4 and 4.5 intent)
-- Kernel: chattr +F / EXT4_IOC_SETFLAGS FS_CASEFOLD_FL, Linux 5.2+
-  (man 1 chattr, fs/ext4/ioctl.c)
-- GitHub Actions: `schedule` event (cron), `workflow_dispatch` event, `gh pr create --draft`
-- Project convention: PR bodies must include fork URL per `.claude/MEMORY/WORK/feedback_pr_fork_link.md`
-- Confidence: HIGH for all claims; chattr+F ext4 kernel behavior is well-established and
-  directly testable; rebase CI patterns are standard GitHub Actions patterns
+| Claim | Source |
+|-------|--------|
+| `firststeps_dashlet` todos structure | `src/renderer/src/extensions/firststeps_dashlet/todos.tsx` |
+| `onboarding_dashlet` video steps | `src/renderer/src/extensions/onboarding_dashlet/steps.ts` |
+| `NoGameDashlet` welcome text + overflow | `src/renderer/src/extensions/gamemode_management/views/NoGameDashlet.tsx` |
+| Steam Linux detection paths | `src/renderer/src/util/linux/steamPaths.ts`, `src/renderer/src/util/Steam.ts` |
+| `suggestStagingPath()` Linux branch | `src/renderer/src/extensions/gamemode_management/util/discovery.ts:859` |
+| `ensureDirWritableAsync` → `applyChattrCasefold` | `src/renderer/src/util/fs.ts:1381–1394` |
+| Staging directory dialogs | `src/renderer/src/extensions/mod_management/stagingDirectory.ts` |
+| Settings > Mods path input 40em min-width | `src/stylesheets/vortex/page-settings.scss:64,77` |
+| minWidth 1024 / minHeight 700 | `src/main/src/MainWindow.ts:387–388` |
+| Dialogs min-width 400/600 | `src/stylesheets/vortex/dialogs.scss:3,175` |
+| "Run as Administrator" text | `src/renderer/src/extensions/symlink_activator_elevate/index.ts:121–123` |
+| "windows user account" text | `src/renderer/src/extensions/download_management/views/Settings.tsx:737–738` |
+| `C:\Users\Mike\...` example text | `src/renderer/src/extensions/mod_management/texts.ts:96–98` |
+| Hardlink activator Linux guard | `src/renderer/src/extensions/hardlink_activator/index.ts:40` |
+| Onboarding overlay iframe 335px | `src/renderer/src/extensions/onboarding_dashlet/views/Overlay.tsx:29` |
+| GamePicker 1280px breakpoint | `src/stylesheets/vortex/gamepicker.scss:133` |
+| help.nexusmods.com links | `src/renderer/src/ui/components/no_results/NoResults.tsx:80` |
 
 ---
-*Feature research for: chattr+F dual-path filesystem layer + rebase CI automation*
-*Researched: 2026-04-15*
+
+*Feature research for: v7.0 First-Run Onboarding Wizard (Linux)*
+*Researched: 2026-04-16*

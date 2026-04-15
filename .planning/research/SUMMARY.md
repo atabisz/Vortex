@@ -1,200 +1,331 @@
-# Project Research Summary
+# Research Summary — v7.0 First-Run Onboarding Wizard
 
-**Project:** Vortex Linux fork — milestone v6.0 Infrastructure
-**Domain:** Electron mod manager — chattr+F dual-path filesystem layer + GitHub Actions upstream rebase CI
-**Researched:** 2026-04-15
-**Confidence:** HIGH (both features fully grounded in codebase inspection, kernel docs, and Actions docs)
+**Project:** Vortex Linux — v7.0 First-Run Onboarding Wizard
+**Domain:** Electron mod manager — Linux-native first-run onboarding wiring
+**Researched:** 2026-04-16
+**Confidence:** HIGH — all findings from direct codebase inspection
 
 ---
 
 ## Executive Summary
 
-This milestone adds two independent infrastructure capabilities to the Vortex Linux fork. The first is the chattr+F filesystem layer — it applies a kernel-level case-insensitive directory flag to new staging directories on ext4 filesystems, complementing the existing Wine-prefix userspace case-folding shim. The second is the upstream rebase CI workflow — it automates daily polling of nexus-mods/Vortex for new release tags and opens a draft PR when the fork needs rebasing. Neither feature has any runtime dependency on the other; they share only the milestone boundary.
+The v7.0 milestone is not a greenfield wizard. Vortex has no traditional step-through
+first-run modal; its "wizard" is a dashboard composed of `firststeps_dashlet` (todo list)
+and `onboarding_dashlet` (tutorial video cards). The underlying Linux infrastructure —
+Steam detection, chattr+F casefold, pkexec elevation, FOMOD pipeline, NXM download — is
+fully shipped from v1.0–v6.0. ONBRD-01 through ONBRD-06 are wiring, string-cleanup, and
+layout fixes on top of that foundation, not new subsystems.
 
-The recommended implementation approach for both features requires zero new npm dependencies. The chattr+F layer shells out to the `chattr` binary (from `e2fsprogs`, pre-installed on all Ubuntu systems) using Node.js `child_process.execFile`, and detects ext4 via `fs.promises.statfs()` (Node 22 built-in). The rebase CI uses `actions/checkout@v6`, `actions/github-script@v9.0.0`, and `peter-evans/create-pull-request@v8.1.1` — all established, actively maintained Actions. The only architectural addition to application code is a single new function (`applyChattrCasefold`) inserted as one `.then()` call inside the existing `ensureDirWritableAsync` in `src/renderer/src/util/fs.ts`.
+The recommended approach is surgical: platform-guard Windows-specific strings without
+editing existing i18n literals, fix the two known crash paths in `firststeps_dashlet` and
+`stagingDirectory.ts`, and audit dialogs at 1280×800. No new runtime dependencies are
+needed. All changes are additive Linux branches alongside unchanged Windows paths. The
+diff against upstream should remain minimal.
 
-The primary risks are well-characterized. For chattr+F: the feature will silently fail on most user home directories (ext4 without the `casefold` feature is the norm), so the fallback to the existing userspace shim must be the default path, not the exception. For the rebase CI: idempotency (no duplicate PRs on repeated daily runs), conflict handling (rebase conflicts must produce a draft PR, not a failed job), and trigger selection (schedule-only, never push-to-master) are the three correctness requirements that must be implemented from day one.
-
----
-
-## Key Findings
-
-### Recommended Stack
-
-Both features are zero-dependency additions to the existing stack. No new npm packages are required. The chattr+F layer uses only Node.js built-ins (`child_process.execFile`, `fs.promises.statfs`) and the `chattr` system binary. The rebase CI uses three well-vetted GitHub Actions that are already consistent with existing workflow patterns in the repo.
-
-**Core technologies:**
-
-- `child_process.execFile('chattr', ['+F', dirPath])` — apply kernel casefold attribute — zero deps, universally available on Linux, graceful ENOENT fallback; use argument array (not shell string) to avoid path injection
-- `fs.promises.statfs(path)` — detect filesystem type via magic number — Node 22 built-in (added v18.17.0), no text parsing, direct POSIX-correct call; `EXT4_SUPER_MAGIC = 0xef53`
-- `chattr` binary from `e2fsprogs` — pre-installed on all Ubuntu/Fedora/Arch; must be pre-flight checked (`commandExists('chattr')`) because it is absent in minimal Docker containers
-- `actions/checkout@v6` — full history checkout for rebase — already used in existing workflows; `fetch-depth: 0` required for rebase
-- `actions/github-script@v9.0.0` — query nexus-mods/Vortex releases via Octokit — pre-authenticated, April 2026 release
-- `peter-evans/create-pull-request@v8.1.1` — create rebase draft PR — 2.7k stars, 114 releases, actively maintained, April 2026
-
-**Rejected alternatives:**
-
-- `ioctl` npm package (v2.0.2): NaN-based, last published July 2019, unmaintained — reject
-- `ffi-napi` (v4.0.3): adds native addon dep to replace a 5-line `execFile` call — reject
-- Parsing `/proc/mounts` for filesystem detection: fragile, bind-mount edge cases — reject in favor of `statfs()`
-- Marketplace rebase Actions (`imba-tjd/rebase-upstream@0.12`): self-described "not widely tested", uses `git push -f`, no conflict control — reject
-- `repository_dispatch` trigger: requires nexus-mods/Vortex to cooperate — unavailable
-- btrfs casefold via chattr: not supported in any released kernel as of April 2026 — treat btrfs as fallback-to-shim only
-
-### Expected Features
-
-**Must have — chattr+F (table stakes):**
-
-- Pre-flight check: `commandExists('chattr')` before any invocation; skip and activate shim if absent
-- Detect filesystem type at staging directory path using `statfs()` ext4 magic (0xEF53)
-- Apply `chattr +F` immediately after `fs.ensureDir()` creates the staging directory, before any files are written (the ordering `mkdir → chattr+F → write-tag-file` is a hard requirement)
-- Catch all non-zero exit codes (EOPNOTSUPP, EINVAL, ENOENT) and fall back silently to the existing Wine-prefix shim
-- Platform guard: `process.platform !== 'linux'` early return — Windows CI matrix must stay green
-- Flatpak sandbox detection (`FLATPAK_ID` env var) — skip chattr attempt entirely inside Flatpak
-- Skip existing non-empty staging directories entirely — chattr+F is only applied to newly created, empty directories
-- Log at INFO when chattr+F succeeds; log at DEBUG on fallback — no user-visible error for normal fallback
-
-**Must have — rebase CI (table stakes):**
-
-- `schedule` cron trigger (daily, 06:00 UTC) plus `workflow_dispatch` manual override — no `push: branches: [master]` trigger
-- Compare latest nexus-mods/Vortex tag against last-known tag in `.planning/upstream-sync/last-known-tag.txt` — exit early on no change; update tracking file only when a PR is opened
-- Fixed, predictable branch name: `rebase/upstream-<tag>` — enables idempotent PR update without creating duplicates
-- Pre-creation idempotency check: `gh pr list --head <branch> --base master --state open` — if PR exists, update branch only, do not create a second PR
-- "Already up to date" guard: `git merge-base --is-ancestor upstream/HEAD fork/master` — exit 0 cleanly with no PR when no new commits
-- Clean rebase path: push branch, open draft PR titled `chore: rebase onto upstream <tag>`
-- Conflicted rebase path: `git rebase --abort`, commit conflict state, push, open draft PR with "conflicts detected" warning body — `git rebase` exit 1 must never fail the workflow job
-- PR body includes: upstream tag, upstream release URL, conflict status, and fork link (https://github.com/atabisz/Vortex) per project convention
-- Job-level `if: github.repository == 'atabisz/Vortex'` guard
-- Workflow permissions: `contents: write`, `pull-requests: write` declared explicitly in the YAML
-
-**Should have — post-validation (v1.x):**
-
-- chattr+F: runtime verification after success — write uppercase file, read lowercase — catches NFS/FUSE silent-success false positives; cache result per staging directory path per session
-- chattr+F: informational notification when staging directory is on ext4 without casefold feature (educational, not an error)
-- Rebase CI: `workflow_dispatch` input for `upstream_ref` override — debugging and on-demand trigger
-- Rebase CI: upstream commit diff summary in PR body (`gh api repos/Nexus-Mods/Vortex/compare/<prev>...<new>`)
-- Rebase CI: `upstream-rebase` label on all rebase PRs for easy filtering
-
-**Defer to v2+:**
-
-- chattr+F: migration path for existing staging directories — blocked by hard kernel constraint (chattr+F requires empty dir); requires create-new-dir, copy-files, switch approach; high complexity, low incremental value
-- Rebase CI: drift detection alert after N consecutive conflicted rebases
-- Rebase CI: auto-resolve known trivial conflicts (version bumps in package.json) — unpredictable conflict surface
-
-**Anti-features — do not implement:**
-
-- chattr+F: running `tune2fs -O casefold` on users' filesystems — destructive, requires unmounting, can corrupt data
-- chattr+F: removing the userspace Wine-prefix shim when kernel casefold is active — the two mechanisms cover orthogonal path trees (Wine prefix paths vs staging dir paths)
-- chattr+F: showing error dialogs on btrfs/XFS/ZFS — these filesystems never support it; silent fallback only
-- chattr+F: calling chattr+F on non-empty staging directories — kernel rejects it; no retroactive application
-- Rebase CI: auto-merging the rebase PR — upstream changes always require human review
-- Rebase CI: pushing rebased commits directly to `master` — bypasses review, can break the rolling release
-- Rebase CI: `git merge` instead of `git rebase` — merge commits pollute history and make the upstream diff unreadable
-- Rebase CI: trigger on `push: branches: [master]` — creates a feedback loop when the rebase PR is merged back
-
-### Architecture Approach
-
-The chattr+F layer is a purely additive change to `src/renderer/src/util/fs.ts` in the renderer process. A single new function `applyChattrCasefold(dirPath)` is inserted as one `.then()` call inside the existing `ensureDirWritableAsync`. The function always resolves (never rejects), is fully gated on `process.platform === 'linux'`, and is placed before the canary write test. The existing Wine-prefix shim (`isWinePrefixPath`, `resolveCaseIfWinePrefix`) is unchanged — it operates on a different path namespace (`/compatdata/<id>/pfx/`) and does not intersect with staging directory paths. The rebase CI consists entirely of two new files with no changes to existing workflows.
-
-**Major components:**
-
-1. `src/renderer/src/util/fs.ts: applyChattrCasefold()` (new function, ~20 lines) — shells out to `chattr +F` via `execFile`, catches all errors, always resolves; called from `ensureDirWritableAsync` immediately after `fs.ensureDir()` and before the canary write test
-2. `src/renderer/src/util/fs.ts: ensureDirWritableAsync()` (one-line modification) — adds `.then(() => applyChattrCasefold(dirPath))` after the `ensureDir` call; no other logic changes
-3. `src/renderer/src/util/fs.test.ts` (modified) — three new test cases: chattr succeeds on ext4-casefold; chattr returns EOPNOTSUPP and resolves without throw; non-Linux returns immediately without calling chattr
-4. `.github/workflows/sync-upstream.yml` (new) — daily schedule + workflow_dispatch; orchestrates rebase check; fork-only via `if: github.repository == 'atabisz/Vortex'`
-5. `.github/scripts/sync-upstream.sh` (new) — git operations for fetch, tag comparison, branch creation, rebase, conflict detection, push; modeled after existing `.github/scripts/cherry-pick.sh`
-
-**Unchanged components:**
-
-- `stagingDirectory.ts` — no change; the injection point is one layer below, inside `ensureDirWritableAsync` in `fs.ts`
-- `isWinePrefixPath` / `resolveCaseIfWinePrefix` in `fs.ts` — Wine-prefix scope; staging dirs never match `/compatdata/` pattern
-- `ensureDirAsync` in `LinkingDeployment.ts` — handles deployment target dirs, not staging dirs; chattr+F not needed there
-- All existing workflows (`main.yml`, `release-linux.yml`, `cherry-pick.yml`) — no modifications; `main.yml` CI runs automatically on the rebase PR via pre-existing `pull_request: branches: [master]` trigger
-
-**Injection point (critical detail):**
-
-The only correct insertion position is inside `ensureDirWritableAsync` in `fs.ts` at approximately line 1224, not in `stagingDirectory.ts`. The mandatory sequence is `ensureDir → chattr+F → canary write`. Calling chattr+F after the canary write (or after `writeStagingTag`) would fail because the directory would no longer be empty.
-
-### Critical Pitfalls
-
-1. **chattr+F on non-casefold ext4 filesystem — most users' `/home` partitions lack the casefold feature** — `chattr +F` returns EOPNOTSUPP on any ext4 partition formatted without the `casefold` feature (the default for all Linux distros); treat chattr failure as the common case, not an error; the fallback to the userspace shim must be the default path. Prevention: explicit exit-code check; fallback activation on any non-zero result; never gate deployment on chattr+F success.
-
-2. **chattr+F on non-empty directory fails — the `mkdir → chattr+F → write-tag` ordering is a hard kernel constraint** — the kernel rejects chattr+F on any non-empty directory; if the staging directory already exists with mods, skip chattr+F entirely and use the shim; if called after `writeStagingTag` writes even one file, the call fails. Prevention: call must be inside `ensureDirWritableAsync` before the canary write; skip for pre-existing directories without attempting the call.
-
-3. **NFS/FUSE silent false positive — chattr+F exits 0 but casefold is not active** — on some NFS configurations and FUSE filesystems, `chattr +F` appears to succeed (exit 0) but the attribute is not stored on the remote filesystem; code that trusts the exit code skips the shim and gets "file not found" errors on case-mismatch. Prevention: after `chattr +F` exits 0, verify with a runtime test (write uppercase file, read lowercase); fall back to shim if the test fails; cache the result per staging directory per session.
-
-4. **Rebase CI creates duplicate PRs on daily runs** — a naive workflow creates a new PR on every cron run regardless of whether one already exists; the `gh pr create` API returns an error that surfaces as a CI failure. Prevention: fixed branch name (`rebase/upstream-<tag>`) plus pre-creation `gh pr list` idempotency check — both must be in the initial workflow, not added after the first duplicate occurs.
-
-5. **`git rebase` exit 1 must not fail the workflow job** — when rebase encounters conflicts, the natural GitHub Actions behavior is to fail the step and produce no output; the correct behavior is to catch the conflict, abort the rebase, commit the conflict state, push, and open a draft PR with a warning body. Prevention: explicit `HAS_CONFLICTS` flag pattern before any `set -e` scope; never rely on rebase to exit 0 on the conflict path.
-
-6. **Windows CI broken by missing `process.platform === 'linux'` guard** — `main.yml` runs both `ubuntu-latest` and `windows-latest` builds; any `chattr` or `lsattr` call outside a platform guard causes `ENOENT` on Windows and fails the matrix. Prevention: `applyChattrCasefold` has an unconditional `if (process.platform !== 'linux') return` as the first line; add a test asserting the function is a no-op when `process.platform` is mocked to `'win32'`.
+The primary risk is accidentally changing existing i18n string literals, which silently
+breaks Windows wording and stales non-English locale caches. Every string change must be
+a new conditional branch, never an edit to an existing `t("...")` literal. Secondary risk
+is the `stagingDirectory.ts` partition-exists check, which uses a Windows-only error code
+and produces the wrong dialog branch on Linux when the staging folder is missing.
 
 ---
 
-## Implications for Roadmap
+## 1. Stack Additions
 
-Both tracks are independent at both development and runtime level. They can be implemented in parallel (two branches, two PRs) and merged in any order.
+### Already Wired — No Changes Needed
 
-### Phase 1A: chattr+F Filesystem Layer
+| Subsystem | Status | Entry Point |
+|-----------|--------|-------------|
+| Steam library detection | Shipped v2.0 | `util/Steam.ts` → `findAllLinuxSteamPaths()` |
+| chattr+F at staging dir creation | Shipped v6.0 | `util/fs.ts` `ensureDirWritableAsync()` → `applyChattrCasefold()` |
+| pkexec elevation | Shipped v3.0 | `util/elevated.ts` `runElevated()` |
+| winapi-bindings shim | Shipped v1.0 | webpack alias → `util/winapi-shim.ts` |
+| FOMOD IPC pipeline | Shipped v5.0 | TCP transport + `TextUtil.NormalizePath` |
+| NXM download handler | Shipped v2.0 | `extensions/download_management/` + xdg-utils |
+| Hardlink + symlink deployers | Existing | `hardlink_activator/`, `symlink_activator/` |
 
-**Rationale:** Self-contained change to a single file (`fs.ts`) with no upstream PR implications and no CI workflow changes needed. Can be developed and reviewed independently of Phase 1B. The injection point, call signature, and fallback behavior are fully specified — no further design decisions required before starting.
+### New in v7.0 — The Actual Changes
 
-**Delivers:** Kernel-level case-insensitive lookup for new staging directories on ext4-casefold filesystems; silent fallback to the existing userspace shim on all other filesystems; zero change to existing behavior on Windows or non-casefold Linux; both Windows and Linux CI matrix jobs stay green.
+No new dependencies. All v7.0 work is edits to existing files:
 
-**Addresses (from FEATURES.md):** chattr+F detect + apply at staging creation (P1); silent fallback (P1); Flatpak sandbox detection (P1); platform guard for Windows CI (P1).
+| Change | File(s) | ONBRD# |
+|--------|---------|--------|
+| Fix `getDriveList.ts` — hardcoded `"C:"` fallback on lines 23/44 → `"/"` on Linux | `gamemode_management/util/getDriveList.ts` | 01 |
+| Fix `todos.tsx` — wrap `GetVolumePathName` value functions with undefined guard | `firststeps_dashlet/todos.tsx` | 01 |
+| Add Steam cache retry on empty result (2s delay, `reloadGames()`) | `firststeps_dashlet` game-detection step | 01 |
+| Show actionable guidance when no games found post-discovery | `gamemode_management/views/NoGameDashlet.tsx` | 01 |
+| Fix `stagingDirectory.ts` partition-exists check — use Linux `statAsync` not Windows error code | `mod_management/stagingDirectory.ts` | 02 |
+| Fix `mod-location` todo visibility — broken `GetDiskFreeSpaceEx` condition hides it on Linux | `firststeps_dashlet/todos.tsx` | 02 |
+| Platform-conditional path examples in help text | `mod_management/texts.ts`, `mod_management/views/Settings.tsx` | 02 |
+| Platform guard in `raiseUACDialog` — Linux message references pkexec, not UAC | `util/fs.ts` | 03 |
+| Platform guard in `download_management/views/Settings.tsx:737` — Windows-only error text | `download_management/views/Settings.tsx` | 03 |
+| Platform guard in `activationStore.ts:313` — "Windows user account" message | `mod_management/util/activationStore.ts` | 03 |
+| Platform guard in `symlink_activator_elevate` name/description (if visible on Linux) | `symlink_activator_elevate/index.ts`, `Settings.tsx` | 03 |
+| Add Linux arm to `nativeErrors.ts` `decodeSystemError` for EPERM/EACCES | `util/nativeErrors.ts` | 03 |
+| Clamp onboarding overlay position to viewport bottom | `onboarding_dashlet/Dashlet.tsx` | 05 |
+| Add `max-height: calc(100vh - 160px)` + `flex-shrink: 0` on modal footer | `stylesheets/vortex/dialogs.scss` | 05 |
+| Add Linux entries to `WIKI_TOPICS`; platform branch in handler; `opn()` fallback | `extensions/documentation/src/index.tsx` | 06 |
 
-**Avoids:** Pitfalls 1 (EOPNOTSUPP fallback), 2 (empty-dir ordering), 4 (btrfs silent failure), 5 (binary absence check), 6 (Windows platform guard). Anti-features: no tune2fs, no shim removal.
+---
 
-**Files changed:** `src/renderer/src/util/fs.ts`, `src/renderer/src/util/fs.test.ts`
+## 2. Feature Table Stakes
 
-**Research needed:** None. Implementation is fully specified in ARCHITECTURE.md Q5 and FEATURES.md behavioral contract.
+What must work for ONBRD-01 through ONBRD-06 to be satisfied:
 
-### Phase 1B: Upstream Rebase CI Workflow
+### ONBRD-01 — First-run wizard completes, Steam auto-detected
 
-**Rationale:** Pure CI infrastructure — no application code changes, no interaction with Phase 1A at any level. Can be developed and reviewed in parallel with Phase 1A. The workflow structure is modeled directly on the existing `.github/scripts/cherry-pick.sh` idempotency pattern.
+- `firststeps_dashlet` todo list renders without crashing on a fresh Linux install
+  (currently crashes when `instPath`/`dlPath` are undefined — `GetVolumePathName` throws)
+- `pick-game` todo navigates to Games page where discovered Steam games appear
+- `getDriveList.ts` returns Linux mount points (not `"C:"`), so game search paths populate
+- When no Steam games found after quick discovery, an actionable notification or guidance
+  appears — not a blank screen
+- `manual-scan` todo is visible unconditionally on Linux (currently hidden because
+  `searchPaths !== undefined` condition is never true on a fresh install)
+- Steam detection retries once with a 2-second delay if initial result is empty, to handle
+  the case where Steam hasn't finished writing VDF/ACF files at Vortex launch
 
-**Delivers:** Daily automated detection of new nexus-mods/Vortex release tags; draft rebase PR with clean/conflict distinction; idempotent behavior on repeated runs; reduces the estimated 4–8 hour manual rebase cycle to a human review-and-merge operation.
+### ONBRD-02 — Staging directory configured with filesystem detection
 
-**Addresses (from FEATURES.md):** Cron trigger + tag comparison (P1); clean and conflicted rebase paths (P1); PR body template with fork URL (P1); duplicate PR guard (P1); repository guard (P1).
+- `mod-location` todo in `firststeps_dashlet` is visible on Linux (currently always hidden
+  because `GetDiskFreeSpaceEx` in the condition silently returns false on any error)
+- Staging directory suggestion resolves to `~/.local/share/Vortex/{game}/mods` (already
+  works via `suggestStagingPath()` Linux branch — no change needed)
+- `stagingDirectory.ts` shows the correct dialog when staging folder is missing on Linux
+  (currently the partition-exists check uses Windows error code and takes the wrong branch)
+- chattr+F fires automatically on directory creation — already wired via v6.0; no change needed
 
-**Avoids:** Pitfalls 7 (duplicate PRs — fixed branch name + idempotency check), 8 (empty PR on no-op — `merge-base` guard), 9 (conflict-to-draft-PR), 10 (branch protection — push to side branch only), 11 (feedback loop — `schedule` trigger not `push`), 12 (stale PR accumulation — fixed branch name + label).
+### ONBRD-03 — No Windows-specific error text on Linux
 
-**Files changed:** `.github/workflows/sync-upstream.yml` (new), `.github/scripts/sync-upstream.sh` (new), `.planning/upstream-sync/last-known-tag.txt` (new tracking file)
+- Zero `"Run as Administrator"` strings in any path a Linux user can reach during first run
+- Zero `"C:\"` or `"C:\\Users"` example paths in visible help text or tooltips
+- Zero `"Windows will show an UAC dialog"` text in any permission-error dialog
+- Zero `"windows user account"` text in any permission-error dialog
+- EPERM/EACCES on Linux produces an actionable Linux-specific message, not a fallthrough
+  to Windows-centric "Run as Administrator" text from `decodeSystemError`
 
-**Research needed:** None. Trigger mechanism, workflow structure, permissions model, and PR body template are fully specified in STACK.md and FEATURES.md.
+### ONBRD-04 — Mod install → deploy → enable round-trip
 
-### Phase 2: Integration Validation
+- A Proton game is detected and selectable (ONBRD-01 must be satisfied first)
+- Installing one mod archive completes without error (staging dir must exist — ONBRD-02)
+- "Deploy Mods" completes with hardlink or symlink deployment for a game on the same device
+  as staging
+- The mod shows as enabled in the mod list and the game can be launched through Vortex
+- No cryptic `NoDeployment` error appears immediately after wizard completion (staging
+  initialization race condition guard)
 
-**Rationale:** Both Phase 1 deliverables need end-to-end validation that unit tests alone cannot provide. The rebase CI needs a first live run to confirm GITHUB_TOKEN permissions and branch creation work in the actual fork. The chattr+F layer needs confirmation that both matrix jobs stay green.
+### ONBRD-05 — All dialogs render correctly at 1280×800
 
-**Delivers:** Confirmed green CI on both `ubuntu-latest` and `windows-latest` matrix jobs for Phase 1A; first successful (or intentionally-conflicted) rebase PR from Phase 1B; confirmed no duplicate PR on second workflow run.
+- The onboarding overlay (600px wide, 466px tall) does not clip below the viewport bottom
+  at 800px height — position clamping needed in `Dashlet.tsx`
+- The "Mark as complete" button in the YouTube overlay is always accessible without
+  requiring the user to discover a hidden scrollbar
+- No Bootstrap 3 modal has its action buttons clipped off-screen at 800px viewport height
+  (fix: `max-height: calc(100vh - 160px)` on wizard modal; `flex-shrink: 0` on footer)
 
-**Gate for Phase 1A:** Both matrix jobs in `main.yml` pass on the chattr+F PR; `applyChattrCasefold` unit tests pass; `fs.test.ts` covers all three cases (success, EOPNOTSUPP, non-Linux).
+### ONBRD-06 — "Get Help" links route to Linux documentation
 
-**Gate for Phase 1B:** Manual `workflow_dispatch` trigger produces a draft PR (or clean "no new upstream" exit); second manual trigger without merging the PR updates the branch without creating a duplicate; conflict-path creates a draft PR (inject artificial conflict to verify).
+- Clicking "Help centre" on Linux opens a Linux-appropriate URL, not the generic Windows wiki
+- If the Linux doc page does not yet exist, the fallback is the Vortex wiki root (acceptable)
+  rather than a dead link or Windows-only article
+- `opn()` failure on SteamOS (no default browser set) shows the URL as inline dialog text,
+  not a silent no-op
 
-**Optional additions at this phase (v1.x items):** `workflow_dispatch` `upstream_ref` input override; runtime casefold verification (`verifyCasefoldActive`); `upstream-rebase` label support; `workflow_dispatch` for rebase CI.
+---
 
-### Phase Ordering Rationale
+## 3. Watch Out For
 
-- Phase 1A and 1B share no files and have no runtime dependencies — parallel development is correct; do not serialize them.
-- Phase 2 validation gates on both Phase 1 PRs being merged and cannot start before both are in.
-- The chattr+F migration path (existing staging directories) is deferred to v2+ due to the hard kernel constraint (empty-dir requirement); new installations automatically get kernel casefold, existing installations silently continue using the shim.
-- The rebase CI conflict-to-draft-PR path must be implemented in Phase 1B from day one — adding it reactively means the first upstream release with conflicts produces a failed CI job with no actionable output and no PR.
-- The runtime casefold verification (`verifyCasefoldActive`) is deferred to Phase 2 validation because it is only relevant for NFS/FUSE staging directories, which are an uncommon configuration; the Phase 1A implementation is correct for the common cases.
+### Pitfall 1 — Editing i18n string literals breaks Windows wording (CRITICAL)
 
-### Research Flags
+The codebase uses inline string literals as i18next keys. Editing an existing
+`t("Windows will show an UAC dialog.")` changes the Windows UI permanently and stales
+non-English locale caches. Every string change must be a new conditional branch alongside
+the unchanged existing string:
 
-Phases with standard patterns — skip research-phase:
+```typescript
+// CORRECT: add new string alongside the old one
+const msg = process.platform === 'linux'
+  ? t("pkexec will request your password.")
+  : t("Windows will show a UAC dialog.");
 
-- **Phase 1A (chattr+F):** Injection point, call signature, platform guards, and test cases are fully specified in ARCHITECTURE.md Q5 and FEATURES.md. Implement directly from those documents.
-- **Phase 1B (Rebase CI):** Workflow structure, action versions, permissions model, idempotency pattern, and PR body template are fully specified in STACK.md and FEATURES.md. The `cherry-pick.sh` in the repo is the direct model.
-- **Phase 2 (Validation):** Standard CI validation — no research needed.
+// WRONG: edits existing key, breaks Windows and non-English locales
+t("pkexec will request your password.")
+```
 
-Phases that may benefit from deeper investigation before implementation:
+Never edit an existing `t("...")` literal. Add new ones alongside.
 
-- **NFS/FUSE runtime verification (Phase 2 / v1.x addition):** The `verifyCasefoldActive` function (write uppercase, read lowercase) is straightforward but needs care around race conditions and ensuring the test file does not interfere with the staging directory state. Brief design spike recommended before merging.
-- **btrfs casefold (future, not this milestone):** Research confidence is LOW — btrfs casefold is not confirmed in any released kernel as of April 2026. Do not implement btrfs casefold support until kernel availability is confirmed on hardware.
+### Pitfall 2 — `firststeps_dashlet/todos.tsx` crashes on undefined path (CRITICAL)
+
+On a fresh Linux install, `instPath`/`dlPath` in Redux state are `undefined`. The `value`
+function for `download-location` and `mod-location` todos calls
+`winapi.GetVolumePathName(props.instPath)` without guarding for `undefined`. The shim's
+mount-point walk throws, the React error boundary catches it, and the entire dashboard goes
+blank — the user has no onboarding guidance and cannot proceed.
+
+Fix: add `if (props.instPath === undefined) return t("<No staging folder>");` before the
+`GetVolumePathName` call in both todo `value` functions.
+
+### Pitfall 3 — `stagingDirectory.ts` partition check uses Windows-only error code (HIGH)
+
+`ensureStagingDirectoryImpl` checks `isErrorWithSystemCode(err) && err.systemCode === 2`
+to detect a missing partition. The Linux shim throws a plain JS Error without `systemCode`,
+so `partitionExists` stays `true`, and the wrong dialog branch fires when the staging folder
+is missing on Linux (user sees "removable drive" language rather than "create directory").
+This call path fires on every game activation, not just first run.
+
+Fix: platform-guard the partition-exists check; use
+`fs.statAsync(path.parse(instPath).root)` on Linux.
+
+### Pitfall 4 — Steam `mCache` singleton returns empty if Steam still loading at Vortex start (HIGH)
+
+`Steam.ts` populates `mCache` once at first `allGames()` call. If Vortex launches before
+Steam finishes writing its VDF/ACF files (common on first boot), the cache is populated
+with zero games and never refreshed without a restart.
+
+Fix: if `allGames()` returns empty on Linux, automatically retry once after a 2-second delay
+using the existing `steam.reloadGames()` method. Add a visible "Refresh" button in the
+game-detection view.
+
+### Pitfall 5 — Bootstrap 3 modal has no `max-height`; buttons clip at 800px (HIGH)
+
+`.common-dialog-wide` sets `height: 80%` = 640px at 800px viewport. After subtracting OS
+taskbar, window chrome, and Vortex toolbar (~160px total), the usable content area is ~640px.
+A modal at 80% viewport height with `overflow: hidden` on `.layout-flex` clips action
+buttons below the fold with no discoverable scroll.
+
+Fix:
+```scss
+.modal-dialog { max-height: calc(100vh - 160px); display: flex; flex-direction: column; }
+.modal-content { height: 100%; overflow-y: auto; }
+.modal-footer  { flex-shrink: 0; }
+```
+
+Test every wizard-adjacent dialog at exactly 800px browser height before shipping.
+
+---
+
+## 4. Phase Ordering Recommendation
+
+ONBRD-04 depends on both ONBRD-01 (need a detected game) and ONBRD-02 (need a staging
+dir). Everything else is independent and can be parallelized.
+
+```
+ONBRD-01 (Steam/game detection) ──┐
+                                   ├─→ ONBRD-04 (mod install round-trip)
+ONBRD-02 (staging dir setup)   ──┘
+
+ONBRD-03 (Windows string purge)  — independent
+ONBRD-05 (1280×800 layout)       — independent
+ONBRD-06 (help links)            — independent, lowest risk, lowest urgency
+```
+
+### Phase A — First-Run Dashboard Foundation (ONBRD-01)
+
+Fix the two crash paths that prevent the dashboard from rendering on a fresh Linux install:
+the `todos.tsx` undefined-path crash and the `getDriveList.ts` `"C:"` fallback. Add the
+Steam cache retry and the unconditional `manual-scan` todo on Linux. After this phase a
+Linux user can launch Vortex and see a working todo list that guides them to pick a game.
+
+Files: `getDriveList.ts`, `firststeps_dashlet/todos.tsx`, `NoGameDashlet.tsx`.
+
+Needs research: NO — exact file locations and fix patterns are specified.
+
+### Phase B — Staging Directory Wiring (ONBRD-02)
+
+Fix `stagingDirectory.ts` partition check, fix the `mod-location` todo visibility (broken
+`GetDiskFreeSpaceEx` condition), and fix Windows path examples in `texts.ts` and
+`Settings.tsx`. The chattr+F machinery already runs silently — this phase ensures the user
+can see and configure the staging path through the todo list without seeing Windows text.
+
+Files: `stagingDirectory.ts`, `texts.ts`, `mod_management/views/Settings.tsx`.
+
+Needs research: NO — exact line numbers and fix patterns are specified.
+
+### Phase C — Windows String Purge (ONBRD-03)
+
+Platform-guard all remaining Windows-specific error strings. Add Linux arm to
+`nativeErrors.ts` so EPERM/EACCES produce actionable Linux messages instead of falling
+through to "Run as Administrator" text. Verify whether `symlink_activator_elevate` is
+visible on Linux before committing scope for that file.
+
+Files: `fs.ts`, `download_management/views/Settings.tsx`, `activationStore.ts`,
+`nativeErrors.ts`, and conditionally `symlink_activator_elevate/index.ts` and `Settings.tsx`.
+
+Needs research: One runtime/source check — verify whether `tasksSupported()` returns false
+on Linux (determines if `symlink_activator_elevate` is in scope for string changes).
+
+### Phase D — Layout at 1280×800 (ONBRD-05)
+
+Apply modal fix (`max-height` + sticky footer). Clamp onboarding overlay position in
+`Dashlet.tsx`. Run Vortex at exactly 1280×800 and audit every dialog reachable in the
+first-run flow. This phase is independent and can run in parallel with Phase C.
+
+Files: `stylesheets/vortex/dialogs.scss`, `onboarding_dashlet/Dashlet.tsx`.
+
+Needs research: Live visual inspection at 800px height to confirm which dialogs clip —
+static code analysis alone is insufficient.
+
+### Phase E — Help Links (ONBRD-06)
+
+Add Linux entries to `WIKI_TOPICS`. Add `opn()` rejection handler that shows URL inline
+as fallback for SteamOS no-browser case. Should be last — it requires Linux documentation
+pages to exist at target URLs, or a redirect URL to be set up first.
+
+Files: `extensions/documentation/src/index.tsx`.
+
+Needs research: Confirm target URL exists or create a stable redirect before implementation.
+
+### Phase F — Mod Install Round-Trip Validation (ONBRD-04)
+
+No new code. End-to-end UAT: install one mod for a Proton game, deploy, enable, verify
+game loads mod. Requires Phases A and B to be complete. Document result in PROJECT.md.
+
+Needs research: NO (for code). Requires human tester with Steam + Proton game installed.
+
+---
+
+## 5. Key Open Questions
+
+Blockers and decisions needed before or during execution:
+
+**Q1: Does `symlink_activator_elevate.isSupported()` return false/unsupported on Linux?**
+If yes, the "Run as Administrator" name is never shown and no string change is needed
+for that file. If no, a platform-conditional name must be added. Verify by tracing
+`tasksSupported()` return value before committing Phase C scope for that extension.
+Impact: determines whether 2-3 files are in scope for ONBRD-03.
+Source: ARCHITECTURE.md "symlink_activator_elevate on Linux — MEDIUM confidence"
+
+**Q2: Does a Linux-specific Vortex help article exist at Nexus Mods (or fork wiki)?**
+ONBRD-06 requires help links to point somewhere useful. If no Linux article exists yet,
+the implementation should use a stable redirect URL the maintainer controls
+(`github.com/atabisz/Vortex/wiki/linux-setup`), not a direct article URL that may 404.
+Ship the redirect first; update the article later.
+Impact: must be confirmed before Phase E can ship.
+Source: STACK.md "Help URL Infrastructure" + PITFALLS.md Pitfall 9
+
+**Q3: Is the `mod-location`/`download-location` disk-space fix (replace `GetDiskFreeSpaceEx`
+with `fs.statfs()`) in scope for v7.0?**
+The todo items are currently always hidden on Linux because the shim's `GetDiskFreeSpaceEx`
+silently returns false. Replacing the condition with native `statfs().bavail * bsize` is a
+one-function change and would make disk-space todos functional. It is listed as a
+differentiator in FEATURES.md but not a table-stakes requirement.
+Impact: decides whether Phase B includes this change or defers it.
+Source: FEATURES.md "Differentiators" + PITFALLS.md Pitfall 15
+
+**Q4: Should staging-path suggestion use device-aware logic on Linux for multi-drive setups?**
+`suggestStagingPath()` always returns `{USERDATA}/{game}/mods` on Linux, even when the
+game is on an external drive. This guarantees hardlink deployment fails for external-drive
+Steam libraries. PITFALLS.md Pitfall 6 has the fix (`statSync.dev` comparison). Low cost,
+meaningful benefit for multi-drive users. Decide: Phase B or deferred.
+Impact: scope of Phase B.
+Source: PITFALLS.md Pitfall 6
+
+**Q5: Is ONBRD-04 a human UAT gate or a CI-testable integration test?**
+The mod install → deploy → enable round-trip requires a real Proton game install. The
+existing UAT backlog (ELEV-05, PROT-01) is already pending hardware testing. Decide
+whether Phase F is a code phase, a sign-off gate, or both.
+Impact: determines whether Phase F appears on the execution roadmap or the UAT backlog.
+Source: PROJECT.md "Human UAT pending" items
 
 ---
 
@@ -202,51 +333,42 @@ Phases that may benefit from deeper investigation before implementation:
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All technologies verified: `fs.statfs()` Node docs, `chattr` man page, Actions marketplace versions confirmed April 2026; rejected alternatives confirmed via npm registry and marketplace inspection |
-| Features | HIGH | Grounded in direct codebase inspection of `fs.ts`, `stagingDirectory.ts`, `profile_management/index.ts`, and existing CI workflows; behavioral contract derived from actual call chain |
-| Architecture | HIGH | Injection point (`ensureDirWritableAsync` in `fs.ts`) confirmed by full call chain trace from `manageGameDiscovered` through `ensureStagingDirectoryImpl`; workflow structure modeled on existing `cherry-pick.sh` pattern |
-| Pitfalls | HIGH | 13 pitfalls documented from codebase audit + kernel behavior + Actions permissions; not inferred — observed from source patterns, man pages, and kernel documentation |
+| Stack | HIGH | No new deps confirmed; all 6 ONBRD items mapped to existing files with exact line numbers |
+| Features | HIGH | All table-stakes gaps identified with exact file + line numbers from live source |
+| Architecture | HIGH | Extension hooks, Redux state paths, and ONBRD dependency graph confirmed from source |
+| Pitfalls | HIGH | 14 pitfalls grounded in codebase audit; 2 MEDIUM items noted (symlink_activator_elevate runtime behavior; dialog clip locations need live test at 800px) |
 
 **Overall confidence:** HIGH
 
-### Gaps to Address
+### Gaps to Address During Planning
 
-- **btrfs casefold status (LOW confidence):** No released kernel version confirmed supporting `chattr +F` on btrfs as of April 2026. STACK.md correctly includes `BTRFS_SUPER_MAGIC` in `getStagingFsType()` as future-proofing but explicitly marks btrfs casefold as unconfirmed. Treat btrfs as "always fallback to shim" for this milestone; revisit when btrfs casefold lands in a stable kernel release.
+- **`symlink_activator_elevate` on Linux runtime behavior (MEDIUM)** — needs a quick
+  source trace of `tasksSupported()` to confirm whether the deployment method appears in
+  the UI on Linux. Resolves Q1 above; determines Phase C scope.
 
-- **NFS/FUSE runtime verification (Phase 2 decision point):** The `verifyCasefoldActive` runtime test (Pitfall 6) is specified but marked as a v1.x addition. If staging directories on NAS/network mounts are a common user configuration for this project's target audience (Steam Deck users using external drives), promote the runtime verification to a Phase 1A must-have rather than a post-validation addition. Decide before Phase 1A starts.
+- **Dialog clip locations at 1280×800** — ARCHITECTURE.md and FEATURES.md identify likely
+  risk areas but actual clipping must be confirmed by running Vortex at 800px height. Cannot
+  be fully scoped from static code analysis alone. Phase D must include a visual inspection
+  step before writing SCSS changes.
 
-- **SteamOS `/home` partition behavior (expected, documented for clarity):** SteamOS uses btrfs for the OS partition but ext4 for `/home` on Steam Deck; however, the ext4 `/home` partition is typically formatted without the casefold feature. Steam Deck users will always fall back to the userspace shim — chattr+F will not activate in the primary SteamOS deployment scenario. This is correct behavior (silent fallback), but worth stating explicitly so the feature is not expected to reduce per-call overhead on Steam Deck.
+- **Linux help article URL** — must be confirmed or a redirect URL created before Phase E
+  can be finalized. If deferred until an article exists, Phase E can ship with a GitHub wiki
+  fallback in the interim.
 
 ---
 
 ## Sources
 
-### Primary (HIGH confidence)
+All findings from direct codebase inspection at `/home/alex/src/Vortex/` on 2026-04-16.
+No external documentation consulted — confidence derives from reading live source files.
 
-- `src/renderer/src/util/fs.ts` — `ensureDirWritableAsync`, `isWinePrefixPath`, `resolveCaseIfWinePrefix`, injection point confirmed
-- `src/renderer/src/extensions/mod_management/stagingDirectory.ts` — `ensureStagingDirectoryImpl`, full staging dir creation call chain
-- `src/renderer/src/extensions/profile_management/index.ts` — `manageGameDiscovered` → `ensureStagingDirectory` call site
-- `.github/workflows/main.yml` — CI matrix structure; Windows + Linux parallel build jobs confirmed
-- `.github/workflows/cherry-pick.yml` + `.github/scripts/cherry-pick.sh` — idempotent PR creation pattern; conflict-to-draft-PR handling — direct model for rebase CI
-- `.github/workflows/release-linux.yml` — fork-only workflow pattern; `workflow_run` trigger example
-- nodejs.org — `fs.statfs()` added v18.17.0, `.type` field returns `f_type` filesystem magic number
-- man1/chattr — `+F` sets `FS_CASEFOLD_FL`; requires empty directory; requires filesystem-level casefold feature enabled at mkfs time
-- kernelnewbies.org/Linux_5.2 — ext4 casefold merged in Linux 5.2 (2019)
-- github.com/peter-evans/create-pull-request — v8.1.1, April 2026, 2.7k stars, 537 forks, 114 releases
-- github.com/actions/github-script — v9.0.0, April 2026
-- docs.github.com Actions — `schedule`, `workflow_dispatch`, `repository_dispatch` event docs; confirmed no cross-repo `release` trigger
-
-### Secondary (MEDIUM confidence)
-
-- Steam/Proton `chattr +F` behavior on Steam library folders — community-documented in Steam for Linux changelogs (2019) and SteamOS documentation; no direct Valve source code inspection
-- btrfs EOPNOTSUPP on `chattr +F`: confirmed via chattr man page behavior documentation; no direct kernel btrfs source inspection for April 2026 btrfs status
-
-### Tertiary (LOW confidence)
-
-- btrfs casefold kernel support: no released kernel version confirmed as of April 2026 — ext4-only for this milestone
-- `imba-tjd/rebase-upstream@0.12` characteristics: confirmed via marketplace search but limited detail on actual behavior
+Detailed findings with exact file paths and line numbers in:
+- `.planning/research/STACK.md`
+- `.planning/research/FEATURES.md`
+- `.planning/research/ARCHITECTURE.md`
+- `.planning/research/PITFALLS.md`
 
 ---
 
-*Research completed: 2026-04-15*
+*Research completed: 2026-04-16*
 *Ready for roadmap: yes*

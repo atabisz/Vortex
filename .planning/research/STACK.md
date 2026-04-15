@@ -1,427 +1,446 @@
-# Stack Research
+# Technology Stack
 
-**Domain:** Electron mod manager — chattr+F casefold staging + GitHub Actions upstream rebase
-**Researched:** 2026-04-15
-**Confidence:** HIGH for chattr+F approach and CI trigger pattern; MEDIUM for btrfs casefold status
+**Project:** Vortex Linux — v7.0 First-Run Onboarding Wizard
+**Researched:** 2026-04-16
+**Confidence:** HIGH — all findings based on direct code inspection of the live codebase
 
 ---
 
 ## Scope
 
-This document covers stack additions for the **chattr+F filesystem casefold** and **upstream rebase
-CI** features. Previous milestone research (v1.0–v3.0) is summarized in the "Already Validated"
-section; the bulk of this document covers only new additions.
+This document covers stack analysis for the **v7.0 First-Run Onboarding Wizard** milestone.
+All previous milestone stack research (v1.0–v6.0) is preserved in git history. This file
+covers only what is relevant for v7.0.
+
+The v7.0 requirements are:
+- **ONBRD-01**: First-run wizard completes and auto-detects Steam library
+- **ONBRD-02**: Mod staging directory configured with filesystem detection (ext4 → chattr+F,
+  fallback for XFS/ZFS/other)
+- **ONBRD-03**: No "Run as Administrator" or `C:\` paths appear in any error state on Linux
+- **ONBRD-04**: Mod install → deploy → enable round-trip works for one Proton game
+- **ONBRD-05**: All dialogs render without clipped buttons or invisible scroll at 1280×800
+- **ONBRD-06**: "Get Help" links route to Linux-specific documentation
+
+**No new major dependencies are needed.** This is UI/string fixes + connecting existing
+detection code to the wizard flow.
 
 ---
 
-## Already Validated — Do Not Re-Research
+## 1. First-Run Wizard Infrastructure (ONBRD-01)
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Electron 39 on Linux | v1.0 | .deb + AppImage; 16 runtime .so deps |
-| Wine prefix case-folding shim | v1.0 | `isWinePrefixPath()` + `resolveCaseIfWinePrefix()` wrapping fs calls in `src/main/src/filesystem/fs.ts` |
-| pnpm workspace monorepo | All phases | pnpm 10, Node.js 22, TypeScript, Vitest |
-| `pkexec` / `sudo` elevation | v3.0 | `child_process.spawn` approach; no new npm deps |
-| gamebryo-savegame pnpm patch | v3.0 | `patches/gamebryo-savegame@2.1.2.patch` |
-| CI: ubuntu-latest with native addon rebuilds | v2.0+ | main.yml + release-linux.yml both functional |
+### What Exists
 
----
+Vortex does not have a traditional "modal wizard" that appears on first run. The first-run
+experience is entirely dashboard-based and consists of two separate dashlets plus a
+game-picker flow:
 
-## Feature: chattr+F Kernel Casefold on ext4/btrfs
+#### `firststeps_dashlet` — The "To-Do" dashlet ("Let's get you set up")
 
-### Background
+**Location:** `src/renderer/src/extensions/firststeps_dashlet/`
 
-`chattr +F` sets the `FS_CASEFOLD_FL` inode flag on a directory. The kernel then performs
-case-insensitive path lookups within that directory. For mod staging directories, this means a
-mod file named `Data/Textures/Foo.dds` is found even when the game requests
-`data/textures/foo.dds` — eliminating the need for the Wine prefix shim for those paths.
+Files:
+- `index.ts` — registers dashlet, exposes `registerToDo` API to other extensions
+- `Dashlet.tsx` — renders the to-do list; calls `todo.action(props)` on click
+- `todos.tsx` — defines the built-in todo items (pick-game, profile-visibility, download-location,
+  mod-location, manual-scan)
+- `reducers.ts` — persists which steps have been dismissed (`settings.firststeps.steps`)
+- `actions.ts` — `dismissStep` action
+- `IToDo.ts` — interface
 
-**Kernel requirement:** Linux 5.2+ for ext4 casefold (confirmed merged; see kernelnewbies.org/Linux_5.2).
-**btrfs casefold:** Not confirmed in any released kernel version as of April 2026 — ext4 ONLY for now.
-**Filesystem prerequisite:** The filesystem must be formatted with the `casefold` feature enabled
-(e2fsprogs 1.45.6+: `mkfs.ext4 -O casefold`). The feature cannot be added to an existing
-filesystem without reformatting.
-
-### How chattr +F Works at the Kernel Level
-
-`chattr +F` internally calls `ioctl(fd, FS_IOC_SETFLAGS, &flags)` with `FS_CASEFOLD_FL = 0x40000000`
-set in the flags bitmask. The kernel (ext4 driver) validates: (a) the filesystem was mounted with
-casefold support, (b) the directory is empty, (c) the kernel version is 5.2+. If any check fails,
-`ioctl` returns `EOPNOTSUPP`.
-
-### API Approach: Shell Out to `chattr`
-
-**Recommended: `child_process.execFile('chattr', ['+F', dirPath])`**
-
-Rationale:
-- Zero new npm dependencies — uses Node.js built-in `child_process`
-- `chattr` is part of `e2fsprogs`, installed on all major Linux distros (Ubuntu: `e2fsprogs` package)
-- The `ioctl` npm package (v2.0.2, last published July 2019) uses NaN (not N-API) — requires
-  native recompile per Node version and is unmaintained. Risk of breakage on Node 22 upgrade.
-- `ffi-napi` (v4.0.3, last published March 2021) could call `ioctl` via FFI, but adds a native
-  addon dependency to a feature that needs zero-dep shell-out as fallback anyway.
-- Direct ioctl via N-API would require writing a new C++ addon — unjustified complexity when
-  `chattr` is universally available.
-
-**Integration pattern** (fits existing `src/main/src/filesystem/fs.ts` style):
-
+**Critical issue for ONBRD-03:** `todos.tsx` calls `winapi.GetDiskFreeSpaceEx()` and
+`winapi.GetVolumePathName()` directly at lines 31, 99, and 132. The import is:
 ```typescript
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import * as winapi from "winapi-bindings";
+```
+On Linux, webpack aliases `winapi-bindings` → `src/renderer/src/util/winapi-shim.ts`
+(configured at `src/renderer/webpack.config.cjs:52`), so the shim's Linux-native implementations
+(`statfsSync`, mount-point walk) are used. The shim already works correctly.
 
-const execFileAsync = promisify(execFile);
+**Issue:** The `download-location` and `mod-location` todos only appear as
+warnings when disk space is below 200 GB (`MIN_DISK_SPACE = 200 * 1024^3`). On Linux the
+`GetVolumePathName()` shim returns the mount point path (e.g., `/home`, `/`) rather than
+`C:` drive letter. This is correct behavior — no change needed.
 
-/**
- * Attempt to enable kernel case-folding on `dirPath` via chattr +F.
- * Returns true on success, false if the filesystem does not support it
- * or chattr is not available (caller falls back to Wine prefix shim).
- */
-export async function tryEnableCasefold(dirPath: string): Promise<boolean> {
-  if (process.platform !== 'linux') return false;
-  try {
-    await execFileAsync('chattr', ['+F', dirPath]);
-    return true;
-  } catch {
-    // EOPNOTSUPP: filesystem not formatted with casefold feature
-    // ENOENT: chattr not installed (e2fsprogs missing)
-    // EINVAL: directory not empty, or kernel < 5.2
-    return false;
-  }
+**Issue:** The `mod-location` todo value displays the volume path via `winapi.GetVolumePathName`,
+which returns the mount point on Linux. This is reasonable (e.g., `/home`), though it is less
+informative than a drive letter display. MEDIUM priority — informational only.
+
+#### `NoGameDashlet` — The welcome banner
+
+**Location:** `src/renderer/src/extensions/gamemode_management/views/NoGameDashlet.tsx`
+
+Shows "Welcome to Vortex — As this is the first time you start Vortex, please pick a game
+to manage." Renders discovered game thumbnails inline and has a "More..." link to the Games
+page. No Windows strings. No layout issues observed.
+
+#### `onboarding_dashlet` — The video tutorial dashlet ("Get Started")
+
+**Location:** `src/renderer/src/extensions/onboarding_dashlet/`
+
+Files:
+- `index.ts` — registers dashlet
+- `Dashlet.tsx` — renders video cards and a "completed" state
+- `steps.ts` — hard-codes three tutorial videos (YouTube embeds): "Manage your game",
+  "Browse & install mods", "Using Profiles in Vortex"
+- `views/Overlay.tsx` — renders the iframe + "Mark as complete" button
+
+**Issue for ONBRD-01/ONBRD-06:** The tutorial videos are Windows-centric (no Linux-specific
+content). Existing video IDs (Nn4fLIbe7mU, MxmZNONcSVU, tNfA0iZ7kgw) should be supplemented
+with a Linux-specific step if available, or the description text updated to note Linux
+differences. This is a content decision, not a code architecture change.
+
+**Overlay size at 1280×800 (ONBRD-05):** The overlay is sized at:
+```scss
+.instructions-overlay.overlay-onboarding {
+    height: 466px;
+    width: 600px;
 }
 ```
+At 1280×800 this is fine — the overlay is 600px wide vs 1280px viewport. No clipping expected.
 
-**Fallback:** When `tryEnableCasefold()` returns `false`, the existing Wine prefix shim
-(`resolveCaseIfWinePrefix`) continues to handle case-insensitive resolution. No degradation.
+### Steam Library Auto-Detection (ONBRD-01)
 
-### How to Detect Filesystem Type: `fs.statfs()` (Node.js Built-In)
+Steam library detection is fully implemented in v2.0 via:
+- `src/renderer/src/util/Steam.ts` — `allGames()` uses `findAllLinuxSteamPaths()` on Linux
+- `src/renderer/src/util/linux/steamPaths.ts` — parses VDF, handles Flatpak Steam paths
 
-**Recommended: `fs.promises.statfs(path)` — available since Node.js v18.17.0**
+**The detection already works on Linux.** ONBRD-01 is about ensuring the wizard flow
+*surfaces* the detection results correctly, not reimplementing detection.
 
-The `.type` field returns the Linux filesystem magic number matching `statfs(2)`'s `f_type`.
+The `firststeps_dashlet` todos include a `pick-game` item that navigates to the Games page
+(`api.events.emit("show-main-page", "Games")`). The Games page runs `allGames()` via the
+Steam store helper. No changes needed to detection; the wiring already exists.
 
+---
+
+## 2. Mod Staging Directory + Filesystem Detection (ONBRD-02)
+
+### Status: Already Implemented in v6.0
+
+`applyChattrCasefold(dirPath)` in `src/renderer/src/util/fs.ts` is called from
+`ensureDirWritableAsync()`. This covers:
+- `statfsSync` to detect ext4 casefold support (CASE-05)
+- `chattr +F` application on success (CASE-06)
+- Silent fallback to Wine-prefix shim on EOPNOTSUPP/EINVAL/non-ext4 (CASE-07)
+- Platform guard (CASE-08), Flatpak guard (CASE-09), post-apply verify (CASE-10)
+
+**ONBRD-02 is already satisfied by v6.0 infrastructure.** No stack changes needed.
+
+---
+
+## 3. Windows-Specific Strings (ONBRD-03)
+
+### Findings by File
+
+#### HIGH PRIORITY — Visible on Linux, no platform guard
+
+**`src/renderer/src/extensions/download_management/views/Settings.tsx:737`**
+```
+"This directory is not writable to the current windows user account. "
+"Vortex can try to create the directory as administrator but it will "
+"then have to give access to it to all logged in users."
+```
+Triggered by `confirmElevate()` when user attempts to create a non-writable download
+directory. No platform guard. This dialog and its "Create as Administrator" button appear
+on Linux. Must be fixed.
+
+**`src/renderer/src/util/fs.ts:1563-1564` (inside `raiseUACDialog`)**
+```
+"If your account has admin rights Vortex can unlock the file for you. "
+"Windows will show an UAC dialog."
+```
+`raiseUACDialog` is called from `forcePerm` when both `changeFileAttributes` and the
+retry path fail on `EPERM`/`EACCES`. This can happen on Linux. Must be fixed.
+
+**`src/renderer/src/extensions/mod_management/util/activationStore.ts:313`**
+```
+"insufficient permissions.\nPlease ensure your Windows user account "
+"has full read/write permissions to the manifest file and try again."
+```
+EPERM reading the manifest file — no platform guard. Can be seen on Linux. Must be fixed.
+
+**`src/renderer/src/extensions/mod_management/texts.ts:96-98`**
+```
+"e.g. if your Windows account name is Mike,"
+'"C:\\Users\\Mike\\AppData\\Roaming\\Vortex\\Downloads\\"'
+```
+Shown in the More popover for the downloads path setting. Informational text, visible on
+Linux. Should be replaced with platform-appropriate example paths.
+
+**`src/renderer/src/extensions/mod_management/views/Settings.tsx:222`**
+```
+'"c:\\Users\\<username>\\AppData\\Roaming\\Vortex\\<game>" because that\'s '
+```
+In the "Staging Path Mode" More popover. Visible on Linux. Should show Linux path example
+(`~/.local/share/vortex/<game>`) instead.
+
+#### MEDIUM PRIORITY — Shown on Linux but only as deployment method descriptions (informational)
+
+**`src/renderer/src/extensions/symlink_activator_elevate/index.ts:121,123`**
+```
+"Symlink Deployment (Run as Administrator)"
+"This is run as administrator and requires your permission every time we deploy."
+```
+This extension's `isSupported()` returns `{ description: (t) => "Elevation not required on
+non-windows systems" }` on Linux (line 240), so this deployer never becomes *active* on
+Linux. The name/description strings are only shown in the deployment method selector UI,
+where the method appears as "unavailable." A Linux user sees the unavailability reason
+("Elevation not required on non-windows systems") but not the method's own description
+string. MEDIUM priority — could confuse if the user browses deployment method details.
+
+**`src/renderer/src/extensions/symlink_activator/index.ts:104`**
+```
+"Requires admin rights on windows."
+```
+`symlink_activator.isSupported()` calls `this.ensureAdmin()` which tests symlink creation.
+On Linux, regular users can create symlinks in home directories, so `ensureAdmin()` returns
+`true` and this string is NOT shown. The `symlink_activator` is available on Linux.
+LOW priority — string would only show if symlink creation fails for the test file.
+
+**`src/renderer/src/extensions/symlink_activator_elevate/index.ts:154,186-187`**
+```
+"On Windows, symbolic links only work on NTFS drives."
+" - On windows you need admin rights to create a symbolic link..."
+```
+These are in `detailedDescription()` which is shown when the user clicks "details" on a
+deployment method in settings. The `symlink_activator_elevate` shows as unavailable on
+Linux, but its detail text can still be viewed. LOW/MEDIUM priority.
+
+#### LOW PRIORITY — Platform-guarded or in comments
+
+- `src/main/src/Application.ts:650-656`: UAC warning dialog — guarded by `is-admin` which
+  returns `false` on non-win32. Never shown on Linux.
+- `src/main/src/Application.ts:401-417`: "My Documents" missing dialog — `DocumentsPathMissing`
+  only thrown on `win32` (guarded at `Application.ts:1200`). Never shown on Linux.
+- `src/renderer/src/extensions/symlink_activator_elevate/Settings.tsx:138-149`: UAC/Developer
+  Mode dialog — this settings page is Windows-only since the deployer is unavailable on Linux.
+- `src/renderer/src/util/fs.ts:1367`: Comment only (UAC dialog cancellation code). Not user-visible.
+- `src/renderer/src/extensions/installer_dotnet/index.ts:98,150`: .NET installer — the
+  `installer_dotnet` extension has its own platform guard; not applicable on Linux.
+
+---
+
+## 4. Help URL Infrastructure (ONBRD-06)
+
+### How "Get Help" Works
+
+The help system uses a single event-driven pattern: `api.events.emit("open-knowledge-base", wikiId?)`.
+
+**Entry point:** `src/renderer/src/views/components/Header/HelpSection.tsx:30`
 ```typescript
-import { statfs } from 'node:fs/promises';
+api.events.emit("open-knowledge-base");
+```
+The "Help centre" dropdown item in the header fires this event without a `wikiId`.
 
-const EXT4_SUPER_MAGIC  = 0xef53;
-const BTRFS_SUPER_MAGIC = 0x9123683e;  // future-proofing; btrfs casefold not yet merged
-
-export async function getStagingFsType(path: string): Promise<'ext4' | 'btrfs' | 'other'> {
-  if (process.platform !== 'linux') return 'other';
-  try {
-    const stats = await statfs(path);
-    if (stats.type === EXT4_SUPER_MAGIC) return 'ext4';
-    if (stats.type === BTRFS_SUPER_MAGIC) return 'btrfs';
-    return 'other';
-  } catch {
-    return 'other';
+**Handler:** `extensions/documentation/src/index.tsx:118-133`
+```typescript
+context.api.events.on("open-knowledge-base", (wikiId?: string) => {
+  const state = context.api.store.getState();
+  const isModernLayout = state.settings?.window?.useModernLayout;
+  if (isModernLayout) {
+    const url = generateUrl(wikiId) ?? WIKI_URL;
+    util.opn(url).catch(() => null);  // opens browser
+  } else {
+    context.api.events.emit("show-main-page", "Knowledge base");
+    // navigate to inline Knowledge base page
   }
+});
+```
+
+**URL generation:** `extensions/documentation/src/index.tsx:13-34`
+```typescript
+const WIKI_URL = "https://github.com/Nexus-Mods/Vortex/wiki";
+
+const WIKI_TOPICS = {
+  "adding-games": "MODDINGWIKI-Users-UI-Games-section",
+  "deployment-methods": "MODDINGWIKI-Users-General-Deployment-Methods",
+  // ... 8 topics total, all Windows-focused
+};
+```
+
+**Issue for ONBRD-06:** There are no Linux-specific wiki topic IDs. The `WIKI_URL` points
+to `github.com/Nexus-Mods/Vortex/wiki` which has no Linux-specific documentation. When a
+Linux user clicks "Help centre" they get the Windows-focused Nexus Mods wiki.
+
+**What needs to change:**
+1. Add a Linux-specific default help URL constant (e.g., pointing to a Linux setup guide)
+2. Optionally add Linux-specific `wikiId` entries (e.g., `"linux-setup"`) that can be
+   emitted from relevant error dialogs
+3. The `open-knowledge-base` handler in `documentation/src/index.tsx` can be extended
+   to branch on `process.platform === "linux"` for the default fallback URL
+
+**More component (inline help):** `src/renderer/src/controls/More.tsx` shows a "Learn more"
+link that emits `open-knowledge-base` with the component's `wikiId`. This is the inline
+contextual help for settings fields. No changes needed to the component itself; the wiki
+topic map in `documentation/src/index.tsx` just needs Linux entries added.
+
+---
+
+## 5. Layout at 1280×800 (ONBRD-05)
+
+### Window Size Constraints
+
+`src/main/src/MainWindow.ts:17`:
+```typescript
+const MIN_HEIGHT = 700;
+```
+`src/main/src/MainWindow.ts:387-388`:
+```typescript
+minWidth: 1024,
+minHeight: MIN_HEIGHT,  // 700px
+```
+
+At 1280×800, Vortex has 800px height — 100px above the 700px minimum. The window fits
+within 1280×800.
+
+### Potential Layout Problems at 1280×800
+
+**Onboarding cards (`.onboarding-card`):**
+```scss
+.onboarding-card {
+    width: 250px;
+    max-width: 250px;
+}
+.onboarding-card-list {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;  // wraps if needed
+    overflow: auto;
 }
 ```
+Three cards × 250px + 2 gaps × 14px = 778px minimum. At 1280px wide minus the Spine
+sidebar width, there should be enough room for 3 cards in a row. `flex-wrap: wrap` means
+cards wrap to a second row at narrow widths — no clipping, just reflow.
 
-**Why not `/proc/mounts`:** Parsing text files is fragile (bind mounts, overlays) and requires
-mapping device paths to directory paths. `statfs()` is the POSIX-correct approach and works
-directly on any path — no device lookup needed.
-
-**Why not shell out to `findmnt` or `df`:** Extra process spawn, extra failure modes, text parsing.
-`statfs()` is synchronous-capable and built into Node with proper typing.
-
-**Node 22 compatibility:** Confirmed. `fs.statfs()` was added in v18.17.0; Node 22 (LTS) fully
-supports it. No polyfill needed.
-
-### System Prerequisites (runtime, not build-time)
-
-| Prerequisite | Ubuntu pkg | Notes |
-|-------------|-----------|-------|
-| `chattr` binary | `e2fsprogs` | Pre-installed on all Ubuntu installations; no apt change needed |
-| ext4 with casefold feature | (user's filesystem) | Must be present at format time; `mkfs.ext4 -O casefold`; NOT retroactively addable |
-| Linux kernel 5.2+ | (user's kernel) | Ubuntu 20.04 LTS ships 5.4+; all current LTS distros qualify |
-
-**No new npm packages needed for chattr+F.**
-
-### What NOT to Use for chattr+F
-
-| Approach | Why Rejected |
-|----------|-------------|
-| `ioctl` npm package (v2.0.2) | NaN-based (not N-API), last published July 2019, unmaintained; rebuild risk on Node 22 upgrades |
-| `ffi-napi` (v4.0.3) | Adds native addon dep for something `execFile` handles in 5 lines; published 2021, unknown Node 22 status |
-| Custom N-API ioctl addon | 200+ lines of C++ to replace a `chattr` one-liner; not justified |
-| Parsing `/proc/mounts` | Fragile text parsing; use `statfs()` instead |
-| `findmnt` / `df` shell-out | Extra process, text parsing, same data available from `statfs()` |
-
----
-
-## Feature: GitHub Actions Upstream Rebase Automation
-
-### Problem Statement
-
-The `nexus-mods/Vortex` upstream repo releases new tags/versions periodically. This fork
-(`atabisz/Vortex`) needs to rebase its `linux-port` branch on top of new upstream releases and
-open a PR for human review before merging.
-
-### Trigger Mechanism: `schedule` (cron polling)
-
-**There is no GitHub Actions event that fires on a different repository's release.**
-
-The `release` and `push` events in GitHub Actions only fire for activity in the *current* repo.
-Cross-repo watching requires one of:
-1. **`schedule` (cron)**: poll upstream periodically — the standard pattern
-2. **`repository_dispatch`**: receive a webhook from upstream — requires upstream to cooperate (N/A here)
-3. **`workflow_dispatch`**: manual trigger — good to add as a companion for on-demand runs
-
-**Recommended trigger combination:**
-
-```yaml
-on:
-  schedule:
-    - cron: '0 6 * * *'   # daily at 06:00 UTC
-  workflow_dispatch:        # allow manual trigger
+**Overlay (`.instructions-overlay.overlay-onboarding`):**
+```scss
+height: 466px;
+width: 600px;
 ```
+This is positioned absolutely near the clicked card. At 1280×800 this overlay (600px wide,
+466px tall) should fit. The overlay uses `window.innerWidth / window.innerHeight` for its
+position reference. At 800px height, a 466px overlay leaves 334px of space — the overlay
+should not be cut off if positioned with enough top margin. **Investigation needed** at
+actual 1280×800 to verify no clipping at bottom edge.
 
-Daily polling is sufficient. New upstream releases are rare (weekly/monthly). The 5-minute minimum
-cron interval is irrelevant here — daily is the right cadence.
-
-### Workflow Logic
-
-The workflow needs to:
-1. Fetch latest upstream release tag via GitHub REST API
-2. Compare against last-known tag stored in the fork
-3. If new: checkout `linux-port`, add upstream remote, `git rebase upstream/master`, push to new branch
-4. Create a draft PR with the rebase branch → `master`
-
-### Recommended Actions
-
-| Action | Version | Purpose | Why |
-|--------|---------|---------|-----|
-| `actions/checkout@v6` | v6 | Checkout fork with full history | Already used in existing workflows; `fetch-depth: 0` for rebase |
-| `actions/github-script@v9.0.0` | v9.0.0 | Query upstream release via Octokit | Pre-authenticated; avoids raw curl; current release April 2026 |
-| `peter-evans/create-pull-request@v8.1.1` | v8.1.1 | Create the rebase PR | Actively maintained (537 forks, 114 releases); handles branch creation + PR |
-
-**Note on marketplace rebase actions:**
-Several marketplace actions exist (`imba-tjd/rebase-upstream@0.12`, `tjusl/fetch-upstream-action-rebase`)
-but both are uncertified, minimally tested, and not maintained by established publishers.
-The recommended approach builds the rebase workflow from primitives (git commands + github-script +
-create-pull-request) to ensure full control over conflict handling and PR content.
-
-### Tag Tracking Pattern
-
-Store the last-seen upstream tag in a tracked file in the repo:
-
+**Game picker media query:**
+```scss
+@media (max-width: 1280px) {
+    // .game-thumbnail-body .thumbnail-img {
+    //   max-width: 128px;
+    // }
+}
 ```
-.planning/upstream-sync/last-known-tag.txt
+Commented out — no active constraint at 1280px.
+
+**ToDo dashlet (`.todo`):**
+```scss
+width: 140px;
+height: 105px;
+min-width: 110px;
 ```
+Fixed-size tiles — no overflow issue expected.
 
-The workflow reads this file, compares with `GET /repos/nexus-mods/Vortex/releases/latest`,
-and skips if unchanged. On new tag: rebase, update the file, commit, push, create PR.
-
-**Alternative:** Use a git tag in the fork repo (`upstream-synced/v1.x.x`). More visible but
-adds noise to the tag list. The file approach is simpler.
-
-### Skeleton Workflow
-
-```yaml
-name: Upstream Rebase Check
-
-on:
-  schedule:
-    - cron: '0 6 * * *'
-  workflow_dispatch:
-
-jobs:
-  check-upstream:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get latest upstream release
-        id: upstream
-        uses: actions/github-script@v9.0.0
-        with:
-          script: |
-            const { data } = await github.rest.repos.getLatestRelease({
-              owner: 'nexus-mods',
-              repo: 'Vortex',
-            });
-            core.setOutput('tag', data.tag_name);
-            core.setOutput('published_at', data.published_at);
-
-      - name: Check if tag is new
-        id: check
-        run: |
-          LAST=$(cat .planning/upstream-sync/last-known-tag.txt 2>/dev/null || echo "none")
-          NEW="${{ steps.upstream.outputs.tag }}"
-          echo "last=$LAST" >> $GITHUB_OUTPUT
-          echo "new=$NEW" >> $GITHUB_OUTPUT
-          if [ "$LAST" = "$NEW" ]; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Rebase onto upstream
-        if: steps.check.outputs.changed == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote add upstream https://github.com/nexus-mods/Vortex.git
-          git fetch upstream
-          BRANCH="upstream-rebase/${{ steps.upstream.outputs.tag }}"
-          git checkout -b "$BRANCH" origin/linux-port
-          git rebase upstream/master || true   # conflicts → PR created for human resolution
-
-      - name: Update last-known-tag file
-        if: steps.check.outputs.changed == 'true'
-        run: |
-          mkdir -p .planning/upstream-sync
-          echo "${{ steps.upstream.outputs.tag }}" > .planning/upstream-sync/last-known-tag.txt
-          git add .planning/upstream-sync/last-known-tag.txt
-          git commit -m "chore: track upstream ${{ steps.upstream.outputs.tag }}" || true
-
-      - name: Create Pull Request
-        if: steps.check.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v8.1.1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: upstream-rebase/${{ steps.upstream.outputs.tag }}
-          base: master
-          title: "chore: rebase linux-port onto upstream ${{ steps.upstream.outputs.tag }}"
-          body: |
-            Automated rebase of `linux-port` onto upstream `${{ steps.upstream.outputs.tag }}`.
-
-            Upstream published: ${{ steps.upstream.outputs.published_at }}
-
-            Review for merge conflicts and Linux-specific changes before merging.
-          draft: true
-          labels: upstream-sync
-```
-
-### Permissions Required
-
-The workflow needs `contents: write` (push rebase branch) and `pull-requests: write` (create PR).
-Both are grantable via `permissions:` in the workflow without a PAT, provided branch protection
-on `master` allows bot pushes to feature branches.
-
-If `GITHUB_TOKEN` lacks PR creation permission (org-level setting), a PAT stored as
-`secrets.REBASE_PAT` with `repo` scope is the fallback.
-
-### What NOT to Use for Rebase CI
-
-| Approach | Why Rejected |
-|----------|-------------|
-| `imba-tjd/rebase-upstream@0.12` | Self-described as "not widely tested"; 0 issues/PRs open; uses `git push -f`; no control over conflict handling |
-| `tjusl/fetch-upstream-action-rebase` | Uncertified third-party; no version pinning; unclear maintenance |
-| `release` event trigger | Only fires on THIS repo's releases, not upstream |
-| `repository_dispatch` | Requires upstream (nexus-mods/Vortex) to send a webhook — not under our control |
-| Polling more frequently than daily | Upstream releases are infrequent; hourly polling wastes CI minutes |
+**Known risk areas for 1280×800:**
+- The onboarding overlay position calculation uses `{ x: window.innerWidth, y: window.innerHeight }`
+  as the trigger position (`Dashlet.tsx:42`). This places the overlay near the bottom-right
+  corner. At 800px height the overlay (466px) may be clipped by the viewport bottom.
+  This is the most likely ONBRD-05 bug.
+- The FOMOD installer dialog (`dialog-fomod.scss`) has fixed height constraints that may
+  overflow at 800px but is not part of the first-run flow.
 
 ---
 
-## Core Technologies Summary
+## 6. Deployment Round-Trip (ONBRD-04)
 
-### New Stack Additions for chattr+F
+### What Already Works
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| `child_process.execFile` | Node 22 built-in | Shell out to `chattr +F` | Zero deps; universally available; graceful ENOENT fallback |
-| `fs.promises.statfs` | Node 22 built-in (added v18.17.0) | Detect ext4/btrfs via magic number | POSIX-correct; no text parsing; returns `f_type` magic directly |
-| `chattr` binary | e2fsprogs (system) | Set `FS_CASEFOLD_FL` on directory | Pre-installed on all Ubuntu/Fedora/Arch; part of base system |
+By v6.0, the full deployment stack is in place:
+- `hardlink_activator` — preferred deployer on Linux (works cross-partition via hardlinks)
+- `symlink_activator` — available on Linux (no admin rights needed)
+- `applyChattrCasefold` — applied at staging dir creation
+- Steam/Proton game paths — resolved via `mygamesPath()`, `proton.ts`
 
-### New Stack Additions for Rebase CI
+**ONBRD-04 requires no new stack.** The remaining work is integration testing, not new code.
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| `actions/github-script` | v9.0.0 | Query upstream releases via Octokit | Pre-authenticated; avoids raw curl; current April 2026 release |
-| `peter-evans/create-pull-request` | v8.1.1 | Create rebase PR automatically | 2.7k stars, 537 forks, 114 releases; actively maintained; released April 2026 |
-| `schedule` trigger (cron) | GitHub Actions built-in | Poll upstream daily | Only cross-repo trigger available; daily cadence is appropriate |
-
-### No New npm Dependencies Required
-
-Both features use only:
-- Node.js built-in modules (`child_process`, `fs/promises`)
-- System binaries already present on Linux (`chattr` from `e2fsprogs`)
-- Existing GitHub Actions (checkout, github-script, create-pull-request)
+The `firststeps_dashlet` todos already guide users: pick-game → configure staging path →
+deploy. The staging directory creation wires to `ensureDirWritableAsync` → `applyChattrCasefold`.
 
 ---
 
-## Installation
+## 7. No New Dependencies Required
 
-No `npm install` needed. Both features are zero-dependency additions.
-
-For CI workflow: pin action versions as shown above. No new apt packages required.
-
-For local development: `e2fsprogs` is pre-installed on Ubuntu; `chattr --version` should confirm
-e2fsprogs 1.47.x on Ubuntu 24.04.
-
----
-
-## Alternatives Considered
-
-| Recommended | Alternative | When to Use Alternative |
-|-------------|-------------|-------------------------|
-| Shell out `chattr +F` | `ioctl` npm package (v2.0.2) | Never — NaN-based, unmaintained, Node 22 risk |
-| `fs.statfs()` built-in | Parse `/proc/mounts` | Never for type detection — `statfs` is always correct |
-| `fs.statfs()` built-in | Shell out `findmnt` | Only if somehow running Node < 18.17 (not applicable; we pin Node 22) |
-| `peter-evans/create-pull-request@v8` | Write custom PR creation script | Only if PR options needed beyond what the action supports |
-| `schedule` daily cron | `workflow_dispatch` only | Add `workflow_dispatch` as a companion; don't replace `schedule` with it |
+| Requirement | Approach | New Dep? |
+|-------------|----------|----------|
+| ONBRD-01: Steam auto-detect | Already done via `Steam.ts` | None |
+| ONBRD-02: Filesystem detection | Already done via `applyChattrCasefold` | None |
+| ONBRD-03: Windows string cleanup | String edits + platform guards | None |
+| ONBRD-04: Deploy round-trip | Integration testing | None |
+| ONBRD-05: 1280×800 layout | CSS/positioning fixes | None |
+| ONBRD-06: Help links | Add Linux URL constant + conditional branch | None |
 
 ---
 
-## Version Compatibility
+## Specific Files That Need Changes
 
-| Package | Compatible With | Notes |
-|---------|-----------------|-------|
-| `fs.statfs()` | Node.js 18.17.0+ | Node 22 confirmed; no polyfill |
-| `child_process.execFile` | Node.js 0.1.x+ | Built-in; no compat concern |
-| `actions/github-script@v9.0.0` | GitHub Actions | Upgraded to `@actions/github` v9; April 2026 |
-| `peter-evans/create-pull-request@v8.1.1` | GitHub Actions | Current as of April 2026 |
-| `chattr +F` | e2fsprogs 1.45.6+ + kernel 5.2+ + ext4 with casefold feature | Ubuntu 24.04 ships e2fsprogs 1.47.x and kernel 6.x — satisfies all |
+### ONBRD-03 — Windows String Cleanup
+
+| File | Line(s) | Change Needed |
+|------|---------|---------------|
+| `src/renderer/src/extensions/download_management/views/Settings.tsx` | 737-741 | Platform-guard the dialog; show Linux-appropriate message ("not writable to the current user") with pkexec elevation path instead of UAC |
+| `src/renderer/src/util/fs.ts` | 1560-1565 (`raiseUACDialog`) | Platform-guard "Windows will show an UAC dialog." — show "Vortex will use pkexec to grant permission." on Linux |
+| `src/renderer/src/extensions/mod_management/util/activationStore.ts` | 312-314 | Remove "Windows user account" from EPERM message; use platform-neutral wording |
+| `src/renderer/src/extensions/mod_management/texts.ts` | 96-98 | Replace Windows path example with `{USERDATA}` variable reference (platform-neutral) or add conditional example |
+| `src/renderer/src/extensions/mod_management/views/Settings.tsx` | 221-226 | Replace `c:\Users\<username>\AppData\Roaming\Vortex\<game>` with platform-agnostic description or `{USERDATA}` example |
+
+### ONBRD-06 — Help Link Routing
+
+| File | Change Needed |
+|------|---------------|
+| `extensions/documentation/src/index.tsx` | Add Linux-specific default URL in `open-knowledge-base` handler; add `"linux-setup"` key to `WIKI_TOPICS` map; add Linux help URL constant |
+
+### ONBRD-05 — Layout at 1280×800
+
+| File | Change Needed |
+|------|---------------|
+| `src/renderer/src/extensions/onboarding_dashlet/Dashlet.tsx` | Clamp overlay position so it does not extend past viewport bottom; use `Math.min(y - height, window.innerHeight - overlayHeight)` pattern |
+| `src/stylesheets/vortex/dashlet.scss` | Verify `.instructions-overlay.overlay-onboarding` height (466px) fits within 800px viewport; add `max-height` media query if needed |
 
 ---
 
-## Integration with Existing Code
+## Already Validated (No Changes Needed)
 
-### chattr+F integrates into `src/main/src/filesystem/`
-
-The existing `fs.ts` (Linux filesystem backend) handles file operations. A new companion file
-`casefold.linux.ts` is the right location for `tryEnableCasefold()` and `getStagingFsType()`.
-
-The call site is the staging directory creation path — when Vortex creates a new staging directory
-on Linux:
-1. Call `getStagingFsType(parentPath)` → check for `'ext4'`
-2. If ext4: call `tryEnableCasefold(newDir)` after `mkdir`
-3. Log result; fall back silently if casefold is not supported
-
-This is a purely additive change. The Wine prefix shim remains active as fallback for non-casefold
-filesystems.
-
-### Rebase CI workflow lives in `.github/workflows/upstream-rebase.yml`
-
-This is a new workflow file — no changes to existing `main.yml`, `e2e.yml`, or release workflows.
-The only shared concern: the new workflow needs `contents: write` permission, which existing
-workflows do not grant. This is scoped to the new workflow only.
+| Item | Status | Evidence |
+|------|--------|----------|
+| `winapi.GetDiskFreeSpaceEx` on Linux | Works | `winapi-shim.ts` uses `fs.statfsSync` (line 37); webpack alias active |
+| `winapi.GetVolumePathName` on Linux | Works | `winapi-shim.ts` walks mount point tree (line 54); returns `/home`, `/` etc. |
+| `applyChattrCasefold` at staging creation | Shipped v6.0 | `ensureDirWritableAsync` calls it at `fs.ts:1390` |
+| Steam library detection on Linux | Shipped v2.0 | `findAllLinuxSteamPaths()` + Flatpak path support |
+| `isAdmin()` returns false on Linux | Works | `is-admin` package explicitly returns false on non-win32 |
+| `DocumentsPathMissing` on Linux | Not triggered | `validateDocumentsPath` guarded by `if (process.platform !== "win32") return` |
+| Symlink activator available on Linux | Works | `ensureAdmin()` tests symlink creation; succeeds for normal users in home dirs |
+| Symlink elevate deployer on Linux | Correctly unavailable | `isSupported()` returns unavailability reason on non-win32 |
 
 ---
 
 ## Sources
 
-- kernelnewbies.org/Linux_5.2 — confirmed ext4 casefold added in Linux 5.2 (HIGH confidence)
-- man7.org/linux/man-pages/man1/chattr.1 — confirmed `+F` sets case-insensitive lookup (HIGH confidence)
-- registry.npmjs.org/ioctl — `ioctl` package v2.0.2, published 2019, NaN-based (HIGH confidence)
-- registry.npmjs.org/ffi-napi — `ffi-napi` v4.0.3, published March 2021 (HIGH confidence)
-- nodejs.org docs `fs.statfs` — added v18.17.0, returns `.type` with filesystem magic (HIGH confidence)
-- docs.github.com Actions events — confirmed `schedule`/`workflow_dispatch`/`repository_dispatch`; no cross-repo `release` trigger (HIGH confidence)
-- github.com/peter-evans/create-pull-request — v8.1.1, April 2026, actively maintained (HIGH confidence)
-- github.com/actions/github-script — v9.0.0, April 2026 (HIGH confidence)
-- github.com/imba-tjd/rebase-upstream — v0.12, "not widely tested", 0 issues (MEDIUM confidence — verified via marketplace search but limited detail available)
-- btrfs casefold: NOT confirmed in any released kernel version as of April 2026 (LOW confidence — no source found; ext4-only for now)
+All findings based on direct code inspection (HIGH confidence). Specific files:
+- `src/renderer/src/extensions/firststeps_dashlet/todos.tsx` — winapi calls confirmed
+- `src/renderer/webpack.config.cjs:50-59` — winapi-bindings webpack alias confirmed
+- `src/renderer/src/util/winapi-shim.ts:37-75` — Linux shim implementations confirmed
+- `src/renderer/src/extensions/download_management/views/Settings.tsx:730-747` — Windows dialog
+- `src/renderer/src/util/fs.ts:1552-1565` — raiseUACDialog Windows text
+- `src/renderer/src/extensions/mod_management/util/activationStore.ts:310-317` — Windows perms text
+- `src/renderer/src/extensions/mod_management/texts.ts:85-118` — Windows example paths
+- `extensions/documentation/src/index.tsx:13-34` — WIKI_URL + WIKI_TOPICS
+- `src/main/src/MainWindow.ts:17,387-388` — window size constraints
+- `src/stylesheets/vortex/dashlet.scss:455-620` — onboarding CSS
+- `src/renderer/src/extensions/symlink_activator_elevate/index.ts:240-244` — Linux guard
+- `src/main/src/Application.ts:1200` — DocumentsPathMissing Linux guard
+- `src/main/node_modules/is-admin/index.js` — returns false on non-win32
 
 ---
 
-*Stack research for: Vortex Linux — v4.0 chattr+F casefold + upstream rebase CI*
-*Researched: 2026-04-15*
+*Stack research for: Vortex Linux — v7.0 First-Run Onboarding Wizard*
+*Researched: 2026-04-16*
