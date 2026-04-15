@@ -94,7 +94,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./dist/vortex-setup.AppImage
+            ./dist/vortex-setup*.AppImage
             ./dist/vortex_amd64.deb
             ./dist/latest-linux.yml
           prerelease: false
@@ -116,7 +116,7 @@ jobs:
         with:
           tag_name: latest-linux
           files: |
-            ./dist/vortex-setup.AppImage
+            ./dist/vortex-setup*.AppImage
             ./dist/vortex_amd64.deb
             ./dist/latest-linux.yml
           prerelease: true
