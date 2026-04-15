@@ -92,15 +92,34 @@ ${COMMIT_LOG}
 Fork: https://github.com/atabisz/Vortex"
 fi
 
-# Step 8: Idempotent PR creation — skip if PR already exists for this branch
-if ! gh pr list --head "${BRANCH}" --base master --json number --jq '.[0].number' | grep -q .; then
-  gh pr create \
-    --base master \
-    --head "${BRANCH}" \
-    --title "chore: rebase onto upstream ${UPSTREAM_TAG}" \
-    --draft \
-    --body "${PR_BODY}"
-  echo "Draft PR created for ${BRANCH}."
+# Step 8: Idempotent PR creation via REST API (avoids GraphQL restrictions on fork repos)
+REPO="${GITHUB_REPOSITORY:-atabisz/Vortex}"
+EXISTING_PR=$(curl -s -H "Authorization: token ${GH_TOKEN}" \
+  "https://api.github.com/repos/${REPO}/pulls?head=${REPO%%/*}:${BRANCH}&base=master&state=open" \
+  | grep -o '"number":[0-9]*' | head -1 | grep -o '[0-9]*')
+
+if [[ -z "${EXISTING_PR}" ]]; then
+  PR_PAYLOAD=$(printf '%s' "{
+    \"title\": \"chore: rebase onto upstream ${UPSTREAM_TAG}\",
+    \"head\": \"${BRANCH}\",
+    \"base\": \"master\",
+    \"body\": $(printf '%s' "${PR_BODY}" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
+    \"draft\": true
+  }")
+  HTTP_STATUS=$(curl -s -o /tmp/pr_response.json -w "%{http_code}" \
+    -X POST \
+    -H "Authorization: token ${GH_TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d "${PR_PAYLOAD}" \
+    "https://api.github.com/repos/${REPO}/pulls")
+  if [[ "${HTTP_STATUS}" == "201" ]]; then
+    PR_URL=$(grep -o '"html_url":"[^"]*' /tmp/pr_response.json | head -1 | cut -d'"' -f4)
+    echo "Draft PR created: ${PR_URL}"
+  else
+    echo "PR creation failed (HTTP ${HTTP_STATUS}):"
+    cat /tmp/pr_response.json
+    exit 1
+  fi
 else
-  echo "PR already exists for ${BRANCH}, skipping creation."
+  echo "PR #${EXISTING_PR} already exists for ${BRANCH}, skipping creation."
 fi
