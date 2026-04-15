@@ -928,6 +928,12 @@ class LootInterface {
                     path.dirname(modulePath),
                     "libloot_wstring_stub.so",
                   ),
+                  LD_LIBRARY_PATH: [
+                    path.dirname(modulePath),
+                    process.env.LD_LIBRARY_PATH,
+                  ]
+                    .filter(Boolean)
+                    .join(":"),
                 }
               : {}),
           },

@@ -55,7 +55,6 @@ import LootInterface from "./autosort";
 import { GHOST_EXT, NAMESPACE } from "./statics";
 
 import Promise from "bluebird";
-import ESPFile from "esptk";
 import { access, constants } from "fs";
 import I18next from "i18next";
 import * as path from "path";
@@ -70,6 +69,31 @@ import {
   masterlistExists,
   masterlistFilePath,
 } from "./util/masterlist";
+
+// Lazy-load esptk: the native addon may fail to dlopen in .deb packaged
+// builds where the Electron runtime context differs. Graceful degradation
+// allows the extension to register and the Plugins tab to appear even
+// without ESP file parsing.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _ESPFile: any = undefined;
+let _esptLoaded = false;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getESPFile(): any {
+  if (!_esptLoaded) {
+    _esptLoaded = true;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      _ESPFile = require("esptk").default ?? require("esptk");
+    } catch (err) {
+      log("warn", "esptk native addon failed to load -- ESP parsing disabled", {
+        error: (err as any).message,
+      });
+      _ESPFile = null;
+    }
+  }
+  return _ESPFile;
+}
 
 type TranslationFunction = typeof I18next.t;
 
@@ -268,7 +292,9 @@ function updatePluginListImpl(
                 blueprintIds = new Set<string>();
                 for (const pluginId of Object.keys(pluginStates)) {
                   try {
-                    const esp = new ESPFile(
+                    const ESPFileCtor = getESPFile();
+                    if (ESPFileCtor === null) continue;
+                    const esp = new ESPFileCtor(
                       pluginStates[pluginId].filePath,
                       gameId,
                     );
@@ -447,7 +473,9 @@ function register(
       filePath = path.basename(filePath, GHOST_EXT);
     }
     const masterExts = [".esm"];
-    const file = new ESPFile(filePath, gameMode);
+    const ESPFileCtor = getESPFile();
+    if (ESPFileCtor === null) return flag;
+    const file = new ESPFileCtor(filePath, gameMode);
     return (
       flag ||
       (masterExts.indexOf(path.extname(filePath).toLowerCase()) !== -1 &&
@@ -468,8 +496,10 @@ function register(
   const openLOOTSite = () =>
     util.opn("https://loot.github.io/").catch(() => null);
 
-  const parseESPFile = (filePath: string, gameMode: string): IESPFile => {
-    const fileInfo = new ESPFile(filePath, gameMode);
+  const parseESPFile = (filePath: string, gameMode: string): IESPFile | null => {
+    const ESPFileCtor = getESPFile();
+    if (ESPFileCtor === null) return null;
+    const fileInfo = new ESPFileCtor(filePath, gameMode);
     return {
       isMaster: fileInfo.isMaster,
       isLight: fileInfo.isLight,
@@ -1294,7 +1324,20 @@ class PluginInfoCache {
       mtime !== this.mCache[id].lastModified ||
       ino !== this.mCache[id].lastINO
     ) {
-      const info = new ESPFile(filePath, activeGameMode);
+      const ESPFileCtor = getESPFile();
+      if (ESPFileCtor === null) {
+        this.mCache[id] = {
+          lastModified: mtime,
+          lastINO: ino,
+          info: {
+            isLight: false,
+            isBlueprint: false,
+            masterList: [],
+          },
+        };
+        return this.mCache[id].info;
+      }
+      const info = new ESPFileCtor(filePath, activeGameMode);
       this.mCache[id] = {
         lastModified: mtime,
         lastINO: ino,
@@ -1863,8 +1906,17 @@ function init(context: IExtensionContextExt) {
       return;
     }
 
+    const ESPFileCtor = getESPFile();
+    if (ESPFileCtor === null) {
+      context.api.showErrorNotification(
+        "Failed to set light flag",
+        "esptk native addon is not available on this platform",
+        { allowReport: false },
+      );
+      return;
+    }
     try {
-      const esp = new ESPFile(plugin.filePath, profile.gameId);
+      const esp = new ESPFileCtor(plugin.filePath, profile.gameId);
       esp.setLightFlag(enable);
     } catch (err) {
       if (err.nativeCode !== 0) {
