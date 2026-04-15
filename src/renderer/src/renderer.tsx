@@ -133,7 +133,7 @@ import {
   toError,
 } from "./util/errorHandling";
 import {} from "./util/extensionRequire";
-import { setTFunction } from "./util/fs";
+import { _setChattrNotifier, setTFunction } from "./util/fs";
 import GlobalNotifications from "./util/GlobalNotifications";
 import getI18n, {
   changeLanguage,
@@ -633,6 +633,12 @@ async function init(): Promise<ExtensionManager | null> {
   // are visible to the user (ELEV-06). Must be after setStore() which
   // initializes sendNotification on the api.
   _setNotifier((notification) => {
+    extensions.getApi().sendNotification?.(notification);
+  });
+
+  // Wire chattr+F casefold notification so EOPNOTSUPP-on-ext4 info
+  // message is visible to the user (CASE-11). Must be after setStore().
+  _setChattrNotifier((notification) => {
     extensions.getApi().sendNotification?.(notification);
   });
 
