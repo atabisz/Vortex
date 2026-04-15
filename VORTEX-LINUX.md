@@ -33,9 +33,13 @@ Vortex Linux is an independent fork of [nexus-mods/Vortex](https://github.com/Ne
 
 **Goal:** Fix the known quality gap, complete hardware UAT, ship a labeled beta, and open the door to community contributors.
 
-### 4.1 Investigate and Fix D1
+### 4.1 Investigate and Fix D1 — RESOLVED
 
-The plugins tab behaves differently between `pnpm dev` and a `.deb` install. Root cause is uncharacterized. This is the highest-priority defect — it erodes trust before users have a chance to form a good impression. Investigate, fix, document.
+**Status:** Fixed (2026-04-15). Two separate issues were identified and fixed:
+
+1. **Plugins tab missing in .deb** — `esptk.node` failed to dlopen because the static top-level import caused the entire `gamebryo-plugin-management` extension to fail registration. Fixed by converting the import to a lazy `require()` with graceful degradation (commits `0875e3db2`, `03a8c74fa`). Also: `LD_LIBRARY_PATH` was not propagated to the loot subprocess; fixed by adding it explicitly in the `fork()` env block.
+
+2. **mod-dependency-manager spam + mo-import/nmm-import-tool failure** — `modmeta-db` and its native peer `leveldown` lived inside `app.asar`. `leveldown`'s `node-gyp-build` v4.1.1 silently returns `[]` when `fs.readdirSync` is called on a virtual asar path, causing `modmeta-db` to export `ModDB=undefined`. Separately, `bundledPlugins` extensions cannot reach packages inside `app.asar` via Node.js path resolution. Fixed by adding `modmeta-db`, `leveldown`, `levelup`, and `encoding-down` to `asarUnpack` in `electron-builder.config.cjs` (commit `538aef374`).
 
 ### 4.2 Hardware UAT
 
