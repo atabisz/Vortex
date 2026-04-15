@@ -1,6 +1,16 @@
-# Vortex Linux Support — v5.0 Shipped
+# Vortex Linux Support — v6.0 Infrastructure
+
+## Current Milestone: v6.0 Infrastructure
+
+**Goal:** Replace the fragile userspace case-folding shim with a kernel-backed chattr+F dual-path strategy, and automate upstream sync via a GitHub Actions rebase workflow.
+
+**Target features:**
+- chattr+F dual-path fs layer — apply kernel casefold (`chattr +F`) at mod staging directory creation on ext4/btrfs; fall back to existing userspace shim on XFS/ZFS/other
+- Automated upstream rebase CI — GitHub Actions workflow that detects new nexus-mods/Vortex releases and opens a rebase PR automatically
 
 ## Current State
+
+**Shipped v6.0 Phase 16 on 2026-04-15.** `applyChattrCasefold(dirPath)` implemented in `fs.ts` — applies `chattr +F` to new empty mod staging directories on ext4-casefold filesystems. Platform/Flatpak/non-empty/non-ext4 guards ensure Windows CI stays green and non-supported configs are silently bypassed. Injectable test seams (`_setChattr`, `_setChattrNotifier`, `_resetChattrState`) follow the `elevated.ts` pattern. 13 Vitest tests pass (CASE-05–CASE-11). Wired into `ensureDirWritableAsync` and notification dispatch through renderer.tsx bootstrap. CI green check pending.
 
 **Shipped v5.0 on 2026-04-09.** Phase 15 complete: fomod-installer source path normalization (`TextUtil.NormalizePath` on `matchedFiles[0]`), Linux-specific CSharpScript unsupported warning in `reportUnsupported`, redundant `replaceAll` removed from copy source path, `vortex-api` declarations regenerated with `resolvePathCase`. All 7 FOMD-15-xx requirements satisfied. FOMOD end-to-end story on Linux is clean — no workarounds remain in Vortex; fork is PR-ready.
 
@@ -69,14 +79,12 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 
 ### Active (v6.0)
 
+- [ ] **CASE-05**: Mod staging directories on ext4/btrfs use `chattr +F` kernel casefold at creation time — userspace shim retained as fallback for XFS/ZFS/other
+- [ ] **CASE-06**: Filesystem type detected at staging directory creation; chattr+F applied only when supported (ext4/btrfs); other filesystems silently fall through to existing shim
+- [ ] **REBASE-01**: GitHub Actions workflow detects new nexus-mods/Vortex releases (tags) and opens a draft rebase PR automatically
+- [ ] **REBASE-02**: Rebase workflow replays the linux-port platform-guard patch set on top of the new upstream tag and runs CI to confirm green
 - [ ] **ELEV-05**: All user-triggered elevation operations complete successfully on desktop Linux without crashing or hanging — code-complete (Phase 12); hardware UAT pending (Phase 999.1)
 - [ ] **ELEV-06**: Steam Deck elevation failure shows actionable error notification with recovery path — code-complete (Phase 12); end-to-end Electron UX UAT pending (Phase 999.1)
-- [ ] **D1**: Plugins tab behavioral difference between pnpm dev and .deb install — needs investigation
-- [ ] **A1**: ELEV-05 hardware UAT — Phase 999.1 ready, needs real hardware execution
-- [ ] **A2**: ELEV-04 live session caching test — AUTH_ADMIN_KEEP in .deb, no live test yet
-- [ ] **A3**: PROT-01 live NXM download test on real AppImage/deb hardware
-- [ ] **A4**: SAVE-05 live save transfer on real Proton/Linux install
-- [ ] **E1**: Submit upstream PR from `linux-port` branch — commit classification completed 2026-04-08
 
 ### Deferred (v5.0+)
 
@@ -175,4 +183,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-09 after v5.0 milestone completion — FOMD Linux fixes shipped, fork upstream PR-ready*
+*Last updated: 2026-04-15 after Phase 16 completion — chattr+F casefold layer implemented, 13 tests pass, CI check pending*

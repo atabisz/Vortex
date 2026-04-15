@@ -17,13 +17,13 @@
 
 ### Upstream Rebase CI
 
-- [ ] **REBASE-01**: A GitHub Actions workflow runs on a daily schedule (cron) and polls nexus-mods/Vortex for new release tags; exits cleanly with no PR when the fork is already up to date
-- [ ] **REBASE-02**: When a new upstream release tag is detected, the workflow creates a rebase branch (`rebase/upstream-<tag>`), rebases the fork's master onto the upstream tag, and opens a draft PR titled `chore: rebase onto upstream <tag>`
-- [ ] **REBASE-03**: The workflow is idempotent — if a draft PR for the same upstream tag already exists, it updates the branch without opening a second PR
-- [ ] **REBASE-04**: When `git rebase` encounters conflicts, the workflow aborts the rebase, commits the conflict state, pushes the branch, and opens a draft PR with a "conflicts detected" warning body — the workflow job itself does not fail
-- [ ] **REBASE-05**: The workflow can be triggered manually via `workflow_dispatch` with an optional `upstream_ref` input for on-demand runs and debugging
-- [ ] **REBASE-06**: The draft PR body includes: the upstream tag, a link to the upstream release, conflict status, upstream commit diff summary (what changed between tags), and a link to https://github.com/atabisz/Vortex
-- [ ] **REBASE-07**: The workflow only runs in the `atabisz/Vortex` fork (guarded by `if: github.repository == 'atabisz/Vortex'`) to prevent accidental runs in other contexts
+- [x] **REBASE-01**: A GitHub Actions workflow runs on a daily schedule (cron) and polls nexus-mods/Vortex for new release tags; exits cleanly with no PR when the fork is already up to date
+- [x] **REBASE-02**: When a new upstream release tag is detected, the workflow creates a rebase branch (`rebase/upstream-<tag>`), rebases the fork's master onto the upstream tag, and opens a draft PR titled `chore: rebase onto upstream <tag>`
+- [x] **REBASE-03**: The workflow is idempotent — if a draft PR for the same upstream tag already exists, it updates the branch without opening a second PR
+- [x] **REBASE-04**: When `git rebase` encounters conflicts, the workflow aborts the rebase, commits the conflict state, pushes the branch, and opens a draft PR with a "conflicts detected" warning body — the workflow job itself does not fail
+- [x] **REBASE-05**: The workflow can be triggered manually via `workflow_dispatch` with an optional `upstream_ref` input for on-demand runs and debugging
+- [x] **REBASE-06**: The draft PR body includes: the upstream tag, a link to the upstream release, conflict status, upstream commit diff summary (what changed between tags), and a link to https://github.com/atabisz/Vortex
+- [x] **REBASE-07**: The workflow only runs in the `atabisz/Vortex` fork (guarded by `if: github.repository == 'atabisz/Vortex'`) to prevent accidental runs in other contexts
 
 ## v2+ Requirements (Deferred)
 
@@ -60,13 +60,13 @@
 | CASE-09 | Phase 16 | Complete |
 | CASE-10 | Phase 16 | Complete |
 | CASE-11 | Phase 16 | Complete |
-| REBASE-01 | Phase 17 | Pending |
-| REBASE-02 | Phase 17 | Pending |
-| REBASE-03 | Phase 17 | Pending |
-| REBASE-04 | Phase 17 | Pending |
-| REBASE-05 | Phase 17 | Pending |
-| REBASE-06 | Phase 17 | Pending |
-| REBASE-07 | Phase 17 | Pending |
+| REBASE-01 | Phase 17 | Complete |
+| REBASE-02 | Phase 17 | Complete |
+| REBASE-03 | Phase 17 | Complete |
+| REBASE-04 | Phase 17 | Complete |
+| REBASE-05 | Phase 17 | Complete |
+| REBASE-06 | Phase 17 | Complete |
+| REBASE-07 | Phase 17 | Complete |
 
 **Coverage:**
 - v6.0 requirements: 14 total

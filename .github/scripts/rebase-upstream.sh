@@ -52,7 +52,9 @@ if ! git rebase "${UPSTREAM_TAG}"; then
 fi
 
 # Step 6: Force-push branch (force for idempotency on repeated runs)
-git push --force origin "${BRANCH}"
+# Use HEAD:refs/heads/... so this works for both clean rebase (on branch)
+# and conflict case (detached HEAD after failed rebase).
+git push --force origin "HEAD:refs/heads/${BRANCH}"
 
 # Step 7: Build PR body
 FORK_BASE=$(git merge-base master "upstream/${UPSTREAM_TAG}" 2>/dev/null || echo "unknown")
@@ -93,33 +95,25 @@ Fork: https://github.com/atabisz/Vortex"
 fi
 
 # Step 8: Idempotent PR creation via REST API (avoids GraphQL restrictions on fork repos)
+# gh api uses REST when given a path, bypassing the GraphQL createPullRequest mutation.
 REPO="${GITHUB_REPOSITORY:-atabisz/Vortex}"
-EXISTING_PR=$(curl -s -H "Authorization: token ${GH_TOKEN}" \
-  "https://api.github.com/repos/${REPO}/pulls?head=${REPO%%/*}:${BRANCH}&base=master&state=open" \
-  | grep -o '"number":[0-9]*' | head -1 | grep -o '[0-9]*')
+EXISTING_PR=$(gh api "repos/${REPO}/pulls" \
+  --method GET \
+  -F "head=${REPO%%/*}:${BRANCH}" \
+  -F "base=master" \
+  -F "state=open" \
+  --jq '.[0].number // empty' 2>/dev/null || true)
 
 if [[ -z "${EXISTING_PR}" ]]; then
-  PR_PAYLOAD=$(printf '%s' "{
-    \"title\": \"chore: rebase onto upstream ${UPSTREAM_TAG}\",
-    \"head\": \"${BRANCH}\",
-    \"base\": \"master\",
-    \"body\": $(printf '%s' "${PR_BODY}" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
-    \"draft\": true
-  }")
-  HTTP_STATUS=$(curl -s -o /tmp/pr_response.json -w "%{http_code}" \
-    -X POST \
-    -H "Authorization: token ${GH_TOKEN}" \
-    -H "Content-Type: application/json" \
-    -d "${PR_PAYLOAD}" \
-    "https://api.github.com/repos/${REPO}/pulls")
-  if [[ "${HTTP_STATUS}" == "201" ]]; then
-    PR_URL=$(grep -o '"html_url":"[^"]*' /tmp/pr_response.json | head -1 | cut -d'"' -f4)
-    echo "Draft PR created: ${PR_URL}"
-  else
-    echo "PR creation failed (HTTP ${HTTP_STATUS}):"
-    cat /tmp/pr_response.json
-    exit 1
-  fi
+  PR_URL=$(gh api "repos/${REPO}/pulls" \
+    --method POST \
+    -F "title=chore: rebase onto upstream ${UPSTREAM_TAG}" \
+    -F "head=${BRANCH}" \
+    -F "base=master" \
+    -F "body=${PR_BODY}" \
+    -F "draft=true" \
+    --jq '.html_url')
+  echo "Draft PR created: ${PR_URL}"
 else
   echo "PR #${EXISTING_PR} already exists for ${BRANCH}, skipping creation."
 fi
