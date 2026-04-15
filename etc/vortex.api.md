@@ -418,6 +418,9 @@ const apiKey: (state: IState) => string;
 // @public (undocumented)
 const appendFileAsync: (file: string, data: any, options?: fs_2.WriteFileOptions) => Promise_2<void>;
 
+// @internal
+function applyChattrCasefold(dirPath: string): Promise<void>;
+
 // @public
 class Archive {
     constructor(handler: IArchiveHandler);
@@ -1092,6 +1095,10 @@ export class FormTextItem extends React_2.Component<IFormItemProps, {}> {
 
 declare namespace fs {
     export {
+        _setChattr,
+        _setChattrNotifier,
+        _resetChattrState,
+        applyChattrCasefold,
         watch,
         setTFunction,
         genFSWrapperAsync,
@@ -4747,6 +4754,9 @@ function renderModReference(ref?: IModReference, mod?: IMod, options?: IRenderOp
 // @public (undocumented)
 function request(method: Method, reqURL: string, headers: any, cb: (res: IncomingMessage) => void): ClientRequest;
 
+// @internal
+function _resetChattrState(): void;
+
 // @public (undocumented)
 const resetSuppression: ComplexActionCreator1<unknown, any, {}>;
 
@@ -4949,6 +4959,16 @@ const setCategoryOrder: reduxAct.ComplexActionCreator2<string, string[], {
     gameId: string;
     categoryIds: string[];
 }, {}>;
+
+// Warning: (ae-forgotten-export) The symbol "ExecFileFn" needs to be exported by the entry point api.d.ts
+//
+// @internal
+function _setChattr(fn: ExecFileFn): void;
+
+// Warning: (ae-forgotten-export) The symbol "NotifierFn" needs to be exported by the entry point api.d.ts
+//
+// @internal
+function _setChattrNotifier(fn: NotifierFn | undefined): void;
 
 // @public (undocumented)
 const setCleanupOnDeploy: reduxAct.ComplexActionCreator1<boolean, boolean, {}>;

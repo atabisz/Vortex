@@ -418,6 +418,15 @@ declare const apiKey: (state: IState) => string;
 
 declare const appendFileAsync: (file: string, data: any, options?: fs_2.WriteFileOptions) => Promise_2<void>;
 
+/**
+ * Apply kernel casefold (chattr +F) to a freshly created, empty directory
+ * on ext4 filesystems. Always resolves — never rejects. Falls back silently
+ * to the existing Wine-prefix userspace shim on all unsupported configs.
+ *
+ * @internal Exported for testing only.
+ */
+declare function applyChattrCasefold(dirPath: string): Promise<void>;
+
 declare type AppPath = keyof VortexPaths;
 
 /**
@@ -1147,6 +1156,8 @@ declare function ensureFileAsync(filePath: string): Promise_2<void>;
 
 export declare const ErrorBoundary: any;
 
+declare type ExecFileFn = (cmd: string, args: string[], callback: (err: Error | null, stdout: string, stderr: string) => void) => void;
+
 declare type ExportType = IContextMenuProps & IActionControlProps & IExtensibleProps & React_2.HTMLAttributes<any>;
 
 declare type ExportType_2 = IBaseProps & IActionControlProps & IExtensibleProps & React_2.HTMLAttributes<any>;
@@ -1244,6 +1255,10 @@ export declare class FormTextItem extends React_2.Component<IFormItemProps, {}> 
 
 declare namespace fs {
     export {
+        _setChattr,
+        _setChattrNotifier,
+        _resetChattrState,
+        applyChattrCasefold,
         watch,
         setTFunction,
         genFSWrapperAsync,
@@ -7253,6 +7268,8 @@ declare const notifications: (state: IState) => INotification[];
 
 declare type NotificationType = "activity" | "global" | "success" | "info" | "warning" | "error" | "silent";
 
+declare type NotifierFn = (notification: INotification) => void;
+
 declare class NotSupportedError extends Error {
     constructor();
 }
@@ -7642,6 +7659,9 @@ declare interface ReportableError {
 
 declare function request(method: Method, reqURL: string, headers: any, cb: (res: IncomingMessage) => void): ClientRequest;
 
+/** @internal Reset chattr state between tests. Do not call in production. */
+declare function _resetChattrState(): void;
+
 declare const resetSuppression: ComplexActionCreator1<unknown, any, {}>;
 
 /**
@@ -7893,6 +7913,12 @@ declare const setCategoryOrder: reduxAct.ComplexActionCreator2<string, string[],
     gameId: string;
     categoryIds: string[];
 }, {}>;
+
+/** @internal Override the execFile function for testing. Do not call in production. */
+declare function _setChattr(fn: ExecFileFn): void;
+
+/** @internal Register a notification handler for casefold info messages. */
+declare function _setChattrNotifier(fn: NotifierFn | undefined): void;
 
 declare const setCleanupOnDeploy: reduxAct.ComplexActionCreator1<boolean, boolean, {}>;
 
