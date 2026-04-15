@@ -52,7 +52,11 @@ import {
 } from "./util/graphQueries";
 import submitFeedback from "./util/submitFeedback";
 
-import { NEXUS_BASE_URL, NEXUS_NEXT_URL, USERINFO_ENDPOINT } from "./constants";
+import {
+  NEXUS_BASE_URL,
+  NEXUS_GAMES_URL,
+  USERINFO_ENDPOINT,
+} from "./constants";
 import {
   checkModVersionsImpl,
   endorseDirectImpl,
@@ -352,7 +356,7 @@ export function onOpenCollectionPage(api: IExtensionApi) {
     }
     const game = gameById(api.store.getState(), gameId);
     const segments = [
-      NEXUS_NEXT_URL,
+      NEXUS_GAMES_URL,
       nexusGameId(game) || gameId,
       "collections",
       collectionSlug,
