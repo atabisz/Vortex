@@ -1,5 +1,5 @@
 import { readFile, writeFile, mkdir, readdir } from "node:fs/promises";
-import { resolve, dirname, isAbsolute } from "node:path";
+import { resolve, relative, dirname, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -253,8 +253,71 @@ function extractAllowBuildsBlock(yamlText) {
   return "allowBuilds:\n" + match[1];
 }
 
+/**
+ * Collects workspace packages that are `workspace:*` deps of the direct workspace
+ * deps of @vortex/main. These must be listed in dist/pnpm-workspace.yaml so that
+ * pnpm can resolve nested `workspace:*` references when installing file: packages.
+ * @param {Record<string, string>} workspacePackageMap
+ * @returns {Promise<Set<string>>} absolute package directory paths
+ */
+async function collectNeededWorkspacePkgs(workspacePackageMap) {
+  const mainRawJSON = await readFile(MAIN_PACKAGE_PATH, "utf8");
+  const mainPkg = JSON.parse(mainRawJSON);
+  const allMainDeps = {
+    ...mainPkg.dependencies,
+    ...mainPkg.peerDependencies,
+  };
+
+  // Seed the queue with direct workspace deps of @vortex/main
+  const queue = [];
+  for (const [name, version] of Object.entries(allMainDeps)) {
+    if (
+      typeof version === "string" &&
+      version.startsWith("workspace:") &&
+      workspacePackageMap[name]
+    ) {
+      queue.push(workspacePackageMap[name]);
+    }
+  }
+
+  const needed = new Set();
+  const visited = new Set();
+
+  while (queue.length > 0) {
+    const pkgDir = queue.shift();
+    if (visited.has(pkgDir)) continue;
+    visited.add(pkgDir);
+
+    try {
+      const pkgJsonPath = resolve(pkgDir, "package.json");
+      const raw = await readFile(pkgJsonPath, "utf8");
+      const pkg = JSON.parse(raw);
+      const allDeps = {
+        ...(pkg.dependencies ?? {}),
+        ...(pkg.peerDependencies ?? {}),
+      };
+
+      for (const [name, version] of Object.entries(allDeps)) {
+        if (
+          typeof version === "string" &&
+          version.startsWith("workspace:") &&
+          workspacePackageMap[name]
+        ) {
+          const depDir = workspacePackageMap[name];
+          needed.add(depDir);
+          queue.push(depDir);
+        }
+      }
+    } catch {
+      // Skip packages whose package.json cannot be read
+    }
+  }
+
+  return needed;
+}
+
 /** Prepares all PNPM related files */
-async function preparePNPM(rawWorkspaceYaml) {
+async function preparePNPM(rawWorkspaceYaml, neededWorkspaceDirs) {
   const npmrc = ["node-linker=hoisted", "shamefully-hoist=true"].join("\n");
   await writeFile(resolve(DIST_DIR, ".npmrc"), npmrc);
   console.log("✔  Created dist/.npmrc");
@@ -263,7 +326,19 @@ async function preparePNPM(rawWorkspaceYaml) {
   const catalog = extractCatalogBlock(rawWorkspaceYaml);
   const overrides = extractOverridesBlock(rawWorkspaceYaml);
 
+  // Emit a packages: section so pnpm can resolve workspace:* refs in file: deps.
+  // Without this, any workspace package that depends on another workspace package
+  // via workspace:* will fail with ERR_PNPM_WORKSPACE_PKG_NOT_FOUND in the dist context.
+  let packagesSection = "";
+  if (neededWorkspaceDirs && neededWorkspaceDirs.size > 0) {
+    const lines = [...neededWorkspaceDirs]
+      .map((absPath) => `  - ${relative(DIST_DIR, absPath)}`)
+      .join("\n");
+    packagesSection = `packages:\n${lines}\n\n`;
+  }
+
   const minimalYaml =
+    packagesSection +
     (overrides ? overrides + "\n" : "") +
     catalog +
     "\n" +
@@ -281,7 +356,8 @@ async function main() {
   const catalog = parseCatalog(rawWorkspaceYaml);
 
   await createMinimalPackageJson(workspacePackageMap, catalog);
-  await preparePNPM(rawWorkspaceYaml);
+  const neededWorkspaceDirs = await collectNeededWorkspacePkgs(workspacePackageMap);
+  await preparePNPM(rawWorkspaceYaml, neededWorkspaceDirs);
 }
 
 main().catch((err) => {
