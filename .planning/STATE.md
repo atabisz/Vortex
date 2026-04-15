@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: Infrastructure
 status: verifying
-stopped_at: "Completed 17-01-PLAN.md — checkpoint:human-verify Task 3 pending"
-last_updated: "2026-04-15T12:57:38.195Z"
+stopped_at: Completed 17-01-PLAN.md — rebase-upstream CI workflow complete and verified
+last_updated: "2026-04-15T13:18:13.730Z"
 last_activity: 2026-04-15
 progress:
   total_phases: 3
@@ -71,6 +71,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 10-save-ui-validation-steamos-polkit P01 | 8 | 3 tasks | 6 files |
 | Phase 16 P01 | 6 | 2 tasks | 3 files |
 | Phase 17-upstream-rebase-ci-workflow P01 | 3 | 2 tasks | 3 files |
+| Phase 17 P01 | 30 | 4 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -135,6 +136,8 @@ Recent decisions affecting current work:
 - [Phase 17-01]: chmod +x set via git update-index --chmod=+x; sandbox filesystem read-only for scripts dir
 - [Phase 17-01]: CONFLICT_FILES captured before git add -A per RESEARCH.md Open Question 1 resolution
 - [Phase 17-01]: Always --draft on gh pr create regardless of conflict state per D-11
+- [Phase 17-upstream-rebase-ci-workflow]: gh pr create (GraphQL) replaced with gh api REST POST — GraphQL rejects fork GITHUB_TOKEN for createPullRequest mutation
+- [Phase 17-upstream-rebase-ci-workflow]: git push origin HEAD:refs/heads/BRANCH required in CI — git rebase leaves detached HEAD; named refspec avoids push failure
 
 ### Research Context (v6.0)
 
@@ -180,6 +183,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-15T12:57:38.188Z
-Stopped at: Completed 17-01-PLAN.md — checkpoint:human-verify Task 3 pending
+Last session: 2026-04-15T13:17:51.023Z
+Stopped at: Completed 17-01-PLAN.md — rebase-upstream CI workflow complete and verified
 Resume file: None
