@@ -117,5 +117,5 @@ Plans:
 | 13. Save Transfer | v4.0 | 1/1 | Complete | 2026-04-07 |
 | 14. Linux Case-Folding fs Wrapper | v4.0 | 2/2 | Complete | 2026-04-07 |
 | 15. fomod-installer Linux Fixes + Vortex Cleanup | v5.0 | 3/3 | Complete | 2026-04-09 |
-| 16. chattr+F Filesystem Layer | v6.0 | 1/1 | Complete   | 2026-04-15 |
+| 16. chattr+F Filesystem Layer | v6.0 | 1/1 | Complete    | 2026-04-15 |
 | 17. Upstream Rebase CI Workflow | v6.0 | 0/? | Not started | - |
