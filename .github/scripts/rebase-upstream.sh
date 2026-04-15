@@ -34,26 +34,23 @@ if git merge-base --is-ancestor "${UPSTREAM_TAG}" master; then
   exit 0
 fi
 
-# Step 4: Create rebase branch
-BRANCH="rebase/upstream-${UPSTREAM_TAG}"
+# Step 4: Create sync branch from master
+BRANCH="sync/upstream-${UPSTREAM_TAG}"
 git checkout -b "${BRANCH}" master
 
-# Step 5: Attempt rebase — capture conflicts without failing job
+# Step 5: Attempt merge of upstream tag into the branch — capture conflicts without failing job
 HAS_CONFLICTS=false
 CONFLICT_FILES=""
-if ! git rebase "${UPSTREAM_TAG}"; then
-  echo "Rebase conflicts detected."
+if ! git merge "${UPSTREAM_TAG}" --no-edit -m "merge upstream ${UPSTREAM_TAG} into master"; then
+  echo "Merge conflicts detected."
   HAS_CONFLICTS=true
-  # Capture conflicted files BEFORE git add -A (diff-filter=U lists Unmerged files)
+  # Capture conflicted files before staging
   CONFLICT_FILES=$(git diff --name-only --diff-filter=U 2>/dev/null || echo "(see commit)")
-  # DO NOT abort — working tree has conflict markers to commit
   git add -A
-  git commit --no-edit -m "rebase onto ${UPSTREAM_TAG} (conflicts)" || true
+  git commit --no-edit -m "merge upstream ${UPSTREAM_TAG} (conflicts)" || true
 fi
 
 # Step 6: Force-push branch (force for idempotency on repeated runs)
-# Use HEAD:refs/heads/... so this works for both clean rebase (on branch)
-# and conflict case (detached HEAD after failed rebase).
 git push --force origin "HEAD:refs/heads/${BRANCH}"
 
 # Step 7: Build PR body
@@ -62,7 +59,7 @@ COMMIT_COUNT=$(git rev-list --count "${FORK_BASE}..upstream/${UPSTREAM_TAG}" 2>/
 COMMIT_LOG=$(git log --oneline "${FORK_BASE}..upstream/${UPSTREAM_TAG}" 2>/dev/null | head -20 || echo "(unavailable)")
 
 if [[ "${HAS_CONFLICTS}" == "true" ]]; then
-  PR_BODY="## Rebase onto upstream ${UPSTREAM_TAG}
+  PR_BODY="## Sync upstream ${UPSTREAM_TAG} into master
 
 **Upstream tag:** \`${UPSTREAM_TAG}\`
 **Upstream release:** https://github.com/Nexus-Mods/Vortex/releases/tag/${UPSTREAM_TAG}
@@ -78,11 +75,11 @@ ${CONFLICT_FILES}
 ---
 Fork: https://github.com/atabisz/Vortex"
 else
-  PR_BODY="## Rebase onto upstream ${UPSTREAM_TAG}
+  PR_BODY="## Sync upstream ${UPSTREAM_TAG} into master
 
 **Upstream tag:** \`${UPSTREAM_TAG}\`
 **Upstream release:** https://github.com/Nexus-Mods/Vortex/releases/tag/${UPSTREAM_TAG}
-**Conflict status:** Clean rebase
+**Conflict status:** Clean merge
 **Commits from fork base to upstream tag:** ${COMMIT_COUNT}
 
 ### Upstream commits
@@ -107,7 +104,7 @@ EXISTING_PR=$(gh api "repos/${REPO}/pulls" \
 if [[ -z "${EXISTING_PR}" ]]; then
   PR_URL=$(gh api "repos/${REPO}/pulls" \
     --method POST \
-    -F "title=chore: rebase onto upstream ${UPSTREAM_TAG}" \
+    -F "title=chore: sync upstream ${UPSTREAM_TAG} into master" \
     -F "head=${BRANCH}" \
     -F "base=master" \
     -F "body=${PR_BODY}" \
