@@ -62,7 +62,16 @@ if ! git merge "${UPSTREAM_TAG}" --no-edit -m "merge upstream ${UPSTREAM_TAG} in
   git commit --no-edit -m "merge upstream ${UPSTREAM_TAG} (conflicts)" || true
 fi
 
-# Step 6: Force-push branch (force for idempotency on repeated runs)
+# Step 6: Restore our fork's .github/workflows/ before pushing.
+# GITHUB_TOKEN cannot push workflow file changes — and we don't want upstream's
+# CI config overwriting ours anyway. Restoring from master keeps our workflows
+# intact and keeps the push within the token's permissions.
+git checkout master -- .github/workflows/ 2>/dev/null || true
+if ! git diff --cached --quiet; then
+  git commit --no-edit -m "restore fork workflows after upstream merge" || true
+fi
+
+# Force-push branch (force for idempotency on repeated runs)
 git push --force origin "HEAD:refs/heads/${BRANCH}"
 
 # Step 7: Build PR body
