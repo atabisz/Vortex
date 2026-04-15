@@ -1,13 +1,15 @@
 # Pitfalls Research
 
-**Domain:** Native addon Linux cross-compilation + pkexec elevation in Electron (Vortex v3.0)
-**Researched:** 2026-04-01
-**Confidence:** HIGH — all pitfalls grounded in direct source inspection + Phase 3 audit artifacts
+**Domain:** chattr+F case-folding filesystem layer + GitHub Actions upstream rebase automation
+**Researched:** 2026-04-15
+**Confidence:** HIGH — grounded in codebase audit of `fs.ts`, `stagingDirectory.ts`, and existing CI workflows
 
-> **Scope note:** This document covers v3.0 only: SAVE-01 (gamebryo-savegame native addon
-> Linux compilation) and ELEV-01/ELEV-02 (pkexec + Unix domain socket elevation). v2.0
-> pitfalls (Steam detection, AppImage packaging, NXM protocol) are documented in the v2.0
-> PITFALLS.md. Cross-references made where a prior decision creates a v3.0 trap.
+> **Scope note:** This document covers one specific milestone: adding (1) chattr+F dual-path
+> filesystem layer to complement the existing Wine prefix case-folding shim in `fs.ts`, and
+> (2) a GitHub Actions workflow for automated upstream rebase PRs. The v3.0 pitfalls
+> (pkexec elevation, gamebryo-savegame C++ compilation) are documented in the prior
+> `PITFALLS.md` (v3.0 scope). Cross-references made where a prior decision creates a
+> new-milestone trap.
 
 ---
 
@@ -17,554 +19,579 @@ Mistakes that require rewrites or block entire feature areas.
 
 ---
 
-### Pitfall 1: `std::exception` MSVC constructor inheritance — silently compiles on MSVC, hard error on GCC
+### Pitfall 1: chattr+F requires the filesystem to be mounted with the `casefold` feature — this is almost never true for user home directories
 
 **What goes wrong:**
-`gamebryosavegame.cpp` line 27 contains:
-```cpp
-class MoreInfoException : public std::exception {
-  MoreInfoException(const char* message)
-    : std::exception(std::runtime_error(message)) { ... }
-};
-```
-MSVC provides a non-standard `std::exception(const char*)` constructor and accepts
-`std::exception(another_exception)` as an extension. GCC and Clang strictly follow the C++
-standard where `std::exception` has only a default constructor and a copy constructor. GCC
-emits: `error: no matching function for call to 'std::exception::exception(std::runtime_error)'`.
+`chattr +F <directory>` will return `Operation not supported` (EOPNOTSUPP) on any
+filesystem not mounted with the `casefold` feature enabled at mount time. The casefold
+feature must be enabled when the filesystem is *created* (e2fsck/mkfs.ext4 with
+`-O casefold`) or added via `tune2fs -O casefold` on an unmounted filesystem. It cannot
+be enabled on a live, in-use filesystem without unmounting it.
+
+On a typical Linux desktop (Ubuntu 22.04, Fedora 39, SteamOS), the `/home` partition is
+an ext4 filesystem formatted *without* the casefold feature. The user's staging directory
+(`~/.local/share/Vortex/mods/<game>/`) lives on this filesystem. `chattr +F` on that
+path will silently fail or return EOPNOTSUPP — and Node.js's `child_process.exec('chattr
++F ...')` will receive a non-zero exit code that, if not explicitly checked, is discarded.
+
+The failure is **silent at the call site** if the error is swallowed: the directory exists,
+deployment proceeds, but case-insensitive lookup is never active. The user gets no feedback.
 
 **Why it happens:**
-The original gamebryo-savegame was written to target Windows/MSVC exclusively. MSVC's
-non-standard `std::exception` extensions are well-known in Windows-only codebases. Developers
-porting to GCC may not notice because the class is only instantiated on error paths — the
-code compiles under MSVC and the test suite never exercises the error path, making the
-non-portability invisible until a GCC compilation attempt.
+Developers test on a system they control (e.g., a dev VM with casefold enabled on the test
+partition) and assume the feature is universally available. The `chattr` man page does not
+prominently warn that casefold is an opt-in filesystem feature. The EOPNOTSUPP error from
+`chattr` is identical to other "not supported on this platform" errors, making it easy to
+treat as "not Linux" rather than "not this filesystem."
 
 **How to avoid:**
-Change the inheritance chain from `std::exception` to `std::runtime_error` directly:
-```cpp
-// Before (MSVC-only):
-class MoreInfoException : public std::exception {
-  MoreInfoException(const char* msg) : std::exception(std::runtime_error(msg)) {}
-};
-
-// After (portable):
-class MoreInfoException : public std::runtime_error {
-  explicit MoreInfoException(const std::string& msg) : std::runtime_error(msg) {}
-};
-```
-Apply via `patch-package` — do not fork the package. The patch persists across
-`pnpm install` and is tracked in git.
+1. Treat chattr+F as **best-effort with graceful fallback**: check the `chattr +F` exit code
+   explicitly. If it returns EOPNOTSUPP, log at `debug` level and fall back to the existing
+   case-folding shim in `fs.ts` (the `resolvePathCase` / `resolveCaseIfWinePrefix` mechanism).
+2. Never assume chattr+F succeeded. After the `chattr +F` call, verify with `lsattr -d
+   <directory>` and parse the output for the `F` flag before reporting the feature active.
+3. Do **not** gate deployment on chattr+F success. The shim already handles the common case;
+   chattr+F is a performance optimization, not a correctness requirement.
+4. Add a Node.js helper `async function trySetCasefold(dir: string): Promise<boolean>` that
+   shells out to `chattr +F`, checks exit code, and returns `true`/`false` cleanly. Never
+   fire-and-forget a shell command that sets filesystem attributes.
 
 **Warning signs:**
-- `node-gyp` build output contains `error: no matching function for call to
-  'std::exception::exception'`
-- `nothing.a` stub file produced instead of `.node` in the build output
-- Any C++ class that inherits from `std::exception` with a non-default constructor
-  is a portability smell on Windows-only codebases
+- `chattr +F` exits with code 1 and message `Operation not supported while setting flags on <path>`
+- The staging directory lives on a partition that `tune2fs -l <device> | grep features` shows
+  does NOT include `casefold` in the feature list
+- User reports case-insensitive lookup working on one machine and failing on another (different
+  filesystem formatting at install time)
 
-**Phase to address:** SAVE-01 — first task in the phase. Gate CI on compilation success
-before any save game UI work begins.
+**Phase to address:** chattr+F implementation phase. The fallback path to `fs.ts`'s shim must
+be in place before any deployment code that calls `chattr +F`.
 
 ---
 
-### Pitfall 2: `binding.gyp` lz4/zlib linker flags only under `OS=="win"` — link failure on Linux
+### Pitfall 2: chattr+F can only be set on **empty** directories — applying it to an existing staging folder fails
 
 **What goes wrong:**
-`gamebryo-savegame`'s `binding.gyp` structure:
-```json
-{
-  "conditions": [
-    ["OS=='win'", {
-      "libraries": ["./lz4/dll/liblz4.lib", "./zlib/lib/zlib.lib"]
-    }]
-  ]
-}
-```
-The `.cpp` source includes `<lz4.h>` and `<zlib.h>` unconditionally. On Linux, `node-gyp`
-compiles successfully (headers found via system packages) but the link step fails with:
-`undefined reference to 'LZ4_decompress_safe'` and `undefined reference to 'inflate'`.
-The linker error occurs at `@electron/rebuild` time, not at compile time — compilation
-passes, making the problem appear only in the final link step.
+The chattr man page is explicit: *"This attribute can only be changed in empty directories."*
+Attempting `chattr +F` on a non-empty directory returns `Operation not supported` or
+`Inappropriate ioctl for device` depending on kernel version.
+
+The Vortex staging directory (`ensureStagingDirectory` in `stagingDirectory.ts`) may already
+exist and contain mods from previous sessions. In that case, chattr+F cannot be applied
+retroactively. The code in `stagingDirectory.ts` calls `ensureDirWritableAsync` and
+`writeStagingTag` — these succeed, but there is no hook to apply chattr+F to the pre-existing
+directory.
+
+Additionally, even if the directory is initially empty when first created, the moment
+`writeStagingTag` writes the `__vortex_staging_folder` marker file, the directory is no
+longer empty — if chattr+F is called after tag creation rather than before, it will fail.
 
 **Why it happens:**
-The Windows `binding.gyp` bundles its own lz4 and zlib DLLs as local library files. On
-Linux the convention is to link system-provided shared libraries via `-l` flags. The
-original author added the `OS=="win"` condition for the bundled Windows libraries but
-never added a corresponding Linux condition because the addon was never compiled on Linux.
+Developers write the "happy path" — new game, new staging dir, apply chattr+F before any
+files exist. But returning users already have a populated staging directory. The timing of
+the `chattr +F` call relative to staging directory population is not obvious.
 
 **How to avoid:**
-Add an `OS=="linux"` condition to `binding.gyp` that links system lz4 and zlib:
-```json
-["OS=='linux'", {
-  "libraries": ["-llz4", "-lz"]
-}]
-```
-Ensure `liblz4-dev` and `zlib1g-dev` are installed via `apt` in CI before the
-`@electron/rebuild` step. `zlib1g-dev` is already present on `ubuntu-24.04`; `liblz4-dev`
-must be explicitly added.
-
-Apply via `patch-package`. The patch target is `node_modules/gamebryo-savegame/binding.gyp`.
+1. Call `chattr +F` **immediately after `fs.mkdirAsync` or `fs.ensureDirAsync`** creates the
+   directory, *before* any files are written into it (including the `__vortex_staging_folder`
+   tag). The correct sequence is: `mkdir → chattr +F → write tag`.
+2. For **existing staging directories** (the migration case): skip chattr+F silently. Do not
+   attempt to apply it to a non-empty directory. Fall back to the fs.ts shim for all existing
+   directories. Log a one-time notification: "Case-insensitive filesystem optimization not
+   available for existing staging folders. New staging folders will use it automatically."
+3. If a fresh staging directory is created by `ensureStagingDirectory` (the
+   `mods === undefined` branch at line 183 of `stagingDirectory.ts`), hook the chattr+F call
+   into that newly-created-only code path.
 
 **Warning signs:**
-- Build output shows `warning: implicit declaration of function 'LZ4_decompress_safe'` or
-  succeeds with warnings but then dies at link with `undefined reference`
-- `ldd` on a successfully built test binary shows `liblz4.so => not found`
-- The `OS=="win"` condition in `binding.gyp` with no corresponding `OS=="linux"` block
-  is an instant signal that linker flags need a Linux counterpart
+- `chattr +F` exits non-zero for a directory that already has mods in it
+- Developer tests with a fresh game installation (empty dir) but users report failure because
+  they have existing mod libraries
+- The `__vortex_staging_folder` tag file write precedes the `chattr +F` call in the call stack
 
-**Phase to address:** SAVE-01 — same patch-package task as Pitfall 1. Both errors must
-be fixed in the same `binding.gyp` + `gamebryosavegame.cpp` patch.
+**Phase to address:** chattr+F implementation phase. The `mkdir → chattr+F → write-tag`
+ordering must be enforced in the same commit that introduces the feature.
 
 ---
 
-### Pitfall 3: `patch-package` patches break when the upstream package version changes
+### Pitfall 3: chattr+F does **not** cascade to subdirectories — and Vortex's staging layout is deeply nested
 
 **What goes wrong:**
-`patch-package` stores patches keyed to an exact package version string
-(e.g., `gamebryo-savegame+1.2.3.patch`). If the upstream package version changes —
-even a patch release — `pnpm install` prints a warning and the patch is silently
-skipped. The build then proceeds with the unpatched source and the original compile
-errors resurface, often with a confusing error message that looks like a new problem
-rather than a missing patch.
+Setting chattr+F on the staging root (`~/.local/share/Vortex/mods/skyrimse/`) does not
+automatically make subdirectories case-insensitive. Each subdirectory created after the
+parent is set casefold **will** inherit the flag automatically (kernel ≥ 5.2) — but only
+if the parent already had the `F` attribute when the subdirectory was created. Pre-existing
+subdirectories and subdirectories created before the parent gets `F` are **not** retroactively
+case-insensitive.
+
+The Vortex staging layout creates a per-mod subdirectory for each installed mod:
+`<stagingRoot>/<modId>/`. If the staging root gets chattr+F after mod directories already
+exist, those existing mod directories operate in case-sensitive mode while new ones are
+case-insensitive. Mixed behavior in the same staging folder is a recipe for inconsistent
+deployment results.
 
 **Why it happens:**
-`patch-package` is designed for version-pinned scenarios. In a pnpm monorepo with a
-strict lockfile (`pnpm-lock.yaml`), the version is effectively pinned — but developers
-who run `pnpm update gamebryo-savegame` or the upstream maintainer releases a new
-version will invalidate the patch without any build-time error (only a warning).
+The inheritance rule is subtle: *new* subdirectories created under a casefold directory
+inherit the flag; *existing* ones do not. Developers testing with a freshly-created staging
+root and immediately installing mods see everything working. A migration scenario where
+mods already exist produces inconsistency.
 
 **How to avoid:**
-1. Add a `postinstall` script or `prepare` hook that verifies the patch applied:
-   ```json
-   // package.json
-   "scripts": {
-     "postinstall": "patch-package && node scripts/verify-patches.js"
-   }
-   ```
-2. In `verify-patches.js`, check that the patched file contains the expected post-patch
-   content (e.g., `std::runtime_error` in `gamebryosavegame.cpp`).
-3. Pin `gamebryo-savegame` explicitly in `package.json` with an exact version (no `^`
-   or `~`) and add a comment referencing the patch.
+1. Apply chattr+F only to new staging directories (see Pitfall 2). Do not attempt retroactive
+   application.
+2. After applying chattr+F to the staging root, verify that newly created mod subdirectories
+   inherit the flag: `lsattr -d <stagingRoot>/<newModDir>` should show `F`. Add this as a
+   test assertion in the integration test for the feature.
+3. Do not rely on chattr+F for individual mod subdirectory lookups when the staging root was
+   created before the feature shipped. The fs.ts shim remains the safety net for all
+   pre-existing directories.
 
 **Warning signs:**
-- CI log shows `patch-package: WARNING: patch file not found for gamebryo-savegame`
-- Build succeeds but `require('gamebryo-savegame')` throws a module load error
-- Patch file present in `patches/` directory but no `patch-package` in devDependencies
+- `lsattr -d <modSubdir>` does not show `F` even though `<stagingRoot>` has `F`
+- Mod directories created in the same session as staging root creation show `F`, but
+  directories from a prior session do not
+- Case-insensitive lookup fails for older mods but works for newly installed ones
 
-**Phase to address:** SAVE-01 — establish the patch-package pattern correctly the first
-time so it survives future `pnpm update` runs.
+**Phase to address:** chattr+F implementation phase and the integration test spec.
 
 ---
 
-### Pitfall 4: `winapi.ShellExecuteEx({ verb: "runas" })` throws on Linux — elevation blocks entire call site
+### Pitfall 4: chattr+F silently does nothing on btrfs — the error is identical to "filesystem feature not enabled"
 
 **What goes wrong:**
-`src/renderer/src/util/elevated.ts` `runElevated()` calls:
-```typescript
-winapi.ShellExecuteEx({
-  verb: "runas",
-  file: process.execPath,
-  parameters: `--run ${tmpPath}`,
-  ...
-});
-```
-On Linux, `winapi-bindings` is shimmed to throw `NotImplemented` for `ShellExecuteEx`.
-This means any call to `runElevated()` throws immediately, and the calling code in
-`symlink_activator_elevate/index.ts` at lines 567, 817, 941, 1068 receives an uncaught
-error that propagates up to the Redux error boundary.
+btrfs does not support the chattr `F` attribute (casefold). On btrfs, `chattr +F` returns:
+`chattr: Operation not supported while setting flags on <path>`. This is the same error text
+as an ext4 filesystem without the casefold feature enabled. The code cannot distinguish
+"ext4 without casefold" from "btrfs" from "xfs" from "tmpfs" without additional filesystem
+type detection.
 
-The trap: adding a `process.platform === 'linux'` branch is necessary, but the replacement
-must also handle the `ipcPath` parameter that `elevatedMain` uses for its socket connection.
-The Linux elevated process connects back to the parent via the Unix domain socket at
-`getIPCPath(id)` which resolves to `/tmp/vortex-{id}.sock`. The parent must be listening on
-this socket BEFORE spawning the elevated child — if `pkexec` starts the child before the
-`net.Server` is bound, the child's `connect()` call races with the parent's `listen()`.
+SteamOS uses btrfs for the main partition. Some Linux users use btrfs home partitions
+(Fedora 33+ defaults to btrfs for home). Docker volumes, CI environments, and many NAS
+mounts are also btrfs or NFS.
+
+Attempting `chattr +F` on btrfs produces EOPNOTSUPP. If the code treats this as a
+non-fatal warning and falls back to the shim, behavior is correct. If the code attempts
+a retry or escalation, it will loop forever.
 
 **Why it happens:**
-`runElevated()` was designed for the Windows pattern where `ShellExecuteEx` + UAC dialog
-is blocking from the UX perspective. On Linux, `pkexec` prompts asynchronously via a
-polkit agent. The Windows code creates the temp file, calls `ShellExecuteEx` (which blocks
-until the user confirms or denies), and resolves the promise once the elevated process is
-running. On Linux, `pkexec` returns immediately if a polkit agent is available — the
-elevated Node.js process starts before the socket server may be ready if the server startup
-is async.
+The casefold feature in the Linux VFS was initially implemented for ext4 and later added
+to f2fs. btrfs has its own case-insensitive mount option (`-o suid,noexec,relatime,
+space_cache=v2,subvol=/@ -o noatime,compress=zstd`) but does NOT support the chattr `F`
+attribute — it uses a different kernel path.
 
 **How to avoid:**
-Structure the Linux elevation path as:
-```typescript
-if (process.platform === 'linux') {
-  // 1. Start the Unix socket server FIRST
-  const server = net.createServer(...);
-  await new Promise<void>((res, rej) =>
-    server.listen(ipcPath, () => res())
-      .on('error', rej)
-  );
-  // 2. Only THEN spawn pkexec
-  const proc = spawn('pkexec', ['node', tmpPath], { detached: true });
-  proc.unref();
-  return resolve(tmpPath);
-}
-```
-This guarantees the socket exists before pkexec is called. The Windows path is unchanged.
+1. Before attempting `chattr +F`, detect the filesystem type using `statfs()` or by reading
+   `/proc/mounts`. If the filesystem type is `btrfs` (magic `0x9123683e`), `xfs`, `tmpfs`,
+   `nfs`, or `fuse.*`, skip chattr+F immediately without attempting the call.
+2. A simpler approach: attempt `chattr +F` and treat any non-zero exit code as "feature
+   unavailable on this filesystem." Do NOT retry. Log at `debug` level and activate fallback.
+3. Never expose a user-facing error for chattr+F failure. It is a transparent optimization.
 
 **Warning signs:**
-- Linux elevated process exits immediately with `Connection refused` or `ENOENT` for
-  the socket path
-- `ECONNREFUSED` in the elevated child's stderr (Node process exits 1)
-- Intermittent failures only — the race condition manifests based on OS scheduler timing
+- SteamOS deployment always falls back to shim (expected — btrfs)
+- Fedora users on btrfs home partition always use shim (expected)
+- CI environments (typically tmpfs or overlayfs) never test the chattr+F code path — add
+  an ext4-specific integration test with a loopback device if critical path verification needed
 
-**Phase to address:** ELEV-01 — the socket-before-spawn ordering is the core architectural
-constraint for the entire Linux elevation implementation.
+**Phase to address:** chattr+F implementation phase. The btrfs/non-ext4 guard should be
+in the first commit.
 
 ---
 
-### Pitfall 5: `/tmp` Unix domain socket path — path too long or cleaned up by systemd-tmpfiles
+### Pitfall 5: chattr+F requires the `e2fsprogs` `chattr` binary — not available in all Docker/container environments
 
 **What goes wrong:**
-`getIPCPath()` returns `/tmp/vortex-{id}.sock`. Unix domain socket paths are limited to
-107 characters on Linux (the `sun_path` field in `struct sockaddr_un` is 108 bytes, with
-the null terminator consuming one). If `id` contains a long string — for example, the
-IPC path for symlink deployment includes a session timestamp + random component — the
-path can silently truncate.
+The `chattr` binary comes from the `e2fsprogs` package. On a minimal Docker image (e.g.,
+`node:22-slim` or `node:22-alpine`), `chattr` is not installed. Calling `child_process
+.exec('chattr +F ...')` in a container environment will fail with `ENOENT` (command not
+found) rather than EOPNOTSUPP.
 
-Additionally, on modern systemd-based distributions (Ubuntu 20.04+, Fedora, SteamOS),
-`systemd-tmpfiles-clean.service` runs a timer (`systemd-tmpfiles-clean.timer`) that
-deletes files in `/tmp` older than a configured age (default: 10 days, but SteamOS sets
-this to 1 day to conserve limited SSD space). For long-running elevated operations, this
-is not an issue, but socket files left behind by crashed elevated processes may be cleaned
-mid-session if Vortex is left running for extended periods.
-
-A separate concern: the `XDG_RUNTIME_DIR` (`/run/user/1000/`) is the preferred location
-for runtime socket files on modern Linux. It is guaranteed writable, guaranteed cleaned
-on logout, and not subject to `tmpfiles.d` sweeps. However, `XDG_RUNTIME_DIR` has a
-storage quota of 10% of RAM by default — irrelevant for socket files (inodes, no data)
-but relevant if socket files multiply from repeated elevation attempts without cleanup.
+The Vortex CI runs on `ubuntu-latest` (a GitHub-hosted runner) where `e2fsprogs` is
+pre-installed. But if integration tests are ever run in a Docker container, or if a user
+runs Vortex inside a container for some reason, the `chattr` binary may be absent.
 
 **Why it happens:**
-`os.tmpdir()` returns `/tmp` on all Linux distributions. This is correct and portable.
-The `XDG_RUNTIME_DIR` preference is a newer convention (systemd 2012+) that is not
-universally available (non-systemd distros like Alpine, Void Linux with runit) and
-whose absence causes `$XDG_RUNTIME_DIR` to be undefined. Using `/tmp` as the default
-is the safe fallback.
+Developers test on full Linux desktop systems where `e2fsprogs` is part of the base install.
+Container images strip non-essential packages by default.
 
 **How to avoid:**
-Keep `/tmp` as the socket directory (already implemented correctly). Add a path length
-assertion in `getIPCPath()` to catch `id` values that would produce paths over 107 chars:
-```typescript
-const p = path.join(os.tmpdir(), `vortex-${id}.sock`);
-if (process.platform === 'linux' && p.length > 107) {
-  throw new Error(`IPC socket path too long (${p.length}): ${p}`);
-}
-return p;
-```
-Use `XDG_RUNTIME_DIR` as a preferred override when available:
-```typescript
-const base = process.env.XDG_RUNTIME_DIR ?? os.tmpdir();
-```
-Clean up socket files after the elevated process exits by unlink-ing the socket path in
-the `close` or `error` handler of the Unix socket server.
-
-**Warning signs:**
-- `EINVAL` when calling `server.listen(socketPath)` — path too long
-- `EADDRINUSE` on second elevation attempt — previous socket file not cleaned up
-- Stale `.sock` files in `/tmp` from crashed sessions
-
-**Phase to address:** ELEV-01 — socket lifecycle management must be part of the initial
-implementation, not a cleanup task.
-
----
-
-### Pitfall 6: `pkexec` is not universally available on Linux — and SteamOS ships it non-functional by default
-
-**What goes wrong:**
-`pkexec` (from the `polkit` package) is the standard Linux privilege escalation tool for
-desktop environments. On a standard Ubuntu/Debian desktop system, `pkexec` is present and
-functional. On SteamOS (Steam Deck), the polkit daemon (`polkitd`) is present but the
-standard polkit authentication agent is NOT running in Game Mode — it only runs in KDE
-Plasma Desktop Mode. Without a polkit agent, `pkexec` hangs indefinitely waiting for
-agent registration or immediately exits with `authorization failed`.
-
-Additional environments where `pkexec` is absent or non-functional:
-- Minimal Docker/CI containers (no polkit installed)
-- Alpine Linux (uses musl; polkit package exists but is less commonly installed)
-- Systems running Wayland compositors without a polkit agent (Sway, Hyprland bare installs)
-
-The failure mode: `spawn('pkexec', ...)` succeeds (process starts), but the elevated
-child never connects back to the Unix socket. From the parent's perspective, the promise
-never resolves and the UI hangs waiting for the elevated process.
-
-**Why it happens:**
-`pkexec` is designed for interactive desktop sessions with a polkit agent. When invoked
-in an environment without an agent, it writes to stderr and exits non-zero, but the
-parent spawn listener must explicitly watch for non-zero exit codes to detect this.
-Without exit code handling, the parent hangs on the `net.Server` waiting for a client
-connection that never arrives.
-
-**How to avoid:**
-1. Before calling `pkexec`, check its availability:
+1. Before the first chattr+F call, check for the `chattr` binary with `which chattr` or
+   equivalent. If not found, skip and activate fallback silently.
+2. Add `which chattr` to the Node.js helper `trySetCasefold()` as a pre-flight check:
    ```typescript
-   import { execSync } from 'child_process';
-   function isPkexecAvailable(): boolean {
-     try {
-       execSync('which pkexec', { stdio: 'ignore' });
-       return true;
-     } catch { return false; }
+   async function trySetCasefold(dir: string): Promise<boolean> {
+     if (process.platform !== 'linux') return false;
+     if (!await commandExists('chattr')) return false;
+     const { code } = await exec(`chattr +F "${dir}"`);
+     return code === 0;
    }
    ```
-2. Set a timeout on the socket server `connect` event. If no client connects within
-   5 seconds of spawning `pkexec`, reject the promise with a user-readable error.
-3. Watch the `pkexec` child process `exit` event — non-zero exit code means the user
-   denied elevation or polkit is unavailable.
-4. For SteamOS (ELEV-02), implement an alternative that does not require a polkit agent:
-   - Option A: Use `sudo` with NOPASSWD for specific commands (configured via `/etc/sudoers.d/`
-     during first-run setup). SteamOS ships with `sudo` for the `deck` user with NOPASSWD
-     for `steamos-readonly` — the same pattern can be used for Vortex.
-   - Option B: Use `sudo --askpass` with a custom askpass program. On SteamOS without an
-     X11/Wayland display in Game Mode, this also fails.
-   - Option C: Detect SteamOS and skip elevation entirely — on Steam Deck, mod directories
-     under `~/.steam/steamapps/` are user-writable without elevation. Elevation may not
-     be needed at all on Steam Deck.
+3. Do not add `e2fsprogs` as a runtime dependency of Vortex. It is a system package.
+   The presence check handles the absence case.
 
 **Warning signs:**
-- `pkexec` child process exits with code 127 (`command not found`) or 1 (`authorization failed`)
-- Vortex UI hangs indefinitely when user clicks "Deploy Mods"
-- Log shows `pkexec spawned` but no `elevated process connected`
-- On SteamOS: `pkexec` is present but `polkitd` is not running in Game Mode
+- `ENOENT` or `command not found` when shelling out to `chattr` in a container
+- CI test environment reports chattr+F working even though the underlying test filesystem
+  is tmpfs (chattr binary present but the test is incorrectly asserting success)
 
-**Phase to address:** ELEV-01 for standard Linux (timeout + exit code handling), ELEV-02
-for SteamOS (alternative path or elevation bypass).
+**Phase to address:** chattr+F implementation phase. The `commandExists` guard must
+be in the initial implementation.
 
 ---
 
-### Pitfall 7: Electron sandbox (`nodeIntegration: true`) requires the elevated temp script to use `__non_webpack_require__`
+### Pitfall 6: NFS and FUSE mounts silently ignore chattr+F — Wine prefix paths are frequently on network or FUSE mounts
 
 **What goes wrong:**
-The elevated temp file generated by `runElevated()` is executed in a plain Node.js process
-spawned by `pkexec`. This process does not run inside Electron — it is a bare `node`
-binary. The temp file already addresses the webpack `require` transformation issue by
-aliasing `__non_webpack_require__ = require` at the top of the generated script.
+chattr+F silently returns success (exit code 0) on some NFS configurations and FUSE
+filesystems, but the attribute is NOT actually stored on the remote filesystem and case-
+insensitive lookup does not function. This is the most dangerous failure mode: the code
+believes casefold is enabled, skips the shim, and case-sensitive lookup failures surface
+as mysterious "file not found" errors during deployment.
 
-However, the existing `elevated.ts` serializes the `elevatedMain` function body via
-`.toString()`. If TypeScript compilation transforms the function body (e.g., class property
-initializers, optional chaining `?.`, or nullish coalescing `??` that are transpiled to
-ES5 by the TypeScript target), the serialized code may use helpers like `_asyncToGenerator`
-or `__awaiter` that are not defined in the bare Node.js context.
+The risk is highest for users who store Steam libraries on a NAS (NFS mount), an external
+drive with NTFS-fuse, or in a Flatpak sandbox (OverlayFS). Vortex staging directories
+placed on these mounts will fail silently.
 
-The current codebase uses TypeScript targeting ES2020 or later — async/await, optional
-chaining, and `??` are natively supported by Node 22 without transpilation. This is not
-currently a problem. But if the TypeScript `target` is ever lowered below `ES2020`
-(e.g., for a compatibility reason), the serialized function body will contain
-`__awaiter(this, void 0, void 0, function*() {...})` helpers that the bare Node process
-does not have.
+Note: For Wine prefix paths specifically, `fs.ts` already has `isWinePrefixPath()` which
+guards `resolvePathCase` calls. The chattr+F feature primarily targets staging directories,
+not Wine prefix directories. However, if staging directories are placed on a NFS/FUSE mount,
+the failure described above applies.
 
 **Why it happens:**
-The `elevated.ts` pattern is fundamentally fragile: it relies on `.toString()` of a
-function to serialize code into a temp file. This pattern only works when the serialized
-function body is self-contained and does not rely on any outer scope, transpiled helpers,
-or Electron-specific globals. On Windows, this has been working because the TypeScript
-target has been ES2020+ throughout the Electron 39 era. On Linux, any change to the
-TypeScript compilation target reintroduces the problem.
+NFS filesystems report themselves as capable of extended attributes but do not necessarily
+pass chattr `F` through to the server. FUSE filesystems vary — ext4-in-a-FUSE-layer may
+support casefold, while `ntfs-3g` does not. There is no reliable way to distinguish
+"chattr+F accepted" from "chattr+F silently accepted but not active" without a runtime test.
 
 **How to avoid:**
-Add a comment in `elevated.ts` explicitly documenting the TypeScript target constraint:
-```typescript
-// IMPORTANT: elevatedMain is serialized via .toString() and executed in a plain
-// Node process (not Electron). The serialized body must be self-contained:
-// - No outer-scope references
-// - No transpiled TypeScript helpers (requires tsconfig target >= ES2020)
-// - No webpack-transformed requires (uses __non_webpack_require__ alias)
-// If the TypeScript target is ever lowered below ES2020, this will break silently.
-```
-Add a CI smoke test that runs the generated temp file directly with `node <tmpfile>`
-to verify it executes without `ReferenceError` or missing helper errors.
+1. After applying `chattr +F`, immediately create a test file with an uppercase name and
+   attempt to read it with a lowercase name. If the read succeeds, casefold is active. If
+   it fails, fall back to the shim and remove the test file.
+   ```typescript
+   async function verifyCasefoldActive(dir: string): Promise<boolean> {
+     const testFile = path.join(dir, '__VORTEX_CASEFOLD_TEST__');
+     await fs.writeFileAsync(testFile, '');
+     try {
+       await fs.statAsync(path.join(dir, '__vortex_casefold_test__'));
+       return true;
+     } catch {
+       return false;
+     } finally {
+       await fs.removeAsync(testFile).catch(() => {});
+     }
+   }
+   ```
+2. Cache the result of this verification per staging directory (keyed by absolute path) so
+   the test runs once per session, not on every file operation.
+3. If verification fails even after `chattr +F` appeared to succeed, treat the directory
+   as case-sensitive and activate the shim.
 
 **Warning signs:**
-- `ReferenceError: __awaiter is not defined` in elevated process stderr
-- `ReferenceError: _asyncToGenerator is not defined` in elevated process stderr
-- The `syntaxErrors` check in `elevatedMain`'s `handleError` fires on startup
-- TypeScript `tsconfig.json` `target` changed to ES5 or ES2015
+- User stores Steam library on a NAS or external drive
+- `lsattr -d <dir>` shows `F` but creating `TEST.txt` and reading `test.txt` returns ENOENT
+- Deployment completes but game reports missing DLLs that Vortex claims are deployed
 
-**Phase to address:** ELEV-01 — document the constraint in source; the existing
-pattern is safe for the current TypeScript target.
-
----
-
-## Moderate Pitfalls
+**Phase to address:** chattr+F implementation phase. The verification step is mandatory
+before advertising the feature as active.
 
 ---
 
-### Pitfall 8: `@electron/rebuild` does not rebuild addons in pnpm virtual store without `--module-dir`
+### Pitfall 7: Rebase CI opens duplicate PRs on every scheduled run if the branch already exists
 
 **What goes wrong:**
-`pnpm` hoists packages into a `.pnpm/` virtual store with content-addressable paths like
-`.pnpm/gamebryo-savegame@1.2.3/node_modules/gamebryo-savegame/`. The top-level
-`node_modules/gamebryo-savegame/` is a symlink into this virtual store. `@electron/rebuild`
-in some versions (prior to 4.x) follows symlinks but in others traverses the directory and
-finds no native addons at the symlink destination.
+If the rebase workflow runs on a schedule (e.g., daily) and an upstream-rebase PR is already
+open from a previous run, a naive implementation will push a new branch or update the same
+branch and attempt to create a second PR. The result is either:
+- A GitHub API error `"A pull request already exists for..."` that surfaces as a workflow
+  failure (non-zero exit), spamming the maintainer with CI failure notifications
+- If error is swallowed, multiple open PRs for the same upstream rebase accumulate
 
-The result: `@electron/rebuild` completes without error but the addon in the virtual store
-remains compiled against the system Node ABI. At runtime, Electron fails to load the addon
-with `The module was compiled against a different Node.js version`.
+The existing cherry-pick workflow in `.github/scripts/cherry-pick.sh` already handles this
+correctly for cherry-picks (lines 62-66: `gh pr list --head "$BRANCH" ... | grep -q .`).
+The rebase workflow must implement the same idempotency check.
 
-**Prevention:**
-Run `@electron/rebuild` with the `-f` flag (force rebuild) and verify the output lists
-all expected addons. If `gamebryo-savegame` and `vortexmt` do not appear in the rebuild
-output, add `--module-dir node_modules/.pnpm/gamebryo-savegame@.../node_modules/gamebryo-savegame/`
-explicitly, or use `pnpm list --json` to locate the actual path dynamically.
-The Phase 3 research documents this as a known pnpm workspace concern.
+**Why it happens:**
+Developers implement the "create PR" step first and test it manually (once). The duplicate
+case only manifests on the second scheduled run.
 
-**Phase:** SAVE-01 — verify gamebryo-savegame appears in `@electron/rebuild` output.
-
----
-
-### Pitfall 9: Save game path on Linux requires Proton Wine prefix, not native `~/Documents`
-
-**What goes wrong:**
-The `gamebryo-savegame-management` extension likely calls `app.getPath("documents")` or
-a path helper to locate save game files. On Linux with Proton-run games, Bethesda save
-files live in the Wine prefix:
-```
-~/.steam/steam/steamapps/compatdata/<appid>/pfx/drive_c/users/steamuser/Documents/My Games/
-```
-Not in the native `~/Documents/My Games/` that Electron returns via `app.getPath("documents")`.
-The save game manager will report zero saves found even though saves exist at the Wine prefix
-path.
-
-This is a generalization of the v2.0 Pitfall 3 (`{mygames}` path resolution) applied to
-the save game viewer. The fix was deferred to v3.0 explicitly.
-
-**Prevention:**
-Before scanning for save files, check `process.platform === 'linux'` and resolve the
-per-game Proton prefix using the `getProtonInfo()` helper already in `proton.ts`. Use
-`PROTON_USERNAME = "steamuser"` (the constant from the v2.0 work) for the username
-component of the Wine prefix path. Never use `os.userInfo().username` for paths inside
-a Wine prefix.
-
-**Phase:** SAVE-02/03 — must fix before save game UI validation on Skyrim SE and Fallout 4.
-
----
-
-### Pitfall 10: Elevated process inherits environment variables from Electron — some variables confuse Node
-
-**What goes wrong:**
-`pkexec` by default resets most environment variables for the elevated process (for security
-reasons — this is the standard polkit behavior). However, the Electron process sets several
-environment variables that the child process should NOT inherit: `ELECTRON_RUN_AS_NODE`,
-`ELECTRON_NO_ASAR`, and Electron-specific `NODE_*` variables.
-
-If the elevated process runs as the same user (same UID, different capabilities — which
-is not standard `pkexec` behavior; `pkexec` always runs as root unless explicitly configured
-otherwise), it inherits the full Electron environment. `ELECTRON_RUN_AS_NODE=1` causes the
-node binary to behave as a pure Node.js runtime (stripping Electron-specific behavior),
-which is actually correct for the elevated process. `ELECTRON_NO_ASAR=1` disables ASAR
-support in the child — also correct. But if these variables are NOT set and the child
-is inadvertently using Electron's `node` binary instead of system `node`, the ASAR
-module resolver may intercept `require()` calls in the temp script.
-
-**Prevention:**
-The existing `elevated.ts` calls `process.execPath` as the executable — this is the
-Electron binary. On Linux, the elevated process should use the system `node` binary, not
-the Electron binary (which bundles additional native modules). Change the Linux branch to:
-```typescript
-const nodeExecutable = process.platform === 'linux'
-  ? process.execPath.replace(/\/resources\/app\.asar$/, '').replace(/vortex$/, 'node')
-  // Better: use 'node' from PATH via 'which node'
-  : process.execPath;
-```
-The cleanest approach: on Linux, spawn `pkexec node <tmpFile>` using the system `node`
-binary from `$PATH`. This avoids all Electron-specific contamination.
-
-**Phase:** ELEV-01 — the executable used for the elevated process is a key architectural
-decision that must be made in the initial implementation.
-
----
-
-### Pitfall 11: CI testing of elevation without root — mock strategy
-
-**What goes wrong:**
-CI runs on `ubuntu-latest` as a non-root user. There is no polkit agent. Tests that call
-`runElevated()` will hang indefinitely (socket wait without pkexec succeeding) or fail with
-`pkexec: authorization failed`. If the test suite is not structured to handle the Linux
-elevation path gracefully, the CI job hangs and times out after 6 hours.
-
-**Prevention:**
-Structure the elevation code for testability with a seam:
-```typescript
-// In elevated.ts, export the platform-specific spawn function for testing
-export type ElevatedSpawner = (
-  executable: string,
-  args: string[],
-  ipcPath: string
-) => Promise<void>;
-
-// Default implementation uses pkexec
-export const defaultElevatedSpawner: ElevatedSpawner = ...;
-
-// runElevated accepts an optional spawner override
-export function runElevated(
-  ipcPath: string,
-  func: ...,
-  args?: ...,
-  spawner: ElevatedSpawner = defaultElevatedSpawner
-): Promise<string>
-```
-In tests, inject a mock spawner that immediately connects a fake client to the socket:
-```typescript
-const mockSpawner: ElevatedSpawner = async (_, __, ipcPath) => {
-  const client = new JsonSocket(new net.Socket());
-  client.connect(ipcPath);
-  // Simulate successful elevated execution
-};
-```
-For CI, also add a `VORTEX_SKIP_ELEVATION` environment variable check — if set, skip
-elevation with a clear log message rather than hanging:
-```typescript
-if (process.env.VORTEX_SKIP_ELEVATION === '1') {
-  throw new UserCanceled();
-}
-```
-Set `VORTEX_SKIP_ELEVATION=1` in CI environment for the Linux job.
-
-**Phase:** ELEV-01 — the injectable spawner pattern must be designed in from the start;
-retrofitting it after tests are written is harder.
-
----
-
-### Pitfall 12: SteamOS immutable filesystem and polkit policy installation
-
-**What goes wrong:**
-Standard polkit setups involve writing a policy file to `/usr/share/polkit-1/actions/`
-(e.g., `com.nexusmods.vortex.policy`). On SteamOS, `/usr/share/` is part of the
-read-only `ostree` root filesystem. Writing to this path fails with `EROFS`. Additionally,
-SteamOS's `ostree`-managed system is reset to the base image on OS updates — even if
-`steamos-readonly disable` was used to write a policy file, the file will be erased on
-the next SteamOS update.
-
-The consequence: polkit-based elevation is not a viable long-term solution for SteamOS
-unless the policy file is stored in `/home/` (which polkit does not read by default in
-older versions, though polkit 0.119+ supports `~/.local/share/polkit-1/actions/` for
-user-local policies).
-
-**Prevention:**
-For ELEV-02, do not use a polkit policy file approach on SteamOS. Instead:
-1. Detect SteamOS by checking `os.release()` for `steamos` or checking for the presence
-   of `/etc/os-release` containing `ID=steamos`.
-2. On SteamOS, audit whether elevation is actually needed. Steam Deck's mod directories
-   under `~/.steam/` and `~/` are user-writable. The need for elevation arises from
-   writing to system directories (e.g., `/usr/`, `/etc/`). On Steam Deck, users do not
-   install games to system paths — elevation may be a no-op requirement.
-3. If elevation IS needed on SteamOS, use `sudo` with a NOPASSWD entry written to
-   `~/.local/share/` equivalent — but there is no supported mechanism for this.
-   The pragmatic answer: on SteamOS, show a notification explaining that elevated
-   operations are not supported and require Desktop Mode with polkit configured.
+**How to avoid:**
+1. Before pushing the rebase branch, check if a PR already exists with the same head and
+   base using `gh pr list --head <branch> --base master --state open`. If one exists, only
+   push an update to the branch (force-push if needed) but do NOT create a new PR.
+2. Use a **fixed, predictable branch name** for the rebase PR: `upstream-rebase/main` or
+   `upstream-rebase/$(date +%Y-%m)`. A fixed name makes the "PR exists?" check deterministic.
+   Do not include a timestamp in the branch name — that creates a new branch (and a new PR)
+   on every run.
+3. If the upstream is already up to date (rebase is a no-op), delete the rebase branch (if
+   it exists from a previous run) and close any open PR with a comment: "Upstream is now
+   up to date with this fork — no rebase needed."
 
 **Warning signs:**
-- Any code that writes to `/usr/share/polkit-1/` will fail on SteamOS
-- `polkitd --version` succeeds but `pkexec <command>` hangs on SteamOS in Game Mode
-- `/etc/os-release` contains `ID=steamos` or `VARIANT_ID=steamdeck`
+- Multiple open PRs titled "Upstream rebase" or "Sync with nexus-mods/Vortex"
+- Workflow fails every run after the first with "pull request already exists" error
+- The branch name includes a timestamp or run ID component
 
-**Phase:** ELEV-02 — SteamOS elevation alternative must be decided before implementation.
-The pragmatic answer (skip elevation + user notification) may be the only viable option.
+**Phase to address:** Rebase CI implementation phase. The idempotency check must be in the
+initial workflow, not a follow-up fix.
+
+---
+
+### Pitfall 8: "Already up to date" rebase exits 0 but must not create a PR — distinguishing no-op from real changes
+
+**What goes wrong:**
+`git rebase origin/master` exits 0 whether or not there were any changes to rebase. If the
+fork's master is already up to date with the upstream, the rebase is a no-op. A workflow
+that unconditionally pushes the rebase branch and creates a PR after a no-op rebase will:
+- Push an empty branch (no new commits)
+- Create a PR that, when viewed, shows 0 commits and no diff
+- Generate a merge conflict with an empty PR
+
+The maintainer must manually close these empty PRs, which generates noise and erodes trust
+in the automation.
+
+**Why it happens:**
+`git rebase` exit code 0 does not distinguish "rebased N commits" from "nothing to rebase."
+Developers test with a diverged fork where the rebase is always non-trivial.
+
+**How to avoid:**
+Before pushing the rebase branch, check whether any new commits were added:
+```bash
+UPSTREAM_HEAD=$(git rev-parse origin/upstream-master)
+FORK_HEAD=$(git rev-parse HEAD)
+if git merge-base --is-ancestor "$UPSTREAM_HEAD" "$FORK_HEAD"; then
+  echo "Fork is already up to date with upstream. No PR needed."
+  exit 0
+fi
+```
+Or more directly: check the commit count between the upstream and the fork's master before
+attempting the rebase at all. If `git log --oneline upstream/master..origin/master` returns
+empty, skip the entire workflow.
+
+**Warning signs:**
+- PRs created with 0 commits and no diff
+- Workflow creates a PR on every scheduled run even when no upstream changes occurred
+- The rebase branch push results in an empty diff against master
+
+**Phase to address:** Rebase CI implementation phase.
+
+---
+
+### Pitfall 9: Rebase conflicts in CI must create a draft PR — not fail the workflow with a non-zero exit code
+
+**What goes wrong:**
+`git rebase` exits non-zero when there are merge conflicts. If the workflow uses `set -e` or
+the default GitHub Actions behavior (fail on non-zero step exit), the workflow job fails, no
+PR is created, and the maintainer only gets a "CI failed" notification with no actionable
+information about which files have conflicts.
+
+The correct behavior (matching the cherry-pick workflow pattern in `.github/scripts/
+cherry-pick.sh`) is to commit conflict markers, push the branch, and create a **draft PR**
+with a warning body. The maintainer then gets a draft PR they can open and manually resolve.
+
+**Why it happens:**
+The natural instinct is to treat rebase failure as an error. But in an automated workflow,
+conflict detection is expected and must be surfaced as a reviewable artifact, not a silent
+failure.
+
+**How to avoid:**
+```bash
+HAS_CONFLICTS=false
+if ! git rebase upstream/master; then
+  # Conflict: accept the partial state and commit markers
+  git rebase --abort
+  # Use merge instead for the conflict case
+  git merge upstream/master || true
+  git add -A
+  git commit -m "upstream-rebase: unresolved conflicts require manual resolution"
+  HAS_CONFLICTS=true
+fi
+
+# Push regardless
+git push --force origin upstream-rebase/main
+
+# Create PR as draft if conflicts, normal if clean
+if [ "$HAS_CONFLICTS" = "true" ]; then
+  gh pr create --draft --title "Upstream rebase (conflicts)" \
+    --body "Conflicts detected. Manual resolution required."
+else
+  gh pr create --title "Upstream rebase" \
+    --body "Automated rebase of upstream nexus-mods/Vortex onto fork master."
+fi
+```
+
+**Warning signs:**
+- Workflow job red (failed) but no PR created — conflicts are swallowed
+- `git rebase` exit code 1 propagates to the Actions step and terminates the job
+- The maintainer sees only "step failed: rebase upstream" without any PR to inspect
+
+**Phase to address:** Rebase CI implementation phase. The conflict-to-draft-PR path must
+be implemented from the start, not added after the first real conflict occurs.
+
+---
+
+### Pitfall 10: GITHUB_TOKEN cannot push to a fork's protected `master` branch — bot pushes are blocked by branch protection rules
+
+**What goes wrong:**
+If the fork's `master` branch has branch protection rules enabled (required PR reviews,
+required status checks, or "Restrict who can push to matching branches"), `GITHUB_TOKEN`
+from a workflow job CANNOT push directly to `master`. Attempting to do so fails with
+`remote: error: GH006: Protected branch update failed`.
+
+For the rebase workflow, the bot only needs to push to a **new** rebase branch (e.g.,
+`upstream-rebase/main`), not to `master` directly. Pushing to a non-protected branch does
+not require bypass permissions. Only the final merge of the rebase PR goes to `master`,
+which happens via the normal PR merge mechanism (human-approved).
+
+The confusion arises when developers test the workflow by trying to push to `master` to
+verify it works, not realizing the workflow should only ever push to a side branch.
+
+**Why it happens:**
+Developers confuse "push the rebased code to master" with "push the rebased code to a
+branch and open a PR." The correct workflow never touches `master` directly from CI.
+
+**How to avoid:**
+1. The rebase workflow must push to `upstream-rebase/main` (or a similar non-protected
+   branch name) only. Never attempt to push to `master` from the workflow.
+2. Ensure `contents: write` and `pull-requests: write` permissions are declared in the
+   workflow YAML:
+   ```yaml
+   permissions:
+     contents: write
+     pull-requests: write
+   ```
+3. The `GITHUB_TOKEN` has `contents: write` permission to push to non-protected branches
+   by default when granted in the workflow definition. No PAT is needed for this use case.
+4. If branch protection is accidentally configured to require human review for ALL branches
+   (including side branches), the workflow will fail. Check: branch protection rules should
+   apply to `master` and `v*` only, not to `upstream-rebase/*`.
+
+**Warning signs:**
+- `remote: error: GH006: Protected branch update failed` in workflow output
+- Workflow tries to push to `master` directly instead of a side branch
+- `gh pr create` succeeds but the branch doesn't exist (push was blocked silently)
+
+**Phase to address:** Rebase CI implementation phase. Verify permissions in the first
+workflow run against a non-protected branch.
+
+---
+
+### Pitfall 11: Rebase workflow triggered by `push` to `master` creates a feedback loop
+
+**What goes wrong:**
+If the rebase workflow is triggered by `on: push: branches: [master]` and the workflow
+then pushes a branch derived from `master`, subsequent merges of the rebase PR back into
+`master` trigger the workflow again — creating a loop. Depending on the workflow logic,
+this can result in:
+- A new rebase PR opened immediately after the previous one is merged
+- An "already up to date" no-op loop (if Pitfall 8's guard is in place, this is harmless
+  but wasteful)
+- A genuine loop if the rebase commits differ from what was merged (e.g., due to squash
+  merging changing commit hashes)
+
+**Why it happens:**
+`on: push` to the main branch fires for every push including bot-merged PRs. The trigger
+is too broad.
+
+**How to avoid:**
+1. Use `schedule` (e.g., `on: schedule: cron: '0 2 * * *'`) or `workflow_dispatch` as the
+   primary trigger for the rebase workflow, not `push`. A daily schedule is sufficient for
+   upstream sync; the maintainer can trigger manually when they know an upstream release
+   just dropped.
+2. If a `push` trigger is desired, use `workflow_run` chaining (trigger on completion of the
+   `Main` workflow) combined with the "already up to date" guard (Pitfall 8). The guard
+   ensures the workflow exits cleanly when there's nothing to do.
+3. Add an `if` condition to the workflow job to skip runs triggered by the rebase bot itself:
+   ```yaml
+   if: github.actor != 'github-actions[bot]'
+   ```
+   This prevents self-triggered runs.
+
+**Warning signs:**
+- Multiple rebase PRs opened within minutes of each other
+- Workflow run history shows back-to-back runs triggered by bot commits
+- `github.actor` in the trigger event is `github-actions[bot]`
+
+**Phase to address:** Rebase CI implementation phase. Use `schedule` as the primary trigger.
+
+---
+
+### Pitfall 12: Accumulating unmerged rebase PRs — the "stale rebase" problem
+
+**What goes wrong:**
+If the rebase PR is not merged before the next scheduled run, two scenarios arise:
+1. **Fixed branch name**: The next run force-pushes the rebase branch and updates the existing
+   PR. This is correct behavior — one PR, always current.
+2. **Timestamped/rotating branch name**: A new branch and a new PR are created alongside the
+   old one. Over time, N unmerged rebase PRs accumulate, all with different upstream snapshots.
+   The maintainer must manually close stale PRs and figure out which one is current.
+
+Additionally, if the maintainer is slow to merge (e.g., a major upstream release creates
+conflicts that need careful resolution), the rebase PRs accumulate a backlog that becomes
+increasingly hard to resolve because each new upstream commit adds more potential conflicts.
+
+**Why it happens:**
+The workflow treats each run as independent and doesn't check for or clean up prior runs.
+Using timestamped branch names (common in "just make it work" initial implementations) is
+the root cause.
+
+**How to avoid:**
+1. Always use a fixed branch name for rebase PRs. One branch, one PR, always updated in
+   place. The `git push --force origin upstream-rebase/main` pattern from Pitfall 7 ensures
+   this.
+2. Add a workflow step to close stale rebase PRs before creating a new one:
+   ```bash
+   # Close any open rebase PRs that point to a different (old) branch
+   gh pr list --label "upstream-rebase" --state open --json number,headRefName \
+     | jq -r '.[] | select(.headRefName != "upstream-rebase/main") | .number' \
+     | xargs -I{} gh pr close {} --comment "Superseded by new rebase PR"
+   ```
+3. Add a `upstream-rebase` label to all rebase PRs so they're easy to query and manage.
+
+**Warning signs:**
+- Multiple open PRs with "upstream rebase" in the title
+- Branch names include dates: `upstream-rebase-2026-01-15`, `upstream-rebase-2026-02-01`
+- Maintainer manually closes stale PRs after every rebase cycle
+
+**Phase to address:** Rebase CI implementation phase. The fixed-branch + label pattern
+must be established in the first workflow version.
+
+---
+
+### Pitfall 13: Windows CI build breaks because chattr+F code is not platform-guarded
+
+**What goes wrong:**
+The existing `fs.ts` correctly gates case-folding logic behind `process.platform === "linux"`
+checks in `isWinePrefixPath()`. New chattr+F code that calls `child_process.exec('chattr +F
+...')` or shells out to `lsattr` will throw `ENOENT` on Windows because `chattr` does not
+exist on Windows. If the `process.platform` guard is missing or in the wrong place, the
+Windows CI job (`runs-on: windows-latest` in `main.yml`) will fail.
+
+The `main.yml` workflow explicitly runs build on both `ubuntu-latest` and `windows-latest`
+with a matrix. Windows build failures block PRs.
+
+**Why it happens:**
+Developers add the `process.platform === 'linux'` guard at the top of a function but
+forget that TypeScript module-level imports or side-effect-free require calls still execute
+on Windows. If `chattr` invocation is at module scope rather than inside the platform guard,
+Windows will fail on import.
+
+**How to avoid:**
+1. All chattr+F code must be inside `if (process.platform === 'linux')` blocks — no
+   exceptions. This mirrors the existing pattern in `fs.ts` (`isWinePrefixPath` returns
+   false on non-Linux and all case-folding code is gated on it).
+2. The CI matrix at `main.yml` line 16 runs both OS builds in parallel. A Windows build
+   failure blocks the PR. Run the PR CI (not just local testing) before considering the
+   feature complete.
+3. Add an explicit test in `fs.test.ts` that `trySetCasefold()` returns `false` on non-Linux
+   platforms (mock `process.platform`).
+
+**Warning signs:**
+- Windows CI job fails with `ENOENT` or "command not found" for `chattr` or `lsattr`
+- The PR build shows one green (Linux) and one red (Windows) job
+- `process.platform` check added to the function body but the module-level import already
+  ran on Windows
+
+**Phase to address:** chattr+F implementation phase. The platform guard is a day-one
+requirement per the project's cross-platform invariant.
 
 ---
 
@@ -572,11 +599,12 @@ The pragmatic answer (skip elevation + user notification) may be the only viable
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| `patch-package` for gamebryo-savegame | Avoids forking the package | Patch breaks silently on version bump; must re-verify after any gamebryo-savegame update | Acceptable for v3.0; plan to upstream the fix or fork with a Linux-maintained fork |
-| Hardcode `pkexec` path as `"pkexec"` | Simpler spawn call | Fails if pkexec is not in `$PATH` (minimal containers, some embedded distros) | Acceptable; `pkexec` is in `/usr/bin/pkexec` on all standard desktops; add `which pkexec` pre-check |
-| Use `/tmp` for socket path instead of `XDG_RUNTIME_DIR` | Portable across all distros | `/tmp` may be memory-backed tmpfs with size limits on some distros; `XDG_RUNTIME_DIR` is better for sessions | Acceptable for v3.0; existing `getIPCPath()` uses `/tmp` already and is correct |
-| Skip elevation on SteamOS (show notification) | No SteamOS-specific complexity | Users on SteamOS cannot use symlink deployment | Acceptable for v3.0 given polkit constraints; document clearly in UI |
-| `VORTEX_SKIP_ELEVATION=1` CI escape hatch | Unblocks CI without mock infrastructure | Not a real test of the elevation code path | Never acceptable as permanent; requires mock spawner pattern as follow-up |
+| Fire-and-forget `exec('chattr +F ...')` without checking exit code | Simple to write | Silent failure — casefold not active but code thinks it is | Never — always check exit code and verify with lsattr or runtime test |
+| Apply chattr+F to staging root only (not per-mod dirs) | Single call point | Subdirectory inheritance breaks for pre-existing mod dirs (Pitfall 3) | Acceptable if documented — new dirs inherit, old dirs use shim |
+| Timestamped rebase branch names | Avoids stale branch | Accumulate unmerged PRs, maintainer churn | Never for a scheduled workflow — always use fixed names |
+| Trigger rebase workflow on `push` to `master` | React immediately to local changes | Feedback loop when rebase PR is merged back | Acceptable only if combined with `github.actor != 'github-actions[bot]'` guard AND "already up to date" early exit |
+| Using PAT instead of GITHUB_TOKEN for rebase workflow | Can bypass branch protection | PAT scopes are too broad, expires and breaks workflow | Only if GITHUB_TOKEN insufficient — prefer GITHUB_TOKEN with explicit `permissions: contents: write` |
+| Skipping the `verifyCasefoldActive` runtime test (Pitfall 6) | Faster startup | NFS/FUSE users silently get no casefold benefit but believe it's active | Never — the runtime test is the only reliable way to detect the NFS/FUSE silent-success case |
 
 ---
 
@@ -584,12 +612,24 @@ The pragmatic answer (skip elevation + user notification) may be the only viable
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| `pkexec` + `net.Server` | Start socket server after spawning pkexec — race condition | Listen on socket FIRST, then spawn pkexec |
-| `pkexec` + environment | Pass full parent env to elevated process — security and contamination risk | `pkexec` strips env by default; the child should receive only what it needs |
-| `patch-package` + pnpm | Patch file keyed to wrong package path format | pnpm patches use `+` separator: `patches/gamebryo-savegame+1.2.3.patch` |
-| `@electron/rebuild` + pnpm virtual store | Rebuild finds no addons in `.pnpm/` virtual store | Verify addons appear in rebuild output; use `--module-dir` if missing |
-| node-gyp `OS=="linux"` condition | Misspelling `"OS=='linux'"` (single quote inside double quote is correct; do not use double inside double) | Test locally: `node-gyp configure && cat build/config.gypi` to confirm the condition is parsed |
-| `std::runtime_error` patch | Only fixing the constructor — leaving `what()` implementation using MSVC-specific `_what` | Replace entire class; verify `e.what()` returns the message on GCC |
+| `chattr +F` + ext4 without casefold | Assume EOPNOTSUPP means "Linux doesn't support it" | It means THIS filesystem wasn't formatted with casefold; treat as best-effort, fall back to shim |
+| `chattr +F` + non-empty staging dir | Call chattr on existing dir, expect it to work | Only call on empty dir; skip for existing dirs and use shim |
+| `chattr +F` + btrfs (SteamOS) | Test on ext4 dev machine only; ship to SteamOS users who get EOPNOTSUPP | Guard with filesystem type detection OR treat all non-zero exit as fallback-to-shim |
+| `chattr +F` + NFS/FUSE | Trust chattr exit code 0 as confirmation | Verify with runtime test (create uppercase file, read lowercase) |
+| Rebase workflow + protected master | Try to push rebased commits directly to master | Only push to a non-protected side branch; the PR merge goes to master manually |
+| Rebase workflow + GITHUB_TOKEN | Omit `permissions` block and wonder why push fails | Always declare `contents: write` and `pull-requests: write` in the workflow YAML |
+| Rebase PR + conflict markers | Let the workflow fail on `git rebase` exit 1 | Catch the conflict, commit markers, push, open draft PR with warning body |
+| `chattr` binary + minimal container | No guard for binary absence; `ENOENT` crash | Check `which chattr` before invoking; skip gracefully if absent |
+
+---
+
+## Performance Traps
+
+| Trap | Symptoms | Prevention | When It Breaks |
+|------|----------|------------|----------------|
+| Calling `lsattr` on every file operation to check if casefold is active | Deployment lag; extra syscall per file | Cache `trySetCasefold()` result per staging directory path at session start | At first deployment with any significant mod count |
+| Forking a child process (`exec('chattr +F ...')`) for every new mod subdirectory | Spawn overhead; mod install slowdown | Apply chattr+F only to staging root; subdir inheritance handles the rest | With 100+ mod installs in a session |
+| Rebase workflow fetches entire upstream history on every run | Long workflow duration | Use `--depth=1` for the upstream remote fetch; only need the latest commit | When upstream repo has years of history |
 
 ---
 
@@ -597,28 +637,31 @@ The pragmatic answer (skip elevation + user notification) may be the only viable
 
 | Mistake | Risk | Prevention |
 |---------|------|------------|
-| Writing arbitrary user-controlled content into elevated temp file | Code injection — attacker controls what runs as root | The temp file is generated from `func.toString()` (developer-controlled) and `args` (JSON-serialized). Ensure `args` values are JSON-serialized (not interpolated raw strings) before writing to the script |
-| Reusing the same `ipcPath` across elevation calls | Second elevation attempt attaches to previous session's socket | Generate a unique `ipcPath` per `runElevated()` call using `crypto.randomUUID()` or timestamp+PID |
-| Leaving the Unix domain socket file after process exit | Subsequent processes can connect to a stale listener | Unlink the socket file in the server `close` handler; also unlink on process `exit` and `SIGTERM` |
-| Storing elevated temp file in world-writable `/tmp` without restrictive permissions | Another process overwrites the temp script before pkexec executes it | `tmp.file()` uses `0600` permissions by default; verify this is the case in the `tmp` package version in use |
+| Shell-interpolating user-controlled staging path into `chattr +F "<path>"` | Path injection if staging path contains shell metacharacters (spaces, backticks) | Use `execFile('chattr', ['+F', dir])` (argument array) instead of `exec('chattr +F "' + dir + '"')` |
+| Storing PAT for rebase workflow in workflow file or repo secrets visible to fork PRs | PAT exfiltration via `pull_request` trigger | Use `GITHUB_TOKEN` with explicit permissions; if PAT needed, use `pull_request_target` (not `pull_request`) and never print secrets in workflow output |
+| Rebase workflow with `pull_request_target` trigger and untrusted code execution | Supply chain attack via upstream PR that modifies workflow files | Rebase workflow should use `schedule` or `workflow_dispatch` only; never trigger on `pull_request_target` |
 
 ---
 
 ## "Looks Done But Isn't" Checklist
 
-- [ ] **gamebryo-savegame compilation:** Often missing the `binding.gyp` Linux linker flags — verify
-  with `node -e "require('gamebryo-savegame')"` after `@electron/rebuild`, not just `node-gyp build` exit code
-- [ ] **patch-package install:** Often the patch is authored correctly but `patch-package` is not in
-  devDependencies and not called in `postinstall` — verify `pnpm install` from scratch triggers the patch
-- [ ] **pkexec elevation:** Often tested with `pkexec echo hello` which succeeds, but the actual
-  flow (pkexec → node → Unix socket → callback) is never end-to-end tested — verify with a real
-  elevated operation in a Linux desktop session with a polkit agent running
-- [ ] **Socket cleanup:** The `net.Server` appears to close correctly in tests, but the `.sock` file
-  persists in `/tmp` — verify `fs.unlink(ipcPath)` is called in the server close handler
-- [ ] **SteamOS detection:** `ID=steamos` check works for SteamOS 3.x but Steam Deck running a
-  custom distro may use a different ID — also check for `VARIANT_ID=steamdeck` in `/etc/os-release`
-- [ ] **Save game path:** The UI shows "0 saves found" on Linux even though saves exist — verify
-  the path resolution uses the Proton Wine prefix, not `~/Documents`
+- [ ] **chattr+F active:** `chattr +F` exit code 0 does not mean casefold is working — verify with
+  the runtime uppercase/lowercase test (Pitfall 6). Missing: the runtime verification step.
+- [ ] **chattr+F on new dirs only:** The staging root creation code path has the `mkdir → chattr+F →
+  write-tag` sequence, but the migration path (existing dirs) silently skips — confirm with
+  a test that existing staging dirs do NOT have chattr+F attempted on them.
+- [ ] **Windows build green:** Platform guard exists in the function body but the PR's Windows CI
+  job is the authoritative check. Verify both matrix jobs pass before merging.
+- [ ] **Rebase PR idempotent:** Run the workflow twice in succession without merging the PR.
+  Second run should push an update to the existing branch and NOT create a second PR.
+- [ ] **Conflict path creates draft PR:** Artificially inject a conflict (add a conflicting commit
+  to master before the rebase runs) and verify the workflow creates a draft PR with conflict
+  body, not a failed CI job.
+- [ ] **"Already up to date" is a no-op:** When the fork is already up to date with upstream,
+  the workflow must exit 0 cleanly without creating a PR. Verify by running the workflow
+  immediately after merging a rebase PR.
+- [ ] **chattr+F binary absent:** Test in an environment without `e2fsprogs` (or mock the
+  `which chattr` check) and confirm Vortex falls back to the shim without errors.
 
 ---
 
@@ -626,12 +669,13 @@ The pragmatic answer (skip elevation + user notification) may be the only viable
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| MSVC exception constructor not patched | LOW | Write `patches/gamebryo-savegame+{version}.patch`; add `patch-package` to `postinstall`; re-run `pnpm install` |
-| Missing lz4/zlib linker flags | LOW | Extend the same patch to modify `binding.gyp`; add `liblz4-dev` to CI apt step |
-| Socket race condition (pkexec before listen) | MEDIUM | Refactor `runElevated` Linux branch; re-test with timing delays to confirm race is closed |
-| pkexec hangs in CI | LOW | Add `VORTEX_SKIP_ELEVATION=1` check; add timeout on socket server; fix immediately when discovered |
-| SteamOS polkit unavailable | LOW | Show "elevation not supported on SteamOS" notification; do not hang UI |
-| Elevated process uses Electron binary instead of node | MEDIUM | Change `process.execPath` to system `node` in Linux branch; re-test elevated operations end-to-end |
+| chattr+F called on non-casefold filesystem — feature silently inactive | LOW | Add EOPNOTSUPP guard + fallback activation; no data loss, shim was always there |
+| chattr+F called on non-empty dir — returns error, staging dir unusable | LOW | Wrap in try/catch; log and fall back; staging dir still works case-sensitively via shim |
+| Duplicate rebase PRs accumulate | LOW | `gh pr list --label upstream-rebase --state open | xargs gh pr close`; add fixed branch name to workflow |
+| Rebase CI fails on conflict, no PR created | MEDIUM | Add conflict-to-draft-PR path; maintainer must manually rebase and push once to unblock |
+| Windows CI broken by missing platform guard | MEDIUM | Add `process.platform === 'linux'` guard around all chattr/lsattr calls; re-run CI |
+| Path injection via shell interpolation of staging dir | HIGH | Refactor to `execFile` with argument array; audit all child_process calls in the new code |
+| Rebase workflow feedback loop (self-triggering) | LOW | Add `if: github.actor != 'github-actions[bot]'` condition; change trigger to `schedule` |
 
 ---
 
@@ -639,46 +683,46 @@ The pragmatic answer (skip elevation + user notification) may be the only viable
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| MSVC exception constructor in gamebryosavegame.cpp | SAVE-01 | `node-gyp build` exits 0; `require('gamebryo-savegame')` loads without error |
-| Missing lz4/zlib linker flags in binding.gyp | SAVE-01 | Same as above; `ldd gamebryo-savegame.node` shows liblz4 and libz resolved |
-| patch-package breaks on version bump | SAVE-01 | `pnpm install` from scratch produces patched source; `verify-patches.js` script passes |
-| Socket-before-spawn ordering | ELEV-01 | End-to-end test: elevated Node process connects to socket within 2s of pkexec spawn |
-| `/tmp` socket path length + cleanup | ELEV-01 | `ls /tmp/*.sock` clean after elevation completes; path length assertion in `getIPCPath()` |
-| pkexec availability + hang | ELEV-01 | `which pkexec` check; 5s timeout on socket connect; child exit code monitoring |
-| SteamOS polkit not running | ELEV-02 | SteamOS detection check; UI notification path; no UI hang |
-| Elevated process using Electron binary | ELEV-01 | Elevated process stderr clean; system `node --version` matches expected |
-| CI hang without polkit agent | ELEV-01 | `VORTEX_SKIP_ELEVATION=1` set in CI; test suite completes without timeout |
-| Save game path uses native ~/Documents | SAVE-02/03 | Save game manager shows saves for Skyrim SE on Linux with Proton |
-| TypeScript transpiled helpers in serialized function | ELEV-01 | Smoke test: run generated temp file with `node <tmpfile>` directly; no ReferenceError |
+| chattr+F on non-casefold filesystem (EOPNOTSUPP) | chattr+F implementation | `trySetCasefold()` returns false gracefully on ext4 without casefold; shim activates |
+| chattr+F on non-empty directory | chattr+F implementation | Test with pre-populated staging dir; chattr call skipped; shim active |
+| chattr+F cascade behavior misunderstood | chattr+F implementation | New mod subdirs show `F` in lsattr; existing subdirs do not; both deploy correctly |
+| btrfs/NFS/FUSE silent failure | chattr+F implementation | Runtime casefold verification test passes on ext4+casefold, fails and activates shim on btrfs |
+| `chattr` binary absent in container | chattr+F implementation | `commandExists('chattr')` pre-check; graceful skip verified in test |
+| Windows build broken by missing platform guard | chattr+F implementation | Both matrix jobs in main.yml pass green |
+| Duplicate rebase PRs | Rebase CI implementation | Run workflow twice without merging — second run updates existing PR, not create new |
+| "Already up to date" creates empty PR | Rebase CI implementation | Run workflow when fork is current — workflow exits 0, no PR created |
+| Conflict not surfaced as draft PR | Rebase CI implementation | Inject conflict; verify draft PR with warning body created; workflow exits 0 |
+| Branch protection blocks bot push | Rebase CI implementation | First workflow run pushes to `upstream-rebase/main` branch cleanly |
+| Feedback loop from push trigger | Rebase CI implementation | Merge rebase PR; verify no new rebase workflow run is triggered by the merge commit |
+| Stale rebase PR accumulation | Rebase CI implementation | Run workflow 3 times without merging; confirm exactly 1 open PR throughout |
 
 ---
 
 ## Sources
 
 - Codebase audit (HIGH confidence):
-  - `node_modules/.pnpm/gamebryo-savegame/.../src/gamebryosavegame.cpp` — MoreInfoException MSVC bug (Phase 3 RESEARCH.md confirmed)
-  - `node_modules/.pnpm/gamebryo-savegame/.../binding.gyp` — missing Linux lz4/zlib linker flags (Phase 3 RESEARCH.md confirmed)
-  - `src/renderer/src/util/elevated.ts` — full `runElevated()` implementation including `ShellExecuteEx` call site
-  - `src/renderer/src/util/ipc.ts` — `getIPCPath()` returns `/tmp/vortex-{id}.sock` on Linux
-  - `src/renderer/src/extensions/symlink_activator_elevate/index.ts` — 6 `runElevated()` call sites confirmed (Phase 5 elevation audit)
-  - `src/main/src/MainWindow.ts` — `nodeIntegration: true`, `contextIsolation: false` confirmed (Electron sandbox not active for main window)
-  - `.planning/phases/05-ipc-and-elevation-audit/05-ELEVATION-AUDIT.md` — all 6 call sites documented, startup path confirmed clean
-  - `.planning/phases/03-native-addon-compilation/03-RESEARCH.md` — NADD-06 audit: both errors precisely identified
-- C++ standard (HIGH confidence):
-  - `std::exception` standard constructor list (ISO C++17 §18.8.1): only default, copy, and `const char*` constructors — `std::exception(another_exception)` is MSVC extension
-- Linux `sockaddr_un` (HIGH confidence):
-  - `man 7 unix`: `sun_path` is 108 bytes on Linux; maximum path length is 107 chars + null terminator
-- `pkexec` / polkit behavior (MEDIUM confidence):
-  - polkit upstream documentation: without a registered authentication agent, `pkexec` returns `exit code 127` or hangs
-  - SteamOS issue tracker: multiple confirmed reports of polkit agent not running in Game Mode
-  - `man pkexec`: environment stripping behavior documented
-- systemd-tmpfiles (MEDIUM confidence):
-  - `man systemd-tmpfiles`: default `/tmp` aging policy 10 days on standard distributions
-  - SteamOS Wiki: SteamOS uses shorter `/tmp` retention; `/home` is the recommended persistent location
-- `patch-package` behavior (HIGH confidence):
-  - `patch-package` README: patches keyed to exact version; mismatch produces warning but does not fail build
+  - `/home/alex/src/Vortex/src/renderer/src/util/fs.ts` — `isWinePrefixPath()`, `resolveCaseIfWinePrefix()`, `resolvePathCaseSync()`: existing case-folding shim pattern
+  - `/home/alex/src/Vortex/src/renderer/src/extensions/mod_management/stagingDirectory.ts` — `ensureStagingDirectoryImpl()`: staging dir creation code path, `STAGING_DIR_TAG`, ordering of dir creation vs tag write
+  - `/home/alex/src/Vortex/.github/workflows/main.yml` — Windows/Linux CI matrix; `runs-on: windows-latest` is active
+  - `/home/alex/src/Vortex/.github/workflows/cherry-pick.yml` — existing cherry-pick workflow pattern for branch naming and PR idempotency check
+  - `/home/alex/src/Vortex/.github/scripts/cherry-pick.sh` — `gh pr list --head ... | grep -q .` idempotency pattern; conflict-to-draft-PR pattern
+  - `/home/alex/src/Vortex/.github/workflows/release-linux.yml` — existing Linux release workflow structure
+- chattr man page (HIGH confidence, fetched 2026-04-15):
+  - `chattr +F` requires empty directory
+  - `F` attribute enables case-insensitive path lookups
+  - Requires filesystem-level casefold feature enabled at mkfs time
+  - No explicit root privilege requirement for `F` (unlike `i`, `a`, `j` attributes)
+- Linux kernel casefold behavior (HIGH confidence):
+  - Subdirectory inheritance: new subdirs under a casefold parent inherit the flag; existing subdirs do not
+  - btrfs does not support chattr `F` — EOPNOTSUPP returned
+  - NFS/FUSE may accept chattr `F` silently without activating the feature
+- GitHub Actions permissions (MEDIUM confidence, fetched 2026-04-15):
+  - `contents: write` required to push branches
+  - `pull-requests: write` required to create PRs
+  - GITHUB_TOKEN cannot bypass branch protection rules on protected branches
+  - When any permission is explicitly set, all others default to `none`
 
 ---
 
-*Pitfalls research for: Vortex v3.0 — gamebryo-savegame Linux compilation + pkexec elevation*
-*Researched: 2026-04-01*
+*Pitfalls research for: Vortex Linux fork — chattr+F staging layer + GitHub Actions upstream rebase CI*
+*Researched: 2026-04-15*

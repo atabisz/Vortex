@@ -1,17 +1,19 @@
 # Project Research Summary
 
-**Project:** Vortex Linux Support — v3.0 Save Games + Elevation
-**Domain:** Electron mod manager — native C++ addon cross-compilation + Linux privilege escalation
-**Researched:** 2026-04-01
-**Confidence:** HIGH
+**Project:** Vortex Linux fork — milestone v6.0 Infrastructure
+**Domain:** Electron mod manager — chattr+F dual-path filesystem layer + GitHub Actions upstream rebase CI
+**Researched:** 2026-04-15
+**Confidence:** HIGH (both features fully grounded in codebase inspection, kernel docs, and Actions docs)
+
+---
 
 ## Executive Summary
 
-Vortex v3.0 targets two independent capability areas explicitly deferred from earlier milestones: save game management for Bethesda titles on Linux, and privilege escalation for mod deployment operations requiring root. Both areas have well-understood, surgical solution paths. The gamebryo-savegame addon requires two targeted fixes (MSVC exception constructor portability + lz4/zlib linker flags), delivered via `pnpm patch` against the existing repository pattern. Elevation replaces the Windows-only `ShellExecuteEx` call with `pkexec` over the Unix domain socket IPC infrastructure already wired in v1.0 — the IPC plumbing is correct, only the launch mechanism changes.
+This milestone adds two independent infrastructure capabilities to the Vortex Linux fork. The first is the chattr+F filesystem layer — it applies a kernel-level case-insensitive directory flag to new staging directories on ext4 filesystems, complementing the existing Wine-prefix userspace case-folding shim. The second is the upstream rebase CI workflow — it automates daily polling of nexus-mods/Vortex for new release tags and opens a draft PR when the fork needs rebasing. Neither feature has any runtime dependency on the other; they share only the milestone boundary.
 
-The recommended approach is to implement SAVE-01 (C++ addon fix) and ELEV-01 (pkexec elevation) in parallel as Phase 1 — they share no files and have no runtime dependencies on each other. Phase 2 validates the save game UI layer (SAVE-02/03) and adds the SteamOS elevation specialization (ELEV-02). No new npm dependencies are needed for either area. No Windows code paths are touched. Total file change surface is narrow: one C++ source fix, one `binding.gyp` addition, one TypeScript platform branch in `elevated.ts`, one new `platform.ts` utility (~10 lines), and removal of one build guard in a `package.json`.
+The recommended implementation approach for both features requires zero new npm dependencies. The chattr+F layer shells out to the `chattr` binary (from `e2fsprogs`, pre-installed on all Ubuntu systems) using Node.js `child_process.execFile`, and detects ext4 via `fs.promises.statfs()` (Node 22 built-in). The rebase CI uses `actions/checkout@v6`, `actions/github-script@v9.0.0`, and `peter-evans/create-pull-request@v8.1.1` — all established, actively maintained Actions. The only architectural addition to application code is a single new function (`applyChattrCasefold`) inserted as one `.then()` call inside the existing `ensureDirWritableAsync` in `src/renderer/src/util/fs.ts`.
 
-The primary risks are the socket-before-spawn race condition in the elevation path (the Unix domain socket server must be listening before `pkexec` is spawned), SteamOS polkit unavailability in Game Mode (pkexec hangs without a polkit agent — requiring `sudo -n` fallback or a skip-elevation notification), and silent patch invalidation on package version bumps. All three have clear, upfront mitigations that must be built into the initial implementation rather than retrofitted.
+The primary risks are well-characterized. For chattr+F: the feature will silently fail on most user home directories (ext4 without the `casefold` feature is the norm), so the fallback to the existing userspace shim must be the default path, not the exception. For the rebase CI: idempotency (no duplicate PRs on repeated daily runs), conflict handling (rebase conflicts must produce a draft PR, not a failed job), and trigger selection (schedule-only, never push-to-master) are the three correctness requirements that must be implemented from day one.
 
 ---
 
@@ -19,118 +21,180 @@ The primary risks are the socket-before-spawn race condition in the elevation pa
 
 ### Recommended Stack
 
-No new stack additions are needed for v3.0. All components are either already in the codebase or provided by system packages. The `gamebryo-savegame` fix uses `pnpm patch` (same pattern as `patches/loot@6.2.1.patch` already in this repository) and links against `liblz4-dev` + `zlib1g-dev`, both already in CI or trivially added. The elevation implementation uses `child_process.spawn` (Node.js built-in), `pkexec` (pre-installed on all major desktop Linux distros), and the existing `json-socket` + `net.Socket` Unix domain socket infrastructure from v1.0.
+Both features are zero-dependency additions to the existing stack. No new npm packages are required. The chattr+F layer uses only Node.js built-ins (`child_process.execFile`, `fs.promises.statfs`) and the `chattr` system binary. The rebase CI uses three well-vetted GitHub Actions that are already consistent with existing workflow patterns in the repo.
 
 **Core technologies:**
-- `pnpm patch`: deliver gamebryo-savegame C++ fixes — established pattern in this repo (`patches/loot@6.2.1.patch`); one-step, no new tooling
-- `liblz4-dev` / `zlib1g-dev`: system packages for lz4/zlib linking — `liblz4-dev` already in CI; `zlib1g-dev` pre-installed on `ubuntu-latest`
-- `pkexec` (system): Linux privilege escalation frontend — pre-installed on all major distros; standard polkit client
-- `child_process` (Node.js built-in): spawn `pkexec` / `sudo` — zero new npm dependencies
-- `net.Socket` + `json-socket` (existing): Unix domain socket IPC for elevated child communication — already wired in v1.0, IPC-01 through IPC-04
+
+- `child_process.execFile('chattr', ['+F', dirPath])` — apply kernel casefold attribute — zero deps, universally available on Linux, graceful ENOENT fallback; use argument array (not shell string) to avoid path injection
+- `fs.promises.statfs(path)` — detect filesystem type via magic number — Node 22 built-in (added v18.17.0), no text parsing, direct POSIX-correct call; `EXT4_SUPER_MAGIC = 0xef53`
+- `chattr` binary from `e2fsprogs` — pre-installed on all Ubuntu/Fedora/Arch; must be pre-flight checked (`commandExists('chattr')`) because it is absent in minimal Docker containers
+- `actions/checkout@v6` — full history checkout for rebase — already used in existing workflows; `fetch-depth: 0` required for rebase
+- `actions/github-script@v9.0.0` — query nexus-mods/Vortex releases via Octokit — pre-authenticated, April 2026 release
+- `peter-evans/create-pull-request@v8.1.1` — create rebase draft PR — 2.7k stars, 114 releases, actively maintained, April 2026
+
+**Rejected alternatives:**
+
+- `ioctl` npm package (v2.0.2): NaN-based, last published July 2019, unmaintained — reject
+- `ffi-napi` (v4.0.3): adds native addon dep to replace a 5-line `execFile` call — reject
+- Parsing `/proc/mounts` for filesystem detection: fragile, bind-mount edge cases — reject in favor of `statfs()`
+- Marketplace rebase Actions (`imba-tjd/rebase-upstream@0.12`): self-described "not widely tested", uses `git push -f`, no conflict control — reject
+- `repository_dispatch` trigger: requires nexus-mods/Vortex to cooperate — unavailable
+- btrfs casefold via chattr: not supported in any released kernel as of April 2026 — treat btrfs as fallback-to-shim only
 
 ### Expected Features
 
-**Must have (table stakes — v3.0 launch):**
-- SAVE-01: `MoreInfoException` base class changed from `std::exception` to `std::runtime_error` — prerequisite for any Linux GCC/Clang build
-- SAVE-01: `binding.gyp` `OS=="linux"` condition with `-llz4 -lz` linker flags — links gamebryo-savegame against system lz4/zlib
-- SAVE-02: Save game manager UI loads and displays saves for Skyrim SE on Linux — depends on correct Wine prefix path resolution from STAM-04
-- SAVE-03: Save game manager UI loads and displays saves for Fallout 4 on Linux — same path dependency as SAVE-02
-- ELEV-01: `runElevated()` uses `pkexec` on Linux with socket-before-spawn ordering — platform branch replaces `ShellExecuteEx`; pkexec exit-126 mapped to `UserCanceled`
-- ELEV-02: SteamOS detection + `sudo -n` fallback or skip-elevation notification — Steam Deck users must not encounter a hung UI
+**Must have — chattr+F (table stakes):**
 
-**Should have (v3.x after validation):**
-- Profile-scoped saves with INI patching inside Wine prefix — `SLocalSavePath` support on Linux; unblocked once SAVE-02/03 confirmed working
-- Save transfer between profiles on Linux — pure Node.js file copy; trivial once paths are correct
-- Polkit action file for `.deb` post-install (`io.nexusmods.vortex.policy`) — improves UX dialog branding; non-blocking, pkexec works without it
+- Pre-flight check: `commandExists('chattr')` before any invocation; skip and activate shim if absent
+- Detect filesystem type at staging directory path using `statfs()` ext4 magic (0xEF53)
+- Apply `chattr +F` immediately after `fs.ensureDir()` creates the staging directory, before any files are written (the ordering `mkdir → chattr+F → write-tag-file` is a hard requirement)
+- Catch all non-zero exit codes (EOPNOTSUPP, EINVAL, ENOENT) and fall back silently to the existing Wine-prefix shim
+- Platform guard: `process.platform !== 'linux'` early return — Windows CI matrix must stay green
+- Flatpak sandbox detection (`FLATPAK_ID` env var) — skip chattr attempt entirely inside Flatpak
+- Skip existing non-empty staging directories entirely — chattr+F is only applied to newly created, empty directories
+- Log at INFO when chattr+F succeeds; log at DEBUG on fallback — no user-visible error for normal fallback
 
-**Defer (v4.0+):**
-- Steam cloud save conflict detection — requires Valve cloud API; substantial complexity
-- Persistent elevation token (session-scoped polkit rule) — high complexity, low frequency need
-- NXM handler via Steam Browser overlay on Steam Deck (PROT-03) — hardware unavailable for testing; deferred from v2.0
+**Must have — rebase CI (table stakes):**
+
+- `schedule` cron trigger (daily, 06:00 UTC) plus `workflow_dispatch` manual override — no `push: branches: [master]` trigger
+- Compare latest nexus-mods/Vortex tag against last-known tag in `.planning/upstream-sync/last-known-tag.txt` — exit early on no change; update tracking file only when a PR is opened
+- Fixed, predictable branch name: `rebase/upstream-<tag>` — enables idempotent PR update without creating duplicates
+- Pre-creation idempotency check: `gh pr list --head <branch> --base master --state open` — if PR exists, update branch only, do not create a second PR
+- "Already up to date" guard: `git merge-base --is-ancestor upstream/HEAD fork/master` — exit 0 cleanly with no PR when no new commits
+- Clean rebase path: push branch, open draft PR titled `chore: rebase onto upstream <tag>`
+- Conflicted rebase path: `git rebase --abort`, commit conflict state, push, open draft PR with "conflicts detected" warning body — `git rebase` exit 1 must never fail the workflow job
+- PR body includes: upstream tag, upstream release URL, conflict status, and fork link (https://github.com/atabisz/Vortex) per project convention
+- Job-level `if: github.repository == 'atabisz/Vortex'` guard
+- Workflow permissions: `contents: write`, `pull-requests: write` declared explicitly in the YAML
+
+**Should have — post-validation (v1.x):**
+
+- chattr+F: runtime verification after success — write uppercase file, read lowercase — catches NFS/FUSE silent-success false positives; cache result per staging directory path per session
+- chattr+F: informational notification when staging directory is on ext4 without casefold feature (educational, not an error)
+- Rebase CI: `workflow_dispatch` input for `upstream_ref` override — debugging and on-demand trigger
+- Rebase CI: upstream commit diff summary in PR body (`gh api repos/Nexus-Mods/Vortex/compare/<prev>...<new>`)
+- Rebase CI: `upstream-rebase` label on all rebase PRs for easy filtering
+
+**Defer to v2+:**
+
+- chattr+F: migration path for existing staging directories — blocked by hard kernel constraint (chattr+F requires empty dir); requires create-new-dir, copy-files, switch approach; high complexity, low incremental value
+- Rebase CI: drift detection alert after N consecutive conflicted rebases
+- Rebase CI: auto-resolve known trivial conflicts (version bumps in package.json) — unpredictable conflict surface
+
+**Anti-features — do not implement:**
+
+- chattr+F: running `tune2fs -O casefold` on users' filesystems — destructive, requires unmounting, can corrupt data
+- chattr+F: removing the userspace Wine-prefix shim when kernel casefold is active — the two mechanisms cover orthogonal path trees (Wine prefix paths vs staging dir paths)
+- chattr+F: showing error dialogs on btrfs/XFS/ZFS — these filesystems never support it; silent fallback only
+- chattr+F: calling chattr+F on non-empty staging directories — kernel rejects it; no retroactive application
+- Rebase CI: auto-merging the rebase PR — upstream changes always require human review
+- Rebase CI: pushing rebased commits directly to `master` — bypasses review, can break the rolling release
+- Rebase CI: `git merge` instead of `git rebase` — merge commits pollute history and make the upstream diff unreadable
+- Rebase CI: trigger on `push: branches: [master]` — creates a feedback loop when the rebase PR is merged back
 
 ### Architecture Approach
 
-Both v3.0 feature areas are self-contained within the renderer process — no main process changes required. The gamebryo-savegame addon loads directly in the renderer (no IPC boundary), so patching the native addon is sufficient to unblock the save UI with no extension TypeScript changes beyond removing the Windows-only build guard. Elevation lives entirely in `util/elevated.ts`; the Unix socket IPC plumbing from v1.0 (`getIPCPath()` returning `/tmp/vortex-{id}.sock`) is already correct. The SteamOS detection utility (`isSteamOS()`) is a new ~10-line helper in `util/platform.ts` — renderer-side, called only from within the `process.platform === "linux"` elevation branch.
+The chattr+F layer is a purely additive change to `src/renderer/src/util/fs.ts` in the renderer process. A single new function `applyChattrCasefold(dirPath)` is inserted as one `.then()` call inside the existing `ensureDirWritableAsync`. The function always resolves (never rejects), is fully gated on `process.platform === 'linux'`, and is placed before the canary write test. The existing Wine-prefix shim (`isWinePrefixPath`, `resolveCaseIfWinePrefix`) is unchanged — it operates on a different path namespace (`/compatdata/<id>/pfx/`) and does not intersect with staging directory paths. The rebase CI consists entirely of two new files with no changes to existing workflows.
 
-**Major components (changed):**
-1. `node-gamebryo-savegames` native addon — C++ parser for `.ess`/`.fos` save files; fix delivered via `pnpm patch` to `binding.gyp` and `gamebryosavegame.cpp`
-2. `extensions/gamebryo-savegame-management/package.json` — build guard removal after SAVE-01 lands; no logic changes to the extension itself
-3. `util/elevated.ts` — `runElevated()` receives a `process.platform === "linux"` branch with `pkexec` spawn; socket-before-spawn ordering required (see Pitfall 1)
-4. `util/platform.ts` (new) — `isSteamOS()` helper; reads `/etc/os-release`; called only from Linux elevation branch
+**Major components:**
 
-**Unchanged (confirmed no modifications needed):**
-- `util/ipc.ts` — `getIPCPath()` already returns `/tmp/vortex-{id}.sock` on Linux (v1.0, IPC-01)
-- `symlink_activator_elevate/index.ts` — already guarded with `isSupported()` returning false on non-Windows
-- Main process, preload process — no save game or elevation logic lives there
+1. `src/renderer/src/util/fs.ts: applyChattrCasefold()` (new function, ~20 lines) — shells out to `chattr +F` via `execFile`, catches all errors, always resolves; called from `ensureDirWritableAsync` immediately after `fs.ensureDir()` and before the canary write test
+2. `src/renderer/src/util/fs.ts: ensureDirWritableAsync()` (one-line modification) — adds `.then(() => applyChattrCasefold(dirPath))` after the `ensureDir` call; no other logic changes
+3. `src/renderer/src/util/fs.test.ts` (modified) — three new test cases: chattr succeeds on ext4-casefold; chattr returns EOPNOTSUPP and resolves without throw; non-Linux returns immediately without calling chattr
+4. `.github/workflows/sync-upstream.yml` (new) — daily schedule + workflow_dispatch; orchestrates rebase check; fork-only via `if: github.repository == 'atabisz/Vortex'`
+5. `.github/scripts/sync-upstream.sh` (new) — git operations for fetch, tag comparison, branch creation, rebase, conflict detection, push; modeled after existing `.github/scripts/cherry-pick.sh`
+
+**Unchanged components:**
+
+- `stagingDirectory.ts` — no change; the injection point is one layer below, inside `ensureDirWritableAsync` in `fs.ts`
+- `isWinePrefixPath` / `resolveCaseIfWinePrefix` in `fs.ts` — Wine-prefix scope; staging dirs never match `/compatdata/` pattern
+- `ensureDirAsync` in `LinkingDeployment.ts` — handles deployment target dirs, not staging dirs; chattr+F not needed there
+- All existing workflows (`main.yml`, `release-linux.yml`, `cherry-pick.yml`) — no modifications; `main.yml` CI runs automatically on the rebase PR via pre-existing `pull_request: branches: [master]` trigger
+
+**Injection point (critical detail):**
+
+The only correct insertion position is inside `ensureDirWritableAsync` in `fs.ts` at approximately line 1224, not in `stagingDirectory.ts`. The mandatory sequence is `ensureDir → chattr+F → canary write`. Calling chattr+F after the canary write (or after `writeStagingTag`) would fail because the directory would no longer be empty.
 
 ### Critical Pitfalls
 
-1. **Socket-before-spawn race condition (ELEV-01)** — `pkexec` returns asynchronously; if the `net.Server` is not bound before `spawn("pkexec", ...)` is called, the elevated child's `connect()` races against the server's `listen()`. Structure the Linux branch: `await server.listen(ipcPath)`, then spawn. Intermittent `ECONNREFUSED` in the elevated child's stderr is the warning sign.
+1. **chattr+F on non-casefold ext4 filesystem — most users' `/home` partitions lack the casefold feature** — `chattr +F` returns EOPNOTSUPP on any ext4 partition formatted without the `casefold` feature (the default for all Linux distros); treat chattr failure as the common case, not an error; the fallback to the userspace shim must be the default path. Prevention: explicit exit-code check; fallback activation on any non-zero result; never gate deployment on chattr+F success.
 
-2. **pkexec unavailable / hanging without polkit agent (ELEV-01/ELEV-02)** — On SteamOS Game Mode, polkit agent is not running; `pkexec` hangs indefinitely or exits with code 127. Mitigation: `which pkexec` pre-check; 5-second timeout on socket `connect` event; `child.on("exit")` handler for non-zero exit codes; ELEV-02 adds `isSteamOS()` detection with `sudo -n` fallback or skip-elevation notification.
+2. **chattr+F on non-empty directory fails — the `mkdir → chattr+F → write-tag` ordering is a hard kernel constraint** — the kernel rejects chattr+F on any non-empty directory; if the staging directory already exists with mods, skip chattr+F entirely and use the shim; if called after `writeStagingTag` writes even one file, the call fails. Prevention: call must be inside `ensureDirWritableAsync` before the canary write; skip for pre-existing directories without attempting the call.
 
-3. **Missing lz4/zlib `OS=="linux"` block in `binding.gyp` (SAVE-01)** — The existing `conditions` block covers only `OS=="win"`. Compilation may pass (headers found via system default GCC path) but linking fails with `undefined reference to LZ4_decompress_safe`. Fix must be in the same `pnpm patch` commit as the `MoreInfoException` fix. Verify with `ldd gamebryo-savegame.node` after `@electron/rebuild`.
+3. **NFS/FUSE silent false positive — chattr+F exits 0 but casefold is not active** — on some NFS configurations and FUSE filesystems, `chattr +F` appears to succeed (exit 0) but the attribute is not stored on the remote filesystem; code that trusts the exit code skips the shim and gets "file not found" errors on case-mismatch. Prevention: after `chattr +F` exits 0, verify with a runtime test (write uppercase file, read lowercase); fall back to shim if the test fails; cache the result per staging directory per session.
 
-4. **`pnpm patch` silently skips on version bump (SAVE-01)** — Patch files are keyed to exact package versions (`gamebryo-savegame+2.1.2.patch`). If the upstream package updates, `pnpm install` emits only a warning and proceeds with unpatched source. Mitigation: pin `gamebryo-savegame` to an exact version in `package.json`; add a `postinstall` verification step.
+4. **Rebase CI creates duplicate PRs on daily runs** — a naive workflow creates a new PR on every cron run regardless of whether one already exists; the `gh pr create` API returns an error that surfaces as a CI failure. Prevention: fixed branch name (`rebase/upstream-<tag>`) plus pre-creation `gh pr list` idempotency check — both must be in the initial workflow, not added after the first duplicate occurs.
 
-5. **Save game path uses native `~/Documents` instead of Wine prefix (SAVE-02/03)** — The `gamebryo-savegame-management` extension calls `util.getVortexPath("documents")` directly. On Linux this must return the Proton Wine prefix path. Verify whether STAM-04 patched `getVortexPath("documents")` globally or only through the `{mygames}` variable resolver in `ini_prep`. If only the latter, a platform override is needed in `gamebryo-savegame-management/src/util/gameSupport.ts`.
+5. **`git rebase` exit 1 must not fail the workflow job** — when rebase encounters conflicts, the natural GitHub Actions behavior is to fail the step and produce no output; the correct behavior is to catch the conflict, abort the rebase, commit the conflict state, push, and open a draft PR with a warning body. Prevention: explicit `HAS_CONFLICTS` flag pattern before any `set -e` scope; never rely on rebase to exit 0 on the conflict path.
+
+6. **Windows CI broken by missing `process.platform === 'linux'` guard** — `main.yml` runs both `ubuntu-latest` and `windows-latest` builds; any `chattr` or `lsattr` call outside a platform guard causes `ENOENT` on Windows and fails the matrix. Prevention: `applyChattrCasefold` has an unconditional `if (process.platform !== 'linux') return` as the first line; add a test asserting the function is a no-op when `process.platform` is mocked to `'win32'`.
 
 ---
 
 ## Implications for Roadmap
 
-The dependency graph from ARCHITECTURE.md directly drives the phase structure: two parallel Phase 1 tracks with no shared files, followed by sequential Phase 2 work that depends on both Phase 1 tracks.
+Both tracks are independent at both development and runtime level. They can be implemented in parallel (two branches, two PRs) and merged in any order.
 
-### Phase 1: Native Addon Fix + Elevation Foundation (Parallel Tracks)
+### Phase 1A: chattr+F Filesystem Layer
 
-**Rationale:** SAVE-01 (C++ addon fix in the `node-gamebryo-savegames` repo) and ELEV-01 (TypeScript change in `elevated.ts`) share no files and have no runtime dependency on each other. Both target the `linux-port` branch per the project branch strategy. Both can be reviewed and merged simultaneously.
+**Rationale:** Self-contained change to a single file (`fs.ts`) with no upstream PR implications and no CI workflow changes needed. Can be developed and reviewed independently of Phase 1B. The injection point, call signature, and fallback behavior are fully specified — no further design decisions required before starting.
 
-**Delivers:**
-- Track A (SAVE-01): `gamebryo-savegame.node` compiles, links, and loads on Linux CI without linker errors; `pnpm patch` pattern established
-- Track B (ELEV-01): `runElevated()` no longer throws on Linux; pkexec elevation path functional with socket-before-spawn ordering, cancel/timeout handling, and injectable spawner seam for CI testing
+**Delivers:** Kernel-level case-insensitive lookup for new staging directories on ext4-casefold filesystems; silent fallback to the existing userspace shim on all other filesystems; zero change to existing behavior on Windows or non-casefold Linux; both Windows and Linux CI matrix jobs stay green.
 
-**Addresses:** SAVE-01, ELEV-01
+**Addresses (from FEATURES.md):** chattr+F detect + apply at staging creation (P1); silent fallback (P1); Flatpak sandbox detection (P1); platform guard for Windows CI (P1).
 
-**Avoids:** Socket-before-spawn race (Pitfall 1), pkexec hang (Pitfall 2), missing lz4/zlib linker flags (Pitfall 3), patch management (Pitfall 4), `@electron/rebuild` pnpm virtual store miss
+**Avoids:** Pitfalls 1 (EOPNOTSUPP fallback), 2 (empty-dir ordering), 4 (btrfs silent failure), 5 (binary absence check), 6 (Windows platform guard). Anti-features: no tune2fs, no shim removal.
 
-**Files changed:**
-- `node-gamebryo-savegames/binding.gyp` — add `OS=="linux"` condition with `-llz4 -lz`
-- `node-gamebryo-savegames/src/gamebryosavegame.cpp` — change `MoreInfoException` base to `std::runtime_error`
-- `src/renderer/src/util/elevated.ts` — add Linux branch with pkexec spawn, socket-before-spawn ordering, exit code handling, injectable spawner seam
+**Files changed:** `src/renderer/src/util/fs.ts`, `src/renderer/src/util/fs.test.ts`
 
-### Phase 2: Save UI Validation + SteamOS Elevation
+**Research needed:** None. Implementation is fully specified in ARCHITECTURE.md Q5 and FEATURES.md behavioral contract.
 
-**Rationale:** Both items require Phase 1 to be complete. SAVE-02/03 need SAVE-01 (addon must compile before the save UI can be tested; build guard removal only makes sense after the addon works). ELEV-02 extends the Linux elevation branch created by ELEV-01.
+### Phase 1B: Upstream Rebase CI Workflow
 
-**Delivers:**
-- Save game manager displays character name, level, location, timestamp, screenshot for Skyrim SE and Fallout 4 on Linux (SAVE-02/03)
-- SteamOS detected; `sudo -n` fallback or skip-elevation notification prevents hung UI on Steam Deck (ELEV-02)
+**Rationale:** Pure CI infrastructure — no application code changes, no interaction with Phase 1A at any level. Can be developed and reviewed in parallel with Phase 1A. The workflow structure is modeled directly on the existing `.github/scripts/cherry-pick.sh` idempotency pattern.
 
-**Addresses:** SAVE-02, SAVE-03, ELEV-02
+**Delivers:** Daily automated detection of new nexus-mods/Vortex release tags; draft rebase PR with clean/conflict distinction; idempotent behavior on repeated runs; reduces the estimated 4–8 hour manual rebase cycle to a human review-and-merge operation.
 
-**Avoids:** Wine prefix path error (Pitfall 5 — save games scanning `~/Documents` instead of Proton prefix), SteamOS polkit unavailability
+**Addresses (from FEATURES.md):** Cron trigger + tag comparison (P1); clean and conflicted rebase paths (P1); PR body template with fork URL (P1); duplicate PR guard (P1); repository guard (P1).
 
-**Files changed:**
-- `extensions/gamebryo-savegame-management/package.json` — remove `process.platform === 'win32'` early-exit guard from build/dist scripts
-- `src/renderer/src/util/elevated.ts` — add `isSteamOS()` check + SteamOS sub-path
-- `src/renderer/src/util/platform.ts` (new) — `isSteamOS()` helper
+**Avoids:** Pitfalls 7 (duplicate PRs — fixed branch name + idempotency check), 8 (empty PR on no-op — `merge-base` guard), 9 (conflict-to-draft-PR), 10 (branch protection — push to side branch only), 11 (feedback loop — `schedule` trigger not `push`), 12 (stale PR accumulation — fixed branch name + label).
+
+**Files changed:** `.github/workflows/sync-upstream.yml` (new), `.github/scripts/sync-upstream.sh` (new), `.planning/upstream-sync/last-known-tag.txt` (new tracking file)
+
+**Research needed:** None. Trigger mechanism, workflow structure, permissions model, and PR body template are fully specified in STACK.md and FEATURES.md.
+
+### Phase 2: Integration Validation
+
+**Rationale:** Both Phase 1 deliverables need end-to-end validation that unit tests alone cannot provide. The rebase CI needs a first live run to confirm GITHUB_TOKEN permissions and branch creation work in the actual fork. The chattr+F layer needs confirmation that both matrix jobs stay green.
+
+**Delivers:** Confirmed green CI on both `ubuntu-latest` and `windows-latest` matrix jobs for Phase 1A; first successful (or intentionally-conflicted) rebase PR from Phase 1B; confirmed no duplicate PR on second workflow run.
+
+**Gate for Phase 1A:** Both matrix jobs in `main.yml` pass on the chattr+F PR; `applyChattrCasefold` unit tests pass; `fs.test.ts` covers all three cases (success, EOPNOTSUPP, non-Linux).
+
+**Gate for Phase 1B:** Manual `workflow_dispatch` trigger produces a draft PR (or clean "no new upstream" exit); second manual trigger without merging the PR updates the branch without creating a duplicate; conflict-path creates a draft PR (inject artificial conflict to verify).
+
+**Optional additions at this phase (v1.x items):** `workflow_dispatch` `upstream_ref` input override; runtime casefold verification (`verifyCasefoldActive`); `upstream-rebase` label support; `workflow_dispatch` for rebase CI.
 
 ### Phase Ordering Rationale
 
-- SAVE-01 must precede SAVE-02/03: removing the build guard before the addon compiles causes CI to attempt building broken C++ code. The atomic commit rule (guard removal in the same PR as the addon fix) prevents this.
-- ELEV-01 must precede ELEV-02: ELEV-02 adds a sub-branch inside the Linux elevation block that ELEV-01 creates. Without the ELEV-01 branch, ELEV-02 has nothing to extend and end-to-end testing is impossible.
-- Phase 1 tracks A and B are parallel because their file sets are fully disjoint: C++ addon repo vs. renderer TypeScript. Different reviewers, different PRs, zero merge conflicts.
-- SAVE-02/03 are primarily functional validation: the only TypeScript change is the build guard removal; the substance is confirming STAM-04 path resolution covers the savegame extension's `getVortexPath("documents")` call.
+- Phase 1A and 1B share no files and have no runtime dependencies — parallel development is correct; do not serialize them.
+- Phase 2 validation gates on both Phase 1 PRs being merged and cannot start before both are in.
+- The chattr+F migration path (existing staging directories) is deferred to v2+ due to the hard kernel constraint (empty-dir requirement); new installations automatically get kernel casefold, existing installations silently continue using the shim.
+- The rebase CI conflict-to-draft-PR path must be implemented in Phase 1B from day one — adding it reactively means the first upstream release with conflicts produces a failed CI job with no actionable output and no PR.
+- The runtime casefold verification (`verifyCasefoldActive`) is deferred to Phase 2 validation because it is only relevant for NFS/FUSE staging directories, which are an uncommon configuration; the Phase 1A implementation is correct for the common cases.
 
 ### Research Flags
 
-**Phases with well-documented patterns (skip research-phase):**
-- **Phase 1 Track A (SAVE-01):** Patch approach fully specified — exact `binding.gyp` diff, exact C++ change, exact `pnpm patch` commands. No additional research needed.
-- **Phase 1 Track B (ELEV-01):** Socket-before-spawn ordering, pkexec exit-code handling, and injectable spawner design all specified in PITFALLS.md and ARCHITECTURE.md. No additional research needed.
+Phases with standard patterns — skip research-phase:
 
-**Phases needing validation during execution:**
-- **Phase 2 SAVE-02/03:** STAM-04's `getVortexPath("documents")` scope (global vs. ini_prep-only) is unconfirmed. Must read the STAM-04 implementation before writing any save path override. See Gaps.
-- **Phase 2 ELEV-02:** SteamOS `sudo -n` passwordless behavior is documentation-verified but not hardware-tested. Design for graceful fallback regardless; UAT on physical Steam Deck hardware required before shipping.
+- **Phase 1A (chattr+F):** Injection point, call signature, platform guards, and test cases are fully specified in ARCHITECTURE.md Q5 and FEATURES.md. Implement directly from those documents.
+- **Phase 1B (Rebase CI):** Workflow structure, action versions, permissions model, idempotency pattern, and PR body template are fully specified in STACK.md and FEATURES.md. The `cherry-pick.sh` in the repo is the direct model.
+- **Phase 2 (Validation):** Standard CI validation — no research needed.
+
+Phases that may benefit from deeper investigation before implementation:
+
+- **NFS/FUSE runtime verification (Phase 2 / v1.x addition):** The `verifyCasefoldActive` function (write uppercase, read lowercase) is straightforward but needs care around race conditions and ensuring the test file does not interfere with the staging directory state. Brief design spike recommended before merging.
+- **btrfs casefold (future, not this milestone):** Research confidence is LOW — btrfs casefold is not confirmed in any released kernel as of April 2026. Do not implement btrfs casefold support until kernel availability is confirmed on hardware.
 
 ---
 
@@ -138,51 +202,51 @@ The dependency graph from ARCHITECTURE.md directly drives the phase structure: t
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All technologies verified against actual files in the repository; exact `binding.gyp` diff confirmed; zero speculative dependencies |
-| Features | HIGH | All feature completion states verified via direct source inspection; 6 elevation call sites audited in v1.0 with results in `.planning/phases/05-ipc-and-elevation-audit/` |
-| Architecture | HIGH | Data flow diagrams derived from actual source; component boundaries confirmed; IPC protocol traced end-to-end through `elevated.ts` and `remoteCode.ts` |
-| Pitfalls | HIGH (standard Linux) / MEDIUM (SteamOS) | Standard Linux pitfalls grounded in source + C++ standard references; SteamOS elevation behavior based on Valve documentation, not hardware testing |
+| Stack | HIGH | All technologies verified: `fs.statfs()` Node docs, `chattr` man page, Actions marketplace versions confirmed April 2026; rejected alternatives confirmed via npm registry and marketplace inspection |
+| Features | HIGH | Grounded in direct codebase inspection of `fs.ts`, `stagingDirectory.ts`, `profile_management/index.ts`, and existing CI workflows; behavioral contract derived from actual call chain |
+| Architecture | HIGH | Injection point (`ensureDirWritableAsync` in `fs.ts`) confirmed by full call chain trace from `manageGameDiscovered` through `ensureStagingDirectoryImpl`; workflow structure modeled on existing `cherry-pick.sh` pattern |
+| Pitfalls | HIGH | 13 pitfalls documented from codebase audit + kernel behavior + Actions permissions; not inferred — observed from source patterns, man pages, and kernel documentation |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **STAM-04 scope for `getVortexPath("documents")`:** STAM-04 resolved `{mygames}` via the `ini_prep` variable resolver. It is unconfirmed whether `getVortexPath("documents")` was also patched globally. The `gamebryo-savegame-management` extension calls it directly. Resolution before Phase 2: read `src/renderer/src/util/util.ts` and the STAM-04 commit diff to determine whether a platform override is needed in the savegame extension.
+- **btrfs casefold status (LOW confidence):** No released kernel version confirmed supporting `chattr +F` on btrfs as of April 2026. STACK.md correctly includes `BTRFS_SUPER_MAGIC` in `getStagingFsType()` as future-proofing but explicitly marks btrfs casefold as unconfirmed. Treat btrfs as "always fallback to shim" for this milestone; revisit when btrfs casefold lands in a stable kernel release.
 
-- **SteamOS `sudo -n` hardware validation:** The `deck` user having passwordless sudo is documented by Valve but has not been tested on physical Steam Deck hardware in this project. ELEV-02 must be designed with graceful fallback (show notification, do not hang) so that if `sudo -n` also fails, the user receives an actionable message.
+- **NFS/FUSE runtime verification (Phase 2 decision point):** The `verifyCasefoldActive` runtime test (Pitfall 6) is specified but marked as a v1.x addition. If staging directories on NAS/network mounts are a common user configuration for this project's target audience (Steam Deck users using external drives), promote the runtime verification to a Phase 1A must-have rather than a post-validation addition. Decide before Phase 1A starts.
 
-- **`@electron/rebuild` pnpm virtual store behavior:** Pitfall 8 documents that `@electron/rebuild` may silently skip addons in `.pnpm/` virtual store paths. During SAVE-01 execution: verify `gamebryo-savegame` appears explicitly in the `@electron/rebuild` output log. If absent, add `--module-dir` pointing to the virtual store path.
+- **SteamOS `/home` partition behavior (expected, documented for clarity):** SteamOS uses btrfs for the OS partition but ext4 for `/home` on Steam Deck; however, the ext4 `/home` partition is typically formatted without the casefold feature. Steam Deck users will always fall back to the userspace shim — chattr+F will not activate in the primary SteamOS deployment scenario. This is correct behavior (silent fallback), but worth stating explicitly so the feature is not expected to reduce per-call overhead on Steam Deck.
 
 ---
 
 ## Sources
 
-### Primary (HIGH confidence — direct codebase inspection)
+### Primary (HIGH confidence)
 
-- `node_modules/.pnpm/gamebryo-savegame.../src/gamebryosavegame.cpp` — `MoreInfoException` MSVC bug confirmed
-- `node_modules/.pnpm/gamebryo-savegame.../binding.gyp` — missing Linux condition confirmed
-- `node_modules/.pnpm/gamebryo-savegame.../src/string_cast.h` — Linux stubs for `toWC`/`toMB` confirmed
-- `patches/loot@6.2.1.patch` — established `pnpm patch` pattern; `OS=='linux'` gyp condition format
-- `src/renderer/src/util/elevated.ts` — `runElevated()` with `ShellExecuteEx` call confirmed
-- `src/renderer/src/util/ipc.ts` — `getIPCPath()` Unix socket path confirmed from v1.0
-- `src/renderer/src/extensions/symlink_activator_elevate/index.ts` — `isSupported()` Linux guard confirmed
-- `extensions/gamebryo-savegame-management/src/util/refreshSavegames.ts` — addon call site confirmed
-- `.planning/phases/05-ipc-and-elevation-audit/05-ELEVATION-AUDIT.md` — all 6 `runElevated()` call sites
-- `.planning/phases/03-native-addon-compilation/03-RESEARCH.md` — NADD-06 audit, both errors identified
-- `.planning/PROJECT.md` — v3.0 requirements, v1.0/v2.0 validated state
+- `src/renderer/src/util/fs.ts` — `ensureDirWritableAsync`, `isWinePrefixPath`, `resolveCaseIfWinePrefix`, injection point confirmed
+- `src/renderer/src/extensions/mod_management/stagingDirectory.ts` — `ensureStagingDirectoryImpl`, full staging dir creation call chain
+- `src/renderer/src/extensions/profile_management/index.ts` — `manageGameDiscovered` → `ensureStagingDirectory` call site
+- `.github/workflows/main.yml` — CI matrix structure; Windows + Linux parallel build jobs confirmed
+- `.github/workflows/cherry-pick.yml` + `.github/scripts/cherry-pick.sh` — idempotent PR creation pattern; conflict-to-draft-PR handling — direct model for rebase CI
+- `.github/workflows/release-linux.yml` — fork-only workflow pattern; `workflow_run` trigger example
+- nodejs.org — `fs.statfs()` added v18.17.0, `.type` field returns `f_type` filesystem magic number
+- man1/chattr — `+F` sets `FS_CASEFOLD_FL`; requires empty directory; requires filesystem-level casefold feature enabled at mkfs time
+- kernelnewbies.org/Linux_5.2 — ext4 casefold merged in Linux 5.2 (2019)
+- github.com/peter-evans/create-pull-request — v8.1.1, April 2026, 2.7k stars, 537 forks, 114 releases
+- github.com/actions/github-script — v9.0.0, April 2026
+- docs.github.com Actions — `schedule`, `workflow_dispatch`, `repository_dispatch` event docs; confirmed no cross-repo `release` trigger
 
 ### Secondary (MEDIUM confidence)
 
-- polkit upstream documentation — environment stripping by `pkexec`; exit code behavior without polkit agent
-- freedesktop.org `/etc/os-release` specification — `ID=steamos` for Steam Deck detection
-- Valve Steam Deck developer documentation — `deck` user passwordless sudo in Desktop Mode
-- `man 7 unix` — `sun_path` is 108 bytes on Linux; maximum path 107 chars
-- `patch-package` README — patches keyed to exact version; mismatch is a warning, not a build error
+- Steam/Proton `chattr +F` behavior on Steam library folders — community-documented in Steam for Linux changelogs (2019) and SteamOS documentation; no direct Valve source code inspection
+- btrfs EOPNOTSUPP on `chattr +F`: confirmed via chattr man page behavior documentation; no direct kernel btrfs source inspection for April 2026 btrfs status
 
 ### Tertiary (LOW confidence)
 
-- SteamOS issue tracker community reports — polkit agent not running in Game Mode; not Valve official documentation
+- btrfs casefold kernel support: no released kernel version confirmed as of April 2026 — ext4-only for this milestone
+- `imba-tjd/rebase-upstream@0.12` characteristics: confirmed via marketplace search but limited detail on actual behavior
 
 ---
-*Research completed: 2026-04-01*
+
+*Research completed: 2026-04-15*
 *Ready for roadmap: yes*
