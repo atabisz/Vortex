@@ -8,15 +8,6 @@ Linux builds (AppImage + .deb) are published as [releases on this fork](../../re
 
 ## Installing
 
-**Stable release** (latest tagged version):
-
-| Package | Download |
-|---|---|
-| AppImage (recommended) | [vortex-setup.AppImage](https://github.com/atabisz/Vortex/releases/latest/download/vortex-setup.AppImage) |
-| Debian/Ubuntu .deb | [vortex_amd64.deb](https://github.com/atabisz/Vortex/releases/latest/download/vortex_amd64.deb) |
-
-**Rolling build** (latest master commit, may be less stable):
-
 | Package | Download |
 |---|---|
 | AppImage (recommended) | [vortex-setup.AppImage](https://github.com/atabisz/Vortex/releases/download/latest-linux/vortex-setup.AppImage) |
@@ -50,7 +41,7 @@ makepkg -si
 
 ## What Works
 
-**As of v1.16.9 (2026-04-09):**
+**As of v1.16.9 (2026-04-09) + unreleased master:**
 
 - **Launches on Linux** — `pnpm run start` works on Linux without crashing; all native addons (bsatk, esptk, loot, vortexmt, xxhash-addon, bsdiff-node) compile and load
 - **FOMOD installer** — C#/.NET FOMOD installers work via native Linux binaries (no Wine dependency)
@@ -65,6 +56,7 @@ makepkg -si
 - **Linux case-folding fs wrapper** — A shared fs shim resolves actual on-disk casing for Wine prefix AppData paths before file operations, fixing `Plugins.txt`/`plugins.txt` mismatches and similar Windows-assumes-case-insensitive bugs
 - **FOMOD path normalization** — Source paths in FOMOD XML installers are normalized for Linux (forward-slash, lowercase), fixing mod installations that failed silently on case-sensitive filesystems
 - **CSharpScript Linux notice** — Mods that use CSharpScript-based FOMOD installers (a Windows-only feature) now show a clear, actionable notification on Linux rather than failing silently
+- **chattr+F kernel casefold for mod staging** — On ext4/btrfs filesystems, mod staging directories are created with `chattr +F` (kernel-level case folding), eliminating the userspace shim's race conditions on deep mod hierarchies; falls back to the existing shim on XFS/ZFS and other filesystems
 
 ## What Doesn't Work
 
@@ -83,6 +75,7 @@ The full development plan is in [VORTEX-LINUX.md](VORTEX-LINUX.md).
 
 ### Recently shipped
 
+- **master (unreleased)** — chattr+F kernel casefold for mod staging directories (ext4/btrfs); upstream rebase automation (daily CI workflow merges latest upstream tags)
 - **v1.16.9 (2026-04-09)** — FOMOD source path normalization for Linux, CSharpScript Linux notice, vortex-api declarations updated
 - **v1.16.8 (2026-04-07)** — Persistent elevation token (.deb), Steam Deck Game Mode error UX, save file transfer across Wine prefix paths, Linux case-folding fs wrapper
 
