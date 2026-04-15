@@ -164,7 +164,6 @@ const config = {
     "node_modules/leveldown/**",
     "node_modules/levelup/**",
     "node_modules/encoding-down/**",
-    "node_modules/bluebird/**",
   ],
   buildDependenciesFromSource: false,
   npmRebuild: false,
