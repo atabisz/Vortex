@@ -1,0 +1,78 @@
+# Requirements: Vortex Linux — v6.0 Infrastructure
+
+**Defined:** 2026-04-15
+**Core Value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — with elevation operations that work reliably
+
+## v6.0 Requirements
+
+### Filesystem Layer (chattr+F)
+
+- [x] **CASE-05**: Vortex detects whether a new mod staging directory is on an ext4 filesystem using `fs.statfs()` magic number before attempting kernel casefold
+- [x] **CASE-06**: Vortex applies `chattr +F` to a new, empty mod staging directory on supported ext4 filesystems at creation time, before any files are written
+- [x] **CASE-07**: Vortex falls back silently to the existing userspace Wine-prefix shim when `chattr +F` fails (EOPNOTSUPP, EINVAL, ENOENT, non-ext4, or any non-zero exit) — no error shown to user
+- [x] **CASE-08**: The chattr+F call is a no-op on Windows (platform guard `process.platform !== 'linux'`) — Windows CI matrix stays green
+- [x] **CASE-09**: The chattr+F call is skipped when running inside a Flatpak sandbox (`FLATPAK_ID` environment variable is set)
+- [x] **CASE-10**: After a successful `chattr +F` call, Vortex verifies casefold is actually active by writing an uppercase filename and reading it back lowercase — falls back to shim if the verify test fails (catches NFS/FUSE false positives)
+- [x] **CASE-11**: Vortex logs at INFO level when chattr+F succeeds; logs at DEBUG level when falling back — no user-visible error for normal fallback; shows an informational notification once per session when chattr+F is unavailable on the user's filesystem
+
+### Upstream Rebase CI
+
+- [ ] **REBASE-01**: A GitHub Actions workflow runs on a daily schedule (cron) and polls nexus-mods/Vortex for new release tags; exits cleanly with no PR when the fork is already up to date
+- [ ] **REBASE-02**: When a new upstream release tag is detected, the workflow creates a rebase branch (`rebase/upstream-<tag>`), rebases the fork's master onto the upstream tag, and opens a draft PR titled `chore: rebase onto upstream <tag>`
+- [ ] **REBASE-03**: The workflow is idempotent — if a draft PR for the same upstream tag already exists, it updates the branch without opening a second PR
+- [ ] **REBASE-04**: When `git rebase` encounters conflicts, the workflow aborts the rebase, commits the conflict state, pushes the branch, and opens a draft PR with a "conflicts detected" warning body — the workflow job itself does not fail
+- [ ] **REBASE-05**: The workflow can be triggered manually via `workflow_dispatch` with an optional `upstream_ref` input for on-demand runs and debugging
+- [ ] **REBASE-06**: The draft PR body includes: the upstream tag, a link to the upstream release, conflict status, upstream commit diff summary (what changed between tags), and a link to https://github.com/atabisz/Vortex
+- [ ] **REBASE-07**: The workflow only runs in the `atabisz/Vortex` fork (guarded by `if: github.repository == 'atabisz/Vortex'`) to prevent accidental runs in other contexts
+
+## v2+ Requirements (Deferred)
+
+### Filesystem Layer
+
+- **CASE-12**: Migration path for existing staging directories — blocked by kernel empty-dir constraint; requires create-new-dir, copy-files, switch approach
+- **CASE-13**: btrfs casefold support — btrfs casefold not confirmed in any released kernel as of April 2026; revisit when btrfs casefold lands in stable kernel
+
+### Upstream Rebase CI
+
+- **REBASE-08**: Drift detection alert after N consecutive conflicted rebases — signals long-term divergence accumulation
+- **REBASE-09**: Auto-resolve known trivial conflicts (version bumps in `package.json`) — unpredictable conflict surface; defer until patterns emerge
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| `tune2fs -O casefold` on user filesystems | Destructive, requires unmounting, can corrupt data |
+| Removing the userspace Wine-prefix shim | Shim and chattr+F cover orthogonal path namespaces; shim must remain |
+| Showing error dialogs on btrfs/XFS/ZFS | Silent fallback is the correct UX; these filesystems never support chattr+F |
+| Auto-merging the rebase PR | Upstream changes always require human review |
+| Pushing rebased commits directly to master | Bypasses review, can break the rolling release |
+| `git merge` instead of `git rebase` | Merge commits pollute history and make the upstream diff unreadable |
+| Workflow trigger on `push: branches: [master]` | Creates a feedback loop when the rebase PR is merged back |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| CASE-05 | Phase 16 | Complete |
+| CASE-06 | Phase 16 | Complete |
+| CASE-07 | Phase 16 | Complete |
+| CASE-08 | Phase 16 | Complete |
+| CASE-09 | Phase 16 | Complete |
+| CASE-10 | Phase 16 | Complete |
+| CASE-11 | Phase 16 | Complete |
+| REBASE-01 | Phase 17 | Pending |
+| REBASE-02 | Phase 17 | Pending |
+| REBASE-03 | Phase 17 | Pending |
+| REBASE-04 | Phase 17 | Pending |
+| REBASE-05 | Phase 17 | Pending |
+| REBASE-06 | Phase 17 | Pending |
+| REBASE-07 | Phase 17 | Pending |
+
+**Coverage:**
+- v6.0 requirements: 14 total
+- Mapped to phases: 14
+- Unmapped: 0 ✓
+
+---
+*Requirements defined: 2026-04-15*
+*Last updated: 2026-04-15 — traceability populated after roadmap creation*

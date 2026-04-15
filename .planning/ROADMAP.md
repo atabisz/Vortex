@@ -58,7 +58,7 @@
 
 ### v6.0 Infrastructure
 
-- [ ] **Phase 16: chattr+F Filesystem Layer** — Kernel casefold applied at staging directory creation on ext4; silent fallback to userspace shim on all other filesystems
+- [x] **Phase 16: chattr+F Filesystem Layer** — Kernel casefold applied at staging directory creation on ext4; silent fallback to userspace shim on all other filesystems (completed 2026-04-15)
 - [ ] **Phase 17: Upstream Rebase CI Workflow** — Daily automated detection of new nexus-mods/Vortex release tags; draft rebase PR with clean/conflict distinction; idempotent on repeated runs
 
 ## Phase Details
@@ -73,9 +73,9 @@
   3. When running inside a Flatpak sandbox (FLATPAK_ID set) or on Windows (process.platform !== 'linux'), the chattr+F code path is never reached — chattr is never invoked
   4. After a successful `chattr +F` call, Vortex verifies casefold is active by writing an uppercase filename and reading it back lowercase — if the verify test fails, Vortex falls back to the shim silently
   5. The INFO log entry appears on chattr+F success; the DEBUG log entry appears on fallback; no user-visible error dialog is shown for normal fallback on unsupported filesystems
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 Plans:
-- [ ] 16-01-PLAN.md — applyChattrCasefold implementation + tests + renderer.tsx notification wiring
+- [x] 16-01-PLAN.md — applyChattrCasefold implementation + tests + renderer.tsx notification wiring
 
 ### Phase 17: Upstream Rebase CI Workflow
 **Goal**: Upstream nexus-mods/Vortex release tags are detected automatically each day and produce a draft rebase PR in the fork without human polling
@@ -117,5 +117,5 @@ Plans:
 | 13. Save Transfer | v4.0 | 1/1 | Complete | 2026-04-07 |
 | 14. Linux Case-Folding fs Wrapper | v4.0 | 2/2 | Complete | 2026-04-07 |
 | 15. fomod-installer Linux Fixes + Vortex Cleanup | v5.0 | 3/3 | Complete | 2026-04-09 |
-| 16. chattr+F Filesystem Layer | v6.0 | 0/1 | Not started | - |
+| 16. chattr+F Filesystem Layer | v6.0 | 1/1 | Complete   | 2026-04-15 |
 | 17. Upstream Rebase CI Workflow | v6.0 | 0/? | Not started | - |

@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v5.0
-milestone_name: fomod-installer Linux Fixes
-status: archived
-stopped_at: v5.0 milestone archived — run /gsd-new-milestone to start v6.0
-last_updated: "2026-04-09T00:00:00.000Z"
-last_activity: 2026-04-09
+milestone: v6.0
+milestone_name: Infrastructure
+status: verifying
+stopped_at: Completed 16-01-PLAN.md
+last_updated: "2026-04-15T11:50:06.739Z"
+last_activity: 2026-04-15
 progress:
-  total_phases: 2
+  total_phases: 3
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 1
+  completed_plans: 1
   percent: 100
 ---
 
@@ -18,19 +18,19 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-07 after v4.0 milestone start)
+See: .planning/PROJECT.md (updated 2026-04-15 after v6.0 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — with elevation operations that work reliably
-**Current focus:** v4.0 shipped — run /gsd-new-milestone to start v5.0
+**Current focus:** Phase 16 — chattr-f-filesystem-layer
 
 ## Current Position
 
-Phase: 999.1
-Plan: Not started
-Status: v4.0 complete — shipped 2026-04-07
-Last activity: 2026-04-09
+Phase: 16 (chattr-f-filesystem-layer) — EXECUTING
+Plan: 1 of 1
+Status: Phase complete — ready for verification
+Last activity: 2026-04-15
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Progress: [██████████] 100%
 | Phase 09 P02 | 7 | 1 tasks | 2 files |
 | Phase 10-save-ui-validation-steamos-polkit P02 | 5 | 2 tasks | 4 files |
 | Phase 10-save-ui-validation-steamos-polkit P01 | 8 | 3 tasks | 6 files |
+| Phase 16 P01 | 6 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -126,17 +127,25 @@ Recent decisions affecting current work:
 - [Phase 10-save-ui-validation-steamos-polkit]: getSteamEntry uses GameStoreHelper.getGameStore('steam') — bundled extension constraint, can't import renderer src/
 - [Phase 10-save-ui-validation-steamos-polkit]: ILocalSteamEntry local interface — ISteamEntry not exported by vortex-api; bundled extension constraint
 - [Phase 10-save-ui-validation-steamos-polkit]: tsconfig.json excludes test/mock files — __mocks__ outside src/ causes TS6307; production typecheck must not traverse test infrastructure
+- [Phase 16]: Use node:fs/promises import alias to avoid shadow from * as fs from fs-extra
+- [Phase 16]: ExecFileFn stays callback-style (not promisified) to match injectable seam contract
+- [Phase 16]: vi.mock node:fs/promises factory chosen over vi.spyOn to avoid getter non-configurable issue in Vitest happy-dom
 
-### Research Context (v3.0)
+### Research Context (v6.0)
 
-Key findings from research/SUMMARY.md affecting Phase 9–10 execution:
+Key findings from research/SUMMARY.md affecting Phase 16–17 execution:
 
-- SAVE track: gamebryo-savegame needs MoreInfoException base changed to std::runtime_error + binding.gyp OS=="linux" linker flags; pnpm patch pattern is established (see patches/loot@6.2.1.patch)
-- ELEV track: runElevated() needs Linux branch with pkexec spawn; IPC socket path already correct from v1.0 IPC-01; socket-before-spawn ordering is critical (Pitfall 1)
-- Critical pitfall: pkexec hangs without polkit agent on SteamOS Game Mode — sudo -n fallback or skip-elevation notification required
-- Critical pitfall: pnpm patch silently skips on version bump — pin exact version in package.json
-- STAM-04 scope gap: whether getVortexPath("documents") was globally patched or only via ini_prep variable resolver is unconfirmed — must verify before Phase 10 save path work
-- SAVE-04: SLocalSavePath INI patching depends on STAM-04 scope — verify during Phase 10 execution
+- chattr+F injection point: `ensureDirWritableAsync` in `src/renderer/src/util/fs.ts` — one new function `applyChattrCasefold()` inserted as a `.then()` call before the canary write; mandatory sequence is `ensureDir → chattr+F → canary write`
+- chattr+F: EOPNOTSUPP is the COMMON case (most ext4 partitions lack the casefold feature) — treat fallback as the default path, not an error condition
+- chattr+F: platform guard (`process.platform !== 'linux'` early return) + Flatpak guard (`FLATPAK_ID` env var) are both mandatory pre-flight checks
+- chattr+F: runtime verification after chattr+F exit 0 — write uppercase filename, read lowercase — catches NFS/FUSE false positives (CASE-10)
+- chattr+F: skip entirely for pre-existing non-empty directories — kernel rejects chattr+F on non-empty dirs; call is only valid immediately after `ensureDir` on a fresh directory
+- Rebase CI: modeled directly on `.github/scripts/cherry-pick.sh` idempotency pattern already in repo
+- Rebase CI: fixed branch name `rebase/upstream-<tag>` + pre-creation `gh pr list` idempotency check — both mandatory from day one to prevent duplicate PRs
+- Rebase CI: `git rebase` exit 1 must never fail the workflow job — use `HAS_CONFLICTS` flag pattern, abort rebase, commit conflict state, push, open draft PR
+- Rebase CI: `workflow_dispatch` with optional `upstream_ref` input for on-demand debugging (REBASE-05)
+- Rebase CI: job-level `if: github.repository == 'atabisz/Vortex'` guard is non-negotiable (REBASE-07)
+- Two tracks are fully independent — Phase 16 and 17 share no files; can be implemented on separate branches simultaneously
 
 ### Pending Todos
 
@@ -144,7 +153,7 @@ None.
 
 ### Blockers/Concerns
 
-- STAM-04 getVortexPath("documents") scope unconfirmed — must read src/renderer/src/util/util.ts and STAM-04 commit diff before Phase 10 save path implementation
+None.
 
 ### Quick Tasks Completed
 
@@ -166,6 +175,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-08
-Stopped at: v4.0 backlog analysis complete — 9 items in PROJECT.md Active (v5.0), ready to /gsd-new-milestone
-Resume file: .planning/PROJECT.md
+Last session: 2026-04-15T11:50:06.735Z
+Stopped at: Completed 16-01-PLAN.md
+Resume file: None
