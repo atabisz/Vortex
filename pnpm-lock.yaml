@@ -496,6 +496,12 @@ catalogs:
     jsonwebtoken:
       specifier: ^9.0.0
       version: 9.0.3
+    leveldown:
+      specifier: 5.6.0
+      version: 5.6.0
+    levelup:
+      specifier: 4.4.0
+      version: 4.4.0
     limiter:
       specifier: ^3.0.0
       version: 3.0.0
@@ -1666,7 +1672,7 @@ importers:
         version: https://codeload.github.com/Nexus-Mods/node-esptk/tar.gz/7b7db98d2c69b6b6cad2cb3dcd7972143adaa7bd
       loot:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d
+        version: https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d(patch_hash=3d4c1edc7a442f9db9c091845b9f808f1d84517b03a9612fef4e41bd141f47bc)
 
   extensions/gamebryo-savegame-management:
     devDependencies:
@@ -4076,6 +4082,9 @@ importers:
       electron-updater:
         specifier: 'catalog:'
         version: 4.6.5
+      encoding-down:
+        specifier: 'catalog:'
+        version: 6.3.0
       exe-version:
         specifier: 'catalog:'
         version: https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406(patch_hash=91e00f57460903f38a25b5a4ac079b466d8ef8cb8e3352c9e611de0f2e2266b6)
@@ -4124,6 +4133,12 @@ importers:
       jsonwebtoken:
         specifier: 'catalog:'
         version: 9.0.3
+      leveldown:
+        specifier: 'catalog:'
+        version: 5.6.0
+      levelup:
+        specifier: 'catalog:'
+        version: 4.4.0
       limiter:
         specifier: 'catalog:'
         version: 3.0.0
@@ -19239,7 +19254,7 @@ snapshots:
     dependencies:
       js-tokens: 4.0.0
 
-  loot@https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d:
+  loot@https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d(patch_hash=3d4c1edc7a442f9db9c091845b9f808f1d84517b03a9612fef4e41bd141f47bc):
     dependencies:
       autogypi: 0.2.2
       lodash: 4.17.23
