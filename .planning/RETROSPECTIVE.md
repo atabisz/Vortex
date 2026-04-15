@@ -248,6 +248,53 @@
 
 ---
 
+## Milestone: v6.0 — Infrastructure
+
+**Shipped:** 2026-04-15
+**Phases:** 2 | **Plans:** 2 | **Tasks:** 3
+
+### What Was Built
+
+- `applyChattrCasefold(dirPath)` in `src/renderer/src/util/fs.ts` — applies `chattr +F` to new empty staging dirs on ext4-casefold; statfs cache, injectable seams (`_setChattr`, `_setChattrNotifier`, `_resetChattrState`), 13 Vitest tests; wired into `ensureDirWritableAsync`
+- `rebase-upstream.sh` + `.github/workflows/rebase-upstream.yml` — daily cron polls nexus-mods/Vortex for new release tags, rebases fork via bash script, creates idempotent draft PRs via `gh api` REST, handles conflicts via `HAS_CONFLICTS` flag; verified end-to-end via `workflow_dispatch`
+- CI fix series: 6 commits fixing gh GraphQL→REST migration, detached-HEAD push, submodule handling, awk field index, workflow permissions
+
+### What Worked
+
+- **Injectable seam pattern carried forward cleanly.** The `_setChattr` / `_setChattrNotifier` / `_resetChattrState` seams directly mirrored `elevated.ts` — no new patterns needed, the test suite was easy to write.
+- **Phase 16 and 17 fully independent.** No shared files between the two phases; could have run on separate branches simultaneously. The parallel-track design in the CONTEXT.md was accurate.
+- **Modelling on existing CI patterns.** `rebase-upstream.sh` idempotency (`gh pr list` check before create) was modelled directly on `.github/scripts/cherry-pick.sh` already in the repo — reduced guesswork.
+- **HAS_CONFLICTS flag pattern.** Keeping the workflow green on conflict by catching `git rebase` exit 1, committing conflict state, and pushing worked exactly as designed; no special error handling needed.
+
+### What Was Inefficient
+
+- **gh GraphQL → REST migration.** The initial implementation used `gh pr create` (GraphQL under the hood) which the GitHub API rejects for fork tokens. Required a mid-execution pivot to `gh api` REST calls — 3 extra commits.
+- **Detached HEAD push failure.** `git rebase` leaves a detached HEAD; `git push origin HEAD` fails without an explicit refspec. `git push origin HEAD:refs/heads/BRANCH` works — not anticipated in the plan.
+- **Submodule handling in CI conflict commit.** `git add -A` after a conflict staged uninitialized submodule index entries, causing a fatal error. Required `git add -u` (tracked files only) or pre-drop of submodule entries — 2 additional fix commits.
+- **SUMMARY.md one-liner extraction still blank.** Sixth milestone with this schema gap. Phase 16's one-liner was parsed from inline header text rather than a `one_liner:` field.
+
+### Patterns Established
+
+- **gh api REST for fork PR operations.** `gh api repos/{owner}/{repo}/pulls` (REST) instead of `gh pr create` (GraphQL) — GraphQL rejects fork GITHUB_TOKEN for createPullRequest mutations. Always use REST for PR ops in fork workflows.
+- **Detached HEAD push pattern.** After `git rebase` in CI, always push with `git push origin HEAD:refs/heads/$BRANCH` not `git push origin HEAD`.
+- **`git add -u` for conflict commits.** In CI with submodules, use `git add -u` (tracked files only) not `git add -A` to avoid fatal errors on uninitialized submodule paths.
+- **CONFLICT_FILES before git add.** Capture `git diff --name-only --diff-filter=U` before staging — staging wipes the unstaged diff output.
+
+### Key Lessons
+
+1. **GitHub GraphQL rejects fork tokens for mutations.** Any workflow that creates PRs from a fork must use the REST API (`gh api`) not `gh pr create` or the GraphQL endpoint. Document this in the first rebase CI plan to avoid the pivot.
+2. **git rebase always leaves detached HEAD in CI.** After `git rebase upstream/tag`, always push with an explicit refspec: `git push origin HEAD:refs/heads/$BRANCH`. Never rely on `git push origin HEAD` in a rebase workflow.
+3. **Submodule-aware git add in CI.** Repos with git submodules need `git add -u` (not `git add -A`) in automated scripts to avoid fatal errors on uninitialized submodule index entries.
+4. **SUMMARY.md one-liner — sixth milestone with this gap.** This is chronic. Mandate `one_liner:` as a required YAML frontmatter field in the SUMMARY.md schema and lint for it in gsd-tools.
+
+### Cost Observations
+
+- Model mix: Sonnet 4.6 (primary execution)
+- Sessions: 2 sessions (2026-04-15)
+- Notable: 6-commit CI fix series after initial Phase 17 implementation — gh API surface for forks was the hidden complexity. Phase 16 was clean first-pass.
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -259,6 +306,7 @@
 | v3.0 | ~3 | 2 | Research-driven design eliminated all execution surprises; injectable seam pattern for testability |
 | v4.0 | ~4 | 4 | Fs shim pattern over per-callsite fixes; TDD RED/GREEN commit pairs; integration checker confirmed all wiring |
 | v5.0 | 1 | 1 | Smallest milestone; pre-existing confirmations reduced scope; v4.0 lesson (regenerate .d.ts) applied immediately |
+| v6.0 | 2 | 2 | Two independent infrastructure tracks; injectable seam pattern carried forward; gh GraphQL→REST fork pivot; daily upstream rebase CI operational |
 
 ### Cumulative Quality
 
@@ -269,6 +317,7 @@
 | v3.0 | 7 (elevated.test.ts) + gameSupport stubs | 2 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
 | v4.0 | 21 (elevated) + 22 (fs) + 6 (resolvePathCase) = 49 | 4 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
 | v5.0 | 0 new (fomod-installer C# only; verify-warning.spec.ts pre-existing) | 1 phase, 0 Windows regressions | ubuntu-latest + windows-latest |
+| v6.0 | 13 (fs.test.ts chattr+F) | 2 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
 
 ### Top Lessons (Verified Across Milestones)
 
@@ -281,3 +330,6 @@
 7. **Transparent shims > per-callsite fixes** — when a cross-cutting problem affects N callsites, design the shim layer first; per-callsite workarounds become obsolete automatically
 8. **SUMMARY.md one-liner field** — five milestones with blank one-liners due to schema mismatch; standardise `one_liner:` field or fix gsd-tools extraction before v6.0
 9. **REQUIREMENTS.md is a living document** — update statuses inline as plans complete; archiving stale "Planned" statuses defeats the tracking purpose
+10. **gh API for fork PR ops must use REST** — GraphQL rejects fork GITHUB_TOKEN for createPullRequest mutations; always use `gh api repos/{owner}/{repo}/pulls` in fork CI workflows
+11. **git rebase leaves detached HEAD** — always push with `git push origin HEAD:refs/heads/$BRANCH` after a rebase in CI; never rely on `git push origin HEAD`
+12. **Submodule-aware git add** — use `git add -u` not `git add -A` in repos with submodules to avoid fatal errors on uninitialized submodule index entries

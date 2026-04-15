@@ -1,5 +1,16 @@
 # Milestones
 
+## v6.0 Infrastructure (Shipped: 2026-04-15)
+
+**Phases completed:** 2 phases, 2 plans, 3 tasks
+
+**Key accomplishments:**
+
+- `applyChattrCasefold()` in `fs.ts` — `chattr +F` applied at ext4 staging dir creation; injectable seams, statfs cache, 13 Vitest tests covering all 7 CASE requirements (CASE-05–CASE-11)
+- `rebase-upstream.sh` + `rebase-upstream.yml` — daily cron polls nexus-mods/Vortex for new release tags, rebases fork, creates idempotent draft PRs via gh REST API, handles conflicts via HAS_CONFLICTS flag — verified end-to-end via workflow_dispatch
+
+---
+
 ## v5.0 fomod-installer Linux Fixes (Shipped: 2026-04-09)
 
 **Phases completed:** 1 phases, 3 plans, 6 tasks

@@ -1,28 +1,22 @@
-# Vortex Linux Support — v6.0 Infrastructure
+# Vortex Linux Support — Planning Next Milestone
 
-## Current Milestone: v6.0 Infrastructure
-
-**Goal:** Replace the fragile userspace case-folding shim with a kernel-backed chattr+F dual-path strategy, and automate upstream sync via a GitHub Actions rebase workflow.
-
-**Target features:**
-- chattr+F dual-path fs layer — apply kernel casefold (`chattr +F`) at mod staging directory creation on ext4/btrfs; fall back to existing userspace shim on XFS/ZFS/other
-- Automated upstream rebase CI — GitHub Actions workflow that detects new nexus-mods/Vortex releases and opens a rebase PR automatically
+## Current Milestone: v6.0 Infrastructure — SHIPPED 2026-04-15
 
 ## Current State
 
-**Shipped v6.0 Phase 16 on 2026-04-15.** `applyChattrCasefold(dirPath)` implemented in `fs.ts` — applies `chattr +F` to new empty mod staging directories on ext4-casefold filesystems. Platform/Flatpak/non-empty/non-ext4 guards ensure Windows CI stays green and non-supported configs are silently bypassed. Injectable test seams (`_setChattr`, `_setChattrNotifier`, `_resetChattrState`) follow the `elevated.ts` pattern. 13 Vitest tests pass (CASE-05–CASE-11). Wired into `ensureDirWritableAsync` and notification dispatch through renderer.tsx bootstrap. CI green check pending.
+**Shipped v6.0 on 2026-04-15.** 2 phases, 2 plans. `applyChattrCasefold(dirPath)` in `fs.ts` applies `chattr +F` at ext4 staging dir creation; injectable seams (`_setChattr`, `_setChattrNotifier`, `_resetChattrState`) follow the `elevated.ts` pattern; 13 Vitest tests pass covering CASE-05–CASE-11. `rebase-upstream.yml` + `rebase-upstream.sh` daily-poll nexus-mods/Vortex for new release tags, rebase the fork, create idempotent draft PRs via gh REST API, handle conflicts via `HAS_CONFLICTS` flag — verified end-to-end via `workflow_dispatch`.
 
 **Shipped v5.0 on 2026-04-09.** Phase 15 complete: fomod-installer source path normalization (`TextUtil.NormalizePath` on `matchedFiles[0]`), Linux-specific CSharpScript unsupported warning in `reportUnsupported`, redundant `replaceAll` removed from copy source path, `vortex-api` declarations regenerated with `resolvePathCase`. All 7 FOMD-15-xx requirements satisfied. FOMOD end-to-end story on Linux is clean — no workarounds remain in Vortex; fork is PR-ready.
 
 **Shipped v4.0 on 2026-04-07.** Elevation hardening complete: session-scoped polkit rules in `.deb` (AUTH_ADMIN_KEEP), Steam Deck Game Mode failure notification wired, save transfer picks up Wine prefix path casing via transparent fs shim. `resolvePathCase` promoted to vortex-api `util` namespace. `PluginPersistor` per-callsite workaround replaced by shim.
 
-**A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, manage save games, and transfer saves between profiles — with elevation that works reliably on desktop Linux and fails gracefully on Steam Deck.**
+**A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, manage save games, and transfer saves between profiles — with elevation that works reliably on desktop Linux and fails gracefully on Steam Deck. Fork stays in sync with upstream via automated daily rebase PRs.**
 
 **Human UAT pending** (tracked in Phase 999.1 backlog): ELEV-04 session caching, ELEV-05 desktop Linux E2E, ELEV-06 Steam Deck toast UX, SAVE-05 live save transfer.
 
 ## What This Is
 
-Vortex is an Electron-based mod manager for Nexus Mods, targeting Windows and Linux. v1.0 shipped the Linux boot milestone — `pnpm run start` works on Linux. v2.0 makes Vortex actually usable on Linux: Steam/Proton game detection, distributable packages (AppImage + .deb), and the NXM "Download with Manager" flow. v3.0 completes save game management and elevation for Skyrim SE, Fallout 4, and Steam Deck users. v4.0 hardens elevation (persistent polkit token, Steam Deck failure UX), delivers save transfer between profiles, and adds a transparent Wine prefix case-folding shim to the fs layer. v5.0 closes the FOMD story: fomod-installer source path normalization, CSharpScript Linux warning, and regenerated vortex-api declarations — fork is upstream PR-ready.
+Vortex is an Electron-based mod manager for Nexus Mods, targeting Windows and Linux. v1.0 shipped the Linux boot milestone — `pnpm run start` works on Linux. v2.0 makes Vortex actually usable on Linux: Steam/Proton game detection, distributable packages (AppImage + .deb), and the NXM "Download with Manager" flow. v3.0 completes save game management and elevation for Skyrim SE, Fallout 4, and Steam Deck users. v4.0 hardens elevation (persistent polkit token, Steam Deck failure UX), delivers save transfer between profiles, and adds a transparent Wine prefix case-folding shim to the fs layer. v5.0 closes the FOMD story: fomod-installer source path normalization, CSharpScript Linux warning, and regenerated vortex-api declarations — fork is upstream PR-ready. v6.0 adds kernel-backed `chattr +F` casefold at staging dir creation (silent fallback to Wine-prefix shim) and automates upstream sync via a daily GitHub Actions rebase workflow.
 
 ## Core Value
 
@@ -77,14 +71,24 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 - ✓ **FOMD-15-06**: `vortex-api` `lib/api.d.ts` regenerated — `resolvePathCase` in public API surface — v5.0
 - ✓ **B1**: `packages/vortex-api/lib/api.d.ts` regenerated with `resolvePathCase` — v5.0
 
-### Active (v6.0)
+- ✓ **CASE-05**: Vortex detects ext4-casefold filesystem via `statfs()` before attempting kernel casefold — v6.0
+- ✓ **CASE-06**: `chattr +F` applied to new empty staging dirs on ext4-casefold at creation; silent fallback on all other filesystems — v6.0
+- ✓ **CASE-07**: Silent fallback to Wine-prefix shim on chattr+F failure (EOPNOTSUPP, EINVAL, non-ext4, any non-zero exit) — v6.0
+- ✓ **CASE-08**: chattr+F is a no-op on Windows (platform guard `process.platform !== 'linux'`) — v6.0
+- ✓ **CASE-09**: chattr+F skipped inside Flatpak sandbox (`FLATPAK_ID` env var set) — v6.0
+- ✓ **CASE-10**: Post-chattr+F casefold verify: write uppercase filename, read back lowercase; falls back to shim if verify fails — v6.0
+- ✓ **CASE-11**: INFO log on chattr+F success; DEBUG log on fallback; once-per-session informational notification when chattr+F unavailable — v6.0
+- ✓ **REBASE-01**: Daily cron polls nexus-mods/Vortex for new release tags; exits cleanly when fork is up to date — v6.0
+- ✓ **REBASE-02**: New upstream tag → rebase branch + draft PR titled `chore: rebase onto upstream <tag>` — v6.0
+- ✓ **REBASE-03**: Idempotent — second run updates existing branch without creating duplicate PR — v6.0
+- ✓ **REBASE-04**: Conflict state committed and pushed as draft PR with warning body; workflow job stays green — v6.0
+- ✓ **REBASE-05**: `workflow_dispatch` with optional `upstream_ref` input for on-demand runs — v6.0
+- ✓ **REBASE-06**: Draft PR body includes upstream tag, release URL, conflict status, commit diff summary, fork link — v6.0
+- ✓ **REBASE-07**: Workflow guarded by `if: github.repository == 'atabisz/Vortex'` — v6.0
+- [ ] **ELEV-05**: All user-triggered elevation operations complete successfully on desktop Linux — code-complete (Phase 12); hardware UAT pending (Phase 999.1)
+- [ ] **ELEV-06**: Steam Deck elevation failure shows actionable error notification with recovery path — code-complete (Phase 12); hardware UAT pending (Phase 999.1)
 
-- [ ] **CASE-05**: Mod staging directories on ext4/btrfs use `chattr +F` kernel casefold at creation time — userspace shim retained as fallback for XFS/ZFS/other
-- [ ] **CASE-06**: Filesystem type detected at staging directory creation; chattr+F applied only when supported (ext4/btrfs); other filesystems silently fall through to existing shim
-- [ ] **REBASE-01**: GitHub Actions workflow detects new nexus-mods/Vortex releases (tags) and opens a draft rebase PR automatically
-- [ ] **REBASE-02**: Rebase workflow replays the linux-port platform-guard patch set on top of the new upstream tag and runs CI to confirm green
-- [ ] **ELEV-05**: All user-triggered elevation operations complete successfully on desktop Linux without crashing or hanging — code-complete (Phase 12); hardware UAT pending (Phase 999.1)
-- [ ] **ELEV-06**: Steam Deck elevation failure shows actionable error notification with recovery path — code-complete (Phase 12); end-to-end Electron UX UAT pending (Phase 999.1)
+### Active (next milestone)
 
 ### Deferred (v5.0+)
 
@@ -103,18 +107,13 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 
 ## Context
 
-**Shipped v5.0 on 2026-04-09.** 1 phase, 3 plans, 7/7 FOMD requirements satisfied. fomod-installer fork is PR-ready with source path normalization; Vortex has clean Linux CSharpScript UX; vortex-api declarations up to date.
+**Shipped v6.0 on 2026-04-15.** 2 phases, 2 plans, 14/14 v6.0 requirements satisfied.
 
-**Technical state after v5.0:**
-- fomod-installer: `XmlScriptInstaller.cs` normalizes source path via `TextUtil.NormalizePath(matchedFiles[0], false, true)` — lowercase forward-slash paths consistent with destination
-- CSharpScript guard: `ModFormatManager.cs` wraps `CSharpScriptType` registration in `IsOSPlatform(OSPlatform.Windows)` at 2 call sites (pre-existing, confirmed)
-- Vortex UX: `reportUnsupported` in `InstallManager.ts` separates CSharpScript instructions from generic unsupported; fires `type:warning` notification on non-Windows with actionable message
-- Cleanup: `copy.source.replaceAll("\\", "/")` removed — Parser10 normalizes upstream; destination replaceAll retained
-- vortex-api: `packages/vortex-api/lib/api.d.ts` regenerated — `resolvePathCase` appears in public API surface (2 occurrences); `etc/vortex.api.md` updated
-- CI: `build-packages.yml` linux-x64 dotnet publish matrix confirmed (pre-existing)
-- Elevation: `.deb` installs `build/linux/10-vortex.rules` to `/etc/polkit-1/rules.d/` granting `AUTH_ADMIN_KEEP`; AppImage excluded; `rejectWithSteamOSNotification` fires Redux notification on SteamOS Game Mode failure
-- fs layer: `isWinePrefixPath()` + `resolveCaseIfWinePrefix()` wraps `readFileAsync`, `writeFileAsync`, `statAsync`, `watch`, `copyAsync`, `renameAsync`, `ensureDirAsync` — Wine prefix paths only
-- Test coverage: `elevated.test.ts` (21 Vitest); `fs.test.ts` (22 Vitest); `resolvePathCase.test.ts` (6 Vitest)
+**Technical state after v6.0:**
+- fs layer: `applyChattrCasefold(dirPath)` in `src/renderer/src/util/fs.ts` — applies `chattr +F` to new empty staging dirs on ext4-casefold; statfs cache avoids repeated syscalls; injectable seams `_setChattr`, `_setChattrNotifier`, `_resetChattrState` follow `elevated.ts` pattern; 13 Vitest tests pass (CASE-05–CASE-11); wired into `ensureDirWritableAsync`
+- Casefold fallback: EOPNOTSUPP/EINVAL/non-zero exit → silent fallback to existing Wine-prefix shim; Flatpak guard (`FLATPAK_ID`); platform guard (`process.platform !== 'linux'`); post-chattr verify (write uppercase, read lowercase)
+- CI: `rebase-upstream.yml` + `rebase-upstream.sh` — daily cron polls nexus-mods/Vortex, rebases fork master, creates idempotent draft PRs via `gh api` REST (GraphQL rejected for fork tokens); `HAS_CONFLICTS` flag keeps workflow green on conflict; `workflow_dispatch` with optional `upstream_ref`; repo guard `if: github.repository == 'atabisz/Vortex'`
+- Test coverage: `fs.test.ts` now 35 Vitest (13 new chattr+F tests added)
 
 **Platform guard pattern:** `if (process.platform === 'linux') { ... }` and `isWinePrefixPath()` used consistently — Windows paths always pass through unchanged.
 
@@ -164,6 +163,13 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 | resolvePathCase promoted to util/ (not @vortex/shared) | Avoids new shared package churn; util/ already exported via vortex-api; mod_management and bundled extensions can both import | ✓ Done — v4.0 Phase 14 |
 | fs shim wraps at fs.ts level (not per-callsite) | 7+ callsites would each need patching; shim at source guarantees all future callers get case-folding automatically | ✓ Done — v4.0 Phase 14 |
 | fileName.toLowerCase() in watch handler retained permanently | inotify event filenames arrive from OS, outside shim reach — toLowerCase fix must stay in watch handler | ✓ Done — v4.0 Phase 14 D-11 |
+| applyChattrCasefold: node:fs/promises import alias | Avoids shadow from `* as fs from fs-extra`; explicit alias makes the import unambiguous | ✓ Done — v6.0 Phase 16 |
+| ExecFileFn stays callback-style (not promisified) | Matches injectable seam contract; promisifying would break the test seam pattern | ✓ Done — v6.0 Phase 16 |
+| vi.mock node:fs/promises factory over vi.spyOn | Getter non-configurable issue in Vitest happy-dom makes spyOn fail; factory mock is reliable | ✓ Done — v6.0 Phase 16 |
+| gh api REST for PR ops (not GraphQL) | GraphQL createPullRequest mutation rejects fork GITHUB_TOKEN; REST POST works | ✓ Done — v6.0 Phase 17 |
+| git push origin HEAD:refs/heads/BRANCH in CI | git rebase leaves detached HEAD; named refspec avoids push failure | ✓ Done — v6.0 Phase 17 |
+| CONFLICT_FILES captured before git add -A | git add -A stages conflict markers; capturing diff stat first preserves accurate conflict list | ✓ Done — v6.0 Phase 17 |
+| Always --draft on gh pr create | Draft on both clean and conflict PRs — upstream changes always require human review | ✓ Done — v6.0 Phase 17 D-11 |
 
 ## Evolution
 
@@ -183,4 +189,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-15 after Phase 16 completion — chattr+F casefold layer implemented, 13 tests pass, CI check pending*
+*Last updated: 2026-04-15 after v6.0 milestone — chattr+F casefold layer + upstream rebase CI complete*
