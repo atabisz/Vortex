@@ -104,7 +104,7 @@ interface IBaseProps {
     gameMode: string,
   ) => boolean;
   openLOOTSite: () => Promise<any>;
-  parseESPFile: (filePath: string, gameMode: string) => IESPFile;
+  parseESPFile: (filePath: string, gameMode: string) => IESPFile | null;
   safeBasename: (filePath: string) => string;
   installedPlugins: () => Set<string>;
 }
@@ -888,6 +888,19 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
             pluginsIn[pluginName].filePath,
             this.props.gameMode,
           );
+          if (esp === null) {
+            pluginsParsed[pluginName] = {
+              isMaster: false,
+              isLight: false,
+              isMedium: false,
+              isBlueprint: false,
+              parseFailed: true,
+              description: "",
+              author: "",
+              masterList: [],
+              revision: 999,
+            };
+          } else {
           pluginsParsed[pluginName] = {
             isMaster: this.props.isMaster(
               pluginsIn[pluginName].filePath,
@@ -911,6 +924,7 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
             masterList: esp.masterList,
             revision: (esp as any).revision,
           };
+          }
         } catch (err) {
           // TODO: there is a time window where this is called on a file that
           //   no longer exists. Since the error message reported from the native
