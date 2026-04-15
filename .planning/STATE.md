@@ -4,7 +4,7 @@ milestone: v6.0
 milestone_name: Infrastructure
 status: verifying
 stopped_at: Completed 17-01-PLAN.md — rebase-upstream CI workflow complete and verified
-last_updated: "2026-04-15T13:18:13.730Z"
+last_updated: "2026-04-15T13:30:31.091Z"
 last_activity: 2026-04-15
 progress:
   total_phases: 3
@@ -25,8 +25,8 @@ See: .planning/PROJECT.md (updated 2026-04-15 after v6.0 milestone start)
 
 ## Current Position
 
-Phase: 17 (upstream-rebase-ci-workflow) — EXECUTING
-Plan: 1 of 1
+Phase: 999.1
+Plan: Not started
 Status: Phase complete — ready for verification
 Last activity: 2026-04-15
 
@@ -36,7 +36,7 @@ Progress: [░░░░░░░░░░] 0%
 
 **Velocity:**
 
-- Total plans completed: 9
+- Total plans completed: 10
 - Average duration: -
 - Total execution time: 0 hours
 
@@ -50,6 +50,7 @@ Progress: [░░░░░░░░░░] 0%
 | 13 | 1 | - | - |
 | 15 | 3 | - | - |
 | 16 | 1 | - | - |
+| 17 | 1 | - | - |
 
 **Recent Trend:**
 
