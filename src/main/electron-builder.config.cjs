@@ -116,6 +116,24 @@ const config = {
         path.join(winapiDir, file),
       );
     }
+
+    // bluebird is a direct dependency of @vortex/main (top-level in dist/node_modules/)
+    // so we cannot add node_modules/bluebird/** to asarUnpack without an EEXIST conflict.
+    // Instead, nest a copy under modmeta-db/node_modules/bluebird/ so that it is covered
+    // by the existing "node_modules/modmeta-db/**" asarUnpack glob and ends up in
+    // app.asar.unpacked — where the unpacked modmeta-db can resolve it.
+    const bluebirdSrc = path.join(__dirname, "dist", "node_modules", "bluebird");
+    const bluebirdDest = path.join(
+      __dirname,
+      "dist",
+      "node_modules",
+      "modmeta-db",
+      "node_modules",
+      "bluebird",
+    );
+    if (fs.existsSync(bluebirdSrc) && !fs.existsSync(bluebirdDest)) {
+      fs.cpSync(bluebirdSrc, bluebirdDest, { recursive: true });
+    }
   },
   asar: true,
   asarUnpack: [
@@ -139,12 +157,13 @@ const config = {
     // 2. leveldown's node-gyp-build can find its prebuilt .node binary from a real
     //    filesystem path (asar virtual paths cause silent readdirSync failures)
     // 3. require() from app.asar.unpacked cannot cross back into app.asar, so bluebird,
-    //    levelup, and encoding-down must also be unpacked alongside modmeta-db
+    //    levelup, and encoding-down must also be unpacked alongside modmeta-db.
+    //    bluebird is injected as a nested copy under modmeta-db/ by beforePack (below)
+    //    so the top-level bluebird in the asar is untouched and no EEXIST conflict occurs.
     "node_modules/modmeta-db/**",
     "node_modules/leveldown/**",
     "node_modules/levelup/**",
     "node_modules/encoding-down/**",
-    "node_modules/bluebird/**",
   ],
   buildDependenciesFromSource: false,
   npmRebuild: false,
