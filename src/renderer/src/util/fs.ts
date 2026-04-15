@@ -495,43 +495,6 @@ function elevatedUnlock(
     });
 }
 
-function elevatedUnlock(
-  unlockPath: string,
-  filePath: string,
-  originalError: NodeJS.ErrnoException,
-): PromiseBB<boolean> {
-  // Record the path immediately (before the async elevated call) so that
-  // concurrent operations on child paths see it and skip the dialog
-  recordUnlockedPath(unlockPath);
-  const userId = permission.getUserId();
-  return elevated(
-    (ipcPath, req: NodeJS.Require) => {
-      return req("permissions").allow(unlockPath, userId, "rwx", {
-        recursive: true,
-      });
-    },
-    { unlockPath, userId },
-  )
-    .then(() => true)
-    .catch((elevatedErr) => {
-      if (
-        elevatedErr instanceof UserCanceled ||
-        elevatedErr.message.indexOf(
-          "The operation was canceled by the user",
-        ) !== -1
-      ) {
-        return Promise.reject(new UserCanceled());
-      }
-      // if elevation failed, return the original error because the one from
-      // elevate - while interesting as well - would make error handling too complicated
-      log("error", "failed to acquire permission", {
-        filePath,
-        error: elevatedErr.message,
-      });
-      return Promise.reject(originalError);
-    });
-}
-
 function unknownErrorRetry(
   filePath: string,
   err: Error,
