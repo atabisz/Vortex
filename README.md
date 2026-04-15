@@ -50,7 +50,7 @@ makepkg -si
 
 ## What Works
 
-**As of v1.16.8 (2026-04-07):**
+**As of v1.16.9 (2026-04-09):**
 
 - **Launches on Linux** — `pnpm run start` works on Linux without crashing; all native addons (bsatk, esptk, loot, vortexmt, xxhash-addon, bsdiff-node) compile and load
 - **FOMOD installer** — C#/.NET FOMOD installers work via native Linux binaries (no Wine dependency)
@@ -63,34 +63,35 @@ makepkg -si
 - **Steam Deck error UX** — When Vortex runs in Steam Deck Game Mode where no polkit agent is available, a clear notification tells the user to switch to Desktop Mode; Vortex remains functional after dismissal
 - **Save file transfer** — Save files can be transferred between Vortex profiles for Skyrim SE and Fallout 4 across Wine prefix paths using the save manager UI
 - **Linux case-folding fs wrapper** — A shared fs shim resolves actual on-disk casing for Wine prefix AppData paths before file operations, fixing `Plugins.txt`/`plugins.txt` mismatches and similar Windows-assumes-case-insensitive bugs
+- **FOMOD path normalization** — Source paths in FOMOD XML installers are normalized for Linux (forward-slash, lowercase), fixing mod installations that failed silently on case-sensitive filesystems
+- **CSharpScript Linux notice** — Mods that use CSharpScript-based FOMOD installers (a Windows-only feature) now show a clear, actionable notification on Linux rather than failing silently
 
 ## What Doesn't Work
 
 | Feature | Status | Notes |
 |---|---|---|
-| Save game viewer/parser (Skyrim SE, Fallout 4) | Broken | `gamebryo-savegame` native addon has MSVC exception constructors + lz4/zlib linker issues; disabled on Linux with a clear error. Save *transfer* between profiles works — see What Works above. |
+| Save game viewer/parser (Skyrim SE, Fallout 4) | Untested | `gamebryo-savegame` compiles on Linux (build issues were fixed in v3.0) but has not been tested at runtime. Save *transfer* between profiles works — see What Works above. |
 | Elevated privilege operations (AppImage) | Degraded | AppImage builds do not include the polkit rules file — users are prompted on every elevation call. Install the `.deb` for session-scoped credential caching. |
-| NXM via Steam Browser overlay (Steam Deck) | Unknown | WebKit-based overlay `xdg-open` behavior undocumented; requires hardware + Nexus Mods web team coordination |
+| NXM via Steam Browser overlay (Steam Deck) | Unknown | WebKit-based overlay `xdg-open` behavior undocumented; requires hardware access and coordination with both Valve and Nexus Mods web teams |
 | AppImage delta auto-updates on SteamOS | Not implemented | `electron-updater` behavior on SteamOS immutable filesystem needs validation |
 | GOG / itch.io / Heroic Launcher games | Not supported | Steam/Proton only for now |
-| Steam Deck Flatpak distribution | Not packaged | AppImage works in Desktop Mode; Flatpak `~/.steam` sandbox restrictions need validation first |
+| Flathub / Flatpak distribution | Planned | AppImage works today; Flathub submission is on the roadmap using the same permission model as Lutris |
 
 ## Roadmap
 
-### v1.16.8 — Elevation Hardening + Save Transfer (2026-04-07)
+The full development plan is in [VORTEX-LINUX.md](VORTEX-LINUX.md).
 
-- Persistent elevation token via polkit session-scoped rules (.deb only)
-- End-to-end validation of all elevation operations on desktop Linux
-- Steam Deck error UX for missing polkit agent in Game Mode
-- Profile-to-profile save file transfer between Wine prefix paths
-- Linux case-folding fs wrapper for Wine prefix AppData paths
+### Recently shipped
 
-### Future
+- **v1.16.9 (2026-04-09)** — FOMOD source path normalization for Linux, CSharpScript Linux notice, vortex-api declarations updated
+- **v1.16.8 (2026-04-07)** — Persistent elevation token (.deb), Steam Deck Game Mode error UX, save file transfer across Wine prefix paths, Linux case-folding fs wrapper
 
-- GOG, itch.io, Heroic Launcher game detection
-- NXM handler via Steam Browser overlay on Steam Deck
-- AppImage delta auto-update on SteamOS
-- Steam Deck Flatpak distribution
+### Up next
+
+- Hardware UAT for elevation, save transfer, and NXM on real devices
+- First-run onboarding wizard with Linux-native path detection
+- Flathub submission
+- Heroic Launcher, GOG, and itch.io game detection
 
 ## Building from Source
 
