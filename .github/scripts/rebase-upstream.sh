@@ -52,7 +52,11 @@ if ! git merge "${UPSTREAM_TAG}" --no-edit -m "merge upstream ${UPSTREAM_TAG} in
   HAS_CONFLICTS=true
   # Capture conflicted files before staging (excluding submodule paths)
   CONFLICT_FILES=$(git diff --name-only --diff-filter=U 2>/dev/null || echo "(see commit)")
-  # Stage only tracked files — avoids failing on uninitialized submodule entries
+  # Remove any uninitialized submodule entries from the index so git add doesn't
+  # fatally fail trying to index them ("does not have a commit checked out")
+  git ls-files --stage | awk '$2 == "160000"' | awk '{print $4}' | sort -u | while read -r sub; do
+    git rm --cached --ignore-unmatch -f "$sub" || true
+  done
   git add -u
   git commit --no-edit -m "merge upstream ${UPSTREAM_TAG} (conflicts)" || true
 fi
