@@ -1,5 +1,4 @@
 /* eslint-disable */
-<<<<<<< HEAD
 import { clearPendingVote, updateSuccessRate } from "./actions/persistent";
 import persistentReducer from "./reducers/persistent";
 import sessionReducer from "./reducers/session";
@@ -24,24 +23,6 @@ import {
   InstallFinishDialog,
   InstallStartDialog,
 } from "./views/InstallDialog";
-=======
-import { clearPendingVote, updateSuccessRate } from './actions/persistent';
-import persistentReducer from './reducers/persistent';
-import sessionReducer from './reducers/session';
-import settingsReducer from './reducers/settings';
-import trackingReducer from './reducers/installTracking';
-import { ICollection } from './types/ICollection';
-import { IExtendedInterfaceProps } from './types/IExtendedInterfaceProps';
-import { genDefaultsAction } from './util/defaults';
-import { addExtension } from './util/extension';
-import InstallDriver from './util/InstallDriver';
-import { cloneCollection, createCollection, findLinkedCollection, makeCollectionId } from './util/transformCollection';
-import { bbProm, getUnfulfilledNotificationId } from './util/util';
-import AddModsDialog from './views/AddModsDialog';
-import HealthDownvoteDialog from './views/CollectionPageView/HealthDownvoteDialog';
-import CollectionsMainPage from './views/CollectionList';
-import { InstallChangelogDialog, InstallFinishDialog, InstallStartDialog } from './views/InstallDialog';
->>>>>>> v1.16.9
 
 import { getActiveInstallSession } from "./util/selectors";
 
@@ -109,7 +90,8 @@ function isEditableCollection(state: types.IState, modIds: string[]): boolean {
 function profileCollectionExists(api: types.IExtensionApi, profileId: string) {
   const state = api.store.getState();
   const gameMode = selectors.activeGameId(state);
-  return findLinkedCollection(api, profileId, gameMode) !== undefined;
+  const mods = state.persistent.mods[gameMode];
+  return mods[makeCollectionId(profileId)] !== undefined;
 }
 
 function onlyLocalRules(rule: types.IModRule) {
@@ -272,14 +254,7 @@ async function cloneInstalledCollection(
   if (result.action === "Clone") {
     await updateMeta(api, collectionId);
     const id = makeCollectionId(shortid());
-    const newId = await cloneCollection(api, gameMode, id, collectionId);
-    if (newId !== undefined) {
-      const activeProfileId = selectors.activeProfile(api.getState())?.id;
-      if (activeProfileId) {
-        api.store.dispatch(actions.setModAttribute(gameMode, id, 'associatedProfile', activeProfileId));
-      }
-    }
-    return newId;
+    return cloneCollection(api, gameMode, id, collectionId);
   } else {
     return Promise.resolve(undefined);
   }
@@ -521,7 +496,6 @@ async function removeCollection(
       (collection.rules ?? []).map(async (rule) => {
         const dlId = util.findDownloadByRef(rule.reference, downloads);
 
-<<<<<<< HEAD
         if (dlId !== undefined) {
           const download = state.persistent.downloads.files[dlId];
           if (
@@ -535,13 +509,6 @@ async function removeCollection(
               }),
             );
           }
-=======
-      if (dlId !== undefined) {
-        const download = state.persistent.downloads.files[dlId];
-        if ((download !== undefined)
-          && (deleteArchives || (download.state !== 'finished'))) {
-          await util.toPromise(cb => api.events.emit('remove-download', dlId, cb, { silent: true, confirmed: true }));
->>>>>>> v1.16.9
         }
         doProgress(
           "Removing downloads",
@@ -575,16 +542,12 @@ async function removeCollection(
       doProgress("Removing collection", 0.99);
       const download = state.persistent.downloads.files[collection.archiveId];
       if (download !== undefined) {
-<<<<<<< HEAD
         await util.toPromise((cb) =>
           api.events.emit("remove-download", collection.archiveId, cb, {
             silent: true,
             confirmed: true,
           }),
         );
-=======
-        await util.toPromise(cb => api.events.emit('remove-download', collection.archiveId, cb, { silent: true, confirmed: true }));
->>>>>>> v1.16.9
       }
       await util.toPromise((cb) =>
         api.events.emit("remove-mod", gameId, modId, cb, {
@@ -737,10 +700,7 @@ async function updateMeta(api: types.IExtensionApi, collectionId?: string) {
               permissions: info.collection.permissions,
               collectionSlug: info.collection.slug,
               revisionNumber: info.revisionNumber,
-<<<<<<< HEAD
               revisionStatus: info.revisionStatus,
-=======
->>>>>>> v1.16.9
               author: info.collection.user?.name,
               uploader: info.collection.user?.name,
               uploaderAvatar: info.collection.user?.avatar,
@@ -869,12 +829,8 @@ function register(
     removeCollection(context.api, gameId, modId, cancel);
   const onUpdateMeta = () => updateMeta(context.api);
   const editCollection = (id: string) => collectionsCB.editCollection?.(id);
-<<<<<<< HEAD
   const onInstallCollection = (revision: IRevision) =>
     installCollection(context.api, revision);
-=======
-  const onInstallCollection = (revision: IRevision) => installCollection(context.api, revision);
->>>>>>> v1.16.9
 
   context.registerDialog("collection-finish", InstallFinishDialog, () => ({
     api: context.api,
@@ -1148,86 +1104,12 @@ function register(
       profileCollectionExists(context.api, profileIds[0]),
   );
 
-<<<<<<< HEAD
   context.registerAction(
     "mods-action-icons",
     300,
     "collection",
     {},
     "Add to Collection...",
-=======
-  context.registerAction('profile-actions', 150, 'highlight-lab', {}, 'Link Collection',
-    (profileIds: string[]) => {
-      const profileId = profileIds[0];
-      const state = context.api.store.getState();
-      const gameMode = selectors.activeGameId(state);
-      const mods = state.persistent.mods[gameMode] ?? {};
-
-      const editableCollections = Object.values(mods).filter(
-        (m: types.IMod) => m.type === MOD_TYPE && m.attributes?.editable === true,
-      ) as types.IMod[];
-
-      const currentLink = findLinkedCollection(context.api, profileId, gameMode);
-
-      context.api.showDialog('question', 'Link Collection to Profile', {
-        text: context.api.translate(
-          'Select the collection to associate with this profile. '
-          + '"Update Collection" will sync this profile\'s mods into the selected collection.',
-        ),
-        choices: editableCollections.map(mod => ({
-          id: mod.id,
-          text: util.renderModName(mod),
-          value: mod.id === currentLink?.id,
-        })),
-      }, [
-        { label: 'Cancel' },
-        ...(currentLink !== undefined ? [{ label: 'Unlink' }] : []),
-        { label: 'Link', default: true },
-      ]).then(result => {
-        if (result.action === 'Unlink' && currentLink !== undefined) {
-          context.api.store.dispatch(
-            actions.setModAttribute(gameMode, currentLink.id, 'associatedProfile', undefined),
-          );
-        } else if (result.action === 'Link') {
-          const selectedId = Object.keys(result.input).find(k => result.input[k]);
-          if (selectedId) {
-            // Clear any existing link to this collection from another profile
-            const existingHolder = Object.values(state.persistent.profiles ?? {})
-              .find((p: any) => {
-                const linked = findLinkedCollection(context.api, p.id, gameMode);
-                return linked?.id === selectedId && p.id !== profileId;
-              }) as any;
-            if (existingHolder) {
-              const prevMod = findLinkedCollection(context.api, existingHolder.id, gameMode);
-              if (prevMod?.id === selectedId) {
-                context.api.store.dispatch(
-                  actions.setModAttribute(gameMode, selectedId, 'associatedProfile', undefined),
-                );
-              }
-            }
-            context.api.store.dispatch(
-              actions.setModAttribute(gameMode, selectedId, 'associatedProfile', profileId),
-            );
-          }
-        }
-      }).catch(err => context.api.showErrorNotification('Failed to link collection', err));
-    },
-    (profileIds: string[]) => {
-      const profileId = profileIds[0];
-      const state = context.api.store.getState();
-      const gameMode = selectors.activeGameId(state);
-      const profile = state.persistent.profiles[profileId];
-      if (profile?.gameId !== gameMode) return false;
-      if (profileCollectionExists(context.api, profileId)) return false;
-      const mods = state.persistent.mods[gameMode] ?? {};
-      return Object.values(mods).some(
-        (m: types.IMod) => m.type === MOD_TYPE && m.attributes?.editable === true,
-      );
-    },
-  );
-
-  context.registerAction('mods-action-icons', 300, 'collection', {}, 'Add to Collection...',
->>>>>>> v1.16.9
     (instanceIds: string[]) => {
       addCollectionAction(context.api, instanceIds)
         .then(() => collectionChanged.schedule())
@@ -1527,18 +1409,11 @@ function once(api: types.IExtensionApi, collectionsCB: () => ICallbackMap) {
       driver.continue();
     }
 
-<<<<<<< HEAD
     if (driver.step === "review") {
       // this is called a few times so we need to check if collection is undefined or not so we only write timestamp once
       if (driver.collection === undefined) return;
-=======
-    if (driver.step === 'review') {  
 
-      // this is called a few times so we need to check if collection is undefined or not so we only write timestamp once 
-      if(!driver.collection?.id) return;
->>>>>>> v1.16.9
-
-      const gameId = driver.profile?.gameId ?? selectors.activeGameId(api.getState());
+      const gameId = driver.profile.gameId;
       const modId = driver.collection.id;
 
       api.store.dispatch(
@@ -1930,14 +1805,9 @@ function once(api: types.IExtensionApi, collectionsCB: () => ICallbackMap) {
             );
           }
         }
-<<<<<<< HEAD
       });
     },
   );
-=======
-    });
-  });
->>>>>>> v1.16.9
 
   util
     .installIconSet("collections", path.join(__dirname, "icons.svg"))
@@ -1954,7 +1824,6 @@ function once(api: types.IExtensionApi, collectionsCB: () => ICallbackMap) {
     );
 
   const updateOwnCollectionsCB = (gameId: string) =>
-<<<<<<< HEAD
     api.emitAndAwait("get-my-collections", gameId).then((result) => {
       localState.ownCollections = result[0] ?? [];
     });
@@ -1968,26 +1837,6 @@ function once(api: types.IExtensionApi, collectionsCB: () => ICallbackMap) {
         false,
       );
     }
-=======
-    api.emitAndAwait('get-my-collections', gameId)
-      .then(result => {
-        localState.ownCollections = result[0] ?? [];
-      })
-      .catch(err => {
-        log('warn', 'failed to get own collections', { gameId, error: err.message });
-        localState.ownCollections = [];
-      });
-
-  const onGameModeChange = (gameMode: string) => {
-    if (driver.profile?.gameId && driver.profile.gameId !== gameMode) {
-      pauseCollection(api, driver.profile?.gameId, driver.collection?.id, false);
-    }
-
-    updateOwnCollectionsCB(gameMode);
-  };
-
-  api.events.on('gamemode-activated', onGameModeChange);
->>>>>>> v1.16.9
 
     updateOwnCollectionsCB(gameMode);
   };

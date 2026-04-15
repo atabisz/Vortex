@@ -5,11 +5,7 @@ import type { IModRepoId } from "../../mod_management/types/IMod";
 import { nexusGames } from "../util";
 
 const gameNum = (() => {
-<<<<<<< HEAD:src/renderer/src/extensions/nexus_integration/util/UIDs.ts
   let cache: { [gameId: string]: number } | undefined;
-=======
-  let cache: { [gameId: string]: number };
->>>>>>> v1.16.9:src/extensions/nexus_integration/util/UIDs.ts
   return (gameId: string): number | undefined => {
     if (cache === undefined) {
       const games = nexusGames();

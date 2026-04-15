@@ -80,28 +80,18 @@ function sameArgs(lhs: string[], rhs: string[]): boolean {
   return true;
 }
 
-<<<<<<< HEAD
 function isSameTool(
   discovery: types.IDiscoveryResult,
   lhs: types.IDiscoveredTool,
   rhs: ICollectionTool,
 ) {
-=======
-function isSameTool(discovery: types.IDiscoveryResult,
-                    lhs: types.IDiscoveredTool,
-                    rhs: ICollectionTool) {
->>>>>>> v1.16.9
   if (lhs?.path === undefined) {
     return false;
   }
 
-<<<<<<< HEAD
   const samePath =
     normalizePath(lhs.path) ===
     normalizePath(path.resolve(discovery.path, rhs.exe));
-=======
-  const samePath = normalizePath(lhs.path) === normalizePath(path.resolve(discovery.path, rhs.exe));
->>>>>>> v1.16.9
   const sameName = lhs.name === rhs.name;
 
   if (samePath) {
@@ -130,7 +120,6 @@ async function cloneTools(
 
   const knownTools = api.getState().settings.gameMode.discovered[gameId].tools;
 
-<<<<<<< HEAD
   const includedTools: string[] = (tools ?? [])
     .map((tool) => {
       return Object.keys(knownTools ?? {}).find(
@@ -150,18 +139,6 @@ async function cloneTools(
   api.store.dispatch(
     actions.setModAttribute(gameId, to.id, "collection", attributes),
   );
-=======
-  const includedTools: string[] = (tools ?? []).map(tool => {
-    return Object.keys(knownTools ?? {})
-      .find(iter => (knownTools[iter].custom && !knownTools[iter].hidden)
-                && isSameTool(discovery, knownTools[iter], tool));
-  })
-  .filter(iter => iter !== undefined);
-
-  const attributes = util.setSafe(to.attributes.collection, ['includedTools'], includedTools);
-  api.store.dispatch(actions.setModAttribute(gameId, to.id, 'collection',
-                                             attributes));
->>>>>>> v1.16.9
 }
 
 async function setUpTools(

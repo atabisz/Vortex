@@ -1,10 +1,6 @@
 import { truthy } from "../../../util/util";
 
-<<<<<<< HEAD:src/renderer/src/extensions/mod_management/util/testModReference.ts
 import type {
-=======
-import {
->>>>>>> v1.16.9:src/extensions/mod_management/util/testModReference.ts
   IMod,
   IModReference,
   IFileListItem,

@@ -83,18 +83,6 @@ class InstallDriver {
     true,
   );
 
-  // Throttle the progress notification to avoid flooding Redux/UI on every
-  // single mod event.  Tracking dispatches (mModStatusDebouncer) are unaffected.
-  // reset=false keeps it from starving, triggerImmediately=true shows instant
-  // feedback on the first event.
-  private mProgressDebouncer: util.Debouncer = new util.Debouncer(
-    () => {
-      if (this.mProfile && this.mGameId && this.mCollection) {
-        this.updateProgress(this.mProfile, this.mGameId, this.mCollection);
-      }
-      return Bluebird.resolve();
-    }, 1000, false, true);
-
   // Collection installation tracking
   private mCurrentSessionId: string;
   private mTrackingEnabled: boolean = true;
@@ -218,7 +206,6 @@ class InstallDriver {
       },
     );
 
-<<<<<<< HEAD
     api.events.on(
       "did-install-mod",
       (gameId: string, archiveId: string, modId: string) => {
@@ -262,59 +249,6 @@ class InstallDriver {
           }
           if (dependent.type === "requires") {
             this.mInstalledMods.push(mod);
-=======
-      if ((mod !== undefined) && (dependent !== undefined)) {
-        const isMarkedInstalled = this.mInstalledMods.find(m => m.id === mod.id) !== undefined;
-        if (isMarkedInstalled) {
-          // Been here, done that. Update progress and return
-          this.mProgressDebouncer.schedule();
-          return;
-        }
-        if (dependent.type === 'requires') {
-          this.mInstalledMods.push(mod);
-        }
-
-        // Mark as installed in tracking
-        this.markModInstalledInTracking(dependent, modId);
-        
-        if ((this.mCollection?.installationPath !== undefined)
-          && (dependent.reference.description !== undefined)) {
-          if (dependent.type === 'requires') {
-            this.mProgressDebouncer.schedule();
-          }
-          applyPatches(api, this.mCollection,
-            gameId, dependent.reference.description, modId, dependent.extra?.patches);
-          const choices = dependent.installerChoices ?? dependent.extra?.installerChoices;
-          util.batchDispatch(api.store, [
-            actions.setFileOverride(gameId, modId, dependent.extra?.fileOverrides),
-            actions.setModAttribute(gameId, modId, 'installerChoices', choices),
-            actions.setModAttribute(gameId, modId, 'patches', dependent.extra?.patches),
-            actions.setModAttribute(gameId, modId, 'fileList', dependent.fileList),
-          ]);
-        }
-      }
-      this.triggerUpdate();
-    });
-
-    api.events.on('did-finish-download', (downloadId: string, downloadState: string) => {
-      // not checking whether the download is actually part of this collection because
-      // that check may be more expensive than the ui update
-      this.mProgressDebouncer.schedule();
-
-      // Update mod status to 'downloaded' when download completes successfully
-      if (downloadState === 'finished') {
-        const state = api.getState();
-        const download = state.persistent.downloads.files[downloadId];
-        if (download) {
-          const lookup = util.lookupFromDownload(download);
-          const matchingRule = this.mDependentMods.find((rule) => {
-          const { patches, fileList, installerChoices, ...refWithoutExtras } =
-            rule.reference;
-            return util.testModReference(lookup, refWithoutExtras);
-          });
-          if (matchingRule) {
-            this.updateModTracking(matchingRule, 'downloaded');
->>>>>>> v1.16.9
           }
 
           // Mark as installed in tracking
@@ -483,69 +417,6 @@ class InstallDriver {
           }
         }
       });
-<<<<<<< HEAD
-=======
-      if (rule) {
-        this.updateModTracking(rule, 'skipped');
-      } else {
-        log('error', 'could not find rule for skipped free user download', { identifiers });
-      }
-    });
-
-    api.events.on('did-start-download', (info: { id: string, tag: string, urls: string[], fileName: string }) => {
-      const rule = this.mDependentMods.find(r => r.reference.tag === info.tag || r.reference.logicalFileName === info.fileName);
-      const isBundled = rule?.extra?.localPath != null;
-      if (rule && !isBundled) {
-        this.updateModTracking(rule, 'downloading');
-      }
->>>>>>> v1.16.9
-    });
-
-    api.events.on('did-import-downloads', (dlIds: string[]) => {
-      // Update tracking for bundled mods that were just imported
-      const state = api.getState();
-      const downloads = state.persistent.downloads.files;
-
-      dlIds.forEach(dlId => {
-        const download = downloads[dlId];
-        if (download) {
-          const lookup = util.lookupFromDownload(download);
-          const matchingRule = this.mDependentMods.find((rule) => {
-            const { patches, fileList, installerChoices, ...refWithoutExtras } =
-              rule.reference;
-            return util.testModReference(lookup, refWithoutExtras);
-          });
-          if (matchingRule) {
-            this.updateModTracking(matchingRule, 'downloaded');
-          }
-        }
-      });
-    });
-
-    api.events.on('collection-mod-skipped', (reference: types.IModReference) => {
-      // Update tracking when a mod download is skipped (for both free and premium users)
-      const matchingRule = this.mDependentMods.find((rule) => {
-        // Match by tag (most reliable) or other identifiers
-        if (reference.tag && rule.reference.tag === reference.tag) {
-          return true;
-        }
-        if (reference.fileMD5 && rule.reference.fileMD5 === reference.fileMD5) {
-          return true;
-        }
-        if (reference.logicalFileName && rule.reference.logicalFileName === reference.logicalFileName) {
-          return true;
-        }
-        return false;
-      });
-      if (matchingRule) {
-        this.updateModTracking(matchingRule, 'skipped');
-
-        // Also set the ignored flag on the rule so it's persisted
-        // api.store.dispatch(actions.addModRule(this.mGameId, this.mCollection.id, {
-        //   ...matchingRule,
-        //   ignored: true,
-        // } as any));
-      }
     });
 
     api.events.on(
@@ -827,7 +698,6 @@ class InstallDriver {
   }
 
   public installRecommended() {
-<<<<<<< HEAD
     const recommendedRules = this.mCollection.rules.filter(
       (r) => r.type === "recommends",
     );
@@ -838,12 +708,6 @@ class InstallDriver {
       true,
     );
     this.mStep = "recommendations";
-=======
-    const recommendedRules = this.mCollection.rules.filter(r => r.type === 'recommends');
-    this.mApi.emitAndAwait('install-from-dependencies',
-      this.mCollection.id, recommendedRules, true);
-    this.mStep = 'recommendations';
->>>>>>> v1.16.9
     this.triggerUpdate();
   }
 
@@ -988,7 +852,6 @@ class InstallDriver {
     const mod = mods[modId];
     if (mod !== undefined && mod.type === MOD_TYPE) {
       try {
-<<<<<<< HEAD
         const collectionInfo: ICollection = await readCollection(
           this.mApi,
           path.join(stagingPath, mod.installationPath, "collection.json"),
@@ -1008,21 +871,6 @@ class InstallDriver {
           mods,
         );
 
-=======
-        const collectionInfo: ICollection =
-          await readCollection(
-            this.mApi,
-            path.join(stagingPath, mod.installationPath, 'collection.json'));
-
-        // Signal postprocessing and yield to the event loop so the review
-        // dialog can render before the heavy deployment/parsing work begins.
-        this.mPostprocessing = true;
-        this.triggerUpdate();
-        await new Promise<void>(resolve => setTimeout(resolve, 0));
-
-        await postprocessCollection(this.mApi, gameId, mod, collectionInfo, mods);
-
->>>>>>> v1.16.9
         this.mPostprocessing = false;
 
         // Refresh again so that postprocessing changes are reflected in the UI.
@@ -1031,14 +879,10 @@ class InstallDriver {
 
         /* COLLECTIONS COMPLETED ANALYTICS */
 
-<<<<<<< HEAD
         const nexusIds = selectors.nexusIdsFromDownloadId(
           this.mApi.getState(),
           this.mCollection.archiveId,
         );
-=======
-        const nexusIds = selectors.nexusIdsFromDownloadId(this.mApi.getState(), this.mCollection.archiveId);
->>>>>>> v1.16.9
 
         const duration_ms = Date.now() - this.mTimeStarted;
 
@@ -1059,7 +903,6 @@ class InstallDriver {
         // });
       } catch (err) {
         this.mPostprocessing = false;
-<<<<<<< HEAD
         log(
           "info",
           "Failed to apply mod rules from collection. This is normal if this is the " +
@@ -1071,11 +914,6 @@ class InstallDriver {
           this.revisionNumber,
           err,
         );
-=======
-        log('info', 'Failed to apply mod rules from collection. This is normal if this is the '
-          + 'platform where the collection has been created.');
-        this.mDebounce.schedule(undefined, this.collectionSlug, this.revisionNumber, err);
->>>>>>> v1.16.9
       }
     }
   }
@@ -1083,13 +921,9 @@ class InstallDriver {
   private onStop() {
     this.mPostprocessing = false;
     if (this.mCollection !== undefined) {
-<<<<<<< HEAD
       this.mApi.dismissNotification(
         INSTALLING_NOTIFICATION_ID + this.mCollection.id,
       );
-=======
-      this.mApi.dismissNotification(INSTALLING_NOTIFICATION_ID + this.mCollection.id);
->>>>>>> v1.16.9
 
       // Flush pending tracking updates before cleanup so they aren't lost
       this.mModStatusDebouncer.runNow(() => undefined);
@@ -1100,12 +934,8 @@ class InstallDriver {
       // Ensure InstallManager cleans up its internal state (pending installs,
       // active installs, phase state) for this collection. This is idempotent —
       // if pauseCollection already emitted this event, the handler is a no-op.
-<<<<<<< HEAD
       this.mApi
         .emitAndAwait("cancel-dependency-install", this.mCollection.id)
-=======
-      this.mApi.emitAndAwait('cancel-dependency-install', this.mCollection.id)
->>>>>>> v1.16.9
         .catch(() => undefined);
     }
 
@@ -1475,7 +1305,6 @@ class InstallDriver {
   };
 
   private close = () => {
-<<<<<<< HEAD
     if (this.mGameId !== undefined && this.mCollection !== undefined) {
       this.mApi.events.emit(
         "did-install-collection",
@@ -1486,12 +1315,6 @@ class InstallDriver {
       this.mApi.dismissNotification(
         INSTALLING_NOTIFICATION_ID + this.mCollection.id,
       );
-=======
-    if ((this.mGameId !== undefined) && (this.mCollection !== undefined)) {
-      this.mApi.events.emit('did-install-collection', this.mGameId, this.mCollection.id);
-      this.mProgressDebouncer.clear();
-      this.mApi.dismissNotification(INSTALLING_NOTIFICATION_ID + this.mCollection.id);
->>>>>>> v1.16.9
     }
 
     this.completeInstallationTracking(true);
@@ -1519,11 +1342,7 @@ class InstallDriver {
     const downloadProgress = Object.values(mods).reduce((prev, mod) => {
       let size = 0;
 
-<<<<<<< HEAD
       if (mod.state === "downloaded") {
-=======
-      if (mod.state === 'downloaded') {
->>>>>>> v1.16.9
         // Download complete - use full file size
         size += mod.attributes?.fileSize || 0;
       } else if (mod.state === "downloading" || mod.state == null) {

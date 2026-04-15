@@ -1,18 +1,9 @@
-<<<<<<< HEAD
 import Promise from "bluebird";
 import { selectors, types, util } from "vortex-api";
 import { IBiDirRule } from "./types/IBiDirRule";
 import { IConflict } from "./types/IConflict";
 import { findRuleBiDir, isConflictResolved } from "./util/findRule";
 import showUnsolvedConflictsDialog from "./util/showUnsolvedConflicts";
-=======
-import Promise from 'bluebird';
-import { selectors, types, util } from 'vortex-api';
-import { IBiDirRule } from './types/IBiDirRule';
-import { IConflict } from './types/IConflict';
-import { findRuleBiDir, isConflictResolved } from './util/findRule';
-import showUnsolvedConflictsDialog from './util/showUnsolvedConflicts';
->>>>>>> v1.16.9
 
 function unsolvedConflictsCheck(
   api: types.IExtensionApi,
@@ -29,7 +20,6 @@ function unsolvedConflictsCheck(
 
   // find the first conflict that has no rule associated
   const encountered = new Set<string>();
-<<<<<<< HEAD
   const mapEnc = (lhs: string, rhs: string) => [lhs, rhs].sort().join(":");
   const firstConflict = Object.keys(conflicts).find(
     (modId) =>
@@ -45,19 +35,6 @@ function unsolvedConflictsCheck(
         );
       }) !== undefined,
   );
-=======
-  const mapEnc = (lhs: string, rhs: string) => [lhs, rhs].sort().join(':');
-  const firstConflict = Object.keys(conflicts).find(modId =>
-    conflicts[modId].find(conflict => {
-      const encKey = mapEnc(modId, conflict.otherMod.id);
-      if (encountered.has(encKey)) {
-        return false;
-      }
-      encountered.add(encKey);
-      return !isConflictResolved(mods, modId, conflict.otherMod)
-        && findRuleBiDir(modRules, mods[modId], conflict.otherMod) === undefined;
-    }) !== undefined);
->>>>>>> v1.16.9
   if (firstConflict !== undefined) {
     return api
       .showDialog(

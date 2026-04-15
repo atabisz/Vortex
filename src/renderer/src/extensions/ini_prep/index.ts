@@ -124,11 +124,7 @@ async function discoverSettingsChanges(
 
   const iniFormatter = genIniFormat(format);
   if (iniFormatter === undefined) {
-<<<<<<< HEAD:src/renderer/src/extensions/ini_prep/index.ts
     return PromiseBB.resolve();
-=======
-    return Promise.resolve();
->>>>>>> v1.16.9:src/extensions/ini_prep/index.ts
   }
 
   const parser = new IniParser(iniFormatter);
@@ -214,11 +210,6 @@ async function bakeSettings(
   const iniFormatter = genIniFormat(format);
   if (iniFormatter === undefined) {
     return PromiseBB.resolve();
-  }
-
-  const iniFormatter = genIniFormat(format);
-  if (iniFormatter === undefined) {
-    return Promise.resolve();
   }
 
   const enabledTweaks: { [baseFile: string]: string[] } = {};

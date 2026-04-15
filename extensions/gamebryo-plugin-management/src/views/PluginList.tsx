@@ -185,7 +185,6 @@ class GroupSelect extends React.PureComponent<
       group = "";
     }
 
-<<<<<<< HEAD
     const existingOptions = Array.from(
       new Set(
         []
@@ -194,13 +193,6 @@ class GroupSelect extends React.PureComponent<
           .map((iter) => iter.name),
       ),
     ).map((iter) => ({ label: iter, value: iter }));
-=======
-    const existingOptions = Array.from(new Set([]
-        .concat(masterlist.groups || [], userlist.groups || [])
-        .filter(iter => iter !== undefined)
-        .map(iter => iter.name)))
-      .map(iter => ({ label: iter, value: iter }));
->>>>>>> v1.16.9
 
     // Add "Create group" option if user is typing something that doesn't exist
     const options = [...existingOptions];
@@ -575,7 +567,6 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
       },
     ];
 
-<<<<<<< HEAD
     this.updateDetailsDebouncer = new util.Debouncer(
       (pluginList: IPlugins, gameId: string) => {
         if (
@@ -594,20 +585,6 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
       },
       2000,
     );
-=======
-    this.updateDetailsDebouncer = new util.Debouncer((pluginList: IPlugins, gameId: string) => {
-      if (this.props.modActivity !== undefined && this.props.modActivity.length > 0) {
-        log('debug', 'deferring update plugin details because mod activity');
-        this.updateDetailsDebouncer.schedule(undefined, pluginList, gameId);
-        return Promise.resolve();
-      }
-      return this.updatePlugins(pluginList, gameId)
-        .catch(util.ProcessCanceled, () => null)
-        .catch(err => {
-          log('warn', 'failed to update plugins', { error: err.message });
-        });
-    }, 2000);
->>>>>>> v1.16.9
   }
 
   public emptyPluginParsed(): { [plugin: string]: IPluginParsed } {
@@ -679,18 +656,13 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
   }
 
   public UNSAFE_componentWillReceiveProps(nextProps: IProps) {
-<<<<<<< HEAD
     const hasUserlistChange = this.props.userlist !== nextProps.userlist;
-=======
-    const hasUserlistChange = (this.props.userlist !== nextProps.userlist);
->>>>>>> v1.16.9
     // Guard: only do the expensive O(n log n) pluginPaths comparison when the plugins
     // reference actually changed or the userlist changed. During collection installation
     // many unrelated props (modActivity, mods) update several times per second — without
     // this guard those updates would each trigger a full sort+compare of 1000+ file paths.
     if (this.props.plugins !== nextProps.plugins || hasUserlistChange) {
       const pluginPaths = (input: IPlugins) =>
-<<<<<<< HEAD
         Object.values(input ?? {})
           .map((plug) => plug.filePath)
           .sort();
@@ -706,18 +678,10 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
         ) ||
         hasUserlistChange
       ) {
-=======
-        Object.values(input ?? {}).map(plug => plug.filePath).sort();
-      if ((this.props.plugins === undefined)
-          || !_.isEqual(Object.keys(this.props.plugins ?? {}), Object.keys(nextProps.plugins ?? {}))
-          || !_.isEqual(pluginPaths(this.props.plugins), pluginPaths(nextProps.plugins))
-          || hasUserlistChange) {
->>>>>>> v1.16.9
         if (hasUserlistChange) {
           // There's a chance that the userlist has changed (user applied a new
           // group to a plugin, etc)
           // we need to apply the userlist change before scheduling the update.
-<<<<<<< HEAD
           this.applyUserlist(
             nextProps.userlist.plugins || [],
             nextProps.masterlist.plugins || [],
@@ -728,11 +692,6 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
           nextProps.plugins,
           nextProps.gameMode,
         );
-=======
-          this.applyUserlist(nextProps.userlist.plugins || [], nextProps.masterlist.plugins || []);
-        }
-        this.updateDetailsDebouncer.schedule(undefined, nextProps.plugins, nextProps.gameMode);
->>>>>>> v1.16.9
       }
     }
 
@@ -741,15 +700,11 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
     }
 
     if (this.props.forceListUpdate !== nextProps.forceListUpdate) {
-<<<<<<< HEAD
       this.updateDetailsDebouncer.schedule(
         undefined,
         nextProps.plugins,
         nextProps.gameMode,
       );
-=======
-      this.updateDetailsDebouncer.schedule(undefined, nextProps.plugins, nextProps.gameMode);
->>>>>>> v1.16.9
     }
   }
 
@@ -1062,15 +1017,11 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
     pluginIds.forEach((key: string) => {
       const plugin = plugins[key];
       const combined = this.state.pluginsCombined[key];
-<<<<<<< HEAD
       if (
         plugin === undefined ||
         plugin.isNative ||
         combined?.isBlueprint
       ) {
-=======
-      if ((plugin === undefined) || plugin.isNative || combined?.isBlueprint) {
->>>>>>> v1.16.9
         return;
       }
       if (plugin.filePath.toLowerCase().endsWith(GHOST_EXT)) {
@@ -1087,15 +1038,11 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
     pluginIds.forEach((key: string) => {
       const plugin = plugins[key];
       const combined = this.state.pluginsCombined[key];
-<<<<<<< HEAD
       if (
         plugin === undefined ||
         plugin.isNative ||
         combined?.isBlueprint
       ) {
-=======
-      if ((plugin === undefined) || plugin.isNative || combined?.isBlueprint) {
->>>>>>> v1.16.9
         return;
       }
 
@@ -1115,15 +1062,10 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
       if (plugins[key]?.isNative || combined?.isBlueprint) {
         return;
       }
-<<<<<<< HEAD
       if (
         plugins[key]?.filePath !== undefined &&
         !plugins[key]?.filePath.toLowerCase().endsWith(GHOST_EXT)
       ) {
-=======
-      if ((plugins[key]?.filePath !== undefined)
-          && !plugins[key]?.filePath.toLowerCase().endsWith(GHOST_EXT)) {
->>>>>>> v1.16.9
         onSetPluginGhost(key, gameMode, true, false);
       }
     });
@@ -1438,14 +1380,10 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
       return null;
     }
 
-<<<<<<< HEAD
     const filtered =
       relevantOnly === true
         ? messages.filter((msg) => msg.type !== -1)
         : messages;
-=======
-    const filtered = (relevantOnly === true) ? messages.filter(msg => msg.type !== -1) : messages;
->>>>>>> v1.16.9
     return (
       <ListGroup className="loot-message-list">
         {filtered.map((msg: Message, idx: number) => (
@@ -1476,7 +1414,6 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
   };
 
   private setGroup = (plugin: string, group: string) => {
-<<<<<<< HEAD
     const { onAddGroup, onAddGroupRule, onSetGroup, masterlist, userlist } =
       this.props;
     if (
@@ -1485,12 +1422,6 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
       undefined &&
       (userlist.groups || []).find((iter) => iter.name === group) === undefined
     ) {
-=======
-    const { onAddGroup, onAddGroupRule, onSetGroup, masterlist, userlist } = this.props;
-    if ((group !== undefined)
-      && ((masterlist.groups || []).find(iter => iter.name === group) === undefined)
-      && ((userlist.groups || []).find(iter => iter.name === group) === undefined)) {
->>>>>>> v1.16.9
       onAddGroup(group);
       onAddGroupRule(group, "default");
     }
@@ -1926,7 +1857,6 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
         id: "cleaning_info",
         name: "LOOT cleaning info",
         edit: {},
-<<<<<<< HEAD
         customRenderer: (
           plugin: IPluginCombined,
           detail: boolean,
@@ -1948,18 +1878,6 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
         calc: (plugin: IPluginCombined) =>
           (plugin.cleanliness ?? []).length + (plugin.dirtyness ?? []).length,
         placement: "detail",
-=======
-        customRenderer: (plugin: IPluginCombined, detail: boolean, t: TranslationFunction) => (
-          <ListGroup className='loot-message-list'>
-            {(plugin.cleanliness ?? []).map((dat, idx) => (
-              <ListGroupItem key={idx}>{this.renderCleaningData(dat)}</ListGroupItem>))}
-            {(plugin.dirtyness ?? []).map((dat, idx) => (
-              <ListGroupItem key={idx}>{this.renderCleaningData(dat)}</ListGroupItem>))}
-          </ListGroup>
-        ),
-        calc: (plugin: IPluginCombined) => (plugin.cleanliness ?? []).length + (plugin.dirtyness ?? []).length,
-        placement: 'detail',
->>>>>>> v1.16.9
       },
       {
         id: "loot_messages",

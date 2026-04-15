@@ -31,13 +31,8 @@ import installExtension from "./installExtension";
 import getTableAttributes from "./tableAttributes";
 import type { IExtension, IExtensionWithState } from "../../types/extensions";
 
-<<<<<<< HEAD:src/renderer/src/extensions/extension_manager/ExtensionManager.tsx
 import type { EndorsedStatus } from "@nexusmods/nexus-api";
 import PromiseBB from "bluebird";
-=======
-import { EndorsedStatus } from "@nexusmods/nexus-api";
-import Bluebird from "bluebird";
->>>>>>> v1.16.9:src/extensions/extension_manager/ExtensionManager.tsx
 import * as _ from "lodash";
 import * as path from "path";
 import * as React from "react";
@@ -256,15 +251,9 @@ class ExtensionManager extends ComponentEx<IProps, IComponentState> {
     const { downloads } = this.props;
     let success = false;
     log("info", "installing extension(s) via drag and drop", { extPaths });
-<<<<<<< HEAD:src/renderer/src/extensions/extension_manager/ExtensionManager.tsx
     const prop: PromiseBB<void[]> =
       type === "files"
         ? PromiseBB.map(extPaths, (extPath) =>
-=======
-    const prop: Bluebird<void[]> =
-      type === "files"
-        ? Bluebird.map(extPaths, (extPath) =>
->>>>>>> v1.16.9:src/extensions/extension_manager/ExtensionManager.tsx
             installExtension(this.context.api, extPath)
               .then(() => {
                 success = true;
@@ -277,17 +266,10 @@ class ExtensionManager extends ComponentEx<IProps, IComponentState> {
                 );
               }),
           )
-<<<<<<< HEAD:src/renderer/src/extensions/extension_manager/ExtensionManager.tsx
         : PromiseBB.map(
             extPaths,
             (url) =>
               new PromiseBB<void>((resolve, reject) => {
-=======
-        : Bluebird.map(
-            extPaths,
-            (url) =>
-              new Bluebird<void>((resolve, reject) => {
->>>>>>> v1.16.9:src/extensions/extension_manager/ExtensionManager.tsx
                 this.context.api.events.emit(
                   "start-download",
                   [url],

@@ -452,11 +452,7 @@ class OverrideEditor extends ComponentEx<IProps, IComponentState> {
     const node = this.findByPath(treeState, path);
 
     if (!installPath) {
-<<<<<<< HEAD
       log("error", "Cannot preview file - install path not available");
-=======
-      log('error', 'Cannot preview file - install path not available');
->>>>>>> v1.16.9
       return;
     }
 
@@ -476,7 +472,6 @@ class OverrideEditor extends ComponentEx<IProps, IComponentState> {
             return accum;
           }
           if (!mod.installationPath) {
-<<<<<<< HEAD
             log("warn", "Mod has no installation path, skipping preview", {
               modId,
             });
@@ -490,16 +485,6 @@ class OverrideEditor extends ComponentEx<IProps, IComponentState> {
               modId,
               filePath,
             });
-=======
-            log('warn', 'Mod has no installation path, skipping preview', { modId });
-            return accum;
-          }
-          const relPath = (pathTool.isAbsolute(filePath))
-            ? toRelPath(mod, filePath)
-            : filePath;
-          if (!relPath) {
-            log('warn', 'Failed to resolve relative path for mod', { modId, filePath });
->>>>>>> v1.16.9
             return accum;
           }
           accum.push({

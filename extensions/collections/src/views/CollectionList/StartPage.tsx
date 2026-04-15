@@ -6,10 +6,6 @@ import {
   MIN_COLLECTION_NAME_LENGTH,
   MOD_TYPE,
   NAMESPACE,
-<<<<<<< HEAD
-=======
-  NEXUS_BASE_GAMES_URL,
->>>>>>> v1.16.9
   NEXUS_BASE_URL,
 } from "../../constants";
 import InfoCache from "../../util/InfoCache";

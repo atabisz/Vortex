@@ -169,13 +169,7 @@ function init(context: IExtensionContext): boolean {
     externalData: (onChanged: () => void) => {
       context.api.onStateChange(
         ["settings", "interface", "hideTopLevelCategory"],
-<<<<<<< HEAD:src/renderer/src/extensions/category_management/index.ts
         () => { onChanged(); },
-=======
-        () => {
-          onChanged();
-        },
->>>>>>> v1.16.9:src/extensions/category_management/index.ts
       );
     },
     placement: "detail",

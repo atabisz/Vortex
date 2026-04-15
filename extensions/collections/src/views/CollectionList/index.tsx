@@ -16,7 +16,6 @@ import CollectionEdit from "../CollectionPageEdit";
 import CollectionPage from "../CollectionPageView";
 import StartPage from "./StartPage";
 
-<<<<<<< HEAD
 import { IRating, IRevision } from "@nexusmods/nexus-api";
 import type { TFunction } from "i18next";
 import * as React from "react";
@@ -36,18 +35,6 @@ import {
   util,
 } from "vortex-api";
 import { hasEditPermissions, uploadCollection } from "../../util/util";
-=======
-import { IRating, IRevision } from '@nexusmods/nexus-api';
-import I18next from 'i18next';
-import * as React from 'react';
-import { WithTranslation, withTranslation } from 'react-i18next';
-import { connect } from 'react-redux';
-import * as Redux from 'redux';
-import { ThunkDispatch } from 'redux-thunk';
-import { actions, ComponentEx, FlexLayout, log, MainPage, selectors, tooltip,
-         types, util } from 'vortex-api';
-import { hasEditPermissions, uploadCollection } from '../../util/util';
->>>>>>> v1.16.9
 
 export interface ICollectionsMainPageBaseProps extends WithTranslation {
   active: boolean;
@@ -304,7 +291,6 @@ class CollectionsMainPage extends ComponentEx<
       return;
     }
 
-<<<<<<< HEAD
     const author = mods[modId].attributes?.["uploaderId"];
     const canContribute = hasEditPermissions(
       mods[modId].attributes?.permissions,
@@ -324,18 +310,6 @@ class CollectionsMainPage extends ComponentEx<
             "than you're using now ({{currentUser}}). " +
             "If you edit and upload this collection now it will be uploaded as a new " +
             "collection by your current user.",
-=======
-    const author = mods[modId].attributes?.['uploaderId'];
-    const canContribute = hasEditPermissions(mods[modId].attributes?.permissions);
-
-    if ((author !== undefined) && (author !== userInfo?.userId) && !canContribute) {
-      const result = await api.showDialog('question',
-        'Edit Collection', {
-          text: 'This collection has been uploaded with a different account ({{uploadAuthor}}) '
-              + 'than you\'re using now ({{currentUser}}). '
-              + 'If you edit and upload this collection now it will be uploaded as a new '
-              + 'collection by your current user.',
->>>>>>> v1.16.9
           parameters: {
             uploadAuthor: mods[modId].attributes["uploader"],
             currentUser: userInfo?.name ?? "<Logged out>",

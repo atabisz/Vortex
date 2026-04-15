@@ -9,12 +9,8 @@ import type { INotification } from "../../types/INotification";
 import type { IState } from "../../types/IState";
 import getVortexPath from "../../util/getVortexPath";
 import { log } from "../../util/log";
-<<<<<<< HEAD:src/renderer/src/extensions/mod_management/InstallContext.ts
 import type { IPrettifiedError } from "../../util/message";
 import { showError } from "../../util/message";
-=======
-import { IPrettifiedError, showError } from "../../util/message";
->>>>>>> v1.16.9:src/extensions/mod_management/InstallContext.ts
 import { getSafe } from "../../util/storeHelper";
 import {
   ModsInstallationCancelledEvent,

@@ -366,7 +366,6 @@ export default function init(context: IExtensionContext) {
           );
           let sorted: types.IMod[];
           try {
-<<<<<<< HEAD:src/renderer/src/extensions/file_based_loadorder/index.ts
             sorted = await util.sortMods(
               profile.gameId,
               filtered,
@@ -378,15 +377,6 @@ export default function init(context: IExtensionContext) {
                 'Failed to sort mods',
                 'The load order contains circular rules and cannot be sorted automatically. '
                 + 'Please resolve conflicting rules in the mod dependencies.',
-=======
-            sorted = await util.sortMods(profile.gameId, filtered, context.api);
-          } catch (err) {
-            if (err instanceof util.CycleError) {
-              context.api.showErrorNotification(
-                "Failed to sort mods",
-                "The load order contains circular rules and cannot be sorted automatically. " +
-                  "Please resolve conflicting rules in the mod dependencies.",
->>>>>>> v1.16.9:src/extensions/file_based_loadorder/index.ts
                 { allowReport: false },
               );
               return;

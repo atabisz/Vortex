@@ -18,7 +18,6 @@ class GroupFilterComponent extends React.Component<IProps, {}> {
   public render(): JSX.Element {
     const { filter, masterlist, userlist } = this.props;
 
-<<<<<<< HEAD
     const options = Array.from(
       new Set(
         []
@@ -26,31 +25,11 @@ class GroupFilterComponent extends React.Component<IProps, {}> {
           .map((iter) => iter.name),
       ),
     ).map((iter) => ({ label: iter, value: iter }));
-=======
-    const options = Array.from(new Set(
-          [].concat(masterlist.groups || [], userlist.groups || [])
-            .map(iter => iter.name)))
-      .map(iter => ({ label: iter, value: iter }));
->>>>>>> v1.16.9
 
-    // react-select is marked as an external module in our webpack config.
-    //  This means that even though we're trying to use version 5, the actual
-    //  version that gets used is 1.3.0, which has a different API.
-    //  The proper fix for this is to update react-select to version 5 in the package
-    //  file, but that will break any other extensions that use react-select, so for
-    //  now we just have to be hacky.
-    // TODO: Update react-select to version 5 and remove the cast to any.
-    const SelectV1 = Select as any;
     return (
-<<<<<<< HEAD
       <Select
         multi={true}
         className="select-compact"
-=======
-      <SelectV1
-        multi
-        className='select-compact'
->>>>>>> v1.16.9
         options={options}
         value={Array.isArray(filter) ? filter : []}
         onChange={this.changeFilter}

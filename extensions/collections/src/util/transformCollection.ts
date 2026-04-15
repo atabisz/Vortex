@@ -80,11 +80,6 @@ function deduceSource(
     res.type = "browse";
   }
 
-  // "manual" with a URL is functionally identical to "browse"
-  if ((res.type === 'manual') && res.url) {
-    res.type = 'browse';
-  }
-
   const assign = (obj: any, key: string, value: any) => {
     if (obj[key] === undefined) {
       obj[key] = value;
@@ -137,7 +132,6 @@ function deduceSource(
   } else if (sourceInfo?.type === "bundle") {
     assign(res, "updatePolicy", "exact");
   } else {
-<<<<<<< HEAD
     if (versionMatcher === "*") {
       assign(res, "updatePolicy", "latest");
     } else if (
@@ -145,12 +139,6 @@ function deduceSource(
       versionMatcher.endsWith("+prefer")
     ) {
       assign(res, "updatePolicy", "prefer");
-=======
-    if (versionMatcher === '*') {
-      assign(res, 'updatePolicy', 'latest');
-    } else if ((versionMatcher !== undefined) && versionMatcher.endsWith('+prefer')) {
-      assign(res, 'updatePolicy', 'prefer');
->>>>>>> v1.16.9
     } else {
       assign(res, "updatePolicy", "exact");
     }
@@ -633,21 +621,12 @@ export function collectionModToRule(
   const { updatePolicy } = mod.source;
 
   let versionMatch: string;
-<<<<<<< HEAD
   if (updatePolicy === "prefer") {
     versionMatch = !!coerced
       ? `>=${coerced ?? "0.0.0"}+prefer`
       : util.coerceToSemver(mod.version);
   } else if (updatePolicy === "latest") {
     versionMatch = "*";
-=======
-  if (updatePolicy === 'prefer') {
-    versionMatch = !!coerced
-      ? `>=${coerced ?? '0.0.0'}+prefer`
-      : util.coerceToSemver(mod.version);
-  } else if (updatePolicy === 'latest') {
-    versionMatch = '*';
->>>>>>> v1.16.9
   } else {
     // Default to 'exact' for undefined or explicit 'exact' updatePolicy
     versionMatch = !!coerced ? coerced : util.coerceToSemver(mod.version);
@@ -708,15 +687,9 @@ export function collectionModToRule(
       name: mod.name,
       instructions: !!mod.instructions
         ? mod.instructions
-<<<<<<< HEAD
         : mod.source.type === "manual"
           ? mod.source.instructions
           : undefined,
-=======
-        : (mod.source.type === "manual")
-        ? mod.source.instructions
-        : undefined,
->>>>>>> v1.16.9
       phase: mod.phase ?? 0,
       patches: mod.patches,
       fileOverrides: mod.fileOverrides,
@@ -948,26 +921,6 @@ export function makeCollectionId(baseId: string): string {
   return `vortex_collection_${baseId}`;
 }
 
-<<<<<<< HEAD
-=======
-export function findLinkedCollection(
-  api: types.IExtensionApi,
-  profileId: string,
-  gameId: string,
-): types.IMod | undefined {
-  const mods = api.getState().persistent.mods[gameId] ?? {};
-  // Backwards compat: old ID convention
-  const byId = mods[makeCollectionId(profileId)];
-  if (byId?.type === MOD_TYPE) return byId;
-  // New: explicit attribute
-  return Object.values(mods).find(m =>
-    m.type === MOD_TYPE &&
-    m.attributes?.editable === true &&
-    m.attributes?.associatedProfile === profileId,
-  );
-}
-
->>>>>>> v1.16.9
 function deduceCollectionAttributes(
   collectionMod: types.IMod,
   collection: ICollection,
@@ -1369,21 +1322,11 @@ export async function createCollectionFromProfile(
   const profile = state.persistent.profiles[profileId];
 
   const isQuickCollection = forceName !== undefined;
-<<<<<<< HEAD
   const id = isQuickCollection
-=======
-  const conventionId = (isQuickCollection)
->>>>>>> v1.16.9
     ? makeCollectionId(`${profileId}_${shortid()}`)
     : makeCollectionId(profileId);
 
-  // For non-quick collections, also check for a mod linked via the associatedProfile attribute
-  const existingMod: types.IMod = isQuickCollection
-    ? state.persistent.mods[profile.gameId]?.[conventionId]
-    : findLinkedCollection(api, profileId, profile.gameId);
-
-  const id = existingMod?.id ?? conventionId;
-  const mod = existingMod;
+  const mod: types.IMod = state.persistent.mods[profile.gameId]?.[id];
 
   const isNexusSourced = (m: types.IMod) => m?.attributes?.source === "nexus";
   const isGeneratedMod = (m: types.IMod) => m?.attributes?.generated === true;
@@ -1432,7 +1375,6 @@ export async function createCollectionFromProfile(
 
     wantsToUpload = result.action === uploadLabel;
 
-<<<<<<< HEAD
     name = result.input["name"];
     await createCollection(api, profile.gameId, id, name, rules);
     await createTweaksFromProfile(
@@ -1457,17 +1399,9 @@ export async function createCollectionFromProfile(
         },
       });
     }
-=======
-    name = result.input['name'] ?? util.renderModName(mod);
-    await createCollection(api, profile.gameId, id, name, rules);
-    await createTweaksFromProfile(api, profile, state.persistent.mods[profile.gameId] ?? {}, id);
-    api.store.dispatch(actions.setModAttribute(profile.gameId, id, 'associatedProfile', profileId));
->>>>>>> v1.16.9
   } else {
+    name = mod.attributes?.name;
     updateCollection(api, profile.gameId, mod, rules);
-    if (!mod.attributes?.associatedProfile) {
-      api.store.dispatch(actions.setModAttribute(profile.gameId, id, 'associatedProfile', profileId));
-    }
   }
 
   return { id, name, updated: mod !== undefined, wantsToUpload };

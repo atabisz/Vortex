@@ -1,14 +1,7 @@
-<<<<<<< HEAD
 import { selectors, types, util } from "vortex-api";
 import { setConflictDialog } from "../actions";
 import { IBiDirRule } from "../types/IBiDirRule";
 import { findRuleBiDir, isConflictResolved } from "./findRule";
-=======
-import { selectors, types, util } from 'vortex-api';
-import { setConflictDialog } from '../actions';
-import { IBiDirRule } from '../types/IBiDirRule';
-import { findRuleBiDir, isConflictResolved } from './findRule';
->>>>>>> v1.16.9
 
 function showUnsolvedConflictsDialog(
   api: types.IExtensionApi,

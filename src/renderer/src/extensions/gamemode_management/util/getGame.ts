@@ -1,18 +1,11 @@
 import type { IGame } from "../../../types/IGame";
 import type { IGameStore } from "../../../types/IGameStore";
 import local from "../../../util/local";
-<<<<<<< HEAD:src/renderer/src/extensions/gamemode_management/util/getGame.ts
 import type { IExtensionDownloadInfo } from "../../../types/extensions";
 import type GameVersionManager from "../../gameversion_management/GameVersionManager";
 import type { IGameStub } from "../GameModeManager";
 import type GameModeManager from "../GameModeManager";
 import type { IDiscoveryResult } from "../types/IDiscoveryResult";
-=======
-import { IExtensionDownloadInfo } from "../../extension_manager/types";
-import GameVersionManager from "../../gameversion_management/GameVersionManager";
-import GameModeManager, { IGameStub } from "../GameModeManager";
-import { IDiscoveryResult } from "../types/IDiscoveryResult";
->>>>>>> v1.16.9:src/extensions/gamemode_management/util/getGame.ts
 
 import { getModTypeExtensions } from "./modTypeExtensions";
 

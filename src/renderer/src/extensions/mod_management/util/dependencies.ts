@@ -165,11 +165,7 @@ function lookupDownloadHint(
         ),
       );
     }
-<<<<<<< HEAD:src/renderer/src/extensions/mod_management/util/dependencies.ts
     return Promise.resolve({ url: urlNorm });
-=======
-    return Bluebird.resolve({ url: urlNorm });
->>>>>>> v1.16.9:src/extensions/mod_management/util/dependencies.ts
   } else if (
     input.mode === "browse" ||
     (input.mode === "manual" && input.url)

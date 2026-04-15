@@ -159,7 +159,6 @@ export const COLLECTION_SEARCH_QUERY: ICollectionQuery = {
   },
 };
 
-<<<<<<< HEAD:src/renderer/src/extensions/nexus_integration/util/graphQueries.ts
 export const MOD_FILE_INFO: Partial<IModFileQuery> = {
   categoryId: true,
   count: true,
@@ -254,8 +253,6 @@ export const MOD_REQUIREMENTS_INFO: IModRequirementsQuery = {
   },
 };
 
-=======
->>>>>>> v1.16.9:src/extensions/nexus_integration/util/graphQueries.ts
 export const MY_COLLECTIONS_SEARCH_QUERY: ICollectionQuery = {
   revisions: {
     id: true,

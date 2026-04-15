@@ -308,28 +308,6 @@ function updatePluginListImpl(
               }
               pluginPersistor.setKnownPlugins(knownPlugins, blueprintIds);
             }
-<<<<<<< HEAD
-=======
-            const knownPlugins = Object.keys(pluginStates).reduce((prev, pluginId) => {
-              prev[pluginId] = path.basename(pluginStates[pluginId].filePath);
-              return prev;
-            }, {});
-            let blueprintIds: string[] | undefined;
-            if (supportsBlueprintPlugins(gameId)) {
-              blueprintIds = [];
-              for (const pluginId of Object.keys(pluginStates)) {
-                try {
-                  const esp = new ESPFile(pluginStates[pluginId].filePath, gameId);
-                  if (esp.isBlueprint) {
-                    blueprintIds.push(pluginId);
-                  }
-                } catch (err) {
-                  // parse failures are already reported elsewhere; skip
-                }
-              }
-            }
-            ipcRenderer.send('gamebryo-set-known-plugins', knownPlugins, blueprintIds);
->>>>>>> v1.16.9
           }
           return Promise.resolve();
         });
@@ -769,7 +747,6 @@ function register(
   // for files the parser can't read, and for files whose TES4 header doesn't
   // set the Blueprint flag. Consumers should treat a thrown/non-boolean result
   // as a no-op and not assume anything about blueprint-ness.
-<<<<<<< HEAD
   context.registerAPI(
     "isBlueprintPlugin",
     (pluginFilePath: string): boolean => {
@@ -820,45 +797,6 @@ function register(
   context.registerDialog("plugin-dependencies-connector", Connector);
   context.registerDialog("userlist-editor", UserlistEditor);
   context.registerDialog("group-editor", GroupEditor);
-=======
-  context.registerAPI('isBlueprintPlugin', (pluginFilePath: string): boolean => {
-    const gameMode = selectors.activeGameId(context.api.getState());
-    if (!supportsBlueprintPlugins(gameMode)) {
-      return false;
-    }
-    try {
-      return pluginInfoCache.getInfo(pluginFilePath).isBlueprint;
-    } catch (err) {
-      log('warn', 'isBlueprintPlugin parse failed', {
-        pluginFilePath,
-        err: (err as Error).message,
-      });
-      return false;
-    }
-  }, { minArguments: 1 });
-
-  context.registerTest('plugins-locked', 'gamemode-activated',
-    () => testPluginsLocked(selectors.activeGameId(context.api.store.getState())));
-  context.registerTest('master-missing', 'gamemode-activated',
-    () => testMissingMasters(context.api, pluginInfoCache));
-  context.registerTest('master-missing', 'plugins-changed' as any,
-    () => testMissingMasters(context.api, pluginInfoCache));
-  context.registerTest('blueprint-master', 'gamemode-activated',
-    () => testBlueprintMasters(context.api, pluginInfoCache));
-  context.registerTest('blueprint-master', 'plugins-changed' as any,
-    () => testBlueprintMasters(context.api, pluginInfoCache));
-  (context.registerTest)('rules-unfulfilled', 'loot-info-updated' as any,
-    () => testRulesUnfulfilled(context.api));
-  context.registerTest('invalid-userlist', 'gamemode-activated',
-    () => testUserlistInvalid(context.api.translate, context.api.store.getState()));
-  context.registerTest('missing-groups', 'gamemode-activated',
-    () => testMissingGroups(context.api.translate, context.api.store));
-  context.registerTest('exceeded-plugin-limit', 'plugins-changed',
-    () => testExceededPluginLimit(context.api, pluginInfoCache));
-  context.registerDialog('plugin-dependencies-connector', Connector);
-  context.registerDialog('userlist-editor', UserlistEditor);
-  context.registerDialog('group-editor', GroupEditor);
->>>>>>> v1.16.9
 }
 
 /**
@@ -1558,16 +1496,10 @@ function testMissingMasters(
  * plugin as a master. The game strips Blueprint masters from non-Blueprint
  * plugins in memory, which destroys references and produces unresolved FormIDs.
  */
-<<<<<<< HEAD
 function testBlueprintMasters(
   api: types.IExtensionApi,
   infoCache: PluginInfoCache,
 ): Promise<types.ITestResult> {
-=======
-function testBlueprintMasters(api: types.IExtensionApi,
-                              infoCache: PluginInfoCache)
-                              : Promise<types.ITestResult> {
->>>>>>> v1.16.9
   const { translate, store } = api;
   const state = store.getState();
   const gameMode = selectors.activeGameId(state);
@@ -1579,12 +1511,8 @@ function testBlueprintMasters(api: types.IExtensionApi,
   const natives = new Set<string>(nativePlugins(gameMode));
   const loadOrder: { [plugin: string]: ILoadOrder } = state.loadOrder;
   const enabledPlugins = Object.keys(loadOrder).filter(
-<<<<<<< HEAD
     (plugin: string) => loadOrder[plugin].enabled || natives.has(plugin),
   );
-=======
-    (plugin: string) => loadOrder[plugin].enabled || natives.has(plugin));
->>>>>>> v1.16.9
 
   interface IParsedPlugin {
     name: string;
@@ -1603,11 +1531,7 @@ function testBlueprintMasters(api: types.IExtensionApi,
           masterList: info.masterList,
         };
       } catch (err) {
-<<<<<<< HEAD
         log("warn", "failed to parse esp file", {
-=======
-        log('warn', 'failed to parse esp file', {
->>>>>>> v1.16.9
           name: pluginList[plugin].filePath,
           err: err.message,
         });
@@ -1618,12 +1542,8 @@ function testBlueprintMasters(api: types.IExtensionApi,
   const blueprintPlugins = new Set<string>(
     pluginDetails
       .filter((plugin) => plugin.isBlueprint)
-<<<<<<< HEAD
       .map((plugin) => plugin.name),
   );
-=======
-      .map((plugin) => plugin.name));
->>>>>>> v1.16.9
 
   if (blueprintPlugins.size === 0) {
     return Promise.resolve(undefined);
@@ -1634,12 +1554,8 @@ function testBlueprintMasters(api: types.IExtensionApi,
       return prev;
     }
     const offendingMasters = plugin.masterList.filter((master) =>
-<<<<<<< HEAD
       blueprintPlugins.has(master.toLowerCase()),
     );
-=======
-      blueprintPlugins.has(master.toLowerCase()));
->>>>>>> v1.16.9
     if (offendingMasters.length > 0) {
       prev[plugin.name] = offendingMasters;
     }
@@ -1655,7 +1571,6 @@ function testBlueprintMasters(api: types.IExtensionApi,
 
   return Promise.resolve({
     description: {
-<<<<<<< HEAD
       short: translate("Blueprint plugin used as master"),
       long:
         translate(
@@ -1682,38 +1597,12 @@ function testBlueprintMasters(api: types.IExtensionApi,
           })
           .join("\n") +
         "[/tbody][/table]",
-=======
-      short: translate('Blueprint plugin used as master'),
-      long:
-        translate(
-          'The following enabled plugins declare a Blueprint plugin as a master. '
-          + 'Starfield strips Blueprint masters from non-Blueprint plugins at load, '
-          + 'which will break references and corrupt your save. These plugins must '
-          + 'be disabled or rebuilt against a non-Blueprint master:')
-        + '[table][tbody]'
-        + Object.keys(broken)
-          .map((plugin) => {
-            const offending = broken[plugin].map(link).join('[br][/br]');
-            const detail = pluginList[plugin];
-            const name =
-              detail !== undefined ? path.basename(detail.filePath) : plugin;
-            return '[tr]'
-              + [link(name), translate('has Blueprint master'), offending]
-                .map((iter) => `[td]${iter}[/td]`)
-                .join()
-              + '[/tr]'
-              + '[tr][/tr]';
-          })
-          .join('\n')
-        + '[/tbody][/table]',
->>>>>>> v1.16.9
       context: {
         callbacks: {
           showplugin: (pluginName: string) => {
             const stateNow: types.IState = store.getState();
             const gameModeNow = selectors.activeGameId(stateNow);
             if (gameSupported(gameModeNow)) {
-<<<<<<< HEAD
               api.events.emit("show-main-page", "gamebryo-plugins");
               store.dispatch(
                 actions.setAttributeFilter(
@@ -1722,17 +1611,11 @@ function testBlueprintMasters(api: types.IExtensionApi,
                   pluginName,
                 ),
               );
-=======
-              api.events.emit('show-main-page', 'gamebryo-plugins');
-              store.dispatch(
-                actions.setAttributeFilter('gamebryo-plugins', 'name', pluginName));
->>>>>>> v1.16.9
             }
           },
         },
       },
     },
-<<<<<<< HEAD
     severity: "error" as types.ProblemSeverity,
   });
 }
@@ -1740,14 +1623,6 @@ function testBlueprintMasters(api: types.IExtensionApi,
 function testRulesUnfulfilled(
   api: types.IExtensionApi,
 ): Promise<types.ITestResult> {
-=======
-    severity: 'error' as types.ProblemSeverity,
-  });
-}
-
-function testRulesUnfulfilled(api: types.IExtensionApi)
-                              : Promise<types.ITestResult> {
->>>>>>> v1.16.9
   const { translate: t, store } = api;
 
   const state = store.getState();
@@ -2031,7 +1906,6 @@ function init(context: IExtensionContextExt) {
       return;
     }
 
-<<<<<<< HEAD
     const ESPFileCtor = getESPFile();
     if (ESPFileCtor === null) {
       context.api.showErrorNotification(
@@ -2047,27 +1921,14 @@ function init(context: IExtensionContextExt) {
     } catch (err) {
       if (err.nativeCode !== 0) {
         context.api.showErrorNotification("Failed to set light flag", err, {
-=======
-    try {
-      const esp = new ESPFile(plugin.filePath, profile.gameId);
-      esp.setLightFlag(enable);
-    } catch (err) {
-      if (err.nativeCode !== 0) {
-        context.api.showErrorNotification('Failed to set light flag', err, {
->>>>>>> v1.16.9
           message: plugin.filePath,
           allowReport: true,
         });
         return;
       }
     }
-<<<<<<< HEAD
     context.api.ext.addToHistory("plugins", {
       type: "plugin-eslified",
-=======
-    context.api.ext.addToHistory('plugins', {
-      type: 'plugin-eslified',
->>>>>>> v1.16.9
       gameId: profile.gameId,
       data: {
         id,
@@ -2089,44 +1950,10 @@ function init(context: IExtensionContextExt) {
   context.registerHistoryStack("plugins", history);
 
   context
-<<<<<<< HEAD
     // first thing on once, init game support for the previously discovered games
     .once(() =>
       initGameSupport(context.api).then(() => {
         const store = context.api.store;
-=======
-  // Similar to once, we need to initGameSupport from the get-go or the pluginPersistor
-  //  will not use the updated appDataPath values (given that the gameSupport object
-  //  wasn't previously initialized for the main application thread)
-  .onceMain(() => initGameSupport(context.api).then(() => {
-    ipcMain.on('plugin-sync', (event: Electron.IpcMainEvent, enabled: boolean) => {
-      const promise = enabled ? startSync(context.api) : stopSync();
-      promise
-        .then(() => {
-          if (!event.sender.isDestroyed()) {
-            event.sender.send('plugin-sync-ret', null);
-          }
-        })
-        .catch(err => {
-          if (!event.sender.isDestroyed()) {
-            event.sender.send('plugin-sync-ret', { message: err.message, stack: err.stack });
-          }
-        });
-    });
-    ipcMain.on('did-update-masterlist', () => {
-      if (masterlistPersistor !== undefined) {
-        const gameId = selectors.activeGameId(context.api.store.getState());
-        masterlistPersistor.loadFiles(gameId);
-      }
-    });
-    ipcMain.on('gamebryo-set-known-plugins',
-               (event: Electron.Event,
-                knownPlugins: { [pluginId: string]: string },
-                blueprintIds?: string[]) => {
-      pluginPersistor.setKnownPlugins(knownPlugins,
-        blueprintIds !== undefined ? new Set(blueprintIds) : undefined);
-    });
->>>>>>> v1.16.9
 
         context.api.setStylesheet(
           "plugin-management",
@@ -2179,85 +2006,10 @@ function init(context: IExtensionContextExt) {
               return;
             }
 
-<<<<<<< HEAD
             const mod = state.persistent.mods[gameId]?.[modId];
             if (mod?.installationPath === undefined) {
               return;
             }
-=======
-      // When a mod is installed during a collection install, scan its staging folder
-      // for plugin files and merge them into the real plugin list. This ensures
-      // FOMOD prerequisite checks in subsequent installs can see plugins from
-      // earlier-phase mods that haven't been deployed yet.
-      context.api.events.on('did-install-mod',
-        (gameId: string, _archiveId: string, modId: string) => {
-          if (!gameSupported(gameId)) {
-            return;
-          }
-
-          const state: types.IState = context.api.getState();
-
-          // Only during collection dependency installation
-          const activeSession = selectors.getCollectionActiveSession(state);
-          if (activeSession === undefined) {
-            return;
-          }
-
-          const mod = state.persistent.mods[gameId]?.[modId];
-          if (mod?.installationPath === undefined) {
-            return;
-          }
-
-          const installBasePath = selectors.installPathForGame(state, gameId);
-          if (installBasePath === undefined) {
-            return;
-          }
-
-          const modInstPath = path.join(installBasePath, mod.installationPath);
-          const activator = util.getCurrentActivator(state, gameId, true);
-
-          fs.readdirAsync(modInstPath)
-            .map((fileName: string) => activator
-              ? activator.getDeployedPath(fileName)
-              : fileName)
-            .filter((fileName: string) => isPlugin(modInstPath, fileName, gameId))
-            .then((pluginFileNames: string[]) => {
-              if (pluginFileNames.length === 0) {
-                return;
-              }
-
-              // Read fresh state and merge new entries into existing plugin list
-              const currentState: types.IState = context.api.getState();
-              const existingPlugins: IPlugins = util.getSafe(
-                currentState, ['session', 'plugins', 'pluginList'], {});
-              const merged = { ...existingPlugins };
-
-              for (const fileName of pluginFileNames) {
-                const pluginId = toPluginId(fileName);
-                if (!merged[pluginId]) {
-                  merged[pluginId] = {
-                    modId: mod.id,
-                    filePath: path.join(modInstPath, fileName),
-                    isNative: isNativePlugin(gameId, fileName),
-                    warnings: {},
-                    deployed: false,
-                  };
-                }
-              }
-
-              context.api.store?.dispatch(setPluginList(merged));
-            })
-            .catch((err: Error) => {
-              log('warn', 'failed to update plugin list for collection install',
-                { modId, error: err.message });
-            });
-        });
-
-      context.api.onAsync('will-deploy', () => {
-        deploying = true;
-        return Promise.resolve();
-      });
->>>>>>> v1.16.9
 
             const installBasePath = selectors.installPathForGame(state, gameId);
             if (installBasePath === undefined) {

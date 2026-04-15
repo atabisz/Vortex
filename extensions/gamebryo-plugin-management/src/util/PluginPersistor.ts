@@ -328,19 +328,12 @@ class PluginPersistor implements types.IPersistor {
     // Blueprint plugins (Starfield) are excluded entirely: the game manages them
     // itself and strips any that appear in plugins.txt / loadorder.txt on launch.
     const sorted: string[] = Object.keys(this.mKnownPlugins)
-<<<<<<< HEAD
       .filter((pluginId) => !this.mBlueprintPluginIds.has(pluginId))
       .sort(
         (lhs: string, rhs: string) => this.loadOrder(lhs) - this.loadOrder(rhs),
       )
       .filter((pluginId) => pluginId !== undefined)
       .map((pluginId) => this.mKnownPlugins[pluginId]);
-=======
-            .filter(pluginId => !this.mBlueprintPluginIds.has(pluginId))
-            .sort((lhs: string, rhs: string) => this.loadOrder(lhs) - this.loadOrder(rhs))
-            .filter(pluginId => pluginId !== undefined)
-            .map(pluginId => this.mKnownPlugins[pluginId]);
->>>>>>> v1.16.9
 
     const loadOrderFile = path.join(destPath, "loadorder.txt");
     const pluginsFile = path.join(destPath, "plugins.txt");

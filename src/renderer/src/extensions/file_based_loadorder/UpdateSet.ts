@@ -172,14 +172,7 @@ export default class UpdateSet {
       // This is an external entry, we need to find it in the external entries.
       const extEntry = Object.entries(this.mExternalEntries).find((entry) => {
         const [eId, loEntries] = entry;
-<<<<<<< HEAD:src/renderer/src/extensions/file_based_loadorder/UpdateSet.ts
         return Array.isArray(loEntries) && loEntries.some((l) => l.id === lookUpEntry.id);
-=======
-        return (
-          Array.isArray(loEntries) &&
-          loEntries.some((l) => l.id === lookUpEntry.id)
-        );
->>>>>>> v1.16.9:src/extensions/file_based_loadorder/UpdateSet.ts
       });
       if (extEntry !== undefined) {
         return { entries: this.mExternalEntries[extEntry[0]] };
@@ -187,16 +180,8 @@ export default class UpdateSet {
     } else {
       const numericId = Object.entries(this.mModEntries).find((entry) => {
         const [nId, loEntries] = entry;
-<<<<<<< HEAD:src/renderer/src/extensions/file_based_loadorder/UpdateSet.ts
         return Array.isArray(loEntries) && loEntries.some(
           (l) => l.modId === lookUpEntry.modId || l.id === lookUpEntry.id,
-=======
-        return (
-          Array.isArray(loEntries) &&
-          loEntries.some(
-            (l) => l.modId === lookUpEntry.modId || l.id === lookUpEntry.id,
-          )
->>>>>>> v1.16.9:src/extensions/file_based_loadorder/UpdateSet.ts
         );
       })?.[0];
       if (numericId === undefined) {
