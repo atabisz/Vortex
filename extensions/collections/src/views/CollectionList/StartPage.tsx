@@ -11,10 +11,7 @@ import {
 } from "../../constants";
 import InfoCache from "../../util/InfoCache";
 import { validateName } from "../../util/transformCollection";
-<<<<<<< HEAD
 import { hasEditPermissions } from "../../util/util";
-=======
->>>>>>> 6b62a7744 (Update debug profiles and rename games URL env var)
 
 import CollectionThumbnail from "../CollectionTile";
 import CollectionThumbnailRemote from "../CollectionTile/RemoteTile";
@@ -536,7 +533,6 @@ class StartPage extends ComponentEx<IProps, IComponentState> {
         own.map((res) => res.mod.attributes?.["collectionSlug"]),
       );
 
-<<<<<<< HEAD
       const userId = this.props.userInfo?.userId;
       own.push(
         ...this.props.localState.ownCollections
@@ -548,11 +544,6 @@ class StartPage extends ComponentEx<IProps, IComponentState> {
             }
             return hasEditPermissions(coll.collection?.permissions);
           })
-=======
-      own.push(
-        ...this.props.localState.ownCollections
-          .filter((coll) => !installed.has(coll.collection?.slug))
->>>>>>> 6b62a7744 (Update debug profiles and rename games URL env var)
           .map((coll) => ({
             mod: undefined,
             added: foreign.find(
