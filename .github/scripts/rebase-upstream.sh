@@ -46,7 +46,8 @@ if ! git merge "${UPSTREAM_TAG}" --no-edit -m "merge upstream ${UPSTREAM_TAG} in
   HAS_CONFLICTS=true
   # Capture conflicted files before staging
   CONFLICT_FILES=$(git diff --name-only --diff-filter=U 2>/dev/null || echo "(see commit)")
-  git add -A
+  # Use -u to stage only tracked files — avoids failing on uninitialized submodules
+  git add -u
   git commit --no-edit -m "merge upstream ${UPSTREAM_TAG} (conflicts)" || true
 fi
 
