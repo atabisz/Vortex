@@ -18,6 +18,11 @@ import { incrementDeploymentCounter } from "../mod_management/reducers/deploymen
 import { setPrimaryTool } from "./actions";
 import settingsReducer from "./reducers";
 import Tools from "./Tools";
+<<<<<<< HEAD:src/renderer/src/extensions/starter_dashlet/index.ts
+=======
+import type { IDiscoveryResult } from "../gamemode_management/types/IDiscoveryResult";
+import { incrementDeploymentCounter } from "../mod_management/reducers/deployment";
+>>>>>>> v1.16.9:src/extensions/starter_dashlet/index.ts
 
 function testPrimaryTool(api: IExtensionApi): PromiseBB<ITestResult> {
   const state = api.store.getState();

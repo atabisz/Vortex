@@ -48,7 +48,10 @@ import {
   FULL_REVISION_INFO,
   CURRENT_REVISION_INFO,
   COLLECTION_SEARCH_QUERY,
+<<<<<<< HEAD:src/renderer/src/extensions/nexus_integration/eventHandlers.ts
   MOD_REQUIREMENTS_INFO,
+=======
+>>>>>>> v1.16.9:src/extensions/nexus_integration/eventHandlers.ts
   MY_COLLECTIONS_SEARCH_QUERY,
 } from "./util/graphQueries";
 import submitFeedback from "./util/submitFeedback";

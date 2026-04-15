@@ -18,7 +18,12 @@ import { ComplexActionCreator2 } from 'redux-act';
 import { ComplexActionCreator3 } from 'redux-act';
 import { ComplexActionCreator4 } from 'redux-act';
 import { ComplexActionCreator5 } from 'redux-act';
+<<<<<<< HEAD:etc/vortex.api.md
 import { ComplexActionCreator6 } from 'redux-act';
+=======
+import { ComponentProps } from 'react';
+import { ComponentType } from 'react';
+>>>>>>> v1.16.9:etc/vortex_devel.api.md
 import { constants } from 'fs';
 import { createReadStream } from 'original-fs';
 import { createWriteStream } from 'original-fs';
@@ -5017,9 +5022,12 @@ filePath: string;
 }, {}>;
 
 // @public (undocumented)
+<<<<<<< HEAD:etc/vortex.api.md
 const setDownloadGameFilter: ComplexActionCreator1<string, string, {}>;
 
 // @public (undocumented)
+=======
+>>>>>>> v1.16.9:etc/vortex_devel.api.md
 const setDownloadHash: ComplexActionCreator2<string, string, {
 id: string;
 fileMD5: string;

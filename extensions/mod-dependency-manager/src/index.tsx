@@ -2,6 +2,7 @@
  * Extension for editing and visualising mod dependencies
  */
 
+<<<<<<< HEAD
 import { IBiDirRule } from "./types/IBiDirRule";
 import { IConflict } from "./types/IConflict";
 import { IModLookupInfo } from "./types/IModLookupInfo";
@@ -20,6 +21,26 @@ import Editor from "./views/Editor";
 import ModNameWrapper from "./views/ModNameWrapper";
 import OverrideEditor, { IPathTools } from "./views/OverrideEditor";
 import Settings from "./views/Settings";
+=======
+import { IBiDirRule } from './types/IBiDirRule';
+import { IConflict } from './types/IConflict';
+import { IModLookupInfo } from './types/IModLookupInfo';
+import determineConflicts from './util/conflicts';
+import DependenciesFilter from './util/DependenciesFilter';
+import { findRuleBiDir, isConflictResolved } from './util/findRule';
+import renderModLookup from './util/renderModLookup';
+import ruleFulfilled from './util/ruleFulfilled';
+import showUnsolvedConflictsDialog from './util/showUnsolvedConflicts';
+import { topologicalSort } from './util/topologicalSort';
+import ConflictEditor from './views/ConflictEditor';
+import ConflictGraph from './views/ConflictGraph';
+import Connector from './views/Connector';
+import DependencyIcon, { ILocalState } from './views/DependencyIcon';
+import Editor from './views/Editor';
+import ModNameWrapper from './views/ModNameWrapper';
+import OverrideEditor, { IPathTools } from './views/OverrideEditor';
+import Settings from './views/Settings';
+>>>>>>> v1.16.9
 
 import {
   setConflictDialog,
@@ -513,13 +534,19 @@ async function updateConflictInfo(
   const mapEnc = (lhs: string, rhs: string) => [lhs, rhs].sort().join(":");
 
   // see if there is a mod that has conflicts for which there are no rules
+<<<<<<< HEAD
   Object.keys(conflicts).forEach((modId) => {
     const filtered = conflicts[modId].filter((conflict) => {
+=======
+  Object.keys(conflicts).forEach(modId => {
+    const filtered = conflicts[modId].filter(conflict => {
+>>>>>>> v1.16.9
       const encKey = mapEnc(modId, conflict.otherMod.id);
       if (encountered.has(encKey)) {
         return false;
       }
       encountered.add(encKey);
+<<<<<<< HEAD
       return (
         !isConflictResolved(mods, modId, conflict.otherMod) &&
         findRuleBiDir(
@@ -528,6 +555,10 @@ async function updateConflictInfo(
           conflict.otherMod,
         ) === undefined
       );
+=======
+      return !isConflictResolved(mods, modId, conflict.otherMod)
+        && findRuleBiDir(dependencyState.modRules, mods[modId], conflict.otherMod) === undefined;
+>>>>>>> v1.16.9
     });
 
     if (filtered.length !== 0) {
@@ -1555,13 +1586,35 @@ function once(api: types.IExtensionApi) {
     });
   });
 
+<<<<<<< HEAD
   api.events.on("did-install-collection", (gameId: string) => {
+=======
+  api.onAsync('will-deploy', (_profileId: string) => {
+    // During collection installation we suppress continuous sort/rules updates (see state-change
+    // and mods-enabled handlers above) to avoid re-rendering the mods table on every mod install.
+    // Force-run them here, right before each deployment, so the sort order and dependency rules
+    // are up-to-date when the deployment executes.
+    if (selectors.getCollectionActiveSession(api.getState()) == null) {
+      return Promise.resolve();
+    }
+    const gameMode = selectors.activeGameId(store.getState());
+    return new Promise<void>((resolve) => {
+      updateRulesDebouncer.runNow((_err: Error) => resolve(), gameMode);
+    });
+  });
+
+  api.events.on('did-install-collection', (gameId: string) => {
+>>>>>>> v1.16.9
     updateRulesDebouncer.schedule(() => {
       updateConflictDebouncer.schedule(undefined, true);
     }, gameId);
   });
 
+<<<<<<< HEAD
   api.events.on("profile-did-change", () => {
+=======
+  api.events.on('profile-did-change', () => {
+>>>>>>> v1.16.9
     const gameMode = selectors.activeGameId(store.getState());
     updateMetaRules(api, gameMode, store.getState().persistent.mods[gameMode])
       .then((rules) => {
@@ -1662,10 +1715,15 @@ function once(api: types.IExtensionApi) {
           ),
       );
 
+<<<<<<< HEAD
       if (
         relevantChange !== undefined &&
         selectors.getCollectionActiveSession(api.getState()) == null
       ) {
+=======
+      if (relevantChange !== undefined
+        && selectors.getCollectionActiveSession(api.getState()) == null) {
+>>>>>>> v1.16.9
         updateRulesDebouncer.schedule(() => {
           updateConflictDebouncer.schedule(undefined, true);
         }, gameMode);
@@ -1700,6 +1758,7 @@ function once(api: types.IExtensionApi) {
     },
   );
 
+<<<<<<< HEAD
   api.events.on(
     "mods-enabled",
     (
@@ -1718,6 +1777,17 @@ function once(api: types.IExtensionApi) {
       }
     },
   );
+=======
+  api.events.on('mods-enabled', (modIds: string[], enabled: boolean, gameMode: string,
+                                 options?: { silent: boolean, installed: boolean }) => {
+    if (gameMode === selectors.activeGameId(store.getState())
+        && selectors.getCollectionActiveSession(api.getState()) == null) {
+      updateRulesDebouncer.schedule(() => {
+        updateConflictDebouncer.schedule(undefined, true);
+      }, gameMode);
+    }
+  });
+>>>>>>> v1.16.9
 }
 
 interface IManageRuleButtonProps {

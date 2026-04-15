@@ -12,6 +12,7 @@ export class PluginFlagFilterComponent extends React.Component<
     const { t, filter } = this.props;
 
     const selectionFilters = [
+<<<<<<< HEAD
       "Master",
       "Blueprint",
       "Light",
@@ -27,6 +28,11 @@ export class PluginFlagFilterComponent extends React.Component<
       "LOOT Messages",
       "Tags",
     ];
+=======
+      'Master', 'Blueprint', 'Light', 'Dummy', 'Loads Archive', 'Could be light',
+      'Native', 'Not light', 'Dirty', 'Don\'t clean', 'Warnings', 'Incompatible',
+      'LOOT Messages', 'Tags'];
+>>>>>>> v1.16.9
 
     const currentFilters = selectionFilters.map((current) => ({
       label: t(current, { ns: NAMESPACE }),

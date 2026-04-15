@@ -532,6 +532,7 @@ class LootInterface {
     const pluginList: IPlugins = state.session.plugins.pluginList;
 
     try {
+<<<<<<< HEAD
       await loot.loadPluginsAsync(
         plugins
           .filter(
@@ -543,6 +544,13 @@ class LootInterface {
           .map((id) => path.basename(pluginList[id].filePath)),
         false,
       );
+=======
+      await loot.loadPluginsAsync(plugins
+        .filter(id => (pluginList[id] !== undefined)
+          && pluginList[id].deployed
+          && !pluginList[id].filePath?.toLowerCase().endsWith(GHOST_EXT))
+        .map(name => name.toLowerCase()), false);
+>>>>>>> v1.16.9
       pluginsLoaded = true;
     } catch (err) {
       if (err.message.toLowerCase() === "already closed") {
@@ -922,6 +930,7 @@ class LootInterface {
           expectSuccess: true,
           env: {
             ELECTRON_RUN_AS_NODE: "1",
+<<<<<<< HEAD
             ...(process.platform === "linux"
               ? {
                   LD_PRELOAD: path.join(
@@ -936,6 +945,8 @@ class LootInterface {
                     .join(":"),
                 }
               : {}),
+=======
+>>>>>>> v1.16.9
           },
         })
         .catch((err: Error) => {
@@ -1325,6 +1336,7 @@ class LootInterface {
                 {
                   bbcode,
                   checkboxes: solutions,
+<<<<<<< HEAD
                 },
                 errActions,
               )
@@ -1345,6 +1357,25 @@ class LootInterface {
                       return lhs.localeCompare(rhs);
                     }
                   });
+=======
+                }, errActions)
+              .then(async result => {
+                if (result.action === 'Apply Selected') {
+                  const selected = Object.keys(result.input)
+                    .filter(key => result.input[key]);
+
+                  const sorted = selected.sort((lhs, rhs) => {
+                      // reset groups first because if one of the other commands changes the
+                      // groups those might not work any more or reset a different list of groups
+                      if (lhs.startsWith('resetgroups')) {
+                        return -1;
+                      } else if (rhs.startsWith('resetgroups')) {
+                        return 1;
+                      } else {
+                        return lhs.localeCompare(rhs);
+                      }
+                    });
+>>>>>>> v1.16.9
 
                   for (const key of sorted) {
                     await this.applyFix(key, loot);
@@ -1357,7 +1388,11 @@ class LootInterface {
                     this.mUserlistTime = undefined;
                     // small delay to allow the persistor to flush the
                     // updated userlist.yaml to disk before LOOT re-reads it
+<<<<<<< HEAD
                     await new Promise((resolve) => setTimeout(resolve, 500));
+=======
+                    await new Promise(resolve => setTimeout(resolve, 500));
+>>>>>>> v1.16.9
                     this.onSort(true);
                   }
                 }

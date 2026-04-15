@@ -1,9 +1,18 @@
+<<<<<<< HEAD
 import * as React from "react";
 import { Button, Media, Panel } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { actions, log, Modal, Spinner, tooltip, types, util } from "vortex-api";
 import { NAMESPACE } from "../../constants";
+=======
+import * as React from 'react';
+import { Button, Media, Panel } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import { actions, log, Modal, Spinner, tooltip, types, util } from 'vortex-api';
+import { NAMESPACE } from '../../constants';
+>>>>>>> v1.16.9
 
 import YouCuratedTag from "./YouCuratedThisTag";
 
@@ -108,6 +117,8 @@ function InstallFinishedDialog(props: IInstallFinishedDialogProps) {
 
   const finalizing = driver.postprocessing;
 
+  const finalizing = driver.postprocessing;
+
   return (
     <Modal
       id="install-finished-dialog"
@@ -118,6 +129,7 @@ function InstallFinishedDialog(props: IInstallFinishedDialogProps) {
         <Modal.Title>{t("Collection installation complete")}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
+<<<<<<< HEAD
 
         <div
           className="collection-finished-body"
@@ -125,6 +137,16 @@ function InstallFinishedDialog(props: IInstallFinishedDialogProps) {
             finalizing ? { opacity: 0.5, pointerEvents: "none" } : undefined
           }
         >
+=======
+        {finalizing ? (
+          <div className='collection-finished-finalizing'>
+            <Spinner />
+            {t('Finalizing installation - deploying mods and applying collection rules...')}
+          </div>
+        ) : null}
+        <div className='collection-finished-body'
+             style={finalizing ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
+>>>>>>> v1.16.9
           <Media.Left>
             <CollectionThumbnail
               t={t}
@@ -203,6 +225,7 @@ function InstallFinishedDialog(props: IInstallFinishedDialogProps) {
       {optionals.length > 0 ? (
         <Modal.Footer>
           <Button onClick={skip} disabled={finalizing}>
+<<<<<<< HEAD
             {t("No Thanks")}
           </Button>
           <Button onClick={showOptionals} disabled={finalizing}>
@@ -211,11 +234,21 @@ function InstallFinishedDialog(props: IInstallFinishedDialogProps) {
           <Button onClick={installAllOptionals} disabled={finalizing}>
             {t("Install optional mods")}
           </Button>
+=======
+            {t('No Thanks')}
+          </Button>
+          <Button onClick={showOptionals} disabled={finalizing}>{t('View optional mods')}</Button>
+          <Button onClick={installAllOptionals} disabled={finalizing}>{t('Install optional mods')}</Button>
+>>>>>>> v1.16.9
         </Modal.Footer>
       ) : (
         <Modal.Footer>
           <Button onClick={skip} disabled={finalizing}>
+<<<<<<< HEAD
             {t("Done")}
+=======
+            {t('Done')}
+>>>>>>> v1.16.9
           </Button>
         </Modal.Footer>
       )}

@@ -2,6 +2,7 @@ name: Main
 
 on:
   push:
+<<<<<<< HEAD
     branches: [master, rebase/*]
     paths-ignore:
       - ".planning/**"
@@ -9,6 +10,11 @@ on:
       - "*.md"
   pull_request:
     branches: [master]
+=======
+      branches: [ master, v1.16 ]
+  pull_request:
+      branches: [ master, v1.16 ]
+>>>>>>> v1.16.9
   workflow_dispatch:
 
 concurrency:

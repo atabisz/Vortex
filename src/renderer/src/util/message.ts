@@ -420,10 +420,16 @@ function prettifyNodeErrorMessageInner(
     };
   } else if (err.code === "EPERM") {
     const filePath = err.path || err.filename || undefined;
+<<<<<<< HEAD:src/renderer/src/util/message.ts
     const firstLine =
       filePath
         ? 'Vortex needs to access "{{filePath}}" but it\'s write protected.\n'
         : "Vortex needs to access a file that is write protected.\n";
+=======
+    const firstLine = filePath
+      ? 'Vortex needs to access "{{filePath}}" but it\'s write protected.\n'
+      : "Vortex needs to access a file that is write protected.\n";
+>>>>>>> v1.16.9:src/util/message.ts
     return {
       message:
         firstLine +

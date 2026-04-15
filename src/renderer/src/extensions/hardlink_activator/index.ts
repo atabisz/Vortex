@@ -266,8 +266,13 @@ class DeploymentMethod extends LinkingDeployment {
     installationPath: string,
     dataPath: string,
     onProgress?: (num: number, total: number) => void,
+<<<<<<< HEAD:src/renderer/src/extensions/hardlink_activator/index.ts
   ): PromiseBB<void> {
     let installEntryProm: PromiseBB<Set<string>>;
+=======
+  ): Promise<void> {
+    let installEntryProm: Promise<Set<string>>;
+>>>>>>> v1.16.9:src/extensions/hardlink_activator/index.ts
 
     // find ids of all files in our mods directory
     // using idStr (string) instead of id (number) to avoid precision loss
@@ -276,11 +281,14 @@ class DeploymentMethod extends LinkingDeployment {
       installEntryProm = PromiseBB.resolve(this.mInstallationFiles);
     } else {
       this.mInstallationFiles = new Set<string>();
+<<<<<<< HEAD:src/renderer/src/extensions/hardlink_activator/index.ts
       // turbowalk's Linux JS fallback (walk.js) calls the callback synchronously
       // and ignores the return value, so async callbacks are silently dropped.
       // Use the same synchronous-callback + promise-queue pattern as the game-dir
       // scan below so enrichLinuxEntries is always awaited before entries are read.
       let installQueue = PromiseBB.resolve();
+=======
+>>>>>>> v1.16.9:src/extensions/hardlink_activator/index.ts
       installEntryProm = turbowalk(
         installationPath,
         (entries) => {
@@ -289,6 +297,7 @@ class DeploymentMethod extends LinkingDeployment {
             // it is, see https://github.com/Nexus-Mods/Vortex/issues/3684
             return;
           }
+<<<<<<< HEAD:src/renderer/src/extensions/hardlink_activator/index.ts
           installQueue = installQueue.then(async () => {
             await enrichLinuxEntries(entries);
             entries.forEach((entry) => {
@@ -296,6 +305,12 @@ class DeploymentMethod extends LinkingDeployment {
                 this.mInstallationFiles?.add(entry.idStr);
               }
             });
+=======
+          entries.forEach((entry) => {
+            if (entry.linkCount > 1 && entry.idStr !== undefined) {
+              this.mInstallationFiles.add(entry.idStr);
+            }
+>>>>>>> v1.16.9:src/extensions/hardlink_activator/index.ts
           });
         },
         {
@@ -325,9 +340,14 @@ class DeploymentMethod extends LinkingDeployment {
       return turbowalk(
         dataPath,
         (entries) => {
+<<<<<<< HEAD:src/renderer/src/extensions/hardlink_activator/index.ts
           queue = queue.then(async () => {
             await enrichLinuxEntries(entries);
             return PromiseBB.map(entries, (entry) => {
+=======
+          queue = queue.then(() =>
+            Promise.map(entries, (entry) => {
+>>>>>>> v1.16.9:src/extensions/hardlink_activator/index.ts
               if (
                 entry.linkCount > 1 &&
                 entry.idStr !== undefined &&

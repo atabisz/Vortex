@@ -132,6 +132,7 @@ class DependenciesFilter implements types.ITableFilter {
   }
 
   private findRule(source: types.IMod, ref: IModLookupInfo): IBiDirRule {
+<<<<<<< HEAD
     return this.mLocalState.modRules.find(
       (rule) =>
         (util.testModReference(source, rule.source) &&
@@ -139,6 +140,13 @@ class DependenciesFilter implements types.ITableFilter {
         (util.testModReference(ref, rule.source) &&
           util.testModReference(source, rule.reference)),
     );
+=======
+    return this.mLocalState.modRules.find(rule =>
+      (util.testModReference(source, rule.source)
+        && util.testModReference(ref, rule.reference))
+      || (util.testModReference(ref, rule.source)
+        && util.testModReference(source, rule.reference)));
+>>>>>>> v1.16.9
   }
 
   private getDependencyRulesImpl(modId: string) {
