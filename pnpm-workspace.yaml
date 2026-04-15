@@ -203,6 +203,8 @@ catalog:
   jsonwebtoken: ^9.0.0
   limiter: ^3.0.0
   lodash: ^4.17.21
+  leveldown: 5.6.0
+  levelup: 4.4.0
   loot: git+https://github.com/Nexus-Mods/node-loot#7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d
   lru-cache: ^11.2.6
   markdown-ast: ^0.2.1

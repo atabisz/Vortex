@@ -133,15 +133,18 @@ const config = {
     "assets/dotnetprobe",
     "assets/css/**",
     "**/*.node",
-    // modmeta-db and its native peer deps must be outside the asar so that:
+    // modmeta-db and all its runtime deps must be outside the asar so that:
     // 1. bundledPlugins extensions (mo-import, nmm-import-tool) can require("modmeta-db")
     //    from app.asar.unpacked via normal Node.js path resolution
     // 2. leveldown's node-gyp-build can find its prebuilt .node binary from a real
     //    filesystem path (asar virtual paths cause silent readdirSync failures)
+    // 3. require() from app.asar.unpacked cannot cross back into app.asar, so bluebird,
+    //    levelup, and encoding-down must also be unpacked alongside modmeta-db
     "node_modules/modmeta-db/**",
     "node_modules/leveldown/**",
     "node_modules/levelup/**",
     "node_modules/encoding-down/**",
+    "node_modules/bluebird/**",
   ],
   buildDependenciesFromSource: false,
   npmRebuild: false,
