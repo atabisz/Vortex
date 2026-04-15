@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: Infrastructure
 status: verifying
-stopped_at: Completed 16-01-PLAN.md
-last_updated: "2026-04-15T12:03:50.749Z"
+stopped_at: "Completed 17-01-PLAN.md — checkpoint:human-verify Task 3 pending"
+last_updated: "2026-04-15T12:57:38.195Z"
 last_activity: 2026-04-15
 progress:
   total_phases: 3
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
+  completed_phases: 2
+  total_plans: 2
+  completed_plans: 2
   percent: 100
 ---
 
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-15 after v6.0 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — with elevation operations that work reliably
-**Current focus:** Phase 16 — chattr-f-filesystem-layer
+**Current focus:** Phase 17 — upstream-rebase-ci-workflow
 
 ## Current Position
 
-Phase: 17
-Plan: Not started
+Phase: 17 (upstream-rebase-ci-workflow) — EXECUTING
+Plan: 1 of 1
 Status: Phase complete — ready for verification
 Last activity: 2026-04-15
 
@@ -70,6 +70,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 10-save-ui-validation-steamos-polkit P02 | 5 | 2 tasks | 4 files |
 | Phase 10-save-ui-validation-steamos-polkit P01 | 8 | 3 tasks | 6 files |
 | Phase 16 P01 | 6 | 2 tasks | 3 files |
+| Phase 17-upstream-rebase-ci-workflow P01 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -131,6 +132,9 @@ Recent decisions affecting current work:
 - [Phase 16]: Use node:fs/promises import alias to avoid shadow from * as fs from fs-extra
 - [Phase 16]: ExecFileFn stays callback-style (not promisified) to match injectable seam contract
 - [Phase 16]: vi.mock node:fs/promises factory chosen over vi.spyOn to avoid getter non-configurable issue in Vitest happy-dom
+- [Phase 17-01]: chmod +x set via git update-index --chmod=+x; sandbox filesystem read-only for scripts dir
+- [Phase 17-01]: CONFLICT_FILES captured before git add -A per RESEARCH.md Open Question 1 resolution
+- [Phase 17-01]: Always --draft on gh pr create regardless of conflict state per D-11
 
 ### Research Context (v6.0)
 
@@ -176,6 +180,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-15T11:50:06.735Z
-Stopped at: Completed 16-01-PLAN.md
+Last session: 2026-04-15T12:57:38.188Z
+Stopped at: Completed 17-01-PLAN.md — checkpoint:human-verify Task 3 pending
 Resume file: None

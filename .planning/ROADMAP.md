@@ -59,7 +59,7 @@
 ### v6.0 Infrastructure
 
 - [x] **Phase 16: chattr+F Filesystem Layer** — Kernel casefold applied at staging directory creation on ext4; silent fallback to userspace shim on all other filesystems (completed 2026-04-15)
-- [ ] **Phase 17: Upstream Rebase CI Workflow** — Daily automated detection of new nexus-mods/Vortex release tags; draft rebase PR with clean/conflict distinction; idempotent on repeated runs
+- [x] **Phase 17: Upstream Rebase CI Workflow** — Daily automated detection of new nexus-mods/Vortex release tags; draft rebase PR with clean/conflict distinction; idempotent on repeated runs (completed 2026-04-15)
 
 ## Phase Details
 
@@ -87,7 +87,9 @@ Plans:
   3. A second daily run after a rebase PR already exists updates the branch without creating a duplicate PR
   4. When `git rebase` encounters conflicts, the workflow aborts cleanly, commits the conflict state, pushes the branch, and opens a draft PR with a "conflicts detected" warning body — the workflow job itself shows green (not failed)
   5. The workflow never runs outside the `atabisz/Vortex` repository (job-level `if: github.repository == 'atabisz/Vortex'` guard is present and enforced)
-**Plans**: TBD
+**Plans:** 1/1 plans complete
+Plans:
+- [x] 17-01-PLAN.md — rebase-upstream.sh script + rebase-upstream.yml workflow + main.yml rebase/* trigger
 
 ## Backlog
 
@@ -118,4 +120,4 @@ Plans:
 | 14. Linux Case-Folding fs Wrapper | v4.0 | 2/2 | Complete | 2026-04-07 |
 | 15. fomod-installer Linux Fixes + Vortex Cleanup | v5.0 | 3/3 | Complete | 2026-04-09 |
 | 16. chattr+F Filesystem Layer | v6.0 | 1/1 | Complete    | 2026-04-15 |
-| 17. Upstream Rebase CI Workflow | v6.0 | 0/? | Not started | - |
+| 17. Upstream Rebase CI Workflow | v6.0 | 1/1 | Complete   | 2026-04-15 |
