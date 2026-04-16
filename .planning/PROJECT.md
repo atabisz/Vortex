@@ -1,6 +1,18 @@
-# Vortex Linux Support — Planning Next Milestone
+# Vortex Linux Support
 
-## Current Milestone: v6.0 Infrastructure — SHIPPED 2026-04-15
+## Current Milestone: v7.0 First-Run Onboarding Wizard
+
+**Goal:** Fix the Linux first-run flow so a new user can complete onboarding and install a mod without any terminal intervention.
+
+**Target features:**
+- First-run wizard auto-detects Steam library (no manual path entry)
+- Mod staging directory selection with filesystem detection (ext4 → `chattr +F`, fallback for XFS/ZFS/other)
+- Purge all Windows-specific error text ("Run as Administrator", `C:\` paths) from every error state
+- Mod install → deploy → enable round-trip verified for one Proton game without touching config files
+- All dialogs render correctly at 1280×800 (Steam Deck Desktop Mode — no clipped buttons, no invisible scroll)
+- "Get Help" and troubleshooting links route to Linux-specific documentation
+
+## Previous Milestone: v6.0 Infrastructure — SHIPPED 2026-04-15
 
 ## Current State
 
@@ -88,7 +100,14 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 - [ ] **ELEV-05**: All user-triggered elevation operations complete successfully on desktop Linux — code-complete (Phase 12); hardware UAT pending (Phase 999.1)
 - [ ] **ELEV-06**: Steam Deck elevation failure shows actionable error notification with recovery path — code-complete (Phase 12); hardware UAT pending (Phase 999.1)
 
-### Active (next milestone)
+### Active (v7.0)
+
+- [ ] **ONBRD-01**: First-run wizard completes and detects Steam library automatically
+- [ ] **ONBRD-02**: Mod staging directory configured with filesystem detection (ext4 → chattr+F, fallback for XFS/ZFS/other)
+- [ ] **ONBRD-03**: No "Run as Administrator" or `C:\` paths appear in any error state on Linux
+- [ ] **ONBRD-04**: Mod install → deploy → enable round-trip works for one Proton game without touching config files
+- [ ] **ONBRD-05**: All dialogs render without clipped buttons or invisible scroll at 1280×800 (Steam Deck Desktop Mode)
+- [ ] **ONBRD-06**: "Get Help" links route to Linux-specific documentation
 
 ### Deferred (v5.0+)
 
@@ -189,4 +208,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-15 after v6.0 milestone — chattr+F casefold layer + upstream rebase CI complete*
+*Last updated: 2026-04-16 after v7.0 milestone start — First-Run Onboarding Wizard*

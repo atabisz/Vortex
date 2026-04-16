@@ -1,34 +1,34 @@
 ---
 gsd_state_version: 1.0
-milestone: v6.0
-milestone_name: Infrastructure
-status: verifying
-stopped_at: Completed 17-01-PLAN.md — rebase-upstream CI workflow complete and verified
-last_updated: "2026-04-15T22:10:35.858Z"
-last_activity: 2026-04-15
+milestone: v7.0
+milestone_name: First-Run Onboarding Wizard
+status: in progress
+stopped_at: Roadmap created — Phase 18 is next
+last_updated: "2026-04-16T10:00:00.000Z"
+last_activity: 2026-04-16
 progress:
-  total_phases: 3
-  completed_phases: 2
-  total_plans: 2
-  completed_plans: 2
-  percent: 100
+  total_phases: 6
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-15 after v6.0 milestone start)
+See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 
-**Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — with elevation operations that work reliably
-**Current focus:** Phase 17 — upstream-rebase-ci-workflow
+**Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
+**Current focus:** Phase 18 — First-Run Dashboard Foundation
 
 ## Current Position
 
-Phase: 999.1
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-15
+Phase: 18 — First-Run Dashboard Foundation
+Plan: —
+Status: Not started
+Last activity: 2026-04-16 — Roadmap created for v7.0
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -54,7 +54,7 @@ Progress: [░░░░░░░░░░] 0%
 
 **Recent Trend:**
 
-- Last 5 plans: (none yet)
+- Last 5 plans: (none yet for v7.0)
 - Trend: -
 
 *Updated after each plan completion*
@@ -140,21 +140,18 @@ Recent decisions affecting current work:
 - [Phase 17-upstream-rebase-ci-workflow]: gh pr create (GraphQL) replaced with gh api REST POST — GraphQL rejects fork GITHUB_TOKEN for createPullRequest mutation
 - [Phase 17-upstream-rebase-ci-workflow]: git push origin HEAD:refs/heads/BRANCH required in CI — git rebase leaves detached HEAD; named refspec avoids push failure
 
-### Research Context (v6.0)
+### Research Context (v7.0)
 
-Key findings from research/SUMMARY.md affecting Phase 16–17 execution:
+Key findings from research/SUMMARY.md affecting Phase 18–23 execution:
 
-- chattr+F injection point: `ensureDirWritableAsync` in `src/renderer/src/util/fs.ts` — one new function `applyChattrCasefold()` inserted as a `.then()` call before the canary write; mandatory sequence is `ensureDir → chattr+F → canary write`
-- chattr+F: EOPNOTSUPP is the COMMON case (most ext4 partitions lack the casefold feature) — treat fallback as the default path, not an error condition
-- chattr+F: platform guard (`process.platform !== 'linux'` early return) + Flatpak guard (`FLATPAK_ID` env var) are both mandatory pre-flight checks
-- chattr+F: runtime verification after chattr+F exit 0 — write uppercase filename, read lowercase — catches NFS/FUSE false positives (CASE-10)
-- chattr+F: skip entirely for pre-existing non-empty directories — kernel rejects chattr+F on non-empty dirs; call is only valid immediately after `ensureDir` on a fresh directory
-- Rebase CI: modeled directly on `.github/scripts/cherry-pick.sh` idempotency pattern already in repo
-- Rebase CI: fixed branch name `rebase/upstream-<tag>` + pre-creation `gh pr list` idempotency check — both mandatory from day one to prevent duplicate PRs
-- Rebase CI: `git rebase` exit 1 must never fail the workflow job — use `HAS_CONFLICTS` flag pattern, abort rebase, commit conflict state, push, open draft PR
-- Rebase CI: `workflow_dispatch` with optional `upstream_ref` input for on-demand debugging (REBASE-05)
-- Rebase CI: job-level `if: github.repository == 'atabisz/Vortex'` guard is non-negotiable (REBASE-07)
-- Two tracks are fully independent — Phase 16 and 17 share no files; can be implemented on separate branches simultaneously
+- v7.0 is wiring + string cleanup on top of the v1.0–v6.0 infrastructure — no new subsystems or dependencies
+- Primary crash: `todos.tsx` undefined `instPath`/`dlPath` before `GetVolumePathName` — wrap with undefined guard
+- Primary wrong dialog: `stagingDirectory.ts` partition-exists check uses Windows-only error code — replace with `statAsync`
+- String changes must be NEW conditional branches, never edits to existing `t("...")` literals — silently breaks Windows wording and stales locale caches
+- `getDriveList.ts` hardcoded `"C:"` fallback on lines 23/44 — replace with `"/"` on Linux
+- Steam cache retry: 2s delay + `reloadGames()` call in firststeps_dashlet game-detection step
+- Phase 22 targets: `onboarding_dashlet/Dashlet.tsx` (overlay clamp) + `stylesheets/vortex/dialogs.scss` (modal max-height + flex-shrink)
+- Phase 23 targets: `extensions/documentation/src/index.tsx` (WIKI_TOPICS + handler) + `opn()` failure fallback
 
 ### Pending Todos
 
@@ -184,6 +181,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-15T13:17:51.023Z
-Stopped at: Completed 17-01-PLAN.md — rebase-upstream CI workflow complete and verified
+Last session: 2026-04-16T10:00:00.000Z
+Stopped at: Roadmap created for v7.0 — Phase 18 is next
 Resume file: None
