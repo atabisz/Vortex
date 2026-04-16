@@ -186,6 +186,12 @@ class DeploymentMethod extends LinkingDeployment {
         };
       }
     } catch (err) {
+      if (getErrorCode(err) === "ENOENT") {
+        // Staging directory doesn't exist yet (first-run or just removed).
+        // Can't compare devices — assume supported; the actual canary test
+        // will run once the directory is created by ensureStagingDirectory().
+        return undefined;
+      }
       // this can happen when managing the the game for the first time
       log("info", "failed to stat. directory missing?", {
         dir1: installationPath || "undefined",
