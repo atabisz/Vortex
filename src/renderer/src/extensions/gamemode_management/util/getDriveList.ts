@@ -17,6 +17,21 @@ export function _resetDrivelistLoader(): void {
   _drivelistLoader = () => require("drivelist").list;
 }
 
+// Injectable seam for testing — follows the _setSpawner pattern in elevated.ts.
+// Production code never calls _setDrivelistLoader.
+type DrivelistLoader = () => typeof drivelistListT;
+let _drivelistLoader: DrivelistLoader = () => require("drivelist").list;
+
+/** @internal Override the drivelist loader for testing. Do not call in production. */
+export function _setDrivelistLoader(fn: DrivelistLoader): void {
+  _drivelistLoader = fn;
+}
+
+/** @internal Reset the drivelist loader to the production default. */
+export function _resetDrivelistLoader(): void {
+  _drivelistLoader = () => require("drivelist").list;
+}
+
 function getDriveList(api: IExtensionApi): Promise<string[]> {
   let list: typeof drivelistListT;
   try {
