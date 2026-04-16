@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: First-Run Onboarding Wizard
-status: executing
-stopped_at: Completed 18-01-PLAN.md
-last_updated: "2026-04-16T01:08:03.918Z"
+status: verifying
+stopped_at: Completed 18-02-PLAN.md
+last_updated: "2026-04-16T01:29:09.040Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 7
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 
 Phase: 18 (first-run-dashboard-foundation) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-16
 
 Progress: [░░░░░░░░░░] 0%
@@ -74,6 +74,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 17-upstream-rebase-ci-workflow P01 | 3 | 2 tasks | 3 files |
 | Phase 17 P01 | 30 | 4 tasks | 3 files |
 | Phase 18-first-run-dashboard-foundation P01 | 9 | 2 tasks | 4 files |
+| Phase 18 P02 | 16 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -142,6 +143,9 @@ Recent decisions affecting current work:
 - [Phase 17-upstream-rebase-ci-workflow]: git push origin HEAD:refs/heads/BRANCH required in CI — git rebase leaves detached HEAD; named refspec avoids push failure
 - [Phase 18-01]: Injectable seam _setDrivelistLoader added: Vitest vi.mock cannot intercept CJS require() inside function bodies; seam follows _setSpawner pattern in elevated.ts
 - [Phase 18-01]: Platform guard placement: first line in closure/value fn before any Windows-specific API access; minDiskSpace guard before props[key] access
+- [Phase 18]: PromiseBB.delay used (not Bluebird.delay) — consistent with GameModeManager.ts bluebird alias convention
+- [Phase 18]: Test assertions use container.querySelector+textContent (not getByText) — refreshMore setTimeout causes re-renders duplicating DOM nodes
+- [Phase 18]: Retry in startQuickDiscovery (not GameStoreHelper) — needs Redux discovered-games state for zero-games check and full pipeline access
 
 ### Research Context (v7.0)
 
@@ -184,6 +188,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-16T01:08:03.911Z
-Stopped at: Completed 18-01-PLAN.md
+Last session: 2026-04-16T01:29:09.036Z
+Stopped at: Completed 18-02-PLAN.md
 Resume file: None
