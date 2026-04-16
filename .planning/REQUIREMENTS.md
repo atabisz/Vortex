@@ -29,7 +29,7 @@
 
 ### Mod Install Round-Trip (ONBRD-04)
 
-- [ ] **ONBRD-04**: User can install a mod, deploy it, and enable it for one Proton game — end-to-end, no config file edits required (human UAT; gates on ONBRD-01 + ONBRD-02)
+- [x] **ONBRD-04**: User can install a mod, deploy it, and enable it for one Proton game — end-to-end, no config file edits required — code-complete (Phase 21); hardware UAT pending (Phase 999.1)
 
 ### Steam Deck Layout (ONBRD-05)
 
@@ -77,7 +77,7 @@
 | ONBRD-03b | Phase 20 | Complete |
 | ONBRD-03c | Phase 20 | Complete |
 | ONBRD-03d | Phase 20 | Complete |
-| ONBRD-04 | Phase 21 | Pending |
+| ONBRD-04 | Phase 21 | Complete |
 | ONBRD-05a | Phase 22 | Pending |
 | ONBRD-05b | Phase 22 | Pending |
 | ONBRD-06a | Phase 23 | Pending |

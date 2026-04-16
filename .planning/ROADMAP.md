@@ -70,7 +70,7 @@
 - [x] **Phase 18: First-Run Dashboard Foundation** - Fix crash paths and Steam detection gaps so the dashlet renders cleanly on a fresh Linux install
 - [x] **Phase 19: Staging Directory Wiring** - Wire Linux-native disk space checks, partition detection, and path suggestions into the staging directory setup flow (completed 2026-04-16)
 - [x] **Phase 20: Windows String Purge** - Replace every Windows-specific error string visible during first run with a Linux-appropriate alternative (completed 2026-04-16)
-- [ ] **Phase 21: Mod Install Round-Trip Validation** - Human UAT: install, deploy, and enable a mod for one Proton game without any terminal interaction (gates on Phases 18 + 19)
+- [x] **Phase 21: Mod Install Round-Trip Validation** - Human UAT: install, deploy, and enable a mod for one Proton game without any terminal interaction (gates on Phases 18 + 19)
 - [ ] **Phase 22: Steam Deck Layout** - Clamp onboarding overlay and modals so all buttons and content are accessible at 800px viewport height
 - [ ] **Phase 23: Help Links** - Route Linux users to Linux-specific help content and show URLs inline when the browser launcher fails
 
@@ -129,10 +129,10 @@ Plans:
   1. User can download a mod via NXM link (or manual install), install it through the FOMOD wizard, and see it in the mod list — no terminal required
   2. User can deploy the installed mod to the Proton game's mod directory and confirm the files appear in the correct location
   3. User can enable the deployed mod for the selected Proton game and launch the game without editing any INI or config file manually
-**Plans**: 2 plans
+**Plans**: 2/2 plans complete
 Plans:
 - [x] 21-01-PLAN.md — TDD: Fix ENOENT blocker in hardlink_activator isSupported
-- [ ] 21-02-PLAN.md — Mark ONBRD-04 code-complete and add 999.1 UAT entry
+- [x] 21-02-PLAN.md — Mark ONBRD-04 code-complete and add 999.1 UAT entry
 
 ### Phase 22: Steam Deck Layout
 **Goal**: All onboarding dialogs and overlays are fully usable at 1280×800 (Steam Deck Desktop Mode) with no clipped buttons or scrolled-away content
@@ -160,8 +160,20 @@ Plans:
 
 **Goal:** Manually validate Phase 12 elevation UX on real hardware — desktop Linux ELEV-05 checklist (hardlinks, permission repair, session token re-use, fresh session re-prompt) and Steam Deck Game Mode ELEV-06 notification UX. Also confirm Windows CI green via `main.yml` windows-latest matrix push.
 **Context:** Symlink deployment item skipped (not exposed in current UI). Automated Vitest coverage exists for ELEV-06 notifier; this validates end-to-end Electron rendering. Phase 11 polkit rule prerequisite for ELEV-05.
-**Requirements:** ELEV-05, ELEV-06
+**Requirements:** ELEV-05, ELEV-06, ONBRD-04
 **Plans:** 1/2 plans executed
+
+ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
+1. Launch Vortex on Linux with Steam and Skyrim SE installed via Proton
+2. Activate Skyrim SE as the managed game in Vortex
+3. Confirm hardlink_activator is auto-selected as the deployment method (check Settings -> Mods -> Deployment Method)
+4. Download a mod via NXM link (or use manual install with a test archive)
+5. Install the mod through the FOMOD wizard (if applicable) or simple install
+6. Confirm the mod appears in the Mods list
+7. Click Deploy to deploy the mod via hardlink to the Skyrim SE Data directory
+8. Verify deployed files appear in the game's Data/ directory (e.g., `~/.steam/steam/steamapps/common/Skyrim Special Edition/Data/`)
+9. Enable the mod in the load order (if applicable)
+10. Launch Skyrim SE via Vortex and confirm the game starts without errors
 
 ## Progress
 
@@ -187,6 +199,6 @@ Plans:
 | 18. First-Run Dashboard Foundation | v7.0 | 1/2 | In Progress|  |
 | 19. Staging Directory Wiring | v7.0 | 3/3 | Complete    | 2026-04-16 |
 | 20. Windows String Purge | v7.0 | 2/2 | Complete    | 2026-04-16 |
-| 21. Mod Install Round-Trip Validation | v7.0 | 1/2 | In Progress|  |
+| 21. Mod Install Round-Trip Validation | v7.0 | 2/2 | Complete | 2026-04-17 |
 | 22. Steam Deck Layout | v7.0 | 0/? | Not started | - |
 | 23. Help Links | v7.0 | 0/? | Not started | - |
