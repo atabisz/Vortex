@@ -1,5 +1,6 @@
 import type { list as drivelistListT } from "drivelist";
 import type { IExtensionApi } from "../../../types/IExtensionContext";
+import { log } from "../../../util/log";
 
 // Injectable seam for testing — follows the _setSpawner pattern in elevated.ts.
 // Production code never calls _setDrivelistLoader.
@@ -24,6 +25,10 @@ function getDriveList(api: IExtensionApi): Promise<string[]> {
       throw new Error('Failed to load "drivelist" module');
     }
   } catch (err) {
+    if (process.platform === "linux") {
+      log("debug", "drivelist module unavailable on Linux, using root fallback", err);
+      return Promise.resolve(["/"]);
+    }
     api.showErrorNotification(
       "Failed to query list of system drives",
       {
@@ -52,6 +57,10 @@ function getDriveList(api: IExtensionApi): Promise<string[]> {
         }, []),
     )
     .catch((err) => {
+      if (process.platform === "linux") {
+        log("debug", "drivelist failed on Linux, using root fallback", err);
+        return ["/"];
+      }
       api.showErrorNotification(
         "Failed to determine list of disk drives. " +
           "Please review the settings before scanning for games.",
