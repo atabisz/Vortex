@@ -346,22 +346,23 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 
 This fork maintains two branches for clean upstream PR separation:
 
-- **`linux-port`** — upstream PR candidate. Contains only Linux compatibility changes: platform guards, Linux code paths, devcontainer support, native addon work. No `.planning/` docs, no distribution CI, no fork tooling.
-- **`master`** — full fork. Includes everything in `linux-port` plus GSD planning artifacts, AppImage/deb build config, GitHub Actions distribution CI, and any fork-specific work.
+- **`master`** — primary development branch. All work happens here — Linux port changes, GSD planning artifacts, AppImage/deb build config, GitHub Actions distribution CI, and any fork-specific work.
+- **`linux-port`** — upstream PR candidate. A curated export of upstream-eligible commits from `master`, containing only Linux compatibility changes: platform guards, Linux code paths, devcontainer support, native addon work. No `.planning/` docs, no distribution CI, no fork tooling.
 
 ### Workflow rule
 
-**Linux port work (upstream-eligible):** Commit to `linux-port` first, then merge into `master`.
-**Fork-only work (distribution, planning, internal tooling):** Commit directly to `master` only.
+**All work:** Develop and test in `master` first. This ensures full CI, AppImage/deb builds, and GSD tooling are available during development.
+**Upstreaming:** When a Linux-port change is ready to submit to `nexus-mods/Vortex`, cherry-pick the relevant commits to `linux-port`, excluding any `.planning/`, CI, or fork-only changes. Use `/gsd:pr-branch` to assist with clean exports.
+**Fork-only work (distribution, planning, internal tooling):** Never cherry-pick to `linux-port`.
 
 ### What belongs where
 
 | Change type | Branch |
 |---|---|
-| Platform guards, Linux code paths | `linux-port` |
-| Bug fixes with Linux platform guards | `linux-port` |
-| Devcontainer Linux support | `linux-port` |
-| Native addon / build tooling for Linux | `linux-port` |
+| Platform guards, Linux code paths | cherry-pick to `linux-port` after merging in `master` |
+| Bug fixes with Linux platform guards | cherry-pick to `linux-port` after merging in `master` |
+| Devcontainer Linux support | cherry-pick to `linux-port` after merging in `master` |
+| Native addon / build tooling for Linux | cherry-pick to `linux-port` after merging in `master` |
 | GSD `.planning/` docs | `master` only |
 | AppImage / deb build config | `master` only |
 | GitHub Actions distribution CI | `master` only |
