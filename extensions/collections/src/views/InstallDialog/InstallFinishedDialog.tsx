@@ -34,7 +34,7 @@ function InstallFinishedDialog(props: IInstallFinishedDialogProps) {
   const forceUpdate = React.useState(0)[1];
 
   React.useEffect(() => {
-    driver.onUpdate(() => {
+    return driver.onUpdate(() => {
       if (driver?.collection !== undefined && driver?.step === "review") {
         forceUpdate((i) => i + 1);
       }

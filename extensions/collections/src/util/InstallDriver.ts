@@ -583,8 +583,11 @@ class InstallDriver {
     this.triggerUpdate();
   }
 
-  public onUpdate(cb: UpdateCB) {
+  public onUpdate(cb: UpdateCB): () => void {
     this.mUpdateHandlers.push(cb);
+    return () => {
+      this.mUpdateHandlers = this.mUpdateHandlers.filter((h) => h !== cb);
+    };
   }
 
   public get profile() {
