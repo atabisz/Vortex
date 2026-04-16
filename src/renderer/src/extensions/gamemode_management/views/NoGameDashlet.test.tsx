@@ -50,7 +50,10 @@ vi.mock("./GameThumbnail", () => ({
 vi.mock("bluebird", () => ({
   default: class {
     constructor(fn: any) {
-      fn(() => {}, () => {});
+      fn(
+        () => {},
+        () => {},
+      );
     }
   },
 }));
@@ -74,10 +77,12 @@ describe("NoGameDashlet", () => {
   beforeEach(() => {
     originalPlatform = Object.getOwnPropertyDescriptor(process, "platform")!;
     vi.clearAllMocks();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
     Object.defineProperty(process, "platform", originalPlatform);
+    vi.useRealTimers();
   });
 
   describe("Linux empty-state block", () => {
@@ -98,7 +103,7 @@ describe("NoGameDashlet", () => {
 
     it('empty-state block contains "No Steam games detected" heading', () => {
       setPlatform("linux");
-      const { getByText } = render(
+      const { container } = render(
         <Dashlet
           knownGames={[]}
           discoveredGames={{}}
@@ -106,12 +111,14 @@ describe("NoGameDashlet", () => {
           t={(s: string) => s}
         />,
       );
-      expect(getByText("No Steam games detected")).toBeTruthy();
+      const emptyState = container.querySelector(".no-game-linux-empty-state");
+      expect(emptyState).not.toBeNull();
+      expect(emptyState!.textContent).toContain("No Steam games detected");
     });
 
     it('empty-state block contains "Make sure Steam has finished loading" guidance', () => {
       setPlatform("linux");
-      const { getByText } = render(
+      const { container } = render(
         <Dashlet
           knownGames={[]}
           discoveredGames={{}}
@@ -119,14 +126,16 @@ describe("NoGameDashlet", () => {
           t={(s: string) => s}
         />,
       );
-      expect(
-        getByText("Make sure Steam has finished loading, then click Refresh."),
-      ).toBeTruthy();
+      const emptyState = container.querySelector(".no-game-linux-empty-state");
+      expect(emptyState).not.toBeNull();
+      expect(emptyState!.textContent).toContain(
+        "Make sure Steam has finished loading",
+      );
     });
 
     it("empty-state block contains a Refresh button", () => {
       setPlatform("linux");
-      const { getByRole } = render(
+      const { container } = render(
         <Dashlet
           knownGames={[]}
           discoveredGames={{}}
@@ -134,7 +143,11 @@ describe("NoGameDashlet", () => {
           t={(s: string) => s}
         />,
       );
-      expect(getByRole("button", { name: "Refresh" })).toBeTruthy();
+      const emptyState = container.querySelector(".no-game-linux-empty-state");
+      expect(emptyState).not.toBeNull();
+      const btn = emptyState!.querySelector("button");
+      expect(btn).not.toBeNull();
+      expect(btn!.textContent).toContain("Refresh");
     });
 
     it("does NOT render empty-state when discoveryRunning=true on linux", () => {
