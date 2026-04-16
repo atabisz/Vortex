@@ -129,7 +129,10 @@ Plans:
   1. User can download a mod via NXM link (or manual install), install it through the FOMOD wizard, and see it in the mod list — no terminal required
   2. User can deploy the installed mod to the Proton game's mod directory and confirm the files appear in the correct location
   3. User can enable the deployed mod for the selected Proton game and launch the game without editing any INI or config file manually
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 21-01-PLAN.md — TDD: Fix ENOENT blocker in hardlink_activator isSupported
+- [ ] 21-02-PLAN.md — Mark ONBRD-04 code-complete and add 999.1 UAT entry
 
 ### Phase 22: Steam Deck Layout
 **Goal**: All onboarding dialogs and overlays are fully usable at 1280×800 (Steam Deck Desktop Mode) with no clipped buttons or scrolled-away content
@@ -184,6 +187,6 @@ Plans:
 | 18. First-Run Dashboard Foundation | v7.0 | 1/2 | In Progress|  |
 | 19. Staging Directory Wiring | v7.0 | 3/3 | Complete    | 2026-04-16 |
 | 20. Windows String Purge | v7.0 | 2/2 | Complete    | 2026-04-16 |
-| 21. Mod Install Round-Trip Validation | v7.0 | 0/? | Not started | - |
+| 21. Mod Install Round-Trip Validation | v7.0 | 0/2 | Not started | - |
 | 22. Steam Deck Layout | v7.0 | 0/? | Not started | - |
 | 23. Help Links | v7.0 | 0/? | Not started | - |
