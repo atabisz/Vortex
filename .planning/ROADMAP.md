@@ -116,7 +116,10 @@ Plans:
   2. User who encounters the download-settings Windows user account error on Linux sees a meaningful Linux-specific alternative message
   3. User who hits EPERM or EACCES on Linux sees an actionable Linux-specific message (e.g. "check file permissions with chmod") instead of "Run as Administrator"
   4. No path through the first-run flow on Linux surfaces the string "Run as Administrator" to the user
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 20-01-PLAN.md — Platform-guard raiseUACDialog and confirmElevate with Linux-arm ternaries
+- [ ] 20-02-PLAN.md — Verify EPERM/EACCES path and grep audit for zero reachable "Run as Administrator"
 
 ### Phase 21: Mod Install Round-Trip Validation
 **Goal**: A Linux user can install a mod, deploy it, and enable it for one Proton game — end to end — without editing any config files or opening a terminal
@@ -180,7 +183,7 @@ Plans:
 | 17. Upstream Rebase CI Workflow | v6.0 | 1/1 | Complete | 2026-04-15 |
 | 18. First-Run Dashboard Foundation | v7.0 | 1/2 | In Progress|  |
 | 19. Staging Directory Wiring | v7.0 | 3/3 | Complete    | 2026-04-16 |
-| 20. Windows String Purge | v7.0 | 0/? | Not started | - |
+| 20. Windows String Purge | v7.0 | 0/2 | Not started | - |
 | 21. Mod Install Round-Trip Validation | v7.0 | 0/? | Not started | - |
 | 22. Steam Deck Layout | v7.0 | 0/? | Not started | - |
 | 23. Help Links | v7.0 | 0/? | Not started | - |
