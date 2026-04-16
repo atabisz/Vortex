@@ -19,6 +19,7 @@ Vortex Linux is an independent fork of [nexus-mods/Vortex](https://github.com/Ne
 | v3.0 | 2026-04-01 | Save game management, pkexec elevation, polkit action, SteamOS fallback |
 | v4.0 | 2026-04-07 | Polkit session caching (.deb), Steam Deck failure UX, save transfer, case-folding fs shim |
 | v5.0 | 2026-04-09 | fomod-installer source path normalization, CSharpScript Linux warning, vortex-api declarations |
+| v6.0 | 2026-04-15 | chattr+F kernel casefold for mod staging (ext4/btrfs dual-path); automated upstream rebase CI |
 
 **Pending hardware UAT** (code-complete, not yet validated on real hardware):
 - ELEV-04: polkit `AUTH_ADMIN_KEEP` session caching on desktop Linux
@@ -59,18 +60,13 @@ The current first-run flow carries Windows assumptions. Before any public announ
 5. All dialogs render without clipped buttons or invisible scroll at 1280×800 (Steam Deck Desktop Mode)
 6. "Get Help" links route to Linux-specific documentation, not Windows troubleshooting
 
-### 4.4 Filesystem Layer — chattr+F Dual-Path
+### 4.4 Filesystem Layer — chattr+F Dual-Path — COMPLETE
 
-The current userspace case-folding shim (wrapping `readFileAsync`, `writeFileAsync`, `statAsync`, `watch`) is fragile at scale — race conditions on deep mod hierarchies, inotify events arriving outside shim reach. Valve uses `chattr +F` (ext4 kernel casefold) for Proton at production scale.
+**Status:** Shipped (2026-04-15). Implemented `applyChattrCasefold()` in `src/renderer/src/util/fs.ts` with injectable seams for testing. On ext4/btrfs filesystems, mod staging directories are created with `chattr +F` (kernel-level case folding); falls back automatically to the existing userspace shim on XFS/ZFS and other filesystems. The notifier injection (`_setChattrNotifier`) is wired in `renderer.tsx` bootstrap so UX feedback reaches the user on first-run. All branches covered by Vitest unit tests against a mock `execFile`.
 
-Implement a dual-path strategy:
-- **Preferred**: `chattr +F` on mod staging directories when ext4/btrfs is detected at directory creation time
-- **Fallback**: existing userspace shim on XFS/ZFS and other filesystems
-- Abstract behind a single case-fold interface so the shim can be retired without touching callers
+### 4.5 Automated Rebase Machinery — COMPLETE
 
-### 4.5 Automated Rebase Machinery
-
-Staying current with upstream is the single largest ongoing maintenance cost (estimated 4–8 hours per upstream merge cycle, growing as codebases diverge). Build a merge-bot that replays the platform-guard patch set atop each upstream tag. This is not optional — it is survival infrastructure.
+**Status:** Shipped (2026-04-15). A `rebase-upstream.yml` GitHub Actions workflow runs on a daily schedule (`0 6 * * *`) and on `workflow_dispatch`. It invokes `.github/scripts/rebase-upstream.sh`, which fetches the latest upstream release tag, merges it into `linux-port`, runs conflict resolution, and opens a PR via the GitHub REST API. The workflow has `contents: write` and `pull-requests: write` permissions and is gated to the `atabisz/Vortex` repository to prevent accidental runs on forks.
 
 ---
 
