@@ -1148,18 +1148,27 @@ class Settings extends ComponentEx<IProps, IComponentState> {
   private suggestPath = async () => {
     const { modPaths, onShowError, suggestInstallPathDirectory } = this.props;
     try {
-      // stat the volume root rather than the full mod path — the mod directory
-      // may not exist yet (e.g. first-time setup), but we only need the device id
-      const [modPathStats, userDataStats] = await Promise.all([
-        fs.statAsync(path.parse(modPaths[""]).root),
-        window.api.app
-          .getPath("userData")
-          .then((userDataPath) => fs.statAsync(userDataPath)),
-      ]);
+      const userDataStats = await window.api.app
+        .getPath("userData")
+        .then((userDataPath) => fs.statAsync(userDataPath));
+
+      // Stat the actual mod path to get the correct device id for Linux
+      const modDirStat = await fs.statAsync(modPaths[""]);
 
       let suggestion: string;
-      if (modPathStats.dev === userDataStats.dev) {
+      if (modDirStat.dev === userDataStats.dev) {
         suggestion = path.join("{USERDATA}", "{game}", "mods");
+      } else if (process.platform !== "win32") {
+        // Linux: find mountpoint boundary via stat.dev walk
+        let mountpoint = modPaths[""];
+        while (true) {
+          const parent = path.dirname(mountpoint);
+          if (parent === mountpoint) break;
+          const parentStat = await fs.statAsync(parent);
+          if (parentStat.dev !== modDirStat.dev) break;
+          mountpoint = parent;
+        }
+        suggestion = path.join(mountpoint, suggestInstallPathDirectory, "{game}");
       } else {
         const volume = winapi.GetVolumePathName(modPaths[""]);
         suggestion = path.join(volume, suggestInstallPathDirectory, "{game}");
