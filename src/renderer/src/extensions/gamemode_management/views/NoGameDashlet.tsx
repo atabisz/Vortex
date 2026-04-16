@@ -10,12 +10,14 @@ import GameThumbnail from "./GameThumbnail";
 
 import PromiseBB from "bluebird";
 import * as React from "react";
+import { Button } from "react-bootstrap";
 
 export interface IBaseProps {}
 
 interface IConnectedProps {
   knownGames: IGameStored[];
   discoveredGames: { [id: string]: IDiscoveryResult };
+  discoveryRunning: boolean;
 }
 
 interface IActionProps {}
@@ -43,13 +45,32 @@ class Dashlet extends ComponentEx<IProps, IComponentState> {
   }
 
   public render(): JSX.Element {
-    const { t, discoveredGames, knownGames } = this.props;
+    const { t, discoveredGames, knownGames, discoveryRunning } = this.props;
     const { more } = this.state;
 
     const games: IGameStored[] = knownGames.filter(
       (game) =>
         getSafe(discoveredGames, [game.id, "path"], undefined) !== undefined,
     );
+
+    // D-07/D-08: Show empty-state guidance on Linux when no games detected and
+    // discovery has completed. Hides during active discovery to prevent double-trigger.
+    const linuxEmptyState =
+      process.platform === "linux" &&
+      games.length === 0 &&
+      !discoveryRunning ? (
+        <div className="no-game-linux-empty-state">
+          <h4 className="empty-state-heading">
+            {t("No Steam games detected")}
+          </h4>
+          <p className="empty-state-body">
+            {t("Make sure Steam has finished loading, then click Refresh.")}
+          </p>
+          <Button bsStyle="primary" onClick={this.onRefresh}>
+            {t("Refresh")}
+          </Button>
+        </div>
+      ) : null;
 
     return (
       <div>
@@ -81,12 +102,18 @@ class Dashlet extends ComponentEx<IProps, IComponentState> {
             ) : null}
           </div>
         </div>
+        {linuxEmptyState}
       </div>
     );
   }
 
   private openGames = () => {
     this.context.api.events.emit("show-main-page", "Games");
+  };
+
+  // D-07: Refresh button emits start-discovery event to re-run game detection
+  private onRefresh = () => {
+    this.context.api.events.emit("start-discovery");
   };
 
   private refreshMore = () => {
@@ -128,6 +155,7 @@ function mapStateToProps(state: IState): IConnectedProps {
   return {
     knownGames: state.session.gameMode.known,
     discoveredGames: state.settings.gameMode.discovered,
+    discoveryRunning: state.session.discovery.running,
   };
 }
 

@@ -285,6 +285,36 @@ class GameModeManager {
       )
       .then((result) => {
         this.postDiscovery();
+
+        // D-09: One-shot retry on Linux when no games detected.
+        // Handles race where Vortex starts before Steam finishes loading its library.
+        if (process.platform === "linux") {
+          const discovered =
+            this.mStore.getState().settings.gameMode.discovered;
+          const hasGames = Object.keys(discovered).some(
+            (gameId) => discovered[gameId].path !== undefined,
+          );
+          if (!hasGames) {
+            log("debug", "no games found on Linux, retrying after delay");
+            PromiseBB.delay(2000)
+              .then(() => this.reloadStoreGames())
+              .then(() =>
+                quickDiscovery(
+                  games ?? this.mKnownGames,
+                  this.mStore.getState().settings.gameMode.discovered,
+                  this.onDiscoveredGame,
+                  this.onDiscoveredTool,
+                ),
+              )
+              .then(() => {
+                this.postDiscovery();
+              })
+              .catch((err) => {
+                log("debug", "Steam retry failed", err);
+              });
+          }
+        }
+
         return result;
       });
   }
