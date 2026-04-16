@@ -2,6 +2,7 @@ import {} from "module";
 // tslint:disable-next-line:no-var-requires
 const Module = require("module");
 import * as reduxAct from "redux-act";
+import * as winapiShim from "./winapi-shim";
 
 import type { IRegisteredExtension } from "../types/extensions";
 import type { LogLevel } from "./log";
@@ -126,6 +127,11 @@ function extensionRequire(orig, getExtensions: () => IRegisteredExtension[]) {
       }
     } else if (id === "react-select") {
       return reactSelect;
+    } else if (id === "winapi-bindings" && process.platform === "linux") {
+      // Bundled plugins call require('winapi-bindings') at runtime, bypassing the
+      // webpack alias that maps it to winapi-shim.ts at compile time. Intercept
+      // here so they get the Linux shim instead of the missing native module.
+      return winapiShim;
     } else if (id === "redux-act") {
       const ext = getExtensions().find((iter) =>
         this.filename.startsWith(iter.path),
