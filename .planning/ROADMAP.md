@@ -179,7 +179,7 @@ Plans:
 | 16. chattr+F Filesystem Layer | v6.0 | 1/1 | Complete | 2026-04-15 |
 | 17. Upstream Rebase CI Workflow | v6.0 | 1/1 | Complete | 2026-04-15 |
 | 18. First-Run Dashboard Foundation | v7.0 | 1/2 | In Progress|  |
-| 19. Staging Directory Wiring | v7.0 | 3/3 | Complete   | 2026-04-16 |
+| 19. Staging Directory Wiring | v7.0 | 3/3 | Complete    | 2026-04-16 |
 | 20. Windows String Purge | v7.0 | 0/? | Not started | - |
 | 21. Mod Install Round-Trip Validation | v7.0 | 0/? | Not started | - |
 | 22. Steam Deck Layout | v7.0 | 0/? | Not started | - |
