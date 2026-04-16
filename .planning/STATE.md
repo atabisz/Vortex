@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: First-Run Onboarding Wizard
-status: verifying
-stopped_at: Phase 20 context gathered
-last_updated: "2026-04-16T11:35:33.716Z"
+status: executing
+stopped_at: Completed 20-01-PLAN.md
+last_updated: "2026-04-16T12:41:42.632Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 7
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
-  percent: 100
+  total_plans: 7
+  completed_plans: 6
+  percent: 86
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** Phase 19 — staging-directory-wiring
+**Current focus:** Phase 20 — windows-string-purge
 
 ## Current Position
 
-Phase: 20
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 20 (windows-string-purge) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-04-16
 
 Progress: [░░░░░░░░░░] 0%
@@ -79,6 +79,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 19 P00 | 25 | 2 tasks | 3 files |
 | Phase 19 P01 | 4 | 2 tasks | 5 files |
 | Phase 19 P02 | 5 | 2 tasks | 2 files |
+| Phase 20-windows-string-purge P01 | 5min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -157,6 +158,9 @@ Recent decisions affecting current work:
 - [Phase 19]: ternary inside t() pattern for platform-specific i18n strings: Windows arm byte-for-byte unchanged, Linux arm added as new branch
 - [Phase 19]: Settings.tsx: stat modPaths[''] directly (not path.parse root) for correct device id on Linux multi-device systems
 - [Phase 19]: Settings.tsx: sequential awaits instead of Promise.all to allow await inside mountpoint walk loop body
+- [Phase 20-01]: Static test: use path.resolve(__dirname) not import.meta.url (not file:// in happy-dom)
+- [Phase 20-01]: raiseUACDialog Linux arm uses t() wrapping for i18n consistency with Windows arm
+- [Phase 20-01]: confirmElevate text/button: no t() wrapping, matching existing plain string pattern
 
 ### Research Context (v7.0)
 
@@ -199,6 +203,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-16T11:35:33.709Z
-Stopped at: Phase 20 context gathered
-Resume file: .planning/phases/20-windows-string-purge/20-CONTEXT.md
+Last session: 2026-04-16T12:41:42.625Z
+Stopped at: Completed 20-01-PLAN.md
+Resume file: None

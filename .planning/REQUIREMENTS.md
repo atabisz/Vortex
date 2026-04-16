@@ -22,8 +22,8 @@
 
 ### Windows String Purge (ONBRD-03)
 
-- [ ] **ONBRD-03a**: `fs.ts` `raiseUACDialog` shows pkexec-specific message on Linux (platform-guarded alongside unchanged Windows UAC text)
-- [ ] **ONBRD-03b**: `download_management/views/Settings.tsx:737` "windows user account" error text is platform-guarded; Linux arm shows a meaningful alternative
+- [x] **ONBRD-03a**: `fs.ts` `raiseUACDialog` shows pkexec-specific message on Linux (platform-guarded alongside unchanged Windows UAC text)
+- [x] **ONBRD-03b**: `download_management/views/Settings.tsx:737` "windows user account" error text is platform-guarded; Linux arm shows a meaningful alternative
 - [ ] **ONBRD-03c**: `nativeErrors.ts` `decodeSystemError` has a Linux arm for EPERM/EACCES that produces actionable Linux-specific messages (not fallthrough to "Run as Administrator")
 - [ ] **ONBRD-03d**: No `"Run as Administrator"` string is visible to a Linux user in any reachable error path during first run
 
@@ -73,8 +73,8 @@
 | ONBRD-02b | Phase 19 | Complete |
 | ONBRD-02c | Phase 19 | Complete |
 | ONBRD-02d | Phase 19 | Complete |
-| ONBRD-03a | Phase 20 | Pending |
-| ONBRD-03b | Phase 20 | Pending |
+| ONBRD-03a | Phase 20 | Complete |
+| ONBRD-03b | Phase 20 | Complete |
 | ONBRD-03c | Phase 20 | Pending |
 | ONBRD-03d | Phase 20 | Pending |
 | ONBRD-04 | Phase 21 | Pending |

@@ -118,7 +118,7 @@ Plans:
   4. No path through the first-run flow on Linux surfaces the string "Run as Administrator" to the user
 **Plans**: 2 plans
 Plans:
-- [ ] 20-01-PLAN.md — Platform-guard raiseUACDialog and confirmElevate with Linux-arm ternaries
+- [x] 20-01-PLAN.md — Platform-guard raiseUACDialog and confirmElevate with Linux-arm ternaries
 - [ ] 20-02-PLAN.md — Verify EPERM/EACCES path and grep audit for zero reachable "Run as Administrator"
 
 ### Phase 21: Mod Install Round-Trip Validation
@@ -158,7 +158,7 @@ Plans:
 **Goal:** Manually validate Phase 12 elevation UX on real hardware — desktop Linux ELEV-05 checklist (hardlinks, permission repair, session token re-use, fresh session re-prompt) and Steam Deck Game Mode ELEV-06 notification UX. Also confirm Windows CI green via `main.yml` windows-latest matrix push.
 **Context:** Symlink deployment item skipped (not exposed in current UI). Automated Vitest coverage exists for ELEV-06 notifier; this validates end-to-end Electron rendering. Phase 11 polkit rule prerequisite for ELEV-05.
 **Requirements:** ELEV-05, ELEV-06
-**Plans:** 3/3 plans complete
+**Plans:** 1/2 plans executed
 
 ## Progress
 
@@ -183,7 +183,7 @@ Plans:
 | 17. Upstream Rebase CI Workflow | v6.0 | 1/1 | Complete | 2026-04-15 |
 | 18. First-Run Dashboard Foundation | v7.0 | 1/2 | In Progress|  |
 | 19. Staging Directory Wiring | v7.0 | 3/3 | Complete    | 2026-04-16 |
-| 20. Windows String Purge | v7.0 | 0/2 | Not started | - |
+| 20. Windows String Purge | v7.0 | 1/2 | In Progress|  |
 | 21. Mod Install Round-Trip Validation | v7.0 | 0/? | Not started | - |
 | 22. Steam Deck Layout | v7.0 | 0/? | Not started | - |
 | 23. Help Links | v7.0 | 0/? | Not started | - |
