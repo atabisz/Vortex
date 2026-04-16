@@ -84,37 +84,66 @@ function getText(id: string, t: TFunction) {
       );
     case "downloadspath": {
       return t(
-        "The downloads folder holds all mod archives you have downloaded with Vortex. It is shared across all " +
-          "games and includes a subfolder for each of them. e.g. if your downloads folder is set to\n" +
-          '"D:\\Vortex Downloads\\", archive files for Skyrim will be stored in: "D:\\Vortex Downloads\\skyrim\\".\n' +
-          "By default Vortex will select a user data directory that is guaranteed to have write access.\n" +
-          "When changing the Downloads Folder, the downloads for all your games will be moved to the new location " +
-          "automatically. Make sure the new location has plenty of available space and that you have permission " +
-          "to write files to it.\n" +
-          'You can use "variables" to save yourself some typing:\n' +
-          " - {USERDATA} is replaced with your user data directory.\n" +
-          "e.g. if your Windows account name is Mike," +
-          '\n "{USERDATA}\\Downloads\\" will be converted to:\n' +
-          '"C:\\Users\\Mike\\AppData\\Roaming\\Vortex\\Downloads\\"',
+        process.platform === "linux"
+          ? "The downloads folder holds all mod archives you have downloaded with Vortex. It is shared across all " +
+            "games and includes a subfolder for each of them. e.g. if your downloads folder is set to\n" +
+            '"~/.local/share/Vortex/downloads", archive files for Skyrim will be ' +
+            'stored in: "~/.local/share/Vortex/downloads/skyrim".\n' +
+            "By default Vortex will select a user data directory that is guaranteed to have write access.\n" +
+            "When changing the Downloads Folder, the downloads for all your games will be moved to the new location " +
+            "automatically. Make sure the new location has plenty of available space and that you have permission " +
+            "to write files to it.\n" +
+            'You can use "variables" to save yourself some typing:\n' +
+            " - {USERDATA} is replaced with your user data directory.\n" +
+            "e.g. {USERDATA} is ~/.local/share/Vortex so {USERDATA}/downloads will be: " +
+            "~/.local/share/Vortex/downloads"
+          : "The downloads folder holds all mod archives you have downloaded with Vortex. It is shared across all " +
+            "games and includes a subfolder for each of them. e.g. if your downloads folder is set to\n" +
+            '"D:\\Vortex Downloads\\", archive files for Skyrim will be stored in: "D:\\Vortex Downloads\\skyrim\\".\n' +
+            "By default Vortex will select a user data directory that is guaranteed to have write access.\n" +
+            "When changing the Downloads Folder, the downloads for all your games will be moved to the new location " +
+            "automatically. Make sure the new location has plenty of available space and that you have permission " +
+            "to write files to it.\n" +
+            'You can use "variables" to save yourself some typing:\n' +
+            " - {USERDATA} is replaced with your user data directory.\n" +
+            "e.g. if your Windows account name is Mike," +
+            '\n "{USERDATA}\\Downloads\\" will be converted to:\n' +
+            '"C:\\Users\\Mike\\AppData\\Roaming\\Vortex\\Downloads\\"',
       );
     }
     case "modspath": {
       return t(
-        "Vortex uses default paths to store mods you download and install.\n" +
-          "If you don't like these defaults or can't use them (i.e. because you need to use " +
-          "the hard link deployment method and the game is on a different drive) " +
-          "then use this input box to change the directories. Existing files will be " +
-          "moved to the new location automatically once you confirm the new paths.\n" +
-          "Please make sure you have write permission to the new directories. Do NOT use your " +
-          "Vortex application directory!\n\n" +
-          'You can use "variables" to save yourself some typing:\n' +
-          " - {GAME} is replaced with the id of the game\n" +
-          " - {USERDATA} is replaced with a platform dependent data directory that is guaranteed " +
-          "to have write access.\n" +
-          "\n" +
-          'Example: If you change the path to "d:\\vortex_mods\\{GAME}" and your active ' +
-          "game is Skyrim then all your extracted mods will be in " +
-          '"d:\\vortex_mods\\skyrim".',
+        process.platform === "linux"
+          ? "Vortex uses default paths to store mods you download and install.\n" +
+            "If you don't like these defaults or can't use them (i.e. because you need to use " +
+            "the hard link deployment method and the game is on a different device) " +
+            "then use this input box to change the directories. Existing files will be " +
+            "moved to the new location automatically once you confirm the new paths.\n" +
+            "Please make sure you have write permission to the new directories. Do NOT use your " +
+            "Vortex application directory!\n\n" +
+            'You can use "variables" to save yourself some typing:\n' +
+            " - {GAME} is replaced with the id of the game\n" +
+            " - {USERDATA} is replaced with a platform dependent data directory that is guaranteed " +
+            "to have write access.\n" +
+            "\n" +
+            'Example: If you change the path to "~/.local/share/Vortex/mods/{GAME}" and your active ' +
+            "game is Skyrim then all your extracted mods will be in " +
+            '"~/.local/share/Vortex/mods/skyrim".'
+          : "Vortex uses default paths to store mods you download and install.\n" +
+            "If you don't like these defaults or can't use them (i.e. because you need to use " +
+            "the hard link deployment method and the game is on a different drive) " +
+            "then use this input box to change the directories. Existing files will be " +
+            "moved to the new location automatically once you confirm the new paths.\n" +
+            "Please make sure you have write permission to the new directories. Do NOT use your " +
+            "Vortex application directory!\n\n" +
+            'You can use "variables" to save yourself some typing:\n' +
+            " - {GAME} is replaced with the id of the game\n" +
+            " - {USERDATA} is replaced with a platform dependent data directory that is guaranteed " +
+            "to have write access.\n" +
+            "\n" +
+            'Example: If you change the path to "d:\\vortex_mods\\{GAME}" and your active ' +
+            "game is Skyrim then all your extracted mods will be in " +
+            '"d:\\vortex_mods\\skyrim".',
       );
     }
     case "conflicts": {

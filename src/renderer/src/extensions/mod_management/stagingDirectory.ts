@@ -25,6 +25,20 @@ const winapi: typeof winapiT = lazyRequire(() => require("winapi-bindings"));
 
 export const STAGING_DIR_TAG = "__vortex_staging_folder";
 
+export async function findAccessibleAncestor(checkPath: string): Promise<boolean> {
+  try {
+    await fs.statAsync(checkPath);
+    return true;
+  } catch {
+    const parent = path.dirname(checkPath);
+    if (parent === checkPath) {
+      // Reached filesystem root with no accessible directory
+      return false;
+    }
+    return findAccessibleAncestor(parent);
+  }
+}
+
 function writeStagingTag(api: IExtensionApi, tagPath: string, gameId: string) {
   const state: IState = api.store.getState();
   const data = {
@@ -153,17 +167,22 @@ async function ensureStagingDirectoryImpl(
   }
 
   let partitionExists = true;
-  try {
-    winapi.GetVolumePathName(instPath);
-  } catch (err) {
-    // On Windows, error number 2 (0x2) translates to ERROR_FILE_NOT_FOUND.
-    //  the only way for this error to be reported at this point is when
-    //  the destination path is pointing towards a non-existing partition.
-    // If it's a non-existing partition, we want the reinitialization dialog
-    //  to appear so that the user can re-configure his game's staging folder.
-    if (isErrorWithSystemCode(err) && err.systemCode === 2) {
-      partitionExists = false;
+  if (process.platform === "win32") {
+    try {
+      winapi.GetVolumePathName(instPath);
+    } catch (err) {
+      // On Windows, error number 2 (0x2) translates to ERROR_FILE_NOT_FOUND.
+      //  the only way for this error to be reported at this point is when
+      //  the destination path is pointing towards a non-existing partition.
+      // If it's a non-existing partition, we want the reinitialization dialog
+      //  to appear so that the user can re-configure his game's staging folder.
+      if (isErrorWithSystemCode(err) && err.systemCode === 2) {
+        partitionExists = false;
+      }
     }
+  } else {
+    // Linux: walk up until an accessible ancestor is found or root is reached
+    partitionExists = await findAccessibleAncestor(instPath);
   }
   let dirExists = false;
 
