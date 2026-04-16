@@ -153,7 +153,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. User who clicks "Get Help" or opens the knowledge base on Linux is routed to a Linux-specific wiki page, not the generic Windows documentation
   2. User on SteamOS (or any system with no browser configured) sees the target URL displayed inline in the UI instead of a silent failure
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 23-01-PLAN.md — IPC plumbing: shell:openUrlFailed channel, preload bridge, open.ts failure push
+- [ ] 23-02-PLAN.md — Linux wiki URL guard and browser-failure notification listener in documentation extension
 **UI hint**: yes
 
 ## Backlog
@@ -203,4 +206,4 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 | 20. Windows String Purge | v7.0 | 2/2 | Complete    | 2026-04-16 |
 | 21. Mod Install Round-Trip Validation | v7.0 | 2/2 | Complete    | 2026-04-16 |
 | 22. Steam Deck Layout | v7.0 | 1/1 | Complete    | 2026-04-16 |
-| 23. Help Links | v7.0 | 0/? | Not started | - |
+| 23. Help Links | v7.0 | 0/2 | Not started | - |
