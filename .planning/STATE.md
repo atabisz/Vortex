@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: First-Run Onboarding Wizard
-status: verifying
-stopped_at: Completed 18-02-PLAN.md
-last_updated: "2026-04-16T01:29:09.040Z"
+status: executing
+stopped_at: Completed 19-00-PLAN.md
+last_updated: "2026-04-16T10:55:01.024Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 7
-  completed_phases: 0
-  total_plans: 2
-  completed_plans: 1
-  percent: 50
+  completed_phases: 1
+  total_plans: 5
+  completed_plans: 3
+  percent: 60
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** Phase 18 — first-run-dashboard-foundation
+**Current focus:** Phase 19 — staging-directory-wiring
 
 ## Current Position
 
-Phase: 18 (first-run-dashboard-foundation) — COMPLETE
-Plan: 2 of 2
-Status: Phase complete — ready for verification
+Phase: 19 (staging-directory-wiring) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
 Last activity: 2026-04-16
 
 Progress: [░░░░░░░░░░] 0%
@@ -75,6 +75,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 17 P01 | 30 | 4 tasks | 3 files |
 | Phase 18-first-run-dashboard-foundation P01 | 9 | 2 tasks | 4 files |
 | Phase 18 P02 | 16 | 2 tasks | 4 files |
+| Phase 19 P00 | 25 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -146,6 +147,9 @@ Recent decisions affecting current work:
 - [Phase 18]: PromiseBB.delay used (not Bluebird.delay) — consistent with GameModeManager.ts bluebird alias convention
 - [Phase 18]: Test assertions use container.querySelector+textContent (not getByText) — refreshMore setTimeout causes re-renders duplicating DOM nodes
 - [Phase 18]: Retry in startQuickDiscovery (not GameStoreHelper) — needs Redux discovered-games state for zero-games check and full pipeline access
+- [Phase 19]: stagingDirectory.test.ts tests findAccessibleAncestor as named export — lazyRequire proxy prevents winapi call tracking through production function
+- [Phase 19]: discovery.test.ts win32 different-device test marked it.todo — process.platform cross-test mutation in happy-dom; passes in isolation
+- [Phase 19]: modPathsForGame mocked directly in discovery.test.ts — avoids getGame() registration complexity
 
 ### Research Context (v7.0)
 
@@ -188,6 +192,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-16T01:29:09.036Z
-Stopped at: Completed 18-02-PLAN.md
+Last session: 2026-04-16T10:55:01.017Z
+Stopped at: Completed 19-00-PLAN.md
 Resume file: None

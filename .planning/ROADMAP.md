@@ -101,8 +101,9 @@ Plans:
   2. User who configures a staging directory on a filesystem where the folder does not exist gets the correct "missing directory" dialog, not a silent mismatch from the Windows-only error code fallback
   3. User reading staging directory help text sees Linux path examples (e.g. `/home/user/mods`) instead of Windows paths (`C:\Users\Mike\...`)
   4. User on a multi-drive Linux setup receives a staging path suggestion on the same device as their game install, preventing guaranteed hardlink-deployment failure
-**Plans**: 2 plans
+**Plans**: 3 plans
 Plans:
+- [x] 19-00-PLAN.md — Wave 0 test stubs for stagingDirectory, texts, and discovery (Nyquist compliance)
 - [ ] 19-01-PLAN.md — Todos visibility flip, partition-exists statAsync walk, Linux path example strings
 - [ ] 19-02-PLAN.md — Device-aware suggestStagingPath and Settings.tsx suggestPath Linux guard
 
@@ -154,7 +155,7 @@ Plans:
 **Goal:** Manually validate Phase 12 elevation UX on real hardware — desktop Linux ELEV-05 checklist (hardlinks, permission repair, session token re-use, fresh session re-prompt) and Steam Deck Game Mode ELEV-06 notification UX. Also confirm Windows CI green via `main.yml` windows-latest matrix push.
 **Context:** Symlink deployment item skipped (not exposed in current UI). Automated Vitest coverage exists for ELEV-06 notifier; this validates end-to-end Electron rendering. Phase 11 polkit rule prerequisite for ELEV-05.
 **Requirements:** ELEV-05, ELEV-06
-**Plans:** 1/2 plans executed
+**Plans:** 1/3 plans executed
 
 ## Progress
 
@@ -178,7 +179,7 @@ Plans:
 | 16. chattr+F Filesystem Layer | v6.0 | 1/1 | Complete | 2026-04-15 |
 | 17. Upstream Rebase CI Workflow | v6.0 | 1/1 | Complete | 2026-04-15 |
 | 18. First-Run Dashboard Foundation | v7.0 | 1/2 | In Progress|  |
-| 19. Staging Directory Wiring | v7.0 | 0/2 | Not started | - |
+| 19. Staging Directory Wiring | v7.0 | 1/3 | In Progress|  |
 | 20. Windows String Purge | v7.0 | 0/? | Not started | - |
 | 21. Mod Install Round-Trip Validation | v7.0 | 0/? | Not started | - |
 | 22. Steam Deck Layout | v7.0 | 0/? | Not started | - |
