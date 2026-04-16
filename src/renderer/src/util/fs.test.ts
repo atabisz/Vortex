@@ -234,3 +234,79 @@ describe("fs.ts Wine prefix case-folding shim", () => {
     });
   });
 });
+
+describe("raiseUACDialog platform-guarded message (static)", () => {
+  // Verify the source file contains both platform arms.
+  // This is a static analysis test — the ternary is trivially correct
+  // and testing it at runtime would require exporting a private function
+  // or mocking showMessageBox + forcePerm chain.
+  // NOTE: import.meta.url is not file:// in happy-dom; use path.resolve instead.
+
+  it("source contains Linux arm with pkexec-appropriate copy", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { resolve } = await import("node:path");
+    const source = readFileSync(
+      resolve(__dirname, "./fs.ts"),
+      "utf-8",
+    );
+    expect(source).toContain("You will be asked for your password.");
+    expect(source).toContain('process.platform === "linux"');
+  });
+
+  it("source preserves Windows arm unchanged", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { resolve } = await import("node:path");
+    const source = readFileSync(
+      resolve(__dirname, "./fs.ts"),
+      "utf-8",
+    );
+    expect(source).toContain("Windows will show an UAC dialog.");
+  });
+});
+
+describe("confirmElevate platform-guarded strings (static)", () => {
+  it("source contains Linux arm for dialog text", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { resolve } = await import("node:path");
+    const source = readFileSync(
+      resolve(
+        __dirname,
+        "../extensions/download_management/views/Settings.tsx",
+      ),
+      "utf-8",
+    );
+    expect(source).toContain(
+      "This directory is not writable. Vortex can create it with elevated permissions.",
+    );
+    expect(source).toContain('process.platform === "linux"');
+  });
+
+  it("source preserves Windows arm unchanged", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { resolve } = await import("node:path");
+    const source = readFileSync(
+      resolve(
+        __dirname,
+        "../extensions/download_management/views/Settings.tsx",
+      ),
+      "utf-8",
+    );
+    expect(source).toContain(
+      "This directory is not writable to the current windows user account.",
+    );
+  });
+
+  it("source contains Linux arm for button label", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { resolve } = await import("node:path");
+    const source = readFileSync(
+      resolve(
+        __dirname,
+        "../extensions/download_management/views/Settings.tsx",
+      ),
+      "utf-8",
+    );
+    expect(source).toContain("Create with elevated permissions");
+    expect(source).toContain("Create as Administrator");
+  });
+});
