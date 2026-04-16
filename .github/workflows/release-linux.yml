@@ -84,6 +84,9 @@ jobs:
       - name: Verify asar-unpacked paths
         run: node scripts/verify-asar-unpacked.cjs
 
+      - name: Rename AppImage to stable filename
+        run: mv ./dist/vortex-setup-*.AppImage ./dist/vortex-setup.AppImage
+
       # On master branch pushes, force-move the rolling latest-linux tag to this commit
       # so the GitHub release always points to the most recent build.
       - name: Update latest-linux tag
