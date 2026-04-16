@@ -4,7 +4,7 @@ import type { IExtensionApi } from "../../../types/IExtensionContext";
 import { getApplication } from "../../../util/application";
 import { getGame } from "../../gamemode_management/util/getGame";
 import { hasLoadOrder, hasSessionPlugins } from "../utils/guards";
-import { IPluginState } from "../types/interface";
+import type { IPluginState } from "../types/interface";
 
 /**
  * Core delegates for FOMOD installer IPC communication
