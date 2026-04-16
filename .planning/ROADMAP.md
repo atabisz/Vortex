@@ -69,7 +69,7 @@
 
 - [x] **Phase 18: First-Run Dashboard Foundation** - Fix crash paths and Steam detection gaps so the dashlet renders cleanly on a fresh Linux install
 - [x] **Phase 19: Staging Directory Wiring** - Wire Linux-native disk space checks, partition detection, and path suggestions into the staging directory setup flow (completed 2026-04-16)
-- [ ] **Phase 20: Windows String Purge** - Replace every Windows-specific error string visible during first run with a Linux-appropriate alternative
+- [x] **Phase 20: Windows String Purge** - Replace every Windows-specific error string visible during first run with a Linux-appropriate alternative (completed 2026-04-16)
 - [ ] **Phase 21: Mod Install Round-Trip Validation** - Human UAT: install, deploy, and enable a mod for one Proton game without any terminal interaction (gates on Phases 18 + 19)
 - [ ] **Phase 22: Steam Deck Layout** - Clamp onboarding overlay and modals so all buttons and content are accessible at 800px viewport height
 - [ ] **Phase 23: Help Links** - Route Linux users to Linux-specific help content and show URLs inline when the browser launcher fails
@@ -119,7 +119,7 @@ Plans:
 **Plans**: 2 plans
 Plans:
 - [x] 20-01-PLAN.md — Platform-guard raiseUACDialog and confirmElevate with Linux-arm ternaries
-- [ ] 20-02-PLAN.md — Verify EPERM/EACCES path and grep audit for zero reachable "Run as Administrator"
+- [x] 20-02-PLAN.md — Verify EPERM/EACCES path and grep audit for zero reachable "Run as Administrator"
 
 ### Phase 21: Mod Install Round-Trip Validation
 **Goal**: A Linux user can install a mod, deploy it, and enable it for one Proton game — end to end — without editing any config files or opening a terminal
@@ -158,7 +158,7 @@ Plans:
 **Goal:** Manually validate Phase 12 elevation UX on real hardware — desktop Linux ELEV-05 checklist (hardlinks, permission repair, session token re-use, fresh session re-prompt) and Steam Deck Game Mode ELEV-06 notification UX. Also confirm Windows CI green via `main.yml` windows-latest matrix push.
 **Context:** Symlink deployment item skipped (not exposed in current UI). Automated Vitest coverage exists for ELEV-06 notifier; this validates end-to-end Electron rendering. Phase 11 polkit rule prerequisite for ELEV-05.
 **Requirements:** ELEV-05, ELEV-06
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 ## Progress
 
@@ -183,7 +183,7 @@ Plans:
 | 17. Upstream Rebase CI Workflow | v6.0 | 1/1 | Complete | 2026-04-15 |
 | 18. First-Run Dashboard Foundation | v7.0 | 1/2 | In Progress|  |
 | 19. Staging Directory Wiring | v7.0 | 3/3 | Complete    | 2026-04-16 |
-| 20. Windows String Purge | v7.0 | 1/2 | In Progress|  |
+| 20. Windows String Purge | v7.0 | 2/2 | Complete   | 2026-04-16 |
 | 21. Mod Install Round-Trip Validation | v7.0 | 0/? | Not started | - |
 | 22. Steam Deck Layout | v7.0 | 0/? | Not started | - |
 | 23. Help Links | v7.0 | 0/? | Not started | - |
