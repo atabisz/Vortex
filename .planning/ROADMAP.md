@@ -71,7 +71,7 @@
 - [x] **Phase 19: Staging Directory Wiring** - Wire Linux-native disk space checks, partition detection, and path suggestions into the staging directory setup flow (completed 2026-04-16)
 - [x] **Phase 20: Windows String Purge** - Replace every Windows-specific error string visible during first run with a Linux-appropriate alternative (completed 2026-04-16)
 - [x] **Phase 21: Mod Install Round-Trip Validation** - Human UAT: install, deploy, and enable a mod for one Proton game without any terminal interaction (gates on Phases 18 + 19)
-- [ ] **Phase 22: Steam Deck Layout** - Clamp onboarding overlay and modals so all buttons and content are accessible at 800px viewport height
+- [x] **Phase 22: Steam Deck Layout** - Clamp onboarding overlay and modals so all buttons and content are accessible at 800px viewport height (completed 2026-04-16)
 - [ ] **Phase 23: Help Links** - Route Linux users to Linux-specific help content and show URLs inline when the browser launcher fails
 
 ## Phase Details
@@ -100,7 +100,7 @@ Plans:
   1. User sees mod-location and download-location todos in the dashlet on Linux (disk-space display no longer blocked by the Windows-only `GetDiskFreeSpaceEx` call)
   2. User who configures a staging directory on a filesystem where the folder does not exist gets the correct "missing directory" dialog, not a silent mismatch from the Windows-only error code fallback
   3. User reading staging directory help text sees Linux path examples (e.g. `/home/user/mods`) instead of Windows paths (`C:\Users\Mike\...`)
-  4. User on a multi-drive Linux setup receives a staging path suggestion on the same device as their game install, preventing guaranteed hardlink-deployment failure
+  4. User on a multi-drive Linux setup receives a staging path suggestion on the same device as the game install, preventing guaranteed hardlink-deployment failure
 **Plans**: 3 plans
 Plans:
 - [x] 19-00-PLAN.md — Wave 0 test stubs for stagingDirectory, texts, and discovery (Nyquist compliance)
@@ -141,7 +141,9 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. User on a 1280×800 display sees the onboarding overlay fully within the viewport — the overlay bottom edge does not clip below the visible area
   2. User on a 1280×800 display can click action buttons in any Bootstrap modal in the onboarding flow without scrolling — buttons are visible and reachable
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [x] 22-01-PLAN.md — Clamp overlay max-height and create global modal viewport fix
 **UI hint**: yes
 
 ### Phase 23: Help Links
@@ -161,7 +163,7 @@ Plans:
 **Goal:** Manually validate Phase 12 elevation UX on real hardware — desktop Linux ELEV-05 checklist (hardlinks, permission repair, session token re-use, fresh session re-prompt) and Steam Deck Game Mode ELEV-06 notification UX. Also confirm Windows CI green via `main.yml` windows-latest matrix push.
 **Context:** Symlink deployment item skipped (not exposed in current UI). Automated Vitest coverage exists for ELEV-06 notifier; this validates end-to-end Electron rendering. Phase 11 polkit rule prerequisite for ELEV-05.
 **Requirements:** ELEV-05, ELEV-06, ONBRD-04
-**Plans:** 2/2 plans complete
+**Plans:** 1/1 plans complete
 
 ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 1. Launch Vortex on Linux with Steam and Skyrim SE installed via Proton
@@ -199,6 +201,6 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 | 18. First-Run Dashboard Foundation | v7.0 | 1/2 | In Progress|  |
 | 19. Staging Directory Wiring | v7.0 | 3/3 | Complete    | 2026-04-16 |
 | 20. Windows String Purge | v7.0 | 2/2 | Complete    | 2026-04-16 |
-| 21. Mod Install Round-Trip Validation | v7.0 | 2/2 | Complete   | 2026-04-16 |
-| 22. Steam Deck Layout | v7.0 | 0/? | Not started | - |
+| 21. Mod Install Round-Trip Validation | v7.0 | 2/2 | Complete    | 2026-04-16 |
+| 22. Steam Deck Layout | v7.0 | 1/1 | Complete    | 2026-04-16 |
 | 23. Help Links | v7.0 | 0/? | Not started | - |

@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: First-Run Onboarding Wizard
-status: verifying
-stopped_at: Phase 22 context gathered
-last_updated: "2026-04-16T21:31:06.456Z"
+status: executing
+stopped_at: Phase 22 UI-SPEC approved
+last_updated: "2026-04-16T22:52:17.496Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 7
-  completed_phases: 4
-  total_plans: 9
-  completed_plans: 9
+  completed_phases: 5
+  total_plans: 10
+  completed_plans: 10
   percent: 100
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** Phase 21 — mod-install-round-trip-validation
+**Current focus:** Phase 22 — steam-deck-layout
 
 ## Current Position
 
-Phase: 22
+Phase: 23
 Plan: Not started
-Status: Phase complete — ready for verification
+Status: Executing Phase 22
 Last activity: 2026-04-16
 
 Progress: [░░░░░░░░░░] 0%
@@ -36,7 +36,7 @@ Progress: [░░░░░░░░░░] 0%
 
 **Velocity:**
 
-- Total plans completed: 17
+- Total plans completed: 18
 - Average duration: -
 - Total execution time: 0 hours
 
@@ -54,6 +54,7 @@ Progress: [░░░░░░░░░░] 0%
 | 19 | 3 | - | - |
 | 20 | 2 | - | - |
 | 21 | 2 | - | - |
+| 22 | 1 | - | - |
 
 **Recent Trend:**
 
@@ -213,6 +214,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-16T21:31:06.448Z
-Stopped at: Phase 22 context gathered
-Resume file: .planning/phases/22-steam-deck-layout/22-CONTEXT.md
+Last session: 2026-04-16T21:50:16.414Z
+Stopped at: Phase 22 UI-SPEC approved
+Resume file: .planning/phases/22-steam-deck-layout/22-UI-SPEC.md
