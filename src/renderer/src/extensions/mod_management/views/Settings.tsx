@@ -218,12 +218,20 @@ class Settings extends ComponentEx<IProps, IComponentState> {
 
             <More id="staging_path_mode" name="Staging Path Mode">
               {t(
-                "Usually, when you first manage a game, the staging folder is initially set to be in " +
-                  '"c:\\Users\\<username>\\AppData\\Roaming\\Vortex\\<game>" because that\'s ' +
-                  "guaranteed to exist and have the necessary file permissions set up.\n\n" +
-                  "If you enable this option, it will instead put the staging folder on the same drive " +
-                  "as the primary mod folder of each game, in <drive>:\\{{suggestionPattern}}\\<game id>.\n" +
-                  "This should usually work fine for most users and ensures deployment is possible.",
+                process.platform === "linux"
+                  ? "Usually, when you first manage a game, the staging folder is initially set to be in " +
+                    '"~/.local/share/Vortex/<game>" because that\'s ' +
+                    "guaranteed to exist and have the necessary file permissions set up.\n\n" +
+                    "If you enable this option, it will instead put the staging folder on the same " +
+                    "device as the primary mod folder of each game, " +
+                    "in /{{suggestionPattern}}/<game id>.\n" +
+                    "This should usually work fine for most users and ensures deployment is possible."
+                  : "Usually, when you first manage a game, the staging folder is initially set to be in " +
+                    '"c:\\Users\\<username>\\AppData\\Roaming\\Vortex\\<game>" because that\'s ' +
+                    "guaranteed to exist and have the necessary file permissions set up.\n\n" +
+                    "If you enable this option, it will instead put the staging folder on the same drive " +
+                    "as the primary mod folder of each game, in <drive>:\\{{suggestionPattern}}\\<game id>.\n" +
+                    "This should usually work fine for most users and ensures deployment is possible.",
                 {
                   replace: {
                     suggestionPattern: suggestInstallPathDirectory,
