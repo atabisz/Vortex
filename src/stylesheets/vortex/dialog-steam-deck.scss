@@ -1,0 +1,21 @@
+// Steam Deck Desktop Mode (1280x800) -- prevent modal action buttons
+// from being pushed below the visible area at 800px viewport height.
+// max-height is a no-op at typical Windows viewport heights (1024px+).
+.modal-dialog {
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.modal-body {
+    overflow-y: auto;
+}
+
+.modal-footer {
+    flex-shrink: 0;
+}
