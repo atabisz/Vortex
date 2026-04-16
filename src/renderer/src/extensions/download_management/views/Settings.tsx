@@ -734,11 +734,21 @@ class Settings extends ComponentEx<IProps, IComponentState> {
       "Access denied",
       {
         text:
-          "This directory is not writable to the current windows user account. " +
-          "Vortex can try to create the directory as administrator but it will " +
-          "then have to give access to it to all logged in users.",
+          process.platform === "linux"
+            ? "This directory is not writable. Vortex can create it with elevated permissions."
+            : "This directory is not writable to the current windows user account. " +
+              "Vortex can try to create the directory as administrator but it will " +
+              "then have to give access to it to all logged in users.",
       },
-      [{ label: "Cancel" }, { label: "Create as Administrator" }],
+      [
+        { label: "Cancel" },
+        {
+          label:
+            process.platform === "linux"
+              ? "Create with elevated permissions"
+              : "Create as Administrator",
+        },
+      ],
     ).then((result) =>
       result.action === "Cancel"
         ? PromiseBB.reject(new UserCanceled())

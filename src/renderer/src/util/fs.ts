@@ -1558,12 +1558,20 @@ function raiseUACDialog<T>(
   let fileToAccess = filePath !== undefined ? filePath : err.path;
   const options: Electron.MessageBoxOptions = {
     title: "Access denied (2)",
-    message: t(
-      'Vortex needs to access "{{ fileName }}" but doesn\'t have permission to.\n' +
-        "If your account has admin rights Vortex can unlock the file for you. " +
-        "Windows will show an UAC dialog.",
-      { replace: { fileName: fileToAccess } },
-    ),
+    message:
+      process.platform === "linux"
+        ? t(
+            'Vortex needs to access "{{ fileName }}" but doesn\'t have permission to.\n' +
+              "If your account has admin rights Vortex can unlock the file for you. " +
+              "You will be asked for your password.",
+            { replace: { fileName: fileToAccess } },
+          )
+        : t(
+            'Vortex needs to access "{{ fileName }}" but doesn\'t have permission to.\n' +
+              "If your account has admin rights Vortex can unlock the file for you. " +
+              "Windows will show an UAC dialog.",
+            { replace: { fileName: fileToAccess } },
+          ),
     buttons: ["Cancel", "Retry", "Give permission"],
     noLink: true,
     type: "warning",
