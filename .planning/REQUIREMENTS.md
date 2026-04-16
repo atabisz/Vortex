@@ -15,10 +15,10 @@
 
 ### Staging Directory Setup (ONBRD-02)
 
-- [ ] **ONBRD-02a**: `mod-location` and `download-location` todos are visible on Linux (`GetDiskFreeSpaceEx` replaced with `fs.statfs()` for disk-space display)
-- [ ] **ONBRD-02b**: `stagingDirectory.ts` partition-exists check uses Linux-native `statAsync` (not Windows-only error code `systemCode === 2`) so the correct dialog fires when staging folder is missing
-- [ ] **ONBRD-02c**: Windows path examples (`C:\Users\Mike\...`) in `mod_management/texts.ts` and `Settings.tsx` are replaced with Linux-appropriate paths under a platform guard
-- [ ] **ONBRD-02d**: `suggestStagingPath()` uses device-aware logic on Linux — suggests a staging path on the same device as the game install (via `statSync.dev` comparison) to avoid guaranteed hardlink-deployment failure for multi-drive setups
+- [x] **ONBRD-02a**: `mod-location` and `download-location` todos are visible on Linux (`GetDiskFreeSpaceEx` replaced with `fs.statfs()` for disk-space display)
+- [x] **ONBRD-02b**: `stagingDirectory.ts` partition-exists check uses Linux-native `statAsync` (not Windows-only error code `systemCode === 2`) so the correct dialog fires when staging folder is missing
+- [x] **ONBRD-02c**: Windows path examples (`C:\Users\Mike\...`) in `mod_management/texts.ts` and `Settings.tsx` are replaced with Linux-appropriate paths under a platform guard
+- [x] **ONBRD-02d**: `suggestStagingPath()` uses device-aware logic on Linux — suggests a staging path on the same device as the game install (via `statSync.dev` comparison) to avoid guaranteed hardlink-deployment failure for multi-drive setups
 
 ### Windows String Purge (ONBRD-03)
 
@@ -69,10 +69,10 @@
 | ONBRD-01c | Phase 18 | Complete |
 | ONBRD-01d | Phase 18 | Complete |
 | ONBRD-01e | Phase 18 | Complete |
-| ONBRD-02a | Phase 19 | Pending |
-| ONBRD-02b | Phase 19 | Pending |
-| ONBRD-02c | Phase 19 | Pending |
-| ONBRD-02d | Phase 19 | Pending |
+| ONBRD-02a | Phase 19 | Complete |
+| ONBRD-02b | Phase 19 | Complete |
+| ONBRD-02c | Phase 19 | Complete |
+| ONBRD-02d | Phase 19 | Complete |
 | ONBRD-03a | Phase 20 | Pending |
 | ONBRD-03b | Phase 20 | Pending |
 | ONBRD-03c | Phase 20 | Pending |
