@@ -67,7 +67,7 @@ describe("todos platform guards", () => {
 
   // --- minDiskSpace / download-location condition ---
 
-  it("minDiskSpace returns false on linux without calling winapi.GetDiskFreeSpaceEx", () => {
+  it("minDiskSpace returns true on linux without calling winapi.GetDiskFreeSpaceEx", () => {
     setPlatform("linux");
     const todoList = todos(mockApi);
     const dlTodo = todoList.find((t) => t.id === "download-location")!;
@@ -75,7 +75,7 @@ describe("todos platform guards", () => {
     expect(dlTodo.condition).toBeDefined();
 
     const result = dlTodo.condition!({ dlPath: "/home/user/downloads" });
-    expect(result).toBe(false);
+    expect(result).toBe(true);
     expect(winapi.GetDiskFreeSpaceEx).not.toHaveBeenCalled();
   });
 

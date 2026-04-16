@@ -20,7 +20,7 @@ const freeSpace: { [key: string]: { path: string; free: number } } = {};
 function minDiskSpace(required: number, key: string) {
   return (props) => {
     if (process.platform !== "win32") {
-      return false;
+      return true;
     }
     const checkPath = props[key];
     if (checkPath === undefined) {
