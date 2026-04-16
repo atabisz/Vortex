@@ -67,7 +67,7 @@
 
 ### v7.0 First-Run Onboarding Wizard (Phases 18–23)
 
-- [ ] **Phase 18: First-Run Dashboard Foundation** - Fix crash paths and Steam detection gaps so the dashlet renders cleanly on a fresh Linux install
+- [x] **Phase 18: First-Run Dashboard Foundation** - Fix crash paths and Steam detection gaps so the dashlet renders cleanly on a fresh Linux install
 - [ ] **Phase 19: Staging Directory Wiring** - Wire Linux-native disk space checks, partition detection, and path suggestions into the staging directory setup flow
 - [ ] **Phase 20: Windows String Purge** - Replace every Windows-specific error string visible during first run with a Linux-appropriate alternative
 - [ ] **Phase 21: Mod Install Round-Trip Validation** - Human UAT: install, deploy, and enable a mod for one Proton game without any terminal interaction (gates on Phases 18 + 19)
