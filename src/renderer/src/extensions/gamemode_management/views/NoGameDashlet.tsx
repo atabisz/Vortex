@@ -31,6 +31,7 @@ interface IComponentState {
 class Dashlet extends ComponentEx<IProps, IComponentState> {
   private mRef: Element;
   private mInnerRef: Element;
+  private mRefreshTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(props: IProps) {
     super(props);
@@ -42,6 +43,12 @@ class Dashlet extends ComponentEx<IProps, IComponentState> {
 
   public componentDidMount() {
     this.refreshMore();
+  }
+
+  public componentWillUnmount() {
+    if (this.mRefreshTimer !== undefined) {
+      clearTimeout(this.mRefreshTimer);
+    }
   }
 
   public render(): JSX.Element {
@@ -127,7 +134,7 @@ class Dashlet extends ComponentEx<IProps, IComponentState> {
     if (more !== this.state.more) {
       this.nextState.more = more;
     }
-    setTimeout(this.refreshMore, 1000);
+    this.mRefreshTimer = setTimeout(this.refreshMore, 1000);
   };
 
   private refreshGameInfo = (gameId) => {
