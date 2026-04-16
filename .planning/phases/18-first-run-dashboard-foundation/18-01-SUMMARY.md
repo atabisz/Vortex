@@ -127,6 +127,10 @@ Files exist:
 - `src/renderer/src/extensions/firststeps_dashlet/todos.test.ts` — created
 - `src/renderer/src/extensions/gamemode_management/util/getDriveList.test.ts` — created
 
+## Self-Check: PASSED
+
+All files exist and all commits verified.
+
 ---
 *Phase: 18-first-run-dashboard-foundation*
 *Completed: 2026-04-16*
