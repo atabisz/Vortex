@@ -88,7 +88,7 @@
   5. User who launches Vortex before Steam finishes loading sees their games appear after an automatic retry, without needing to restart Vortex
 **Plans**: 2 plans
 Plans:
-- [ ] 18-01-PLAN.md — Platform guards for todos.tsx crash paths and getDriveList Linux fallback
+- [x] 18-01-PLAN.md — Platform guards for todos.tsx crash paths and getDriveList Linux fallback
 - [ ] 18-02-PLAN.md — NoGameDashlet empty-state guidance and one-shot Steam detection retry
 **UI hint**: yes
 
@@ -151,7 +151,7 @@ Plans:
 **Goal:** Manually validate Phase 12 elevation UX on real hardware — desktop Linux ELEV-05 checklist (hardlinks, permission repair, session token re-use, fresh session re-prompt) and Steam Deck Game Mode ELEV-06 notification UX. Also confirm Windows CI green via `main.yml` windows-latest matrix push.
 **Context:** Symlink deployment item skipped (not exposed in current UI). Automated Vitest coverage exists for ELEV-06 notifier; this validates end-to-end Electron rendering. Phase 11 polkit rule prerequisite for ELEV-05.
 **Requirements:** ELEV-05, ELEV-06
-**Plans:** 0 plans (promote with /gsd-review-backlog when ready)
+**Plans:** 1/2 plans executed
 
 ## Progress
 
@@ -174,7 +174,7 @@ Plans:
 | 15. fomod-installer Linux Fixes + Vortex Cleanup | v5.0 | 3/3 | Complete | 2026-04-09 |
 | 16. chattr+F Filesystem Layer | v6.0 | 1/1 | Complete | 2026-04-15 |
 | 17. Upstream Rebase CI Workflow | v6.0 | 1/1 | Complete | 2026-04-15 |
-| 18. First-Run Dashboard Foundation | v7.0 | 0/2 | Not started | - |
+| 18. First-Run Dashboard Foundation | v7.0 | 1/2 | In Progress|  |
 | 19. Staging Directory Wiring | v7.0 | 0/? | Not started | - |
 | 20. Windows String Purge | v7.0 | 0/? | Not started | - |
 | 21. Mod Install Round-Trip Validation | v7.0 | 0/? | Not started | - |

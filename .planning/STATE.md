@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: First-Run Onboarding Wizard
-status: in progress
-stopped_at: Roadmap created — Phase 18 is next
-last_updated: "2026-04-16T10:00:00.000Z"
+status: executing
+stopped_at: Completed 18-01-PLAN.md
+last_updated: "2026-04-16T01:08:03.918Z"
 last_activity: 2026-04-16
 progress:
-  total_phases: 6
+  total_phases: 7
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 2
+  completed_plans: 1
+  percent: 50
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** Phase 18 — First-Run Dashboard Foundation
+**Current focus:** Phase 18 — first-run-dashboard-foundation
 
 ## Current Position
 
-Phase: 18 — First-Run Dashboard Foundation
-Plan: —
-Status: Not started
-Last activity: 2026-04-16 — Roadmap created for v7.0
+Phase: 18 (first-run-dashboard-foundation) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
+Last activity: 2026-04-16
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -73,6 +73,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 16 P01 | 6 | 2 tasks | 3 files |
 | Phase 17-upstream-rebase-ci-workflow P01 | 3 | 2 tasks | 3 files |
 | Phase 17 P01 | 30 | 4 tasks | 3 files |
+| Phase 18-first-run-dashboard-foundation P01 | 9 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -139,6 +140,8 @@ Recent decisions affecting current work:
 - [Phase 17-01]: Always --draft on gh pr create regardless of conflict state per D-11
 - [Phase 17-upstream-rebase-ci-workflow]: gh pr create (GraphQL) replaced with gh api REST POST — GraphQL rejects fork GITHUB_TOKEN for createPullRequest mutation
 - [Phase 17-upstream-rebase-ci-workflow]: git push origin HEAD:refs/heads/BRANCH required in CI — git rebase leaves detached HEAD; named refspec avoids push failure
+- [Phase 18-01]: Injectable seam _setDrivelistLoader added: Vitest vi.mock cannot intercept CJS require() inside function bodies; seam follows _setSpawner pattern in elevated.ts
+- [Phase 18-01]: Platform guard placement: first line in closure/value fn before any Windows-specific API access; minDiskSpace guard before props[key] access
 
 ### Research Context (v7.0)
 
@@ -181,6 +184,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-16T10:00:00.000Z
-Stopped at: Roadmap created for v7.0 — Phase 18 is next
+Last session: 2026-04-16T01:08:03.911Z
+Stopped at: Completed 18-01-PLAN.md
 Resume file: None
