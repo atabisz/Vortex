@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: First-Run Onboarding Wizard
-status: executing
-stopped_at: Completed 19-01-PLAN.md
-last_updated: "2026-04-16T11:02:22.432Z"
+status: verifying
+stopped_at: Completed 19-02-PLAN.md
+last_updated: "2026-04-16T11:08:55.346Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 7
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 4
-  percent: 80
+  completed_plans: 5
+  percent: 100
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 
 Phase: 19 (staging-directory-wiring) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-16
 
 Progress: [░░░░░░░░░░] 0%
@@ -77,6 +77,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 18 P02 | 16 | 2 tasks | 4 files |
 | Phase 19 P00 | 25 | 2 tasks | 3 files |
 | Phase 19 P01 | 4 | 2 tasks | 5 files |
+| Phase 19 P02 | 5 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -153,6 +154,8 @@ Recent decisions affecting current work:
 - [Phase 19]: modPathsForGame mocked directly in discovery.test.ts — avoids getGame() registration complexity
 - [Phase 19]: findAccessibleAncestor exported as named export for testability: lazyRequire proxy prevents winapi call tracking through production function
 - [Phase 19]: ternary inside t() pattern for platform-specific i18n strings: Windows arm byte-for-byte unchanged, Linux arm added as new branch
+- [Phase 19]: Settings.tsx: stat modPaths[''] directly (not path.parse root) for correct device id on Linux multi-device systems
+- [Phase 19]: Settings.tsx: sequential awaits instead of Promise.all to allow await inside mountpoint walk loop body
 
 ### Research Context (v7.0)
 
@@ -195,6 +198,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-16T11:02:22.424Z
-Stopped at: Completed 19-01-PLAN.md
+Last session: 2026-04-16T11:08:55.337Z
+Stopped at: Completed 19-02-PLAN.md
 Resume file: None
