@@ -856,11 +856,26 @@ export async function suggestStagingPath(
 
   let suggestion: string;
 
-  if (statModPath.dev === statUserData.dev || process.platform !== "win32") {
-    // main mod folder is on same drive as userdata, use a subdirectory below that
+  if (statModPath.dev === statUserData.dev) {
+    // same device — use userData subdirectory (Linux and Windows)
     suggestion = path.join("{USERDATA}", "{game}", "mods");
+  } else if (process.platform !== "win32") {
+    // Linux, different device — find mountpoint of game drive via stat.dev walk
+    let mountpoint = modPaths[""];
+    while (true) {
+      const parent = path.dirname(mountpoint);
+      if (parent === mountpoint) break; // reached root
+      const parentStat = await fs.statAsync(parent);
+      if (parentStat.dev !== statModPath.dev) break;
+      mountpoint = parent;
+    }
+    suggestion = path.join(
+      mountpoint,
+      state.settings.mods.suggestInstallPathDirectory,
+      "{game}",
+    );
   } else {
-    // different drives, suggest path on same drive
+    // Windows, different drive
     const volume = winapi.GetVolumePathName(modPaths[""]);
     suggestion = path.join(
       volume,
