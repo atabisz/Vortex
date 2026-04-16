@@ -429,10 +429,10 @@ class GameModeManager {
     }
   }
 
-  private postDiscovery() {
+  private postDiscovery(): PromiseBB<void> {
     const { discovered } = this.mStore.getState().settings.gameMode;
     this.mStore.dispatch(clearGameDisabled());
-    PromiseBB.map(Object.keys(discovered), (gameId) => {
+    return PromiseBB.map(Object.keys(discovered), (gameId) => {
       if (discovered[gameId].path === undefined) {
         return PromiseBB.resolve();
       }
@@ -463,7 +463,7 @@ class GameModeManager {
           });
           return PromiseBB.resolve();
         });
-    });
+    }).then(() => undefined);
   }
 
   private ensureWritable(modPath: string): PromiseBB<void> {
