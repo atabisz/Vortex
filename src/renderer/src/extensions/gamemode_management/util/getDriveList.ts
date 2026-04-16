@@ -1,10 +1,25 @@
-import type { list as listT } from "drivelist";
+import type { list as drivelistListT } from "drivelist";
 import type { IExtensionApi } from "../../../types/IExtensionContext";
 
+// Injectable seam for testing — follows the _setSpawner pattern in elevated.ts.
+// Production code never calls _setDrivelistLoader.
+type DrivelistLoader = () => typeof drivelistListT;
+let _drivelistLoader: DrivelistLoader = () => require("drivelist").list;
+
+/** @internal Override the drivelist loader for testing. Do not call in production. */
+export function _setDrivelistLoader(fn: DrivelistLoader): void {
+  _drivelistLoader = fn;
+}
+
+/** @internal Reset the drivelist loader to the production default. */
+export function _resetDrivelistLoader(): void {
+  _drivelistLoader = () => require("drivelist").list;
+}
+
 function getDriveList(api: IExtensionApi): Promise<string[]> {
-  let list: typeof listT;
+  let list: typeof drivelistListT;
   try {
-    list = require("drivelist").list;
+    list = _drivelistLoader();
     if (typeof list !== "function") {
       throw new Error('Failed to load "drivelist" module');
     }
