@@ -19,6 +19,9 @@ const freeSpace: { [key: string]: { path: string; free: number } } = {};
 
 function minDiskSpace(required: number, key: string) {
   return (props) => {
+    if (process.platform !== "win32") {
+      return false;
+    }
     const checkPath = props[key];
     if (checkPath === undefined) {
       return false;
@@ -95,6 +98,9 @@ function todos(api: IExtensionApi): IToDo[] {
       props: (state) => ({ dlPath: selectors.downloadPath(state) }),
       text: "Downloads are on drive",
       value: (t: TFunction, props: any) => {
+        if (process.platform !== "win32") {
+          return props.dlPath ?? t("<No download folder>");
+        }
         try {
           return winapi.GetVolumePathName(props.dlPath);
         } catch (err) {
@@ -125,6 +131,9 @@ function todos(api: IExtensionApi): IToDo[] {
       props: (state) => ({ instPath: selectors.installPath(state) }),
       text: "Mods are staged on drive",
       value: (t: TFunction, props: any) => {
+        if (process.platform !== "win32") {
+          return props.instPath ?? t("<No staging folder>");
+        }
         try {
           if (props.instPath === undefined) {
             return t("<No staging folder>");
@@ -158,7 +167,8 @@ function todos(api: IExtensionApi): IToDo[] {
       props: (state) => ({
         discoveryRunning: state.session.discovery.running,
       }),
-      condition: (props) => props.searchPaths !== undefined,
+      condition: (props) =>
+        process.platform === "linux" ? true : props.searchPaths !== undefined,
       text: (t: TFunction, props: any): JSX.Element =>
         props.discoveryRunning
           ? t("Discovery running")
