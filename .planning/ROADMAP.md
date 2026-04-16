@@ -101,7 +101,10 @@ Plans:
   2. User who configures a staging directory on a filesystem where the folder does not exist gets the correct "missing directory" dialog, not a silent mismatch from the Windows-only error code fallback
   3. User reading staging directory help text sees Linux path examples (e.g. `/home/user/mods`) instead of Windows paths (`C:\Users\Mike\...`)
   4. User on a multi-drive Linux setup receives a staging path suggestion on the same device as their game install, preventing guaranteed hardlink-deployment failure
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 19-01-PLAN.md — Todos visibility flip, partition-exists statAsync walk, Linux path example strings
+- [ ] 19-02-PLAN.md — Device-aware suggestStagingPath and Settings.tsx suggestPath Linux guard
 
 ### Phase 20: Windows String Purge
 **Goal**: No Windows-specific error string (UAC prompts, "Run as Administrator", Windows path examples) is shown to a Linux user in any reachable error path during first run
@@ -175,7 +178,7 @@ Plans:
 | 16. chattr+F Filesystem Layer | v6.0 | 1/1 | Complete | 2026-04-15 |
 | 17. Upstream Rebase CI Workflow | v6.0 | 1/1 | Complete | 2026-04-15 |
 | 18. First-Run Dashboard Foundation | v7.0 | 1/2 | In Progress|  |
-| 19. Staging Directory Wiring | v7.0 | 0/? | Not started | - |
+| 19. Staging Directory Wiring | v7.0 | 0/2 | Not started | - |
 | 20. Windows String Purge | v7.0 | 0/? | Not started | - |
 | 21. Mod Install Round-Trip Validation | v7.0 | 0/? | Not started | - |
 | 22. Steam Deck Layout | v7.0 | 0/? | Not started | - |
