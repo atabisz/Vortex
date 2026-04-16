@@ -16,6 +16,10 @@
 
 ## Current State
 
+**Phase 22 complete (2026-04-17).** CSS viewport-clamping for Steam Deck Desktop Mode: onboarding overlay `height: 466px` replaced with `max-height: calc(100vh - 80px)` + `overflow-y: auto`; new `dialog-steam-deck.scss` adds global Bootstrap modal flex-column layout with pinned footer; import registered in `style.scss`. ONBRD-05a + ONBRD-05b satisfied. Visual UAT pending (22-HUMAN-UAT.md).
+
+**Phase 21 complete (2026-04-17).** `hardlink_activator.isSupported` now returns `undefined` (supported) on ENOENT — staging-dir-missing no longer blocks hardlink auto-selection on first game activation. ONBRD-04 code-complete; hardware UAT (10-step Skyrim SE round-trip) deferred to Phase 999.1.
+
 **Shipped v6.0 on 2026-04-15.** 2 phases, 2 plans. `applyChattrCasefold(dirPath)` in `fs.ts` applies `chattr +F` at ext4 staging dir creation; injectable seams (`_setChattr`, `_setChattrNotifier`, `_resetChattrState`) follow the `elevated.ts` pattern; 13 Vitest tests pass covering CASE-05–CASE-11. `rebase-upstream.yml` + `rebase-upstream.sh` daily-poll nexus-mods/Vortex for new release tags, rebase the fork, create idempotent draft PRs via gh REST API, handle conflicts via `HAS_CONFLICTS` flag — verified end-to-end via `workflow_dispatch`.
 
 **Shipped v5.0 on 2026-04-09.** Phase 15 complete: fomod-installer source path normalization (`TextUtil.NormalizePath` on `matchedFiles[0]`), Linux-specific CSharpScript unsupported warning in `reportUnsupported`, redundant `replaceAll` removed from copy source path, `vortex-api` declarations regenerated with `resolvePathCase`. All 7 FOMD-15-xx requirements satisfied. FOMOD end-to-end story on Linux is clean — no workarounds remain in Vortex; fork is PR-ready.
@@ -105,7 +109,7 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 - [ ] **ONBRD-01**: First-run wizard completes and detects Steam library automatically
 - [ ] **ONBRD-02**: Mod staging directory configured with filesystem detection (ext4 → chattr+F, fallback for XFS/ZFS/other)
 - [ ] **ONBRD-03**: No "Run as Administrator" or `C:\` paths appear in any error state on Linux
-- [ ] **ONBRD-04**: Mod install → deploy → enable round-trip works for one Proton game without touching config files
+- [x] **ONBRD-04**: Mod install → deploy → enable round-trip works for one Proton game without touching config files — code-complete (Phase 21); hardware UAT pending (Phase 999.1)
 - [ ] **ONBRD-05**: All dialogs render without clipped buttons or invisible scroll at 1280×800 (Steam Deck Desktop Mode)
 - [ ] **ONBRD-06**: "Get Help" links route to Linux-specific documentation
 
@@ -208,4 +212,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 after v7.0 milestone start — First-Run Onboarding Wizard*
+*Last updated: 2026-04-17 after Phase 21 — ONBRD-04 code-complete, hardlink ENOENT first-run fix*
