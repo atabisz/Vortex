@@ -131,7 +131,7 @@ Plans:
   3. User can enable the deployed mod for the selected Proton game and launch the game without editing any INI or config file manually
 **Plans**: 2 plans
 Plans:
-- [ ] 21-01-PLAN.md — TDD: Fix ENOENT blocker in hardlink_activator isSupported
+- [x] 21-01-PLAN.md — TDD: Fix ENOENT blocker in hardlink_activator isSupported
 - [ ] 21-02-PLAN.md — Mark ONBRD-04 code-complete and add 999.1 UAT entry
 
 ### Phase 22: Steam Deck Layout
@@ -161,7 +161,7 @@ Plans:
 **Goal:** Manually validate Phase 12 elevation UX on real hardware — desktop Linux ELEV-05 checklist (hardlinks, permission repair, session token re-use, fresh session re-prompt) and Steam Deck Game Mode ELEV-06 notification UX. Also confirm Windows CI green via `main.yml` windows-latest matrix push.
 **Context:** Symlink deployment item skipped (not exposed in current UI). Automated Vitest coverage exists for ELEV-06 notifier; this validates end-to-end Electron rendering. Phase 11 polkit rule prerequisite for ELEV-05.
 **Requirements:** ELEV-05, ELEV-06
-**Plans:** 2/2 plans complete
+**Plans:** 1/2 plans executed
 
 ## Progress
 
@@ -187,6 +187,6 @@ Plans:
 | 18. First-Run Dashboard Foundation | v7.0 | 1/2 | In Progress|  |
 | 19. Staging Directory Wiring | v7.0 | 3/3 | Complete    | 2026-04-16 |
 | 20. Windows String Purge | v7.0 | 2/2 | Complete    | 2026-04-16 |
-| 21. Mod Install Round-Trip Validation | v7.0 | 0/2 | Not started | - |
+| 21. Mod Install Round-Trip Validation | v7.0 | 1/2 | In Progress|  |
 | 22. Steam Deck Layout | v7.0 | 0/? | Not started | - |
 | 23. Help Links | v7.0 | 0/? | Not started | - |
