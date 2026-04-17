@@ -167,6 +167,9 @@ export interface MainChannels {
 
   // Menu click events (main -> renderer)
   "menu:click": (menuItemId: string) => void;
+
+  // Shell: Notify renderer that shell.openExternal failed with the attempted URL
+  "shell:openUrlFailed": (url: string) => void;
 }
 
 /** Type containing all known channels for synchronous IPC operations (used primarily by preload scripts) */
