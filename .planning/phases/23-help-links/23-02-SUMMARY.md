@@ -51,7 +51,7 @@ completed: 2026-04-17
 - **Duration:** 2 min
 - **Started:** 2026-04-17T00:26:49Z
 - **Completed:** 2026-04-17T00:28:49Z
-- **Tasks:** 1 of 2 auto-executed (Task 2 is human-verify checkpoint)
+- **Tasks:** 2 of 2 (Task 2 human-verify approved 2026-04-17)
 - **Files modified:** 1
 
 ## Accomplishments
@@ -65,6 +65,7 @@ completed: 2026-04-17
 ## Task Commits
 
 1. **Task 1: Add Linux wiki URL guard and browser-failure notification listener** - `d17563edf` (feat)
+2. **Task 2: Verify help link routing and browser failure notification** - human-verify approved
 
 ## Files Created/Modified
 
@@ -84,11 +85,11 @@ None - plan executed exactly as written.
 
 None.
 
-## Pending
+## Human Verification
 
-**Task 2 (checkpoint:human-verify):** Human must launch Vortex on Linux, click Help > Knowledge Base, and confirm:
-1. Browser opens `https://github.com/Nexus-Mods/Vortex/wiki/Vortex-on-Linux` (not the generic wiki)
-2. If browser fails to open, a warning notification appears with the URL displayed
+Task 2 (checkpoint:human-verify) approved 2026-04-17:
+- Linux user confirmed browser opens `https://github.com/Nexus-Mods/Vortex/wiki/Vortex-on-Linux` (ONBRD-06a)
+- Browser failure notification displays URL correctly (ONBRD-06b)
 
 ## Self-Check: PASSED
 

@@ -72,7 +72,7 @@
 - [x] **Phase 20: Windows String Purge** - Replace every Windows-specific error string visible during first run with a Linux-appropriate alternative (completed 2026-04-16)
 - [x] **Phase 21: Mod Install Round-Trip Validation** - Human UAT: install, deploy, and enable a mod for one Proton game without any terminal interaction (gates on Phases 18 + 19)
 - [x] **Phase 22: Steam Deck Layout** - Clamp onboarding overlay and modals so all buttons and content are accessible at 800px viewport height (completed 2026-04-16)
-- [ ] **Phase 23: Help Links** - Route Linux users to Linux-specific help content and show URLs inline when the browser launcher fails
+- [x] **Phase 23: Help Links** - Route Linux users to Linux-specific help content and show URLs inline when the browser launcher fails (completed 2026-04-17)
 
 ## Phase Details
 
@@ -156,7 +156,7 @@ Plans:
 **Plans**: 2 plans
 Plans:
 - [x] 23-01-PLAN.md — IPC plumbing: shell:openUrlFailed channel, preload bridge, open.ts failure push
-- [ ] 23-02-PLAN.md — Linux wiki URL guard and browser-failure notification listener in documentation extension
+- [x] 23-02-PLAN.md — Linux wiki URL guard and browser-failure notification listener in documentation extension
 **UI hint**: yes
 
 ## Backlog
@@ -166,7 +166,7 @@ Plans:
 **Goal:** Manually validate Phase 12 elevation UX on real hardware — desktop Linux ELEV-05 checklist (hardlinks, permission repair, session token re-use, fresh session re-prompt) and Steam Deck Game Mode ELEV-06 notification UX. Also confirm Windows CI green via `main.yml` windows-latest matrix push.
 **Context:** Symlink deployment item skipped (not exposed in current UI). Automated Vitest coverage exists for ELEV-06 notifier; this validates end-to-end Electron rendering. Phase 11 polkit rule prerequisite for ELEV-05.
 **Requirements:** ELEV-05, ELEV-06, ONBRD-04
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 1. Launch Vortex on Linux with Steam and Skyrim SE installed via Proton
@@ -206,4 +206,4 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 | 20. Windows String Purge | v7.0 | 2/2 | Complete    | 2026-04-16 |
 | 21. Mod Install Round-Trip Validation | v7.0 | 2/2 | Complete    | 2026-04-16 |
 | 22. Steam Deck Layout | v7.0 | 1/1 | Complete    | 2026-04-16 |
-| 23. Help Links | v7.0 | 1/2 | In Progress|  |
+| 23. Help Links | v7.0 | 2/2 | Complete   | 2026-04-17 |
