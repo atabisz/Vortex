@@ -155,7 +155,7 @@ Plans:
   2. User on SteamOS (or any system with no browser configured) sees the target URL displayed inline in the UI instead of a silent failure
 **Plans**: 2 plans
 Plans:
-- [ ] 23-01-PLAN.md — IPC plumbing: shell:openUrlFailed channel, preload bridge, open.ts failure push
+- [x] 23-01-PLAN.md — IPC plumbing: shell:openUrlFailed channel, preload bridge, open.ts failure push
 - [ ] 23-02-PLAN.md — Linux wiki URL guard and browser-failure notification listener in documentation extension
 **UI hint**: yes
 
@@ -166,7 +166,7 @@ Plans:
 **Goal:** Manually validate Phase 12 elevation UX on real hardware — desktop Linux ELEV-05 checklist (hardlinks, permission repair, session token re-use, fresh session re-prompt) and Steam Deck Game Mode ELEV-06 notification UX. Also confirm Windows CI green via `main.yml` windows-latest matrix push.
 **Context:** Symlink deployment item skipped (not exposed in current UI). Automated Vitest coverage exists for ELEV-06 notifier; this validates end-to-end Electron rendering. Phase 11 polkit rule prerequisite for ELEV-05.
 **Requirements:** ELEV-05, ELEV-06, ONBRD-04
-**Plans:** 1/1 plans complete
+**Plans:** 1/2 plans executed
 
 ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 1. Launch Vortex on Linux with Steam and Skyrim SE installed via Proton
@@ -206,4 +206,4 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 | 20. Windows String Purge | v7.0 | 2/2 | Complete    | 2026-04-16 |
 | 21. Mod Install Round-Trip Validation | v7.0 | 2/2 | Complete    | 2026-04-16 |
 | 22. Steam Deck Layout | v7.0 | 1/1 | Complete    | 2026-04-16 |
-| 23. Help Links | v7.0 | 0/2 | Not started | - |
+| 23. Help Links | v7.0 | 1/2 | In Progress|  |

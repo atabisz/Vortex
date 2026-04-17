@@ -39,7 +39,7 @@
 ### Help Links (ONBRD-06)
 
 - [ ] **ONBRD-06a**: `extensions/documentation/src/index.tsx` `WIKI_TOPICS` includes Linux-specific entries; `open-knowledge-base` handler uses Linux URL branch on Linux
-- [ ] **ONBRD-06b**: `opn()` failure on SteamOS (no browser set) shows the target URL inline rather than silently failing
+- [x] **ONBRD-06b**: `opn()` failure on SteamOS (no browser set) shows the target URL inline rather than silently failing
 
 ## v2 Requirements
 
@@ -81,7 +81,7 @@
 | ONBRD-05a | Phase 22 | Pending |
 | ONBRD-05b | Phase 22 | Pending |
 | ONBRD-06a | Phase 23 | Pending |
-| ONBRD-06b | Phase 23 | Pending |
+| ONBRD-06b | Phase 23 | Complete |
 
 **Coverage:**
 - v7.0 requirements: 18 total

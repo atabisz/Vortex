@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: First-Run Onboarding Wizard
 status: executing
-stopped_at: Phase 22 UI-SPEC approved
-last_updated: "2026-04-16T22:52:17.496Z"
-last_activity: 2026-04-16
+stopped_at: Completed 23-help-links-01-PLAN.md
+last_updated: "2026-04-17T00:25:33.589Z"
+last_activity: 2026-04-17
 progress:
   total_phases: 7
   completed_phases: 5
-  total_plans: 10
-  completed_plans: 10
-  percent: 100
+  total_plans: 12
+  completed_plans: 11
+  percent: 92
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** Phase 22 — steam-deck-layout
+**Current focus:** Phase 23 — help-links
 
 ## Current Position
 
-Phase: 23
-Plan: Not started
-Status: Executing Phase 22
-Last activity: 2026-04-16
+Phase: 23 (help-links) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
+Last activity: 2026-04-17
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -86,6 +86,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 20 P02 | 3min | 2 tasks | 0 files |
 | Phase 21-mod-install-round-trip-validation P01 | 5min | 2 tasks | 2 files |
 | Phase 21-mod-install-round-trip-validation P02 | 2min | 1 tasks | 2 files |
+| Phase 23-help-links P01 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -172,6 +173,8 @@ Recent decisions affecting current work:
 - [Phase 21-mod-install-round-trip-validation]: ENOENT fix is cross-platform: staging dir missing is valid on all platforms, no process.platform guard needed
 - [Phase 21-mod-install-round-trip-validation]: hardlink isSupported returns undefined on ENOENT: defer device-comparison to deploy time when ensureStagingDirectory has run
 - [Phase 21-mod-install-round-trip-validation]: ONBRD-04 marked code-complete after Phase 21-01 ENOENT fix; UAT checklist placed in Phase 999.1 matching ELEV-04/ELEV-05/SAVE-05 precedent
+- [Phase 23-help-links]: onOpenUrlFailed returns void (not unsubscribe fn): consistent with persist.onPush/onHydrate; listener registered once for app lifetime
+- [Phase 23-help-links]: shared package must be rebuilt before preload/main tsc checks see new MainChannels types
 
 ### Research Context (v7.0)
 
@@ -214,6 +217,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-16T21:50:16.414Z
-Stopped at: Phase 22 UI-SPEC approved
-Resume file: .planning/phases/22-steam-deck-layout/22-UI-SPEC.md
+Last session: 2026-04-17T00:25:33.584Z
+Stopped at: Completed 23-help-links-01-PLAN.md
+Resume file: None
