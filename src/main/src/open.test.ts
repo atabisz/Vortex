@@ -23,28 +23,33 @@ import { shell, BrowserWindow } from "electron";
 import { betterIpcMain } from "./ipc";
 import { openUrl } from "./open";
 
+// eslint-disable-next-line @typescript-eslint/unbound-method
+const { getAllWindows } = BrowserWindow;
+// eslint-disable-next-line @typescript-eslint/unbound-method
+const { openExternal } = shell;
+const { send: ipcSend } = betterIpcMain;
+
 describe("openUrl", () => {
+  const mockIsDestroyed = vi.fn().mockReturnValue(false);
   const mockWebContents = { id: 1 };
   const mockWindow = {
-    isDestroyed: vi.fn().mockReturnValue(false),
+    isDestroyed: mockIsDestroyed,
     webContents: mockWebContents,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(BrowserWindow.getAllWindows).mockReturnValue(
-      [mockWindow] as any,
+    vi.mocked(getAllWindows).mockReturnValue(
+      [mockWindow] as ReturnType<typeof getAllWindows>,
     );
   });
 
   it("pushes shell:openUrlFailed to all windows when openExternal rejects", async () => {
-    vi.mocked(shell.openExternal).mockRejectedValue(
-      new Error("no browser"),
-    );
+    vi.mocked(openExternal).mockRejectedValue(new Error("no browser"));
 
     openUrl(new URL("https://example.com"));
     await vi.waitFor(() => {
-      expect(betterIpcMain.send).toHaveBeenCalledWith(
+      expect(vi.mocked(ipcSend)).toHaveBeenCalledWith(
         mockWebContents,
         "shell:openUrlFailed",
         "https://example.com/",
@@ -53,22 +58,20 @@ describe("openUrl", () => {
   });
 
   it("does not push when openExternal resolves", async () => {
-    vi.mocked(shell.openExternal).mockResolvedValue();
+    vi.mocked(openExternal).mockResolvedValue();
 
     openUrl(new URL("https://example.com"));
     await new Promise((r) => setTimeout(r, 50));
-    expect(betterIpcMain.send).not.toHaveBeenCalled();
+    expect(vi.mocked(ipcSend)).not.toHaveBeenCalled();
   });
 
   it("skips destroyed windows", async () => {
-    vi.mocked(shell.openExternal).mockRejectedValue(
-      new Error("no browser"),
-    );
-    mockWindow.isDestroyed.mockReturnValue(true);
+    vi.mocked(openExternal).mockRejectedValue(new Error("no browser"));
+    mockIsDestroyed.mockReturnValue(true);
 
     openUrl(new URL("https://example.com"));
     await vi.waitFor(() => {
-      expect(betterIpcMain.send).not.toHaveBeenCalled();
+      expect(vi.mocked(ipcSend)).not.toHaveBeenCalled();
     });
   });
 });
