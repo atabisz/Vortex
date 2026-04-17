@@ -16,6 +16,8 @@
 
 ## Current State
 
+**Phase 23 complete (2026-04-17).** Linux help link routing and browser failure notification: `LINUX_WIKI_URL` guard in documentation extension routes Linux users to `https://github.com/Nexus-Mods/Vortex/wiki/Vortex-on-Linux`; typed `shell:openUrlFailed` IPC channel wired from `open.ts` catch handler through preload bridge; `onOpenUrlFailed` listener dispatches warning notification with URL on any platform. ONBRD-06a + ONBRD-06b satisfied. Runtime UAT pending (23-HUMAN-UAT.md).
+
 **Phase 22 complete (2026-04-17).** CSS viewport-clamping for Steam Deck Desktop Mode: onboarding overlay `height: 466px` replaced with `max-height: calc(100vh - 80px)` + `overflow-y: auto`; new `dialog-steam-deck.scss` adds global Bootstrap modal flex-column layout with pinned footer; import registered in `style.scss`. ONBRD-05a + ONBRD-05b satisfied. Visual UAT pending (22-HUMAN-UAT.md).
 
 **Phase 21 complete (2026-04-17).** `hardlink_activator.isSupported` now returns `undefined` (supported) on ENOENT — staging-dir-missing no longer blocks hardlink auto-selection on first game activation. ONBRD-04 code-complete; hardware UAT (10-step Skyrim SE round-trip) deferred to Phase 999.1.
@@ -111,7 +113,8 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 - [ ] **ONBRD-03**: No "Run as Administrator" or `C:\` paths appear in any error state on Linux
 - [x] **ONBRD-04**: Mod install → deploy → enable round-trip works for one Proton game without touching config files — code-complete (Phase 21); hardware UAT pending (Phase 999.1)
 - [ ] **ONBRD-05**: All dialogs render without clipped buttons or invisible scroll at 1280×800 (Steam Deck Desktop Mode)
-- [ ] **ONBRD-06**: "Get Help" links route to Linux-specific documentation
+- [x] **ONBRD-06a**: Linux users clicking Help > Knowledge Base land on Linux-specific wiki page — code-complete (Phase 23); runtime UAT pending (23-HUMAN-UAT.md)
+- [x] **ONBRD-06b**: Browser launch failure shows warning notification with target URL — code-complete (Phase 23); runtime UAT pending (23-HUMAN-UAT.md)
 
 ### Deferred (v5.0+)
 
@@ -212,4 +215,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-17 after Phase 21 — ONBRD-04 code-complete, hardlink ENOENT first-run fix*
+*Last updated: 2026-04-17 after Phase 23 — ONBRD-06a/06b code-complete, Linux help link routing and browser failure notification*
