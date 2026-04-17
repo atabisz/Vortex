@@ -1,5 +1,4 @@
 import type { IState } from "../../../types/IState";
-import { IDiscoveryState } from "../../../types/IState";
 import { ComponentEx, connect, translate } from "../../../controls/ComponentEx";
 import { getSafe } from "../../../util/storeHelper";
 
