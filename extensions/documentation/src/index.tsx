@@ -25,6 +25,9 @@ const WIKI_TOPICS = {
 
 const WIKI_URL = "https://github.com/Nexus-Mods/Vortex/wiki";
 
+const LINUX_WIKI_URL =
+  "https://github.com/Nexus-Mods/Vortex/wiki/Vortex-on-Linux";
+
 function generateUrl(wikiId: string) {
   const topicId = WIKI_TOPICS[wikiId] || undefined;
   if (topicId === undefined) {
@@ -119,7 +122,9 @@ export default function init(context: types.IExtensionContext) {
       const state = context.api.store.getState();
       const isModernLayout = state.settings?.window?.useModernLayout;
       if (isModernLayout) {
-        const url = generateUrl(wikiId) ?? WIKI_URL;
+        const fallbackUrl =
+          process.platform === "linux" ? LINUX_WIKI_URL : WIKI_URL;
+        const url = generateUrl(wikiId) ?? fallbackUrl;
         util.opn(url).catch(() => null);
       } else {
         context.api.events.emit("show-main-page", "Knowledge base");
@@ -130,6 +135,16 @@ export default function init(context: types.IExtensionContext) {
           }, 2000);
         }
       }
+    });
+
+    (window as any).api.shell.onOpenUrlFailed((url: string) => {
+      context.api.sendNotification({
+        type: "warning",
+        id: "open-url-failed",
+        title: "Could not open browser",
+        message: "Visit: {{url}}",
+        replace: { url },
+      });
     });
   });
 
