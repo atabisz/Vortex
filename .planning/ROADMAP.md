@@ -206,4 +206,4 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 | 20. Windows String Purge | v7.0 | 2/2 | Complete    | 2026-04-16 |
 | 21. Mod Install Round-Trip Validation | v7.0 | 2/2 | Complete    | 2026-04-16 |
 | 22. Steam Deck Layout | v7.0 | 1/1 | Complete    | 2026-04-16 |
-| 23. Help Links | v7.0 | 2/2 | Complete   | 2026-04-17 |
+| 23. Help Links | v7.0 | 2/2 | Complete    | 2026-04-17 |
