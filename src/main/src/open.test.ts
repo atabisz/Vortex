@@ -40,7 +40,7 @@ describe("openUrl", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getAllWindows).mockReturnValue(
-      [mockWindow] as ReturnType<typeof getAllWindows>,
+      [mockWindow] as unknown as ReturnType<typeof getAllWindows>,
     );
   });
 
