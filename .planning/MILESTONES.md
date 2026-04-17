@@ -1,5 +1,26 @@
 # Milestones
 
+## v7.0 First-Run Onboarding Wizard (Shipped: 2026-04-17)
+
+**Phases completed:** 6 phases, 12 plans, 21 tasks
+
+**Key accomplishments:**
+
+- Platform guards in todos.tsx (4 sites) and getDriveList.ts (2 sites) prevent winapi/drivelist crashes on Linux first-run dashboard
+- Linux empty-state block with "No Steam games detected" + Refresh button in NoGameDashlet, plus one-shot 2s Steam retry in GameModeManager for race condition on startup
+- Three Vitest red stub files assert Linux platform behaviors for ONBRD-02b/02c/02d before any implementation exists
+- Task 1 (ONBRD-02a):
+- Device-aware Linux staging path suggestion via stat.dev mountpoint walk in both suggestStagingPath() and Settings.tsx suggestPath()
+- Platform-guarded raiseUACDialog (pkexec copy on Linux) and confirmElevate (elevated permissions copy + button label) with static analysis tests for both ternaries
+- One-liner:
+- `getErrorCode(err) === "ENOENT"` guard added to hardlink_activator isSupported catch block so hardlink is auto-selected on first game activation when the staging directory does not yet exist
+- ONBRD-04 marked code-complete in REQUIREMENTS.md and a 10-step Skyrim SE hardlink UAT checklist added to Phase 999.1 backlog in ROADMAP.md
+- Replaced fixed 466px overlay height and added global modal viewport clamp so all content and action buttons are accessible at 1280×800 (Steam Deck Desktop Mode).
+- Typed IPC channel `shell:openUrlFailed` wired from `open.ts` catch handler through preload bridge to renderer, with 3 Vitest tests covering push, no-push, and destroyed-window cases
+- Linux platform guard routes Help > Knowledge Base to https://github.com/Nexus-Mods/Vortex/wiki/Vortex-on-Linux; browser failure on any platform shows warning notification with URL
+
+---
+
 ## v6.0 Infrastructure (Shipped: 2026-04-15)
 
 **Phases completed:** 2 phases, 2 plans, 3 tasks

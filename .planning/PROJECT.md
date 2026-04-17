@@ -1,18 +1,13 @@
 # Vortex Linux Support
 
-## Current Milestone: v7.0 First-Run Onboarding Wizard
+## Current Milestone: v8.0 (planning)
 
-**Goal:** Fix the Linux first-run flow so a new user can complete onboarding and install a mod without any terminal intervention.
+**Goal:** TBD — start `/gsd-new-milestone` to define next milestone.
 
-**Target features:**
-- First-run wizard auto-detects Steam library (no manual path entry)
-- Mod staging directory selection with filesystem detection (ext4 → `chattr +F`, fallback for XFS/ZFS/other)
-- Purge all Windows-specific error text ("Run as Administrator", `C:\` paths) from every error state
-- Mod install → deploy → enable round-trip verified for one Proton game without touching config files
-- All dialogs render correctly at 1280×800 (Steam Deck Desktop Mode — no clipped buttons, no invisible scroll)
-- "Get Help" and troubleshooting links route to Linux-specific documentation
+## Previous Milestones
 
-## Previous Milestone: v6.0 Infrastructure — SHIPPED 2026-04-15
+- ✅ v7.0 First-Run Onboarding Wizard — SHIPPED 2026-04-17
+- ✅ v6.0 Infrastructure — SHIPPED 2026-04-15
 
 ## Current State
 
@@ -103,18 +98,18 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 - ✓ **REBASE-05**: `workflow_dispatch` with optional `upstream_ref` input for on-demand runs — v6.0
 - ✓ **REBASE-06**: Draft PR body includes upstream tag, release URL, conflict status, commit diff summary, fork link — v6.0
 - ✓ **REBASE-07**: Workflow guarded by `if: github.repository == 'atabisz/Vortex'` — v6.0
+- ✓ **ONBRD-01a–01e**: First-run dashlet crash paths guarded, getDriveList Linux fallback, manual-scan todo unconditional, empty-state refresh, Steam retry — v7.0
+- ✓ **ONBRD-02a–02d**: Disk-space todos visible on Linux, partition-exists statAsync, Linux path examples, device-aware suggestStagingPath — v7.0
+- ✓ **ONBRD-03a–03d**: raiseUACDialog and confirmElevate Linux arms, download settings message guard, EPERM/EACCES Linux message, zero reachable "Run as Administrator" on Linux — v7.0
+- ✓ **ONBRD-04**: hardlink_activator ENOENT guard; mod install → deploy → enable code-complete; hardware UAT pending (Phase 999.1) — v7.0
+- ✓ **ONBRD-05a–05b**: Onboarding overlay max-height clamp, global Bootstrap modal flex-column layout with pinned footer — v7.0
+- ✓ **ONBRD-06a–06b**: Linux wiki URL guard in documentation extension, browser-failure notification with inline URL — v7.0
 - [ ] **ELEV-05**: All user-triggered elevation operations complete successfully on desktop Linux — code-complete (Phase 12); hardware UAT pending (Phase 999.1)
 - [ ] **ELEV-06**: Steam Deck elevation failure shows actionable error notification with recovery path — code-complete (Phase 12); hardware UAT pending (Phase 999.1)
 
-### Active (v7.0)
+### Active (v8.0)
 
-- [ ] **ONBRD-01**: First-run wizard completes and detects Steam library automatically
-- [ ] **ONBRD-02**: Mod staging directory configured with filesystem detection (ext4 → chattr+F, fallback for XFS/ZFS/other)
-- [ ] **ONBRD-03**: No "Run as Administrator" or `C:\` paths appear in any error state on Linux
-- [x] **ONBRD-04**: Mod install → deploy → enable round-trip works for one Proton game without touching config files — code-complete (Phase 21); hardware UAT pending (Phase 999.1)
-- [ ] **ONBRD-05**: All dialogs render without clipped buttons or invisible scroll at 1280×800 (Steam Deck Desktop Mode)
-- [x] **ONBRD-06a**: Linux users clicking Help > Knowledge Base land on Linux-specific wiki page — code-complete (Phase 23); runtime UAT pending (23-HUMAN-UAT.md)
-- [x] **ONBRD-06b**: Browser launch failure shows warning notification with target URL — code-complete (Phase 23); runtime UAT pending (23-HUMAN-UAT.md)
+_(Define next milestone requirements via `/gsd-new-milestone`)_
 
 ### Deferred (v5.0+)
 
@@ -133,7 +128,7 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 
 ## Context
 
-**Shipped v6.0 on 2026-04-15.** 2 phases, 2 plans, 14/14 v6.0 requirements satisfied.
+**Shipped v7.0 on 2026-04-17.** 6 phases, 12 plans, 18/18 v7.0 requirements satisfied (ONBRD-01 through ONBRD-06).
 
 **Technical state after v6.0:**
 - fs layer: `applyChattrCasefold(dirPath)` in `src/renderer/src/util/fs.ts` — applies `chattr +F` to new empty staging dirs on ext4-casefold; statfs cache avoids repeated syscalls; injectable seams `_setChattr`, `_setChattrNotifier`, `_resetChattrState` follow `elevated.ts` pattern; 13 Vitest tests pass (CASE-05–CASE-11); wired into `ensureDirWritableAsync`
@@ -215,4 +210,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-17 after Phase 23 — ONBRD-06a/06b code-complete, Linux help link routing and browser failure notification*
+*Last updated: 2026-04-17 after v7.0 milestone — First-Run Onboarding Wizard shipped, all ONBRD requirements satisfied*

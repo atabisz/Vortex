@@ -4,7 +4,7 @@ milestone: v7.0
 milestone_name: First-Run Onboarding Wizard
 status: verifying
 stopped_at: Completed 23-02-PLAN.md
-last_updated: "2026-04-17T00:59:06.417Z"
+last_updated: "2026-04-17T05:23:39.667Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 7
@@ -220,6 +220,7 @@ None.
 | 260408-haq | Set deb/AppImage version to major.minor.YYYYMMDDHHMM | 2026-04-08 | 53033d808 | [260408-haq-set-deb-package-version-to-major-minor-f](./quick/260408-haq-set-deb-package-version-to-major-minor-f/) |
 | 260408-mvp | Speed up GH Actions builds: rust cache, workflow_run chain, paths-ignore | 2026-04-08 | 30436ef73 | [260408-mvp-speed-up-gh-actions-builds-rust-cache-wo](./quick/260408-mvp-speed-up-gh-actions-builds-rust-cache-wo/) |
 | 260408-ms8 | Update planning docs with current state after v4.0 backlog analysis | 2026-04-08 | — | [260408-ms8-update-planning-docs-with-current-state-](./quick/260408-ms8-update-planning-docs-with-current-state-/) |
+| 260417-kth | fix unused IDiscoveryState import in NoGameDashlet.tsx | 2026-04-17 | 604daafed | [260417-kth-fix-unused-idiscoverystate-import-in-nog](./quick/260417-kth-fix-unused-idiscoverystate-import-in-nog/) |
 
 ## Session Continuity
 
