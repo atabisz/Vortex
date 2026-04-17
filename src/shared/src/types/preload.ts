@@ -104,6 +104,9 @@ export interface Shell {
 
   /** Opens the file using the default application for the file extension */
   openFile(filePath: string): void;
+
+  /** Register listener for shell.openExternal failure events from main process. */
+  onOpenUrlFailed(callback: (url: string) => void): void;
 }
 
 export interface Dialog {
