@@ -295,6 +295,58 @@
 
 ---
 
+## Milestone: v7.0 — First-Run Onboarding Wizard
+
+**Shipped:** 2026-04-17
+**Phases:** 6 | **Plans:** 12 | **Tasks:** 21
+
+### What Was Built
+
+- Platform guards in `todos.tsx` (4 sites) and `getDriveList.ts` (2 sites) — first-run dashlet no longer crashes on Linux
+- `NoGameDashlet` empty-state block with Refresh button and one-shot 2s Steam retry in `GameModeManager`
+- Device-aware `suggestStagingPath()` via `stat.dev` mountpoint walk — hardlink deployment failure on multi-drive setups prevented
+- Linux path examples in `texts.ts` + `Settings.tsx`; partition-exists check via `statAsync` (not Windows error codes)
+- `raiseUACDialog` and `confirmElevate` Linux arms (pkexec copy); zero reachable "Run as Administrator" on Linux verified via grep audit
+- `hardlink_activator.isSupported` ENOENT guard — staging-dir-missing no longer blocks hardlink auto-selection on first activation
+- CSS viewport clamp for Steam Deck Desktop Mode: overlay `max-height: calc(100vh - 80px)`, global `dialog-steam-deck.scss` with pinned modal footer
+- Typed `shell:openUrlFailed` IPC channel wired end-to-end; documentation extension routes Linux users to Linux wiki and shows URL on browser failure
+
+### What Worked
+
+- **Grep-first requirement verification** — Phase 20 ONBRD-03c/03d confirmed satisfied by existing code without any changes; avoids over-engineering
+- **Nyquist test-stub wave (Phase 19-00)** — writing RED stubs before implementation caught interface issues early and produced tighter plan scope
+- **CSS-only Steam Deck fix** — unconditional `max-height` rules are a no-op at Windows viewport heights, eliminating the need for platform-guarded JS logic
+- **Phase 22 completed in ~10 min** — prior research eliminated ambiguity; two tasks, three file changes, done
+- **`(window as any).api.shell` pattern** — bundled extension constraint (import from vortex-api only) navigated cleanly; no new intra-renderer dependencies
+
+### What Was Inefficient
+
+- **REQUIREMENTS.md not updated at plan-close** — ONBRD-05a/05b were completed in Phase 22 but left as `[ ]` in REQUIREMENTS.md; caught only at milestone close
+- **Progress table stale entry** — Phase 18 showed `1/2` in ROADMAP.md Progress table after both plans completed; manual correction required at close
+- **`audit-open` tool crash** — `ReferenceError: output is not defined` in gsd-tools.cjs prevented automated pre-close artifact audit
+
+### Patterns Established
+
+- **Ternary inside `t()` for platform-specific strings** — `t(process.platform === 'linux' ? '...' : '...')` keeps Windows arm byte-for-byte unchanged and satisfies i18n correctly
+- **`onOpenUrlFailed` returns `void` (not unsubscribe fn)** — consistent with `persist.onPush`/`onHydrate`; registered once for app lifetime
+- **Fixed notification ID for dedup** — `open-url-failed` ID is fixed (not URL-dependent) to prevent rapid-failure notification spam
+- **shared package must be rebuilt before tsc** — any new `MainChannels` type must exist in compiled shared output before preload/main TypeScript checks run
+
+### Key Lessons
+
+1. **Check requirements at plan-close, not milestone-close** — ONBRD-05a/05b were completed but not checked off; the right time to update `[ ]→[x]` is immediately after the SUMMARY.md is written
+2. **Grep audit before writing code** — for "purge X string" requirements, grep for the string first; often the requirement is already satisfied or has a simpler scope than assumed
+3. **`(window as any).api` for bundled extensions** — bundled extensions in `src/renderer/src/extensions/` cannot import from `src/renderer/src/`; use `window.api` cast to avoid new coupling
+4. **Unconditional CSS > platform-guarded JS for layout** — CSS `max-height` with sensible headroom values is safe cross-platform; avoid JS guards for pure layout concerns
+
+### Cost Observations
+
+- Model mix: Sonnet 4.6 (primary execution)
+- Sessions: 3–4 sessions (2026-04-16 to 2026-04-17)
+- Notable: Phase 22 (CSS-only) and Phase 20 (grep-confirmed no changes needed) were the fastest phases in the project — invest in research to find the minimal scope.
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -307,6 +359,7 @@
 | v4.0 | ~4 | 4 | Fs shim pattern over per-callsite fixes; TDD RED/GREEN commit pairs; integration checker confirmed all wiring |
 | v5.0 | 1 | 1 | Smallest milestone; pre-existing confirmations reduced scope; v4.0 lesson (regenerate .d.ts) applied immediately |
 | v6.0 | 2 | 2 | Two independent infrastructure tracks; injectable seam pattern carried forward; gh GraphQL→REST fork pivot; daily upstream rebase CI operational |
+| v7.0 | 3–4 | 6 | Grep-first requirement verification; Nyquist RED stubs before implementation; CSS-only Steam Deck fix; fastest phases were research-driven minimal scope |
 
 ### Cumulative Quality
 
@@ -318,6 +371,7 @@
 | v4.0 | 21 (elevated) + 22 (fs) + 6 (resolvePathCase) = 49 | 4 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
 | v5.0 | 0 new (fomod-installer C# only; verify-warning.spec.ts pre-existing) | 1 phase, 0 Windows regressions | ubuntu-latest + windows-latest |
 | v6.0 | 13 (fs.test.ts chattr+F) | 2 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
+| v7.0 | ~8 (hardlink_activator, stagingDirectory, discovery, raiseUACDialog, openUrlFailed) | 6 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
 
 ### Top Lessons (Verified Across Milestones)
 
