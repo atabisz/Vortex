@@ -137,8 +137,8 @@ describe("hardlink_activator isSupported", () => {
       "",
     );
 
-    // Currently FAILS: current code returns { description: ... } for all errors.
-    // After fix, ENOENT returns undefined (supported).
+    // ENOENT means staging dir doesn't exist yet (first-run).
+    // isSupported returns undefined (supported) so hardlink is auto-selected.
     expect(result).toBeUndefined();
   });
 
