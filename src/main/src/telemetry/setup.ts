@@ -27,7 +27,11 @@ export const createMainTelemetryProvider = (options?: RingBufferOptions): void =
     ...options,
     onExportSpans: (spans) => {
       if (!isTelemetryEnabled()) return;
-      exporter.export(spans, () => {});
+      exporter.export(spans, (result) => {
+        if (result.error) {
+          console.error("[telemetry] OTLP export failed", result.error);
+        }
+      });
     },
   });
   setProcessor(processor);
