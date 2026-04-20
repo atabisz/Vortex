@@ -2,6 +2,7 @@ import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-ho
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { BasicTracerProvider } from "@opentelemetry/sdk-trace-base";
 
+import { log } from "../logging";
 import { createVortexResource } from "./resources";
 import { RingBufferSpanProcessor, type RingBufferOptions } from "./RingBufferSpanProcessor";
 import { isTelemetryEnabled, setProcessor } from "./state";
@@ -29,7 +30,10 @@ export const createMainTelemetryProvider = (options?: RingBufferOptions): void =
       if (!isTelemetryEnabled()) return;
       exporter.export(spans, (result) => {
         if (result.error) {
-          console.error("[telemetry] OTLP export failed", result.error);
+          const { message, code } = result.error as Error & {
+            code?: string | number;
+          };
+          log("warn", "OTLP export failed", { message, code });
         }
       });
     },
