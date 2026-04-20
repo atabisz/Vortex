@@ -1,13 +1,10 @@
 import * as React from "react";
-import { ControlLabel, FormControl } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
+import { ControlLabel, FormControl } from "react-bootstrap";
 import { FlexLayout, More, Toggle, tooltip, types } from "vortex-api";
-
 import { INSTRUCTIONS_PLACEHOLDER, NAMESPACE } from "../../constants";
-import { isGamebryoGame } from "../../util/gameSupport";
 
 export interface IInstructionProps {
-  gameId: string;
   collection: types.IMod;
   onSetCollectionAttribute: (path: string[], value: any) => void;
 }
@@ -23,8 +20,7 @@ function CollectionGeneralInfo(props: IInstructionProps) {
 
 const settings = (props: IInstructionProps) => {
   const [t] = useTranslation([NAMESPACE, "common"]);
-  const { gameId, onSetCollectionAttribute, collection } = props;
-  const showExcludePluginRules = isGamebryoGame(gameId);
+  const { onSetCollectionAttribute, collection } = props;
   const [recommendNewProfile, setRecommendNewProfile] = React.useState(
     collection.attributes?.collection?.collectionConfig?.recommendNewProfile,
   );
@@ -35,19 +31,33 @@ const settings = (props: IInstructionProps) => {
   const toggleRecommendNewProfile = React.useCallback(() => {
     const newValue = !recommendNewProfile;
     setRecommendNewProfile(newValue);
-    onSetCollectionAttribute(["collectionConfig", "recommendNewProfile"], newValue);
+    onSetCollectionAttribute(
+      ["collectionConfig", "recommendNewProfile"],
+      newValue,
+    );
   }, [onSetCollectionAttribute, recommendNewProfile, setRecommendNewProfile]);
 
   const toggleExcludePluginRules = React.useCallback(() => {
     const newValue = !excludePluginRules;
     setExcludePluginRules(newValue);
-    onSetCollectionAttribute(["collectionConfig", "excludePluginRules"], newValue);
+    onSetCollectionAttribute(
+      ["collectionConfig", "excludePluginRules"],
+      newValue,
+    );
   }, [onSetCollectionAttribute, excludePluginRules, setExcludePluginRules]);
 
   return (
-    <FlexLayout type="column" id="collection-settings-edit" className="collection-settings-edit">
+    <FlexLayout
+      type="column"
+      id="collection-settings-edit"
+      className="collection-settings-edit"
+    >
       <h4>{t("Options")}</h4>
-      <p>{t("The below settings can optionally be changed to customize this collection")}</p>
+      <p>
+        {t(
+          "The below settings can optionally be changed to customize this collection",
+        )}
+      </p>
 
       <Toggle
         id={"settings-recommend-new-profile"}
@@ -55,28 +65,32 @@ const settings = (props: IInstructionProps) => {
         checked={recommendNewProfile}
       >
         {t("Recommend new profile")}
-        <More id="collection-settings-recommendnewprofile" name={t("Recommend new profile")}>
+        <More
+          id="collection-settings-recommendnewprofile"
+          name={t("Recommend new profile")}
+        >
           {t(
             "If enabled, Vortex will recommend creating a new profile when installing this collection. If disabled, the collection will be installed into the currently active profile.",
           )}
         </More>
       </Toggle>
 
-      {showExcludePluginRules ? (
-        <Toggle
-          id={"settings-exclude-plugin-rules"}
-          onToggle={toggleExcludePluginRules}
-          checked={excludePluginRules}
+      <Toggle
+        id={"settings-exclude-plugin-rules"}
+        onToggle={toggleExcludePluginRules}
+        checked={excludePluginRules}
+      >
+        {t("Exclude plugin rules")}
+        <More
+          id="collection-settings-excludepluginrules"
+          name={t("Exclude plugin rules")}
         >
-          {t("Exclude plugin rules")}
-          <More id="collection-settings-excludepluginrules" name={t("Exclude plugin rules")}>
-            {t(
-              "If enabled, custom LOOT plugin rules and groups will not be included when exporting this collection. " +
-                "This prevents inherited rules from spreading between collections.",
-            )}
-          </More>
-        </Toggle>
-      ) : null}
+          {t(
+            "If enabled, custom LOOT plugin rules and groups will not be included when exporting this collection. "
+            + "This prevents inherited rules from spreading between collections.",
+          )}
+        </More>
+      </Toggle>
     </FlexLayout>
   );
 };
@@ -88,7 +102,9 @@ const instructions = (props: IInstructionProps) => {
   const [input, setInput] = React.useState(
     collection.attributes?.["collection"]?.["installInstructions"],
   );
-  const [placeholder, setPlaceholder] = React.useState(t(INSTRUCTIONS_PLACEHOLDER) as string);
+  const [placeholder, setPlaceholder] = React.useState(
+    t(INSTRUCTIONS_PLACEHOLDER) as string,
+  );
   const [hasChanged, setHasChanged] = React.useState(false);
 
   React.useEffect(() => {
