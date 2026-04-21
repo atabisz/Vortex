@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { INotification } from "../../../../types/INotification";
+
 import Debouncer from "../../../../util/Debouncer";
 
 const NOTIFICATION_TIMEOUTS: Record<string, number | null> = {
@@ -62,7 +63,9 @@ export const useNotificationFiltering = ({
           return true;
         }
 
-        const timeout = (item.type === "activity" ? item.createdTime : item.updatedTime) + dispTime;
+        const timeout =
+          (item.type === "activity" ? item.createdTime : item.updatedTime) +
+          dispTime;
         if (timeout > now) {
           if (nextTimeout === null || timeout < nextTimeout) {
             nextTimeout = timeout;
@@ -82,7 +85,10 @@ export const useNotificationFiltering = ({
           clearTimeout(updateTimerRef.current);
         }
         if (nextTimeout !== null) {
-          updateTimerRef.current = setTimeout(() => updateFiltered(), nextTimeout - now + 100);
+          updateTimerRef.current = setTimeout(
+            () => updateFiltered(),
+            nextTimeout - now + 100,
+          );
         }
       }
     }
@@ -103,8 +109,11 @@ export const useNotificationFiltering = ({
       if (item?.id === undefined) {
         continue;
       }
-      const ref = notis.find((n) => n?.id === item.id);
-      if (ref !== undefined && (item.message !== ref.message || item.progress !== ref.progress)) {
+      const ref = notis.find((n) => n.id === item.id);
+      if (
+        ref !== undefined &&
+        (item.message !== ref.message || item.progress !== ref.progress)
+      ) {
         updates.push({ ...item, message: ref.message, progress: ref.progress });
       }
     }
@@ -112,7 +121,9 @@ export const useNotificationFiltering = ({
     if (updates.length > 0) {
       setFiltered((prev) => {
         const byId = new Map(updates.map((u) => [u.id, u]));
-        return prev.map((item) => (item?.id !== undefined ? (byId.get(item.id) ?? item) : item));
+        return prev.map((item) =>
+          item?.id !== undefined ? (byId.get(item.id) ?? item) : item,
+        );
       });
     }
   }, []);
