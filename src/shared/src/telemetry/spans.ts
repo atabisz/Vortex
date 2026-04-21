@@ -1,4 +1,5 @@
 import type { Span } from "@opentelemetry/api";
+
 import { SpanStatusCode } from "@opentelemetry/api";
 
 import { computeErrorFingerprint, sanitizeFramePath } from "../errors";
@@ -21,7 +22,8 @@ export const recordErrorOnSpan = (
   attributes?: Record<string, string | number | boolean>,
 ): void => {
   const sanitizedMessage = sanitizeFramePath(error.message);
-  const sanitizedStack = error.stack !== undefined ? sanitizeFramePath(error.stack) : undefined;
+  const sanitizedStack =
+    error.stack !== undefined ? sanitizeFramePath(error.stack) : undefined;
   const sanitized = new Error(sanitizedMessage);
   sanitized.name = error.name;
   sanitized.stack = sanitizedStack;
