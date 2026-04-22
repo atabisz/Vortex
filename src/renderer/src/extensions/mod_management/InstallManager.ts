@@ -1333,7 +1333,8 @@ class InstallManager {
     );
     const profileId =
       batchContext?.get<string>("profileId") ?? activeProfile(state)?.id;
-    const currentProfile = profileById(state, profileId);
+    const currentProfile =
+      profileById(state, profileId) ?? activeProfile(state);
 
     // Use parallel installation concurrency limiter instead of sequential mQueue
     this.mMainInstallsLimit
@@ -1441,6 +1442,13 @@ class InstallManager {
                       installGameId,
                       modId,
                     });
+                    if (currentProfile === undefined) {
+                      return Promise.reject(
+                        new ProcessCanceled(
+                          "You need to manage a game before installing this mod",
+                        ),
+                      );
+                    }
                     installGameId = currentProfile.gameId;
                   }
                   const discovery = discoveryByGame(state, installGameId);
