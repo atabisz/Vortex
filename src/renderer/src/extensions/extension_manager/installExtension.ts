@@ -1,24 +1,28 @@
-import * as path from "path";
+import type ZipT from "node-7z";
 
 import { unknownToError } from "@vortex/shared";
 import PromiseBB from "bluebird";
 import * as _ from "lodash";
-import type ZipT from "node-7z";
+import * as path from "path";
 import rimraf from "rimraf";
+
+import type { ExtensionType, IExtension } from "../../types/extensions";
+import type { IExtensionApi } from "../../types/IExtensionContext";
+import type { IState } from "../../types/IState";
 
 import { removeExtension } from "../../actions";
 import ExtensionManager from "../../ExtensionManager";
 import { log } from "../../logging";
-import type { ExtensionType, IExtension } from "../../types/extensions";
-import type { IExtensionApi } from "../../types/IExtensionContext";
-import type { IState } from "../../types/IState";
 import { DataInvalid } from "../../util/CustomErrors";
 import { withTrackedActivity } from "../../util/errorHandling";
 import * as fs from "../../util/fs";
 import getVortexPath from "../../util/getVortexPath";
 import { INVALID_FILENAME_RE } from "../../util/util";
 import { webpackRequireHack } from "../../util/webpack-hacks";
-import { countryExists, languageExists } from "../settings_interface/languagemap";
+import {
+  countryExists,
+  languageExists,
+} from "../settings_interface/languagemap";
 import { readExtensionInfo } from "./util";
 
 const rimrafAsync: (removePath: string, options: any) => PromiseBB<void> =
@@ -55,7 +59,10 @@ class ContextProxyHandler implements ProxyHandler<any> {
   }
 }
 
-function installExtensionDependencies(api: IExtensionApi, extPath: string): PromiseBB<void> {
+function installExtensionDependencies(
+  api: IExtensionApi,
+  extPath: string,
+): PromiseBB<void> {
   const handler = new ContextProxyHandler();
   const context = new Proxy({}, handler);
 
@@ -90,7 +97,10 @@ function installExtensionDependencies(api: IExtensionApi, extPath: string): Prom
     const err = unknownToError(unknownErr);
     // TODO: can't check for dependencies if the extension is already loaded
     //   and registers actions
-    if (err.name === "TypeError" && err.message.startsWith("Duplicate action type")) {
+    if (
+      err.name === "TypeError" &&
+      err.message.startsWith("Duplicate action type")
+    ) {
       return PromiseBB.resolve();
     }
     return PromiseBB.reject(err);
@@ -107,7 +117,10 @@ function sanitize(input: string): string {
   }
 }
 
-function removeOldVersion(api: IExtensionApi, info: IExtension): PromiseBB<void> {
+function removeOldVersion(
+  api: IExtensionApi,
+  info: IExtension,
+): PromiseBB<void> {
   const state: IState = api.store.getState();
   const { installed } = state.session.extensions;
 
@@ -140,7 +153,9 @@ function validateTheme(extPath: string): PromiseBB<void> {
   return fs
     .readdirAsync(extPath)
     .filter((fileName: string) =>
-      fs.statAsync(path.join(extPath, fileName)).then((stats) => stats.isDirectory()),
+      fs
+        .statAsync(path.join(extPath, fileName))
+        .then((stats) => stats.isDirectory()),
     )
     .then((dirNames) => {
       if (dirNames.length === 0) {
@@ -182,21 +197,33 @@ function validateTranslation(extPath: string): PromiseBB<void> {
     .readdirAsync(extPath)
     .filter((fileName: string) => isLocaleCode(fileName))
     .filter((fileName: string) =>
-      fs.statAsync(path.join(extPath, fileName)).then((stats) => stats.isDirectory()),
+      fs
+        .statAsync(path.join(extPath, fileName))
+        .then((stats) => stats.isDirectory()),
     )
     .then((dirNames) => {
       if (dirNames.length !== 1) {
-        return PromiseBB.reject(new DataInvalid("Expected exactly one language subdirectory"));
+        return PromiseBB.reject(
+          new DataInvalid("Expected exactly one language subdirectory"),
+        );
       }
       // the check in isLocaleCode is extremely unreliable because it will fall back to
       // iso on everything. Was it always like that or was that changed in a recent
       // node release?
       const [language, country] = dirNames[0].split("-");
-      if (!languageExists(language) || (country !== undefined && !countryExists(country))) {
-        return PromiseBB.reject(new DataInvalid("Directory isn't a language code"));
+      if (
+        !languageExists(language) ||
+        (country !== undefined && !countryExists(country))
+      ) {
+        return PromiseBB.reject(
+          new DataInvalid("Directory isn't a language code"),
+        );
       }
       return fs.readdirAsync(path.join(extPath, dirNames[0])).then((files) => {
-        if (files.find((fileName) => path.extname(fileName) === ".json") === undefined) {
+        if (
+          files.find((fileName) => path.extname(fileName) === ".json") ===
+          undefined
+        ) {
           return PromiseBB.reject(new DataInvalid("No translation files"));
         }
 
@@ -216,12 +243,17 @@ function validateExtension(extPath: string): PromiseBB<void> {
     .then(() => null)
     .catch({ code: "ENOENT" }, () => {
       return PromiseBB.reject(
-        new DataInvalid("Extension needs to include index.js and info.json on top-level"),
+        new DataInvalid(
+          "Extension needs to include index.js and info.json on top-level",
+        ),
       );
     });
 }
 
-function validateInstall(extPath: string, info?: IExtension): PromiseBB<ExtensionType> {
+function validateInstall(
+  extPath: string,
+  info?: IExtension,
+): PromiseBB<ExtensionType> {
   if (info === undefined) {
     let validAsTheme: boolean = true;
     let validAsTranslation: boolean = true;
@@ -239,7 +271,8 @@ function validateInstall(extPath: string, info?: IExtension): PromiseBB<Extensio
         if (!validAsExtension && !validAsTheme && !validAsTranslation) {
           return PromiseBB.reject(
             new DataInvalid(
-              "Doesn't seem to contain a correctly packaged extension, " + "theme or translation",
+              "Doesn't seem to contain a correctly packaged extension, " +
+                "theme or translation",
             ),
           );
         }
@@ -256,7 +289,9 @@ function validateInstall(extPath: string, info?: IExtension): PromiseBB<Extensio
         }
       });
   } else if (info.type === "theme") {
-    return validateTheme(extPath).then(() => PromiseBB.resolve("theme" as ExtensionType));
+    return validateTheme(extPath).then(() =>
+      PromiseBB.resolve("theme" as ExtensionType),
+    );
   } else if (info.type === "translation") {
     return validateTranslation(extPath).then(() =>
       PromiseBB.resolve("translation" as ExtensionType),
@@ -273,7 +308,8 @@ function installExtension(
 ): PromiseBB<void> {
   const extensionsPath = path.join(getVortexPath("userData"), "plugins");
   let destPath: string;
-  const tempPath = path.join(extensionsPath, path.basename(archivePath)) + ".installing";
+  const tempPath =
+    path.join(extensionsPath, path.basename(archivePath)) + ".installing";
 
   const Zip: typeof ZipT = require("node-7z");
   const extractor = new Zip();
@@ -283,103 +319,114 @@ function installExtension(
   let type: ExtensionType;
 
   let extName: string;
-  return PromiseBB.resolve(
-    withTrackedActivity(
-      "vortex.extension-manager",
-      "extension.install",
-      {
-        "extension.archive": path.basename(archivePath),
-        "extension.name": info?.name,
-        "extension.type": info?.type,
-      },
-      () =>
-        extractor
-          .extractFull(
-            archivePath,
-            tempPath,
-            { ssc: false },
-            () => undefined,
-            () => undefined,
-          )
-          .then(() => validateInstall(tempPath, info).then((guessedType) => (type = guessedType)))
-          .then(() => readExtensionInfo(tempPath, false, info))
-          // merge the caller-provided info with the stuff parsed from the info.json file because there
-          // is data we may only know at runtime (e.g. the modId)
-          .then((manifestInfo) => {
-            fullInfo = { ...(manifestInfo.info || {}), ...fullInfo };
-            const res: { id: string; info: Partial<IExtension> } = {
-              id: manifestInfo.id,
-              info: fullInfo,
-            };
+  return PromiseBB.resolve(withTrackedActivity(
+    "vortex.extension-manager",
+    "extension.install",
+    {
+      "extension.archive": path.basename(archivePath),
+      "extension.name": info?.name,
+      "extension.type": info?.type,
+    },
+    () =>
+    extractor
+      .extractFull(
+        archivePath,
+        tempPath,
+        { ssc: false },
+        () => undefined,
+        () => undefined,
+      )
+      .then(() =>
+        validateInstall(tempPath, info).then(
+          (guessedType) => (type = guessedType),
+        ),
+      )
+      .then(() => readExtensionInfo(tempPath, false, info))
+      // merge the caller-provided info with the stuff parsed from the info.json file because there
+      // is data we may only know at runtime (e.g. the modId)
+      .then((manifestInfo) => {
+        fullInfo = { ...(manifestInfo.info || {}), ...fullInfo };
+        const res: { id: string; info: Partial<IExtension> } = {
+          id: manifestInfo.id,
+          info: fullInfo,
+        };
 
-            if (res.info.type === undefined) {
-              res.info.type = type;
-            }
+        if (res.info.type === undefined) {
+          res.info.type = type;
+        }
 
-            return res;
-          })
-          .catch({ code: "ENOENT" }, () =>
-            info !== undefined
-              ? PromiseBB.resolve({
-                  id: path.basename(archivePath, path.extname(archivePath)),
-                  info,
-                })
-              : PromiseBB.reject(new Error("not an extension, info.json missing")),
+        return res;
+      })
+      .catch({ code: "ENOENT" }, () =>
+        info !== undefined
+          ? PromiseBB.resolve({
+              id: path.basename(archivePath, path.extname(archivePath)),
+              info,
+            })
+          : PromiseBB.reject(new Error("not an extension, info.json missing")),
+      )
+      .then((manifestInfo) =>
+        // update the manifest on disc, in case we had new info from the caller
+        fs
+          .writeFileAsync(
+            path.join(tempPath, "info.json"),
+            JSON.stringify(manifestInfo.info, undefined, 2),
           )
-          .then((manifestInfo) =>
-            // update the manifest on disc, in case we had new info from the caller
-            fs
-              .writeFileAsync(
-                path.join(tempPath, "info.json"),
-                JSON.stringify(manifestInfo.info, undefined, 2),
-              )
-              .then(() => manifestInfo),
-          )
-          .then((manifestInfo: { id: string; info: IExtension }) => {
-            extName = manifestInfo.id;
+          .then(() => manifestInfo),
+      )
+      .then((manifestInfo: { id: string; info: IExtension }) => {
+        extName = manifestInfo.id;
 
-            const dirName = sanitize(manifestInfo.id);
-            destPath = path.join(extensionsPath, dirName);
-            if (manifestInfo.info.type !== undefined) {
-              type = manifestInfo.info.type;
-            }
-            return removeOldVersion(api, manifestInfo.info);
-          })
-          // we don't actually expect the output directory to exist
-          .then(() => fs.removeAsync(destPath))
-          .then(() => fs.renameAsync(tempPath, destPath))
-          .then(() => {
-            if (type === "translation") {
-              return fs
-                .readdirAsync(destPath)
-                .map((entry: string) =>
-                  fs.statAsync(path.join(destPath, entry)).then((stat) => ({ name: entry, stat })),
-                )
-                .then(() => null);
-            } else if (type === "theme") {
-              return PromiseBB.resolve();
-            } else {
-              // don't install dependencies for extensions that are already loaded because
-              // doing so could cause an exception
-              if (api.getLoadedExtensions().find((ext) => ext.name === extName) === undefined) {
-                return installExtensionDependencies(api, destPath);
-              } else {
-                return PromiseBB.resolve();
-              }
-            }
-          })
-          .catch(DataInvalid, (err) =>
-            rimrafAsync(tempPath, { glob: false }).then(() => {
-              api.showErrorNotification("Invalid Extension", err, {
-                allowReport: false,
-                message: archivePath,
-              });
-              return Promise.reject(err);
-            }),
-          )
-          .catch((err) => rimrafAsync(tempPath, { glob: false }).then(() => PromiseBB.reject(err))),
-    ),
-  );
+        const dirName = sanitize(manifestInfo.id);
+        destPath = path.join(extensionsPath, dirName);
+        if (manifestInfo.info.type !== undefined) {
+          type = manifestInfo.info.type;
+        }
+        return removeOldVersion(api, manifestInfo.info);
+      })
+      // we don't actually expect the output directory to exist
+      .then(() => fs.removeAsync(destPath))
+      .then(() => fs.renameAsync(tempPath, destPath))
+      .then(() => {
+        if (type === "translation") {
+          return fs
+            .readdirAsync(destPath)
+            .map((entry: string) =>
+              fs
+                .statAsync(path.join(destPath, entry))
+                .then((stat) => ({ name: entry, stat })),
+            )
+            .then(() => null);
+        } else if (type === "theme") {
+          return PromiseBB.resolve();
+        } else {
+          // don't install dependencies for extensions that are already loaded because
+          // doing so could cause an exception
+          if (
+            api.getLoadedExtensions().find((ext) => ext.name === extName) ===
+            undefined
+          ) {
+            return installExtensionDependencies(api, destPath);
+          } else {
+            return PromiseBB.resolve();
+          }
+        }
+      })
+      .catch(DataInvalid, (err) =>
+        rimrafAsync(tempPath, { glob: false }).then(() => {
+          api.showErrorNotification("Invalid Extension", err, {
+            allowReport: false,
+            message: archivePath,
+          });
+          return Promise.reject(err);
+        }),
+      )
+      .catch((err) =>
+        rimrafAsync(tempPath, { glob: false }).then(() =>
+          PromiseBB.reject(err),
+        ),
+      ),
+  ));
 }
 
 export default installExtension;
