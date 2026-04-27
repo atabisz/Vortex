@@ -1232,7 +1232,7 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
       })
       .catch((err) => {
         const isUserError =
-          ["EPERM", "EACCESS"].includes(err.code) ||
+          ["EPERM", "EACCESS", "UNKNOWN"].includes(err.code) ||
           err.message.includes("file not found") ||
           // TODO: error messages from the library are localized, this is what we
           //   actually want to filter by, rather than rename:
@@ -1264,7 +1264,7 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
       })
       .catch((err) => {
         const isUserError =
-          ["EPERM", "EACCESS"].includes(err.code) ||
+          ["EPERM", "EACCESS", "UNKNOWN"].includes(err.code) ||
           err.message.includes("file not found") ||
           // TODO: error messages from the library are localized, this is what we
           //   actually want to filter by, rather than rename:
