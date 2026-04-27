@@ -1,10 +1,7 @@
-name: Fingerprints - Mark as fixed
+name: Mark fingerprints as fixed
 on:
   pull_request:
     types: [closed]
-    branches:
-      - master
-      - "v*"
 
 permissions:
   contents: read
@@ -12,17 +9,10 @@ permissions:
 
 jobs:
   sync:
-    # Needs upstream's self-hosted runner + ClickHouse secrets; no-op in forks.
-    # Also skip auto-cherry-pick PRs created by .github/scripts/cherry-pick.sh
-    # (head branches always start with `cherry-pick/`); the original PR is
-    # what fixes the fingerprint, the cherry-pick is just propagation.
-    if: >-
-      github.repository == 'Nexus-Mods/Vortex' &&
-      github.event.pull_request.merged == true &&
-      !startsWith(github.event.pull_request.head.ref, 'cherry-pick/')
-    runs-on: [self-hosted]
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/fingerprints
         with:
           mode: pr

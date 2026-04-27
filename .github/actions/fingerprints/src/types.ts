@@ -12,19 +12,12 @@ export const Status = {
    * appear in users running that version or later.
    */
   Released: "released",
-  /**
-   * The error fingerprint is being ignored on purpose: it represents a
-   * non-bug (false positive, expected error in some user environments,
-   * out-of-our-control third-party failure, etc.). The dashboard should
-   * filter it out the same way as `released`, but there is no fix and no
-   * `release_version`. Terminal state — only set via `mode: resolve`.
-   */
-  Ignored: "ignored",
 } as const;
 export type Status = (typeof Status)[keyof typeof Status];
 
 export const STATUSES: readonly Status[] = Object.values(Status);
-export const isStatus = (s: string): s is Status => STATUSES.some((v) => v === s);
+export const isStatus = (s: string): s is Status =>
+  STATUSES.some((v) => v === s);
 
 /**
  * Trigger source the action is being invoked for.
@@ -66,11 +59,5 @@ export interface CollectResult {
   dbMode: DbMode;
 }
 
-export const FINGERPRINT_RE = /^[a-f0-9]{8}$/i;
-
-/**
- * Matches `Fixes fingerprint <hex>` and `Fixes fingerprints <hex>(, <hex>)*`
- * lines. The capture group is the raw fingerprint list — split it on
- * `[\s,]+` to get individual values.
- */
-export const PR_FINGERPRINT_RE = /^Fixes fingerprints? ([a-f0-9]{8}(?:[\s,]+[a-f0-9]{8})*)\b/gim;
+export const FINGERPRINT_RE = /^[a-f0-9]{8}$/;
+export const PR_FINGERPRINT_RE = /^Fixes fingerprint ([a-f0-9]{8})\b/gm;

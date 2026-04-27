@@ -16,7 +16,7 @@ inputs:
     required: false
     default: "false"
   status:
-    description: "mode=resolve: fixed | released | ignored. Used when adding."
+    description: "mode=resolve: fixed | released. Used when adding."
     required: false
     default: fixed
   release-version:
@@ -38,5 +38,5 @@ inputs:
     required: true
 
 runs:
-  using: node24
+  using: node20
   main: dist/index.js

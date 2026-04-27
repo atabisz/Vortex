@@ -1,6 +1,5 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
-
 import { CollectResult, PR_FINGERPRINT_RE, Status } from "./types";
 
 /**
@@ -11,19 +10,14 @@ import { CollectResult, PR_FINGERPRINT_RE, Status } from "./types";
 export const collectFromPR = (): CollectResult => {
   const pr = github.context.payload.pull_request;
   if (!pr) {
-    throw new Error("No pull_request payload available; mode=pr requires a pull_request event.");
+    throw new Error(
+      "No pull_request payload available; mode=pr requires a pull_request event.",
+    );
   }
 
   const body: string = pr.body ?? "";
   const fingerprints = [
-    ...new Set(
-      [...body.matchAll(PR_FINGERPRINT_RE)].flatMap((m) =>
-        m[1]
-          .split(/[\s,]+/)
-          .filter(Boolean)
-          .map((fp) => fp.toLowerCase()),
-      ),
-    ),
+    ...new Set([...body.matchAll(PR_FINGERPRINT_RE)].map((m) => m[1])),
   ];
 
   const rows = fingerprints.map((fingerprint) => ({

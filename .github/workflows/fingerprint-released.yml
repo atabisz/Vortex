@@ -1,4 +1,4 @@
-name: Fingerprints - Mark as released
+name: Mark fingerprints as released
 on:
   push:
     tags:
@@ -14,11 +14,9 @@ concurrency:
 
 jobs:
   sync:
-    # Needs upstream's self-hosted runner + ClickHouse secrets; no-op in forks.
-    if: github.repository == 'Nexus-Mods/Vortex'
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/fingerprints
         with:
           mode: release
