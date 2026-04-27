@@ -1,6 +1,5 @@
-import path from "node:path";
-
 import PromiseBB from "bluebird";
+import path from "node:path";
 
 import { log } from "../logging";
 
