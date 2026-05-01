@@ -26,7 +26,6 @@ import { toast } from "react-hot-toast";
 import * as semver from "semver";
 import { generate as shortid } from "shortid";
 import stringFormat from "string-template";
-import { fileMD5 } from "vortexmt";
 
 import type {
   DialogActions,
@@ -91,6 +90,7 @@ import {
 import { suppressNotification } from "./actions/notificationSettings";
 import { setExtensionLoadFailures } from "./actions/session";
 import { setOptionalExtensions } from "./extensions/extension_manager/actions";
+import { IPCDownloadAdapter } from "./IPCDownloadAdapter";
 import { log } from "./logging";
 import { registerSanityCheck } from "./store/reduxSanity";
 import ReduxWatcher from "./store/ReduxWatcher";
@@ -98,6 +98,7 @@ import { computeStateDiff } from "./store/stateDiff";
 import StyleManager from "./StyleManager";
 import { getApplication } from "./util/application";
 import { Archive } from "./util/archives";
+import { fileMD5 } from "./util/checksum";
 import { COMPANY_ID } from "./util/constants";
 import {
   MissingDependency,
@@ -130,12 +131,12 @@ import {
   isFunction,
   setdefault,
   timeout,
-  toPromise,
   truthy,
   wrapExtCBAsync,
   wrapExtCBSync,
 } from "./util/util";
 import { webpackRequireHack } from "./util/webpack-hacks";
+import { isToastSystemDisabled } from "./views/layout/ToastContainer";
 
 const modmeta = lazyRequire<typeof modmetaT>(() => require("modmeta-db"));
 
@@ -713,6 +714,7 @@ class ContextProxyHandler implements ProxyHandler<any> {
       registerLoadOrder: undefined,
       registerGameSpecificCollectionsData: undefined,
       registerHistoryStack: undefined,
+      registerDownloadProtocol: undefined,
       registerAPI: undefined,
       requireVersion: undefined,
       requireExtension: undefined,
@@ -790,6 +792,7 @@ class ExtensionManager {
   private mModDBAPIKey: string;
   private mModDBCache: { [id: string]: ILookupResult[] } = {};
   private mContextProxyHandler: ContextProxyHandler;
+  private mDownloadAdapter: IPCDownloadAdapter;
   private mExtensionState: { [extId: string]: IExtensionState };
   private mLoadFailures: { [extId: string]: IExtensionLoadFailure[] } = {};
   private mOptionalExtensions: { [extId: string]: IExtensionOptional[] } = {};
@@ -903,6 +906,8 @@ class ExtensionManager {
       NAMESPACE: "common",
     };
 
+    this.mDownloadAdapter = new IPCDownloadAdapter(this.mApi);
+
     // Use provided extension state directly (renderer-only architecture)
     // Extensions that need to be removed will be handled when setStore() is called
     this.mExtensionState = extensionState ?? {};
@@ -947,8 +952,11 @@ class ExtensionManager {
           // file handles yet despite waitForRendererExit in the main process.
           // Log and continue — the remove flag stays in state so it retries on
           // next startup.
-          log("warn", "failed to remove extension, will retry on next startup",
-            { extId, error: getErrorMessageOrDefault(err) });
+          log(
+            "warn",
+            "failed to remove extension, will retry on next startup",
+            { extId, error: getErrorMessageOrDefault(err) },
+          );
         }
       });
 
@@ -1112,6 +1120,8 @@ class ExtensionManager {
       this.mApi.store.getState() as T;
     this.mApi.onStateChange = this.stateChangeHandler;
 
+    this.mDownloadAdapter.processInterruptedDownloads();
+
     this.mApi.onStateChange(["settings", "metaserver", "servers"], () => {
       this.mForceDBReconnect = true;
     });
@@ -1230,6 +1240,15 @@ class ExtensionManager {
    */
   public applyExtensionsOfExtensions() {
     this.mContextProxyHandler.invokeAdditions(this.mExtensions);
+    this.mContextProxyHandler
+      .getCalls("registerDownloadProtocol")
+      .forEach((call) => {
+        const [scheme, handler] = call.arguments as [
+          string,
+          Parameters<IPCDownloadAdapter["registerProtocol"]>[1],
+        ];
+        this.mDownloadAdapter.registerProtocol(scheme, handler);
+      });
   }
 
   /**
@@ -1682,6 +1701,9 @@ class ExtensionManager {
   };
 
   private canBeToast = (notif: INotification) => {
+    if (isToastSystemDisabled()) {
+      return false;
+    }
     const invalidToastTypes = ["activity", "warning"];
     if (
       notif.displayMS != null &&
@@ -1819,8 +1841,9 @@ class ExtensionManager {
         const extProxy = new Proxy(contextProxy, apiProxy);
         const init = ext.initFunc();
         if (typeof init !== "function") {
+          const relevantInfo = _.pick(ext, ["name", "namespace", "path"]);
           throw new Error(
-            `init isn't a function but ${typeof init}: ${init} for ${Object.keys(ext)}`,
+            `corrupt extension, failed to initialize: ${JSON.stringify(relevantInfo)}`,
           );
         }
         init(extProxy as IExtensionContext);
@@ -2290,35 +2313,26 @@ class ExtensionManager {
     progressFunc?: (progress: number, total: number) => void,
   ): PromiseBB<IHashResult> => {
     let lastProgress: number = 0;
-    const progressHash = (progress: number, total: number) => {
-      progressFunc?.(progress, total);
-      if (lastProgress !== total) {
-        lastProgress = total;
-      }
-    };
-    return toPromise<string>((cb) => fileMD5(data, cb, progressHash)).then(
-      (result) => {
-        if (lastProgress === 0) {
-          // Need to get the size from the file or buffer
-          const sizePromise = Buffer.isBuffer(data)
-            ? PromiseBB.resolve(data.length)
-            : fsVortex
-                .statAsync(data)
-                .then((stats) => stats.size)
-                .catch(() => 0);
-
-          return sizePromise.then((numBytes) => ({
-            md5sum: result,
-            numBytes,
-          }));
-        } else {
-          return PromiseBB.resolve({
-            md5sum: result,
-            numBytes: lastProgress,
-          });
+    const progressHash = progressFunc
+      ? (progress: number, total: number) => {
+          progressFunc(progress, total);
+          lastProgress = total;
         }
-      },
-    );
+      : undefined;
+
+    return PromiseBB.resolve(fileMD5(data, progressHash)).then((md5sum) => {
+      if (lastProgress > 0) {
+        return { md5sum, numBytes: lastProgress };
+      }
+      const sizePromise = Buffer.isBuffer(data)
+        ? PromiseBB.resolve(data.length)
+        : fsVortex
+            .statAsync(data)
+            .then((stats) => stats.size)
+            .catch(() => 0);
+
+      return sizePromise.then((numBytes) => ({ md5sum, numBytes }));
+    });
   };
 
   private openArchive = (
@@ -2994,7 +3008,7 @@ class ExtensionManager {
   }
 
   /** Finds the default exported extension init function of a module */
-  private static getExtensionInitFunc(mod: unknown): ExtensionInit | undefined {
+  public static getExtensionInitFunc(mod: unknown): ExtensionInit | undefined {
     if (!mod) return undefined;
 
     if (typeof mod === "function") return mod as ExtensionInit;
@@ -3112,6 +3126,7 @@ class ExtensionManager {
   private prepareExtensions(): IRegisteredExtension[] {
     const staticExtensions: Record<string, () => unknown> = {
       about_dialog: () => require("./extensions/about_dialog/index.ts"),
+      adaptor_bridge: () => require("./extensions/adaptor_bridge/index.ts"),
       analytics: () => require("./extensions/analytics/index.ts"),
       announcement_dashlet: () =>
         require("./extensions/announcement_dashlet/index.ts"),

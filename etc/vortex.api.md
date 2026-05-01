@@ -399,7 +399,7 @@ const addMods: reduxAct.ComplexActionCreator2<string, IMod[], {
 }, {}>;
 
 // @public
-function addNotification(notification: INotification): (dispatch: any) => Promise_2<void> | Promise<void>;
+function addNotification(notification: INotification): (dispatch: any) => Promise<void> | Promise_2<void>;
 
 // @public (undocumented)
 function addReducer<ActionT, StateT>(action: ActionT, handler: (state: StateT, payload: PayloadT<ActionT>) => StateT): {
@@ -990,7 +990,7 @@ export const ErrorBoundary: any;
 function extractExeIcon(exePath: string, destPath: string): Promise<void>;
 
 // @public (undocumented)
-function fileMD5(filePath: string): Promise<string>;
+function fileMD5(input: string | Buffer, progress?: (bytesProcessed: number, totalBytes: number) => void): Promise<string>;
 
 // @public
 const finalizingDownload: ComplexActionCreator1<string, {
@@ -2242,6 +2242,11 @@ interface IExtensionContext {
     registerDashlet: RegisterDashlet;
     registerDeploymentMethod: (method: IDeploymentMethod) => void;
     registerDialog: RegisterDialog;
+    registerDownloadProtocol: (scheme: string, handler: (inputUrl: string) => PromiseLike<{
+        urls: string[];
+        updatedUrl?: string;
+        meta: unknown;
+    }>) => void;
     registerFooter: RegisterFooter;
     registerGame: (game: IGame) => void;
     registerGameInfoProvider: (id: string, priority: number, expireMS: number, keys: string[], query: GameInfoQuery) => void;
@@ -3705,6 +3710,10 @@ interface IState {
 // @public (undocumented)
 interface IStateDownloads {
     // (undocumented)
+    checkpoints: {
+        [id: string]: DownloadCheckpoint<string>;
+    };
+    // (undocumented)
     files: {
         [id: string]: IDownload;
     };
@@ -4375,7 +4384,7 @@ const nexusIdsFromDownloadId: ((state: IState, downloadId: string) => {
     modId: string;
     numericGameId: number;
     collectionSlug: string;
-    collectionId: any;
+    collectionId: string;
     revisionId: string;
 }) & OutputSelectorFields<(args_0: {
 [id: string]: IDownload;
@@ -4385,7 +4394,7 @@ fileId: string;
 modId: string;
 numericGameId: number;
 collectionSlug: string;
-collectionId: any;
+collectionId: string;
 revisionId: string;
 }, {
 clearCache: () => void;
@@ -6328,10 +6337,11 @@ export class ZoomableImage extends React_2.Component<IZoomableImageProps, {
 //
 // lib/extensions/mod_management/selectors.d.ts:59:5 - (ae-forgotten-export) The symbol "INeedToDeployMap" needs to be exported by the entry point api.d.ts
 // lib/types/IDialog.d.ts:84:9 - (ae-forgotten-export) The symbol "IBBCodeContext" needs to be exported by the entry point api.d.ts
-// lib/types/IState.d.ts:356:9 - (ae-forgotten-export) The symbol "IHistoryState" needs to be exported by the entry point api.d.ts
-// lib/types/IState.d.ts:358:9 - (ae-forgotten-export) The symbol "IHealthCheckSessionState" needs to be exported by the entry point api.d.ts
-// lib/types/IState.d.ts:390:9 - (ae-forgotten-export) The symbol "IHistoryPersistent" needs to be exported by the entry point api.d.ts
-// lib/types/IState.d.ts:391:9 - (ae-forgotten-export) The symbol "IHealthCheckPersistentState" needs to be exported by the entry point api.d.ts
+// lib/types/IState.d.ts:161:9 - (ae-forgotten-export) The symbol "DownloadCheckpoint" needs to be exported by the entry point api.d.ts
+// lib/types/IState.d.ts:360:9 - (ae-forgotten-export) The symbol "IHistoryState" needs to be exported by the entry point api.d.ts
+// lib/types/IState.d.ts:362:9 - (ae-forgotten-export) The symbol "IHealthCheckSessionState" needs to be exported by the entry point api.d.ts
+// lib/types/IState.d.ts:394:9 - (ae-forgotten-export) The symbol "IHistoryPersistent" needs to be exported by the entry point api.d.ts
+// lib/types/IState.d.ts:395:9 - (ae-forgotten-export) The symbol "IHealthCheckPersistentState" needs to be exported by the entry point api.d.ts
 // lib/views/MainPage.d.ts:12:5 - (ae-forgotten-export) The symbol "MainPageBody" needs to be exported by the entry point api.d.ts
 // lib/views/MainPage.d.ts:13:5 - (ae-forgotten-export) The symbol "MainPageHeader" needs to be exported by the entry point api.d.ts
 

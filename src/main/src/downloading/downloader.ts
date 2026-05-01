@@ -1,4 +1,13 @@
 import type {
+  ByteRange,
+  Chunk,
+  Chunker,
+  ChunkProgress,
+  ResolvedEndpoint,
+  Resolver,
+  RetryStrategy,
+} from "@vortex/shared/download";
+import type {
   Got,
   Headers,
   Delays as GotTimeoutOptions,
@@ -14,14 +23,8 @@ import got from "got";
 import { type FileHandle as NodeFileHandle, open } from "node:fs/promises";
 import PQueue from "p-queue";
 
-import type { ByteRange, Chunk, Chunker } from "./chunking";
-import type { ChunkProgress, ProgressReporter } from "./progress";
-import type {
-  Resolver,
-  NormalizedResource,
-  ResolvedEndpoint,
-} from "./resolver";
-import type { RetryStrategy } from "./retry";
+import type { ProgressReporter } from "./progress";
+import type { NormalizedResource } from "./resolver";
 
 import { isCancellation, toNetworkError } from "./errors";
 import { normalize } from "./resolver";
@@ -116,8 +119,10 @@ export async function download<T>(
     throw toNetworkError(resolved.probeEndpoint, err);
   }
 
-  if (probe.etag && options?.progressReporter)
-    options.progressReporter.etag = probe.etag;
+  if (options?.progressReporter) {
+    if (probe.etag) options.progressReporter.etag = probe.etag;
+    if (probe.fileName) options.progressReporter.fileName = probe.fileName;
+  }
 
   const canChunk = probe.acceptsRanges && probe.size > 0;
   const chunks = canChunk
@@ -352,7 +357,11 @@ async function probeUrl(
     );
   }
 
-  return { size, acceptsRanges, etag };
+  const fileName =
+    getContentDispositionFileName(response.headers) ??
+    getFileNameFromUrl(endpoint.url.toString());
+
+  return { size, acceptsRanges, etag, fileName };
 }
 
 /**
@@ -584,10 +593,40 @@ function getSize(
   return isNaN(parsed) ? null : parsed;
 }
 
+function getContentDispositionFileName(
+  headers: IncomingHttpHeaders,
+): string | null {
+  const raw = headers["content-disposition"];
+  if (!raw) return null;
+  // RFC 6266: filename* (encoded) takes priority over filename.
+  const starMatch = /filename\*\s*=\s*[^']*'[^']*'([^;]+)/i.exec(raw);
+  if (starMatch) {
+    try {
+      return decodeURIComponent(starMatch[1].trim());
+    } catch {
+      // fall through to plain filename
+    }
+  }
+  const plainMatch = /filename\s*=\s*"?([^";]+)"?/i.exec(raw);
+  return plainMatch ? plainMatch[1].trim() : null;
+}
+
+function getFileNameFromUrl(url: string): string | null {
+  try {
+    const basename = decodeURIComponent(
+      new URL(url).pathname.split("/").at(-1) ?? "",
+    );
+    return basename.length > 0 ? basename : null;
+  } catch {
+    return null;
+  }
+}
+
 type ProbeResult = {
   size: number | null;
   acceptsRanges: boolean;
   etag: string | null;
+  fileName: string | null;
 };
 
 type FileHandle = { fd: NodeFileHandle; path: string };

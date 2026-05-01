@@ -1,11 +1,14 @@
-import { vortexAdaptorPlugin } from "@vortex/adaptor-api/plugin";
+import { vortexAdaptorPlugin } from "@nexusmods/adaptor-api/plugin";
 import { rolldown, defineConfig } from "rolldown";
 
 const config = defineConfig({
   input: "./src/index.ts",
   platform: "neutral",
-  external: (id) =>
-    id.startsWith("@vortex/adaptor-api") || id.startsWith("@vortex/fs"),
+  // Only the two host-provided root modules are externalized. Subpath
+  // imports like `@nexusmods/adaptor-api/contracts/game-installer` are
+  // bundled in, because the adaptor sandbox only exposes the root
+  // `@nexusmods/adaptor-api` and `@vortex/fs` specifiers at runtime.
+  external: (id) => id === "@nexusmods/adaptor-api" || id === "@vortex/fs",
   plugins: [
     vortexAdaptorPlugin({}),
   ],

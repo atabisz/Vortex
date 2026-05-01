@@ -1,76 +1,3 @@
-import { setDownloadModInfo } from "../../actions";
-import type {
-  IExtensionApi,
-  StateChangeCallback,
-} from "../../types/IExtensionContext";
-import type { IDownload, IMod, IModTable, IState } from "../../types/IState";
-import {
-  DataInvalid,
-  ProcessCanceled,
-  UserCanceled,
-} from "../../util/CustomErrors";
-import Debouncer from "../../util/Debouncer";
-import * as fs from "../../util/fs";
-import { log } from "../../util/log";
-import { calcDuration, showError } from "../../util/message";
-import { upload } from "../../util/network";
-import opn from "../../util/opn";
-import {
-  activeGameId,
-  currentGame,
-  downloadPathForGame,
-  gameById,
-  knownGames,
-} from "../../util/selectors";
-import { getSafe } from "../../util/storeHelper";
-import { batchDispatch, truthy } from "../../util/util";
-
-import { resolveCategoryName } from "../category_management";
-import {
-  AlreadyDownloaded,
-  DownloadIsHTML,
-} from "../download_management/DownloadManager";
-import { SITE_ID } from "../gamemode_management/constants";
-import type { IGameStoredExt } from "../gamemode_management/types/IGameStored";
-import { setUpdatingMods } from "../mod_management/actions/session";
-import type { IModListItem } from "../news_dashlet/types";
-
-import { setUserInfo } from "./actions/persistent";
-import { findLatestUpdate, retrieveModInfo } from "./util/checkModsVersion";
-import { makeModUID } from "./util/UIDs";
-import {
-  nexusGameId,
-  toNXMId,
-  convertGameIdReverse,
-} from "./util/convertGameId";
-import {
-  FULL_COLLECTION_INFO,
-  FULL_REVISION_INFO,
-  CURRENT_REVISION_INFO,
-  COLLECTION_SEARCH_QUERY,
-  MOD_REQUIREMENTS_INFO,
-  MY_COLLECTIONS_SEARCH_QUERY,
-} from "./util/graphQueries";
-import submitFeedback from "./util/submitFeedback";
-
-import {
-  NEXUS_BASE_URL,
-  NEXUS_GAMES_URL,
-  USERINFO_ENDPOINT,
-} from "./constants";
-import {
-  checkModVersionsImpl,
-  endorseDirectImpl,
-  endorseThing,
-  ensureLoggedIn,
-  processErrorMessage,
-  resolveGraphError,
-  startDownload,
-  transformUserInfoFromApi,
-  updateKey,
-  updateToken,
-} from "./util";
-
 import type {
   EndorsedStatus,
   ICollection,
@@ -93,18 +20,84 @@ import type {
   IPreference,
 } from "@nexusmods/nexus-api";
 import type Nexus from "@nexusmods/nexus-api";
+
 import { NexusError, RateLimitError, TimeoutError } from "@nexusmods/nexus-api";
-import Bluebird from "bluebird";
-import * as path from "path";
-import * as semver from "semver";
-import type { ITokenReply } from "./util/oauth";
-import { isLoggedIn } from "./selectors";
-import type { IValidateKeyDataV2 } from "./types/IValidateKeyData";
 import {
   getErrorCode,
   getErrorMessageOrDefault,
   unknownToError,
 } from "@vortex/shared";
+import Bluebird from "bluebird";
+import * as path from "path";
+import * as semver from "semver";
+
+import type {
+  IExtensionApi,
+  StateChangeCallback,
+} from "../../types/IExtensionContext";
+import type { IDownload, IMod, IModTable, IState } from "../../types/IState";
+import type { IGameStoredExt } from "../gamemode_management/types/IGameStored";
+import type { IModListItem } from "../news_dashlet/types";
+import type { IValidateKeyDataV2 } from "./types/IValidateKeyData";
+import type { ITokenReply } from "./util/oauth";
+
+import { setDownloadModInfo } from "../../actions";
+import { log } from "../../logging";
+import {
+  DataInvalid,
+  ProcessCanceled,
+  UserCanceled,
+} from "../../util/CustomErrors";
+import Debouncer from "../../util/Debouncer";
+import * as fs from "../../util/fs";
+import { calcDuration, showError } from "../../util/message";
+import { upload } from "../../util/network";
+import opn from "../../util/opn";
+import {
+  activeGameId,
+  currentGame,
+  downloadPathForGame,
+  gameById,
+  knownGames,
+} from "../../util/selectors";
+import { getSafe } from "../../util/storeHelper";
+import { batchDispatch, truthy } from "../../util/util";
+import { resolveCategoryName } from "../category_management";
+import { AlreadyDownloaded, DownloadIsHTML } from "@vortex/shared/errors";
+import { SITE_ID } from "../gamemode_management/constants";
+import { setUpdatingMods } from "../mod_management/actions/session";
+import { setUserInfo } from "./actions/persistent";
+import { NEXUS_BASE_URL, NEXUS_GAMES_URL } from "./constants";
+import { isLoggedIn } from "./selectors";
+import {
+  checkModVersionsImpl,
+  endorseDirectImpl,
+  endorseThing,
+  ensureLoggedIn,
+  graphErrorContext,
+  nexusGamesProm,
+  processErrorMessage,
+  resolveGraphError,
+  startDownload,
+  transformUserInfoFromApi,
+  updateKey,
+  updateToken,
+} from "./util";
+import { findLatestUpdate, retrieveModInfo } from "./util/checkModsVersion";
+import {
+  nexusGameId,
+  toNXMId,
+  convertGameIdReverse,
+} from "./util/convertGameId";
+import {
+  FULL_COLLECTION_INFO,
+  FULL_REVISION_INFO,
+  COLLECTION_SEARCH_QUERY,
+  MOD_REQUIREMENTS_INFO,
+  MY_COLLECTIONS_SEARCH_QUERY,
+} from "./util/graphQueries";
+import submitFeedback from "./util/submitFeedback";
+import { makeModUID } from "./util/UIDs";
 
 export function onChangeDownloads(api: IExtensionApi, nexus: Nexus) {
   const state: IState = api.store.getState();
@@ -857,23 +850,33 @@ export function onGetNexusCollectionRevision(
         collectionSlug,
         revisionNumber > 0 ? revisionNumber : undefined,
       ),
-    ).catch((err) => {
-      const allowReport =
-        !err.message.includes("network disconnected") &&
-        !err.message.includes(
-          "Cannot return null for non-nullable field CollectionRevision.collection",
-        ) &&
-        err.code !== "COLLECTION_UNDER_MODERATION";
-      err["collectionSlug"] = collectionSlug;
-      err["revisionNumber"] = revisionNumber;
-      if (err.code !== "NOT_FOUND") {
-        api.showErrorNotification("Failed to get nexus revision info", err, {
-          id: "failed-get-revision-info",
-          allowReport,
-        });
-      }
-      return Bluebird.resolve(undefined);
-    });
+    ).catch(
+      (
+        err: NexusError & { collectionSlug?: string; revisionNumber?: number },
+      ) => {
+        const message = getErrorMessageOrDefault(err);
+        const isRevisionUnavailable = [
+          "NOT_FOUND",
+          "COLLECTION_REVISION_DISCARDED",
+          "COLLECTION_UNDER_MODERATION",
+        ].includes(err.code);
+        const allowReport =
+          !isRevisionUnavailable &&
+          !message.includes("network disconnected") &&
+          !message.includes(
+            "Cannot return null for non-nullable field CollectionRevision.collection",
+          );
+        err.collectionSlug = collectionSlug;
+        err.revisionNumber = revisionNumber;
+        if (!isRevisionUnavailable) {
+          api.showErrorNotification("Failed to get nexus revision info", err, {
+            id: "failed-get-revision-info",
+            allowReport,
+          });
+        }
+        return Bluebird.resolve(undefined);
+      },
+    );
   };
 }
 
@@ -1055,44 +1058,49 @@ export function onGetModRequirements(
       return Bluebird.resolve({});
     }
 
-    // Build UIDs for all mods (64-bit: game ID in upper 32 bits, mod ID in lower 32 bits)
-    // Pass Vortex gameId so makeModUID can convert to numeric Nexus game ID
-    const uidToModId: { [uid: string]: number } = {};
-    const validUids: string[] = [];
-
-    for (const modId of modIds) {
-      const modUid = makeModUID({
-        gameId,
-        modId: modId.toString(),
-        fileId: "0", // Not needed for mod UID but required by interface
-      });
-
-      if (modUid) {
-        uidToModId[modUid] = modId;
-        validUids.push(modUid);
-      } else {
-        log("warn", "Failed to create mod UID for requirements lookup", {
-          gameId: nexusGameDomain,
-          modId,
-        });
-      }
-    }
-
-    if (validUids.length === 0) {
-      return Bluebird.resolve({});
-    }
-
-    // Query must include modId to map results back to mods
     return Bluebird.resolve(
-      nexus.modsByUid(
-        {
-          modId: true,
-          modRequirements: MOD_REQUIREMENTS_INFO,
-          uid: true,
-          thumbnailUrl: true,
-        },
-        validUids,
-      ),
+      (async () => {
+        // makeModUID needs the nexus games list to map domain -> numeric game id.
+        // This should've been done on startup, but there appears to be
+        // a race condition https://github.com/Nexus-Mods/Vortex/issues/22466
+        await nexusGamesProm();
+
+        // Build UIDs for all mods (64-bit: game ID in upper 32 bits, mod ID in lower 32 bits)
+        // Pass Vortex gameId so makeModUID can convert to numeric Nexus game ID
+        const validUids: string[] = [];
+
+        for (const modId of modIds) {
+          const modUid = makeModUID({
+            gameId,
+            modId: modId.toString(),
+            fileId: "0", // Not needed for mod UID but required by interface
+          });
+
+          if (modUid) {
+            validUids.push(modUid);
+          } else {
+            log("warn", "Failed to create mod UID for requirements lookup", {
+              gameId: nexusGameDomain,
+              modId,
+            });
+          }
+        }
+
+        if (validUids.length === 0) {
+          return [];
+        }
+
+        // Query must include modId to map results back to mods
+        return nexus.modsByUid(
+          {
+            modId: true,
+            modRequirements: MOD_REQUIREMENTS_INFO,
+            uid: true,
+            thumbnailUrl: true,
+          },
+          validUids,
+        );
+      })(),
     )
       .then((mods) => {
         const result: Record<number, Partial<IModRequirements>> = {};
@@ -1118,23 +1126,26 @@ export function onGetModRequirements(
         return result;
       })
       .catch((err) => {
+        const defaultDetails = {
+          gameId: nexusGameDomain,
+          modIds,
+        }
         if (err instanceof RateLimitError) {
           log("warn", "Rate limited when fetching mod requirements", {
-            gameId: nexusGameDomain,
-            modIds,
+            ...defaultDetails
           });
         } else if (err instanceof TimeoutError) {
           log("warn", "Timeout when fetching mod requirements", {
-            gameId: nexusGameDomain,
-            modIds,
+            ...defaultDetails
           });
         } else {
-          const detail = processErrorMessage(err);
-          api.showErrorNotification("Failed to get mod requirements", detail, {
-            allowReport: detail.noReport ? false : true,
+          const detail = processErrorMessage(err as NexusError);
+          log("warn", "Failed to get mod requirements", {
+            ...defaultDetails,
+            ...detail,
+            ...graphErrorContext(err),
           });
         }
-
         return Bluebird.resolve({});
       });
   };

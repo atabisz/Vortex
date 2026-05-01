@@ -383,17 +383,36 @@ class InstallDriver {
       },
     );
 
-    api.events.on(
-      "did-start-download",
-      (info: { id: string; tag: string; urls: string[]; fileName: string }) => {
-        const rule = this.mDependentMods.find(
-          (r) =>
-            r.reference.tag === info.tag ||
-            r.reference.logicalFileName === info.fileName,
+    api.onStateChange(
+      ["persistent", "downloads", "files"],
+      (
+        prev: { [id: string]: types.IDownload },
+        current: { [id: string]: types.IDownload },
+      ) => {
+        if (this.mDependentMods.length === 0) return;
+
+        const newIds = Object.keys(current).filter(
+          (id) => prev?.[id] === undefined,
         );
-        const isBundled = rule?.extra?.localPath != null;
-        if (rule && !isBundled) {
-          this.updateModTracking(rule, "downloading");
+        for (const dlId of newIds) {
+          const download = current[dlId];
+          if (!download) continue;
+
+          const lookup = util.lookupFromDownload(download);
+          const matchingRule = this.mDependentMods.find((rule) => {
+            const {
+              patches,
+              fileList,
+              installerChoices,
+              ...refWithoutExtras
+            } = rule.reference;
+            return util.testModReference(lookup, refWithoutExtras);
+          });
+
+          const isBundled = matchingRule?.extra?.localPath != null;
+          if (matchingRule && !isBundled) {
+            this.updateModTracking(matchingRule, "downloading");
+          }
         }
       },
     );
@@ -1113,9 +1132,15 @@ class InstallDriver {
       ["requires", "recommends"].includes(rule.type),
     );
     const dependencies: types.IModRule[] = required.reduce((accum, rule) => {
+      // Mods with binary patches are always reinstalled as variants so the
+      // correct diffs are applied to clean files.
+      if (rule.extra?.patches != null) {
+        accum.push(rule);
+        return accum;
+      }
       const modRef: any = {
         ...rule.reference,
-        patches: rule?.extra?.patches ? { ...rule.extra.patches } : undefined,
+        patches: undefined,
         fileList: rule?.fileList,
       };
       const mod = util.findModByRef(modRef, mods);

@@ -6,7 +6,7 @@ import {
   unknownToError,
 } from "@vortex/shared";
 import PromiseBB from "bluebird";
-import * as diskusage from "diskusage";
+import * as nodeFs from "fs";
 import * as path from "path";
 import turbowalk from "turbowalk";
 import * as winapi from "winapi-bindings";
@@ -44,45 +44,22 @@ export function testPathTransfer(
   source: string,
   destination: string,
 ): PromiseBB<void> {
-  let destinationRoot: string;
+  if (process.platform !== "win32") {
+    return PromiseBB.reject(new UnsupportedOperatingSystem());
+  }
 
-  // Resolve destinationRoot to the first existing ancestor of destination.
-  // On Windows, GetVolumePathName already handles non-existent paths by returning
-  // the volume root. On Linux/macOS we must walk up manually, because diskusage.check()
-  // and fs.statAsync both require the path to exist.
-  const resolveDestinationRoot = (): PromiseBB<void> => {
-    if (process.platform === "win32") {
-      try {
-        destinationRoot = winapi.GetVolumePathName(destination);
-        return PromiseBB.resolve();
-      } catch (err) {
-        if (isErrorWithSystemCode(err)) {
-          if (err.systemCode === 2) {
-            return PromiseBB.reject(new NotFound(destination));
-          }
-        }
-        return PromiseBB.reject(err);
+  let destinationRoot: string;
+  try {
+    destinationRoot = winapi.GetVolumePathName(destination);
+  } catch (err) {
+    if (isErrorWithSystemCode(err)) {
+      if (err.systemCode === 2) {
+        return PromiseBB.reject(new NotFound(destination));
       }
-    } else {
-      const findExistingAncestor = (p: string): PromiseBB<string> =>
-        fs
-          .statAsync(p)
-          .then(() => p)
-          .catch((err) => {
-            if (err.code !== "ENOENT") {
-              return PromiseBB.reject(err);
-            }
-            const parent = path.dirname(p);
-            // Stop at filesystem root to avoid infinite recursion.
-            return parent !== p
-              ? findExistingAncestor(parent)
-              : PromiseBB.resolve(p);
-          });
-      return findExistingAncestor(destination).then((p) => {
-        destinationRoot = p;
-      });
     }
-  };
+
+    return PromiseBB.reject(err);
+  }
 
   const isOnSameVolume = (): PromiseBB<boolean> => {
     return PromiseBB.all([
@@ -104,46 +81,45 @@ export function testPathTransfer(
   };
 
   let totalNeededBytes = 0;
-  return resolveDestinationRoot().then(() =>
-    fs
-      .statAsync(source)
-      .catch((err) => {
-        // We were unable to confirm the existence of the source directory!
-        //  This is a valid use case when the source was a directory on
-        //  a removable drive or network drive that is no longer there, or
-        //  possibly a faulty HDD that was replaced.
-        //  For that reason, we're going to skip disk calculations entirely.
-        log(
-          "warn",
-          "Transfer disk space test failed - missing source directory",
-          err,
-        );
-        return PromiseBB.reject(new ProcessCanceled("Missing source directory"));
-      })
-      .then(() => isOnSameVolume())
-      .then((res) =>
-        res
-          ? PromiseBB.reject(
-              new ProcessCanceled("Disk space calculations are unnecessary."),
-            )
-          : calculate(source),
-      )
-      .then((totalSize) => {
-        totalNeededBytes = totalSize;
-        try {
-          return diskusage.check(destinationRoot);
-        } catch (err) {
-          // don't report an error just because this check failed
-          return PromiseBB.resolve({ free: Number.MAX_VALUE });
-        }
-      })
-      .then((res) =>
-        totalNeededBytes < res.free - MIN_DISK_SPACE_OFFSET
-          ? PromiseBB.resolve()
-          : PromiseBB.reject(new InsufficientDiskSpace(destinationRoot)),
-      )
-      .catch(ProcessCanceled, () => PromiseBB.resolve()),
-  );
+  return fs
+    .statAsync(source)
+    .catch((err) => {
+      // We were unable to confirm the existence of the source directory!
+      //  This is a valid use case when the source was a directory on
+      //  a removable drive or network drive that is no longer there, or
+      //  possibly a faulty HDD that was replaced.
+      //  For that reason, we're going to skip disk calculations entirely.
+      log(
+        "warn",
+        "Transfer disk space test failed - missing source directory",
+        err,
+      );
+      return PromiseBB.reject(new ProcessCanceled("Missing source directory"));
+    })
+    .then(() => isOnSameVolume())
+    .then((res) =>
+      res
+        ? PromiseBB.reject(
+            new ProcessCanceled("Disk space calculations are unnecessary."),
+          )
+        : calculate(source),
+    )
+    .then((totalSize) => {
+      totalNeededBytes = totalSize;
+      try {
+        const stats = nodeFs.statfsSync(destinationRoot);
+        return PromiseBB.resolve({ free: stats.bavail * stats.bsize });
+      } catch (err) {
+        // don't report an error just because this check failed
+        return PromiseBB.resolve({ free: Number.MAX_VALUE });
+      }
+    })
+    .then((res) =>
+      totalNeededBytes < res.free - MIN_DISK_SPACE_OFFSET
+        ? PromiseBB.resolve()
+        : PromiseBB.reject(new InsufficientDiskSpace(destinationRoot)),
+    )
+    .catch(ProcessCanceled, () => PromiseBB.resolve());
 }
 
 export type ProgressCallback = (

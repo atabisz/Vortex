@@ -17,6 +17,76 @@ export type Extension = string;
  * @public */
 export type ResolvedPath = string;
 
+declare const RelativePathBrand: unique symbol;
+
+/**
+ * Forward-slash-separated relative path. Guaranteed to have no leading
+ * slash, no drive-letter prefix, and no `..` segments. Values are only
+ * constructed through {@link relativePath}, which validates and
+ * normalizes the input.
+ *
+ * @public */
+export type RelativePath = string & { readonly [RelativePathBrand]: true };
+
+/**
+ * Thrown by {@link relativePath} when its input cannot be normalized
+ * into a valid relative path.
+ * @public */
+export class RelativePathError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "RelativePathError";
+  }
+}
+
+/**
+ * Constructs a {@link RelativePath} after validation and normalization.
+ *
+ * - Backslashes are converted to forward slashes.
+ * - A single trailing slash is trimmed.
+ * - Empty segments (repeated separators) are collapsed.
+ *
+ * @throws {@link RelativePathError} if the input is absolute (leading
+ * slash), contains a Windows drive-letter prefix (e.g. `C:`), or
+ * contains any `..` segment.
+ *
+ * @example
+ * ```ts @import.meta.vitest
+ * assert(relativePath("foo/bar.txt") === "foo/bar.txt");
+ * assert(relativePath("foo\\bar\\baz") === "foo/bar/baz");
+ * assert(relativePath("foo/") === "foo");
+ * ```
+ *
+ * @public */
+export function relativePath(raw: string): RelativePath {
+  const normalized = raw.replace(/\\/g, "/");
+
+  if (normalized.startsWith("/")) {
+    throw new RelativePathError(
+      `RelativePath must not start with '/': "${raw}"`,
+    );
+  }
+  if (/^[A-Za-z]:/.test(normalized)) {
+    throw new RelativePathError(
+      `RelativePath must not include a drive letter: "${raw}"`,
+    );
+  }
+
+  const trimmed =
+    normalized.endsWith("/") && normalized.length > 1
+      ? normalized.slice(0, -1)
+      : normalized;
+
+  const segments = trimmed.split("/").filter((s) => s.length > 0);
+  if (segments.some((s) => s === "..")) {
+    throw new RelativePathError(
+      `RelativePath must not contain '..' segments: "${raw}"`,
+    );
+  }
+
+  return segments.join("/") as RelativePath;
+}
+
 /**
  * Resolves {@link QualifiedPath} to {@link ResolvedPath}.
  *
@@ -42,6 +112,30 @@ export class PathResolverError extends Error {
     super(message, { cause });
     this.name = "PathResolverError";
   }
+}
+
+/**
+ * Dispatches path resolution across multiple {@link PathResolver}s keyed by
+ * scheme. Resolvers are registered by their {@link PathResolver.scheme} and
+ * selected by matching the scheme of the {@link QualifiedPath} being
+ * resolved.
+ *
+ * @public */
+export interface PathResolverRegistry {
+  /** Registers a resolver for its declared scheme. Overwrites any prior
+   *  resolver for the same scheme. */
+  register(resolver: PathResolver): void;
+
+  /** Returns the resolver for the given scheme, or `undefined` if none is
+   *  registered. */
+  get(scheme: string): PathResolver | undefined;
+
+  /** Resolves the given {@link QualifiedPath} by dispatching to the resolver
+   *  registered for its scheme.
+   *
+   * @throws {@link PathResolverError} when no resolver is registered for the
+   *   path's scheme. */
+  resolve(path: QualifiedPath): Promise<ResolvedPath>;
 }
 
 /**

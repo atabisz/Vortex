@@ -1,6 +1,6 @@
 {
   "$schema": "https://www.schemastore.org/package.json",
-  "name": "@vortex/adaptor-api",
+  "name": "@nexusmods/adaptor-api",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -28,10 +28,20 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./contracts/filesystem": {
+      "development": "./src/contracts/filesystem.ts",
+      "import": "./dist/contracts/filesystem.js",
+      "require": "./dist/contracts/filesystem.cjs"
+    },
     "./contracts/game-info": {
       "development": "./src/contracts/game-info.ts",
       "import": "./dist/contracts/game-info.js",
       "require": "./dist/contracts/game-info.cjs"
+    },
+    "./contracts/game-installer": {
+      "development": "./src/contracts/game-installer.ts",
+      "import": "./dist/contracts/game-installer.js",
+      "require": "./dist/contracts/game-installer.cjs"
     },
     "./contracts/game-paths": {
       "development": "./src/contracts/game-paths.ts",
@@ -43,6 +53,16 @@
       "import": "./dist/contracts/game-tools.js",
       "require": "./dist/contracts/game-tools.cjs"
     },
+    "./contracts/game-version": {
+      "development": "./src/contracts/game-version.ts",
+      "import": "./dist/contracts/game-version.js",
+      "require": "./dist/contracts/game-version.cjs"
+    },
+    "./contracts/glob": {
+      "development": "./src/contracts/glob.ts",
+      "import": "./dist/contracts/glob.js",
+      "require": "./dist/contracts/glob.cjs"
+    },
     "./contracts/ping": {
       "development": "./src/contracts/ping.ts",
       "import": "./dist/contracts/ping.js",
@@ -53,6 +73,11 @@
       "import": "./dist/plugin.js",
       "require": "./dist/plugin.cjs"
     },
+    "./stores/lib": {
+      "development": "./src/stores/lib.ts",
+      "import": "./dist/stores/lib.js",
+      "require": "./dist/stores/lib.cjs"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -61,9 +86,17 @@
         "import": "./dist/index.js",
         "require": "./dist/index.cjs"
       },
+      "./contracts/filesystem": {
+        "import": "./dist/contracts/filesystem.js",
+        "require": "./dist/contracts/filesystem.cjs"
+      },
       "./contracts/game-info": {
         "import": "./dist/contracts/game-info.js",
         "require": "./dist/contracts/game-info.cjs"
+      },
+      "./contracts/game-installer": {
+        "import": "./dist/contracts/game-installer.js",
+        "require": "./dist/contracts/game-installer.cjs"
       },
       "./contracts/game-paths": {
         "import": "./dist/contracts/game-paths.js",
@@ -73,6 +106,14 @@
         "import": "./dist/contracts/game-tools.js",
         "require": "./dist/contracts/game-tools.cjs"
       },
+      "./contracts/game-version": {
+        "import": "./dist/contracts/game-version.js",
+        "require": "./dist/contracts/game-version.cjs"
+      },
+      "./contracts/glob": {
+        "import": "./dist/contracts/glob.js",
+        "require": "./dist/contracts/glob.cjs"
+      },
       "./contracts/ping": {
         "import": "./dist/contracts/ping.js",
         "require": "./dist/contracts/ping.cjs"
@@ -80,6 +121,10 @@
       "./plugin": {
         "import": "./dist/plugin.js",
         "require": "./dist/plugin.cjs"
+      },
+      "./stores/lib": {
+        "import": "./dist/stores/lib.js",
+        "require": "./dist/stores/lib.cjs"
       },
       "./package.json": "./package.json"
     }

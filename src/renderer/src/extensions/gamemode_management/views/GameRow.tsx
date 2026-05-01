@@ -1,24 +1,25 @@
-import IconBar from "../../../controls/IconBar";
-import OverlayTrigger from "../../../controls/OverlayTrigger";
-import { IconButton } from "../../../controls/TooltipControls";
-import type { IActionDefinition } from "../../../types/IActionDefinition";
-import { ComponentEx } from "../../../controls/ComponentEx";
-import opn from "../../../util/opn";
-
-import type { IMod } from "../../mod_management/types/IMod";
-
-import type { IDiscoveryResult } from "../types/IDiscoveryResult";
-import type { IGameStored } from "../types/IGameStored";
-
-import GameInfoPopover from "./GameInfoPopover";
-
 import type PromiseBB from "bluebird";
 import type { TFunction } from "i18next";
+
 import * as path from "path";
 import * as React from "react";
 import { ListGroupItem, Media, Popover } from "react-bootstrap";
 import { Provider } from "react-redux";
 import { pathToFileURL } from "url";
+
+import type { IActionDefinition } from "../../../types/IActionDefinition";
+import type { IMod } from "../../mod_management/types/IMod";
+import type { IDiscoveryResult } from "../types/IDiscoveryResult";
+import type { IGameStored } from "../types/IGameStored";
+
+import { nexusGames } from "../../../extensions/nexus_integration/util";
+import { nexusGameId } from "../../../extensions/nexus_integration/util/convertGameId";
+import { ComponentEx } from "../../../controls/ComponentEx";
+import IconBar from "../../../controls/IconBar";
+import OverlayTrigger from "../../../controls/OverlayTrigger";
+import { IconButton } from "../../../controls/TooltipControls";
+import opn from "../../../util/opn";
+import GameInfoPopover from "./GameInfoPopover";
 
 export interface IProps {
   t: TFunction;
@@ -57,10 +58,21 @@ class GameRow extends ComponentEx<IProps, {}> {
       return null;
     }
 
-    const logoPath: string =
-      game.extensionPath !== undefined
+    let logoPath: string | undefined =
+      game.extensionPath !== undefined && game.logo !== undefined
         ? path.join(game.extensionPath, game.logo)
         : game.imageURL;
+
+    // For adaptor-registered games (no local logo), resolve a Nexus thumbnail
+    if (logoPath == null) {
+      const domain = nexusGameId(game);
+      const numericId = domain != null
+        ? nexusGames().find((g) => g.domain_name === domain)?.id
+        : undefined;
+      if (numericId !== undefined) {
+        logoPath = `https://images.nexusmods.com/images/games/v2/${numericId}/thumbnail.jpg`;
+      }
+    }
 
     const location =
       discovery !== undefined && discovery.path !== undefined ? (
@@ -76,23 +88,24 @@ class GameRow extends ComponentEx<IProps, {}> {
     }
 
     const gameInfoPopover = (
-      <Popover id={`popover-info-${game.id}`} className="popover-game-info">
+      <Popover className="popover-game-info" id={`popover-info-${game.id}`}>
         <Provider store={this.context.api.store}>
           <IconBar
-            id={`game-thumbnail-${game.id}`}
-            className="buttons"
-            group={`game-${type}-buttons`}
-            instanceId={game.id}
-            staticElements={[]}
-            collapse={false}
             buttonType="text"
-            orientation="vertical"
+            className="buttons"
+            collapse={false}
             filter={this.lowPriorityButtons}
+            group={`game-${type}-buttons`}
+            id={`game-thumbnail-${game.id}`}
+            instanceId={game.id}
+            orientation="vertical"
+            staticElements={[]}
             t={t}
           />
+
           <GameInfoPopover
-            t={t}
             game={game}
+            t={t}
             onChange={this.redraw}
             onRefreshGameInfo={onRefreshGameInfo}
           />
@@ -100,11 +113,19 @@ class GameRow extends ComponentEx<IProps, {}> {
       </Popover>
     );
 
-    const protocol = new URL(logoPath).protocol;
-    const imgurl =
-      protocol !== null && protocol.startsWith("http")
-        ? logoPath
-        : pathToFileURL(logoPath).href;
+    let imgurl = null;
+    if (logoPath != null) {
+      let protocol = null;
+      try {
+        protocol = new URL(logoPath)?.protocol;
+      } catch {
+        // not a URL, treat as file path
+      }
+      imgurl =
+        protocol != null && protocol.startsWith("http")
+          ? logoPath
+          : pathToFileURL(logoPath).href;
+    }
 
     return (
       <ListGroupItem className={classes.join(" ")}>
@@ -114,43 +135,47 @@ class GameRow extends ComponentEx<IProps, {}> {
               <img className="game-thumbnail-img-list" src={imgurl} />
             </div>
           </Media.Left>
+
           <Media.Body>
             <Media.Heading>{t(game.name.replace(/\t/g, " "))}</Media.Heading>
+
             {location !== null ? (
               <p>
                 {t("Location")}: {location}
               </p>
             ) : null}
           </Media.Body>
+
           <Media.Right>
             <OverlayTrigger
-              triggerRef={this.setRef}
-              getBounds={getBounds}
               container={container}
-              overlay={gameInfoPopover}
+              getBounds={getBounds}
               orientation="horizontal"
+              overlay={gameInfoPopover}
+              rootClose={true}
               shouldUpdatePosition={true}
               trigger="click"
-              rootClose={true}
+              triggerRef={this.setRef}
             >
               <IconButton
-                id={`btn-info-${game.id}`}
-                icon="game-menu"
                 className="btn-embed"
+                icon="game-menu"
+                id={`btn-info-${game.id}`}
                 tooltip={t("Show Details")}
               />
             </OverlayTrigger>
+
             <IconBar
-              t={t}
+              buttonType="icon"
               className="btngroup-game-list"
-              group={`game-${type}-buttons`}
-              instanceId={game.id}
-              staticElements={[]}
+              clickAnywhere={true}
               collapse={false}
               filter={this.priorityButtons}
-              clickAnywhere={true}
-              buttonType="icon"
-              showAll
+              group={`game-${type}-buttons`}
+              instanceId={game.id}
+              showAll={true}
+              staticElements={[]}
+              t={t}
             />
           </Media.Right>
         </Media>

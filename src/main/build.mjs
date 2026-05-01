@@ -44,7 +44,7 @@ const bootstrapConfig = createConfig(
   BOOTSTRAP_OUTPUT,
   "esm",
   [],
-  (id) => id.startsWith("@vortex/adaptor-api"),
+  (id) => id.startsWith("@nexusmods/adaptor-api"),
 );
 
 const bootstrapBundle = await rolldown(bootstrapConfig);
