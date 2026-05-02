@@ -5,5 +5,5 @@ export default defineConfig({
   format: ["cjs"],
   dts: true,
   platform: "node",
-  exports: "named",
+  outputOptions: { exports: "named" },
 });
