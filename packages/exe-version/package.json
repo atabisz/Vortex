@@ -9,7 +9,7 @@
     "dist": "pnpm tsdown"
   },
   "private": true,
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
     "tsdown": "catalog:"
   }
