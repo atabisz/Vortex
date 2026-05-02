@@ -11,7 +11,6 @@ import { ComplexActionCreator1 } from 'redux-act';
 import { ComplexActionCreator2 } from 'redux-act';
 import { ComplexActionCreator3 } from 'redux-act';
 import { ComplexActionCreator4 } from 'redux-act';
-import { ComplexActionCreator5 } from 'redux-act';
 import { ComplexActionCreator6 } from 'redux-act';
 import { constants } from 'fs';
 import { createReadStream } from 'original-fs';
@@ -398,7 +397,7 @@ declare const addMods: reduxAct.ComplexActionCreator2<string, IMod[], {
  * @param {INotification} notification
  * @returns
  */
-declare function addNotification(notification: INotification): (dispatch: any) => Promise_2<void> | Promise<void>;
+declare function addNotification(notification: INotification): (dispatch: any) => Promise<void> | Promise_2<void>;
 
 declare function addReducer<ActionT, StateT>(action: ActionT, handler: (state: StateT, payload: PayloadT<ActionT>) => StateT): {
     [x: number]: (state: StateT, payload: PayloadT<ActionT>) => StateT;
@@ -502,6 +501,14 @@ declare type ButtonProps = ITooltipProps & typeof Button.prototype.props;
 declare type ButtonType = "text" | "icon" | "both" | "menu";
 
 declare type ButtonType_2 = "text" | "icon" | "both" | "menu";
+
+/**
+ * A range starting at 0 with a length of 500 bytes is represented as start=0, end=499
+ */
+declare type ByteRange = {
+    start: number;
+    end: number;
+};
 
 declare function bytesToString(bytes: number): string;
 
@@ -1050,6 +1057,14 @@ itemId: string;
  */
 export declare const DNDContainer: FC<IDNDContainerProps>;
 
+declare type DownloadCheckpoint<T = unknown> = {
+    downloadId: string;
+    resource: T;
+    dest: string;
+    completedRanges: ByteRange[];
+    etag: string | null;
+};
+
 declare const downloadPath: (state: IState) => string;
 
 declare function downloadPathForGame(state: IState, gameId?: string): string;
@@ -1057,11 +1072,10 @@ declare function downloadPathForGame(state: IState, gameId?: string): string;
 /**
  * set download progress (in percent)
  */
-declare const downloadProgress: ComplexActionCreator5<string, number, number, IChunk[], string[], {
+declare const downloadProgress: ComplexActionCreator4<string, number, number, string[], {
 id: string;
 received: number;
 total: number;
-chunks: IChunk[];
 urls: string[];
 }, {}>;
 
@@ -1172,7 +1186,7 @@ declare type ExtensionType = "game" | "translation" | "theme";
 
 declare function extractExeIcon(exePath: string, destPath: string): Promise<void>;
 
-declare function fileMD5(filePath: string): Promise<string>;
+declare function fileMD5(input: string | Buffer, progress?: (bytesProcessed: number, totalBytes: number) => void): Promise<string>;
 
 /**
  * mark download as finalizing, meaning the file has been downloaded fully,
@@ -2913,10 +2927,6 @@ declare interface IDownload {
      */
     verified: number;
     /**
-     * for paused downloads, this contains the list segments that are still missing
-     */
-    chunks?: IChunk[];
-    /**
      * whether the download server supports resuming downloads
      */
     pausable?: boolean;
@@ -3556,6 +3566,16 @@ declare interface IExtensionContext {
      * @memberOf IExtensionContext
      */
     registerSettingsHive: (type: PersistingType, hive: string) => void;
+    /**
+     * registers a handler for a download URL scheme (e.g. "nxm"). The handler
+     * resolves the scheme-specific URL to a plain http/https URL that can be
+     * downloaded directly.
+     */
+    registerDownloadProtocol: (scheme: string, handler: (inputUrl: string) => PromiseLike<{
+        urls: string[];
+        updatedUrl?: string;
+        meta: unknown;
+    }>) => void;
     /**
      * register a new persistor that will hook a data file into the application store,
      * meaning any part of the application can access that data like any other data in the application
@@ -6143,6 +6163,9 @@ declare interface IStateDownloads {
     files: {
         [id: string]: IDownload;
     };
+    checkpoints: {
+        [id: string]: DownloadCheckpoint<string>;
+    };
 }
 
 declare interface IStateGameMode {
@@ -7236,7 +7259,7 @@ declare const nexusIdsFromDownloadId: ((state: IState, downloadId: string) => {
     modId: string;
     numericGameId: number;
     collectionSlug: string;
-    collectionId: any;
+    collectionId: string;
     revisionId: string;
 }) & OutputSelectorFields<(args_0: {
 [id: string]: IDownload;
@@ -7246,7 +7269,7 @@ fileId: string;
 modId: string;
 numericGameId: number;
 collectionSlug: string;
-collectionId: any;
+collectionId: string;
 revisionId: string;
 }, {
 clearCache: () => void;
@@ -7391,10 +7414,9 @@ declare function pad(value: number, padding: string, width: number): string;
 /**
  * mark download paused
  */
-declare const pauseDownload: ComplexActionCreator3<string, boolean, IChunk[], {
+declare const pauseDownload: ComplexActionCreator2<string, boolean, {
 id: string;
 paused: boolean;
-chunks: IChunk[];
 }, {}>;
 
 declare type PayloadT<Type> = Type extends ComplexActionCreator<infer X> ? X : never;

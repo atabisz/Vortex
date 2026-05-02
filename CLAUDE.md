@@ -344,15 +344,15 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 <!-- GSD:workflow-start source:GSD defaults -->
 ## Branch Strategy
 
-This fork maintains two branches for clean upstream PR separation:
+This fork maintains two branches:
 
 - **`master`** — primary development branch. All work happens here — Linux port changes, GSD planning artifacts, AppImage/deb build config, GitHub Actions distribution CI, and any fork-specific work.
-- **`linux-port`** — upstream PR candidate. A curated export of upstream-eligible commits from `master`, containing only Linux compatibility changes: platform guards, Linux code paths, devcontainer support, native addon work. No `.planning/` docs, no distribution CI, no fork tooling.
+- **`linux-port`** — clean Linux-only history. A curated export of Linux compatibility commits from `master`: platform guards, Linux code paths, devcontainer support, native addon work. No `.planning/` docs, no distribution CI, no fork tooling.
 
 ### Workflow rule
 
 **All work:** Develop and test in `master` first. This ensures full CI, AppImage/deb builds, and GSD tooling are available during development.
-**Upstreaming:** When a Linux-port change is ready to submit to `nexus-mods/Vortex`, cherry-pick the relevant commits to `linux-port`, excluding any `.planning/`, CI, or fork-only changes. Use `/gsd:pr-branch` to assist with clean exports.
+**linux-port:** Cherry-pick Linux compatibility commits from `master` to `linux-port` to keep a clean, focused history of Linux-only changes. Exclude `.planning/`, CI, and fork-only commits.
 **Fork-only work (distribution, planning, internal tooling):** Never cherry-pick to `linux-port`.
 
 ### What belongs where

@@ -157,7 +157,7 @@ catalog:
   dnd-core: ^9.4.0
   draggabilly: ^2.2.0
   drivelist: git+https://github.com/TanninOne/drivelist#720d1890db11482ec05fc0f6aa176cfa6e6844dd
-  electron: 41.3.0
+  electron: 39.8.0
   electron-builder: 24.13.3
   electron-context-menu: ^3.1.1
   electron-devtools-installer: ^3.2.0
@@ -299,5 +299,6 @@ overrides:
   "@types/react-dom": "16"
   node-addon-api: 8.5.0
 patchedDependencies:
+  bsatk@2.1.0: patches/bsatk@2.1.0.patch
   playwright-core@1.58.2: patches/playwright-core@1.58.2.patch
   loot@6.2.2: patches/loot@6.2.2.patch
