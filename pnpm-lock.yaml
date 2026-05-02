@@ -768,7 +768,7 @@ overrides:
 
 patchedDependencies:
   bsatk@2.1.0:
-    hash: 08ad69e18585ea4bb8bc1285debd8c9fa7d01b6fe22b5f290bfde8156e7e2d44
+    hash: a67bd7dd5397f6454636c1769541b2380d868a0c676d09259a322d3aff0fb81c
     path: patches/bsatk@2.1.0.patch
   loot@6.2.2:
     hash: 3d4c1edc7a442f9db9c091845b9f808f1d84517b03a9612fef4e41bd141f47bc
