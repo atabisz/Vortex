@@ -16,6 +16,7 @@
     "preinstall": "npx only-allow pnpm",
     "postinstall": "node scripts/postinstall-libloot.cjs",
     "start": "pnpm -F @vortex/main run start",
+    "rebuild:native": "npx @electron/rebuild -f -v 39.8.0 && node scripts/rebuild-pnpm-natives.cjs",
     "build": "pnpm run typecheck && pnpm --filter \"@vortex/*\" --filter \"@nexusmods/*\" -r run build",
     "build:all": "pnpm run build && pnpm run build:extensions && pnpm run build:assets",
     "build:extensions": "pnpm run api && pnpm run typecheck:extensions && pnpm --filter \"./extensions/**\" run build",

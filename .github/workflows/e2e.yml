@@ -54,6 +54,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Rebuild native addons for Electron
+        if: runner.os == 'Linux'
+        run: npx @electron/rebuild -f -v 39.8.0
+
+      # font-scanner lives in pnpm's isolated store and is missed by @electron/rebuild.
+      - name: Rebuild font-scanner for Electron
+        if: runner.os == 'Linux'
+        run: |
+          FONT_SCANNER_DIR=$(node -e "process.stdout.write(require('path').dirname(require.resolve('font-scanner/package.json', {paths: ['extensions/theme-switcher/node_modules', 'node_modules']})))")
+          echo "Rebuilding font-scanner at: $FONT_SCANNER_DIR"
+          cd "$FONT_SCANNER_DIR"
+          npx node-gyp rebuild --target=39.8.0 --arch=x64 --dist-url=https://electronjs.org/headers
+
       - name: Build
         run: pnpm run build:all
 
