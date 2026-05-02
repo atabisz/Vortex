@@ -91,8 +91,19 @@ function verifyLootViaDependencyCheck(lootPkgPath) {
 
 const addonResults = {};
 
+// Windows-only addons: not installed on Linux; skip verification there.
+// - bsatk: BSA archive support (Bethesda) — Windows prebuilt only
+// - esptk: ESP/ESM plugin toolkit — Windows prebuilt only
+// - bsdiff-node: binary diff (collections) — Windows prebuilt only
+// - vortexmt: multi-threading util — Windows prebuilt only
+const windowsOnlyAddons = ["bsatk", "esptk", "bsdiff-node", "vortexmt"];
+const crossPlatformAddons = ["xxhash-addon"];
+const addonsToVerify = process.platform === "win32"
+  ? [...windowsOnlyAddons, ...crossPlatformAddons]
+  : crossPlatformAddons;
+
 // Verify non-loot addons via require()
-for (const addonName of ["bsatk", "esptk", "bsdiff-node", "xxhash-addon", "vortexmt"]) {
+for (const addonName of addonsToVerify) {
   try {
     const pkgPath = resolveAddon(addonName);
     const addonDir = path.dirname(pkgPath);
