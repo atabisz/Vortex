@@ -49,6 +49,19 @@ index f73f16d..d8b1865 100644
                }]
              ]
          }
+diff --git a/package.json b/package.json
+index abc1234..def5678 100644
+--- a/package.json
++++ b/package.json
+@@ -9,7 +9,7 @@
+   "scripts": {
+     "upload": "prebuild -r napi -t 9 -a x64 --prepack codesign",
+     "rebuild": "autogypi && node-gyp rebuild",
+-    "install": "prebuild-install -r napi -t 9 -a x64 || npm run rebuild"
++    "install": "node -e \"if(process.platform==='win32')require('child_process').execSync('prebuild-install -r napi -t 9 -a x64',{stdio:'inherit',shell:true})\""
+   },
+   "author": "Black Tree Gaming Ltd.",
+   "license": "GPL-3.0",
 diff --git a/async.js b/async.js
 index 975fd21f3591aaac1a54b53cd991535d342540e0..0ed98568b3717b62646d2c2a48a69420032742f6 100644
 --- a/async.js
