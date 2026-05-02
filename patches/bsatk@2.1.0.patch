@@ -1,0 +1,15 @@
+diff --git a/package.json b/package.json
+index abc1234..def5678 100644
+--- a/package.json
++++ b/package.json
+@@ -10,8 +10,8 @@
+   "scripts": {
+     "submodules": "node fetch_bsatk.js",
+     "prebuild": "prebuild.cmd -r napi -t 6 -a x64 --prepack codesign",
+-    "preinstall": "npm run submodules",
+-    "install": "prebuild-install -r napi -t 6 -a x64 || node-gyp rebuild"
++    "preinstall": "node -e \"if(process.platform==='win32')require('child_process').execSync('node fetch_bsatk.js',{stdio:'inherit',shell:true})\"",
++    "install": "node -e \"if(process.platform==='win32')require('child_process').execSync('prebuild-install -r napi -t 6 -a x64',{stdio:'inherit',shell:true})\""
+   },
+   "binary": {
+     "napi_versions": [
