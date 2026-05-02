@@ -18,7 +18,7 @@ const DIST_PACKAGE_PATH = resolve(DIST_DIR, "package.json");
  * @returns {Record<string, string>}
  */
 function parseCatalog(yamlText) {
-  const match = yamlText.match(/^catalog:[ \t]*\n((?:[ \t]+\S.*\n?)*)/m);
+  const match = yamlText.match(/^catalog:[ \t]*\n((?:(?:[ \t]+.*|[ \t]*)(?:\n|$))*)/m);
   if (!match) return {};
 
   const catalog = {};
@@ -239,7 +239,7 @@ function extractOverridesBlock(yamlText) {
  * @returns {string | null}
  */
 function extractCatalogBlock(yamlText) {
-  const match = yamlText.match(/^catalog:[ \t]*\n((?:[ \t]+\S.*\n?)*)/m);
+  const match = yamlText.match(/^catalog:[ \t]*\n((?:(?:[ \t]+.*|[ \t]*)(?:\n|$))*)/m);
   if (!match) return null;
   return "catalog:\n" + match[1];
 }
