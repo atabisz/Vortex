@@ -771,7 +771,7 @@ patchedDependencies:
     hash: 08ad69e18585ea4bb8bc1285debd8c9fa7d01b6fe22b5f290bfde8156e7e2d44
     path: patches/bsatk@2.1.0.patch
   loot@6.2.2:
-    hash: d2b612fb6519177b37176c60dc0b65aea1546d448b9e0cb3a660032d70308d79
+    hash: 3d4c1edc7a442f9db9c091845b9f808f1d84517b03a9612fef4e41bd141f47bc
     path: patches/loot@6.2.2.patch
   playwright-core@1.58.2:
     hash: d20016d2ebd264257c6e1885fb814dc7d150de5b41b3a46557b431ab8de2cf34
@@ -1660,7 +1660,7 @@ importers:
     optionalDependencies:
       loot:
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d(patch_hash=d2b612fb6519177b37176c60dc0b65aea1546d448b9e0cb3a660032d70308d79)
+        version: https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d(patch_hash=3d4c1edc7a442f9db9c091845b9f808f1d84517b03a9612fef4e41bd141f47bc)
 
   extensions/gamebryo-savegame-management:
     dependencies:
@@ -19180,7 +19180,7 @@ snapshots:
     dependencies:
       js-tokens: 4.0.0
 
-  loot@https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d(patch_hash=d2b612fb6519177b37176c60dc0b65aea1546d448b9e0cb3a660032d70308d79):
+  loot@https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d(patch_hash=3d4c1edc7a442f9db9c091845b9f808f1d84517b03a9612fef4e41bd141f47bc):
     dependencies:
       autogypi: 0.2.2
       lodash: 4.17.23
