@@ -453,8 +453,8 @@ function onRestorePlugins(api: types.IExtensionApi, savegame: ISavegame) {
       dispatch,
       "Failed to restore plugins",
       "Your active game is no longer discovered by Vortex; " +
-      "please manually add your game, or run the discovery " +
-      "scan on the games page.",
+        "please manually add your game, or run the discovery " +
+        "scan on the games page.",
       { allowReport: true },
     );
     return;
@@ -534,7 +534,7 @@ async function onRemoveSavegames(
         dispatch,
         "Failed to delete savegame",
         "The profile attached to the savegame you're trying to remove no longer exists. " +
-        "Please delete the file manually.",
+          "Please delete the file manually.",
         { allowReport: false },
       );
       return Promise.resolve();
@@ -552,28 +552,28 @@ async function onRemoveSavegames(
   return Promise.map(savegameIds, (id) =>
     !!id
       ? Promise.map(saveFiles(currentProfile.gameId, id), (filePath) =>
-        fs
-          .removeAsync(path.join(sourceSavePath, filePath))
-          .catch(util.UserCanceled, () => undefined)
-          .catch((err) => {
-            // We're not checking for 'ENOENT' at this point given that
-            //  fs.removeAsync wrapper will resolve whenever these are
-            //  encountered.
-            if (err.code === "EPERM") {
-              util.showError(
-                dispatch,
-                "Failed to delete savegame",
-                "The file is write protected.",
-                { allowReport: false },
-              );
-              return Promise.resolve();
-            }
-            return Promise.reject(err);
-          })
-          .then(() => {
-            dispatch(removeSavegame(id));
-          }),
-      )
+          fs
+            .removeAsync(path.join(sourceSavePath, filePath))
+            .catch(util.UserCanceled, () => undefined)
+            .catch((err) => {
+              // We're not checking for 'ENOENT' at this point given that
+              //  fs.removeAsync wrapper will resolve whenever these are
+              //  encountered.
+              if (err.code === "EPERM") {
+                util.showError(
+                  dispatch,
+                  "Failed to delete savegame",
+                  "The file is write protected.",
+                  { allowReport: false },
+                );
+                return Promise.resolve();
+              }
+              return Promise.reject(err);
+            })
+            .then(() => {
+              dispatch(removeSavegame(id));
+            }),
+        )
       : Promise.reject(new Error("invalid savegame id")),
   )
     .then(() => updateSaves(api.store, sourceSavePath))
@@ -646,7 +646,7 @@ async function onTransferSavegames(
       return [
         t(
           "Unable to create save game directory: {{dest}}\\ (Please ensure you have " +
-          "enough space and/or full write permissions to the destination folder)",
+            "enough space and/or full write permissions to the destination folder)",
           {
             replace: { dest: destSavePath },
           },

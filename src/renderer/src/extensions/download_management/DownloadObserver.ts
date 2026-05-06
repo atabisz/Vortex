@@ -623,7 +623,10 @@ export class DownloadObserver {
           try {
             callback?.(null, id);
           } finally {
-            this.mApi.events.removeListener("start-install-download", onInstallFromCallback);
+            this.mApi.events.removeListener(
+              "start-install-download",
+              onInstallFromCallback,
+            );
           }
           if (
             !installTriggeredByCallback &&

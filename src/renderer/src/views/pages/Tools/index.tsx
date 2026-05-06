@@ -77,7 +77,9 @@ export const ToolsPage: FC = () => {
             <EmptyPlaceholder
               fill={true}
               icon="game"
-              text={t("When you are managing a game, supported tools will appear here")}
+              text={t(
+                "When you are managing a game, supported tools will appear here",
+              )}
             />
           </div>
         </MainPage.Body>
@@ -99,7 +101,9 @@ export const ToolsPage: FC = () => {
               </Typography>
 
               <Typography appearance="moderate">
-                {t("Tools are external programs or launch options used alongside the game.")}
+                {t(
+                  "Tools are external programs or launch options used alongside the game.",
+                )}
               </Typography>
             </div>
           </div>
@@ -147,7 +151,9 @@ export const ToolsPage: FC = () => {
                     max: MAX_PINNED_TOOLS,
                   })}
                   iconPath={mdiPin}
-                  tooltip={t("Pin shortcuts to your most used tools in the left menu")}
+                  tooltip={t(
+                    "Pin shortcuts to your most used tools in the left menu",
+                  )}
                 >
                   {otherPinnedTools.length > 0 ? (
                     otherPinnedTools.map((starter, idx) => (
@@ -173,7 +179,9 @@ export const ToolsPage: FC = () => {
                     ))
                   ) : (
                     <Typography appearance="subdued" typographyType="body-sm">
-                      {t("Pin shortcuts to your most used tools in the left menu.")}
+                      {t(
+                        "Pin shortcuts to your most used tools in the left menu.",
+                      )}
                     </Typography>
                   )}
                 </Panel>

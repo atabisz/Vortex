@@ -567,7 +567,7 @@ function main(context: IExtensionContext) {
         })
         .catch((err: any) => {
           context.api.showErrorNotification("Failed to purge ini edits", err, {
-            allowReport: (err).code !== "ENOENT",
+            allowReport: err.code !== "ENOENT",
           });
         });
     });

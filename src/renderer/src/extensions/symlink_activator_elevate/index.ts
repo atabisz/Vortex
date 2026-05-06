@@ -1,7 +1,12 @@
 import type { TFunction } from "i18next";
 import type * as os from "os";
 
-import { getErrorCode, getErrorMessageOrDefault, getErrorNativeCode, unknownToError } from "@vortex/shared";
+import {
+  getErrorCode,
+  getErrorMessageOrDefault,
+  getErrorNativeCode,
+  unknownToError,
+} from "@vortex/shared";
 import PromiseBB from "bluebird";
 import JsonSocket from "json-socket";
 import * as net from "net";
@@ -229,7 +234,9 @@ class DeploymentMethod extends LinkingDeployment {
     return this.closeServer()
       .then(() => this.startElevated())
       .tapCatch((err) => {
-        log("info", "elevated process failed", { error: getErrorMessageOrDefault(err) });
+        log("info", "elevated process failed", {
+          error: getErrorMessageOrDefault(err),
+        });
         this.context.onComplete();
       })
       .then(() => super.finalize(gameId, dataPath, installationPath))
@@ -305,10 +312,12 @@ class DeploymentMethod extends LinkingDeployment {
           : Promise.resolve(),
       )
       .then(() =>
-        Promise.resolve(this.emitOperation("link-file", {
-          source: sourcePath,
-          destination: linkPath,
-        })),
+        Promise.resolve(
+          this.emitOperation("link-file", {
+            source: sourcePath,
+            destination: linkPath,
+          }),
+        ),
       );
   }
 
@@ -949,9 +958,7 @@ function removeTask(): Promise<void> {
   )
     .then(() => undefined)
     .catch((err) => {
-      throw getErrorNativeCode(err) === 1223
-        ? new UserCanceled()
-        : err;
+      throw getErrorNativeCode(err) === 1223 ? new UserCanceled() : err;
     });
 }
 

@@ -1161,8 +1161,12 @@ function elevated(
     const timeout = setTimeout(() => {
       if (!resolved) {
         resolved = true;
-        reject(new Error("Elevated process did not connect within the expected time. "
-          + "This usually indicates it crashed or failed to start."));
+        reject(
+          new Error(
+            "Elevated process did not connect within the expected time. " +
+              "This usually indicates it crashed or failed to start.",
+          ),
+        );
       }
     }, ELEVATED_TIMEOUT_MS);
 
@@ -1211,7 +1215,11 @@ function elevated(
         // aware of another case
         reject(new UserCanceled());
       } else {
-        reject(new Error(`OS error ${error.message} (${getErrorCode(err) ?? nativeCode})`));
+        reject(
+          new Error(
+            `OS error ${error.message} (${getErrorCode(err) ?? nativeCode})`,
+          ),
+        );
       }
     });
   }).finally(() => {
