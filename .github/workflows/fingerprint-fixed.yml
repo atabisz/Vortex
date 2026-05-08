@@ -16,11 +16,14 @@ jobs:
     # Also skip auto-cherry-pick PRs created by .github/scripts/cherry-pick.sh
     # (head branches always start with `cherry-pick/`); the original PR is
     # what fixes the fingerprint, the cherry-pick is just propagation.
+    # `runs-on` falls back to ubuntu-latest in forks so GitHub can allocate a
+    # runner and evaluate the job-level `if` — otherwise the workflow queues
+    # forever waiting for a self-hosted runner that doesn't exist.
     if: >-
       github.repository == 'Nexus-Mods/Vortex' &&
       github.event.pull_request.merged == true &&
       !startsWith(github.event.pull_request.head.ref, 'cherry-pick/')
-    runs-on: [self-hosted]
+    runs-on: ${{ github.repository == 'Nexus-Mods/Vortex' && 'self-hosted' || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/fingerprints

@@ -15,8 +15,11 @@ concurrency:
 jobs:
   sync:
     # Needs upstream's self-hosted runner + ClickHouse secrets; no-op in forks.
+    # `runs-on` falls back to ubuntu-latest in forks so GitHub can allocate a
+    # runner and evaluate the job-level `if` — otherwise the workflow queues
+    # forever waiting for a self-hosted runner that doesn't exist.
     if: github.repository == 'Nexus-Mods/Vortex'
-    runs-on: [self-hosted]
+    runs-on: ${{ github.repository == 'Nexus-Mods/Vortex' && 'self-hosted' || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/fingerprints
