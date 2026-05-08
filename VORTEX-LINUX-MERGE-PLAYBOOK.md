@@ -245,6 +245,8 @@ Each entry is a real bug we hit at least once — written down so the next merge
 - **VSCode passes `ELECTRON_RUN_AS_NODE=1` down to child shells.** Launching Vortex from VSCode's terminal runs the Electron binary as plain Node, `require('electron')` returns a string path instead of the API, and it crashes straight away. Fix: `ELECTRON_RUN_AS_NODE=` in the `start` script. Also guard `electron-context-menu` (loads at module import time, also calls `require('electron')`). Commit `e69ee23b5`.
 - **`electron-builder` `neverBuiltDependencies` isn't enough to stop transitive native builds.** `winapi-bindings` still gets compiled as a transitive. Also add it to `pnpm-workspace.yaml`'s `neverBuiltDependencies` in `dist/`, AND use `electron-builder.config.cjs` with a `!**/winapi-bindings/**` files exclusion. Belt and braces. Commits `c0c4bf2a8`, `0ccaff0ed`.
 - **`prepare-dist-package` catalog regex stops at blank lines.** `pnpm-workspace.yaml` has a blank line mid-catalog; a naive `((?:[ \t]+\S.*\n?)*)` drops everything after it from `dist/pnpm-workspace.yaml`, causing `ERR_PNPM_CATALOG_ENTRY_NOT_FOUND_FOR_SPEC` for deps listed after the blank line. Fix: allow indented-with-content or pure-whitespace lines, only stop on the next top-level key. Commit `f66a99962`.
+- **pnpm 10's bundled `gyp_main.py` occasionally lands without an execute bit on GH runners.** Symptom: `font-scanner install: /bin/sh: 1: .../pnpm@10.x/.../node-gyp/gyp/gyp_main.py: Permission denied` during `pnpm install`, Makefile regeneration exits 126, kills the whole install step. Flaky — same workflow, same source, one runner hits it and the next doesn't. Fix: a `Fix pnpm-bundled node-gyp script permissions` step between the pnpm/Node setup and `pnpm install` that runs an idempotent `chmod +x` on the found path. Present in both `.github/workflows/main.yml` and `.github/workflows/release-linux.yml`. If an upstream workflow rewrite drops it, flaky installs come back immediately. Commit `f0a0d2178`.
+- **`src/main/package.json` packaging scripts and `electron-builder.config.cjs` must both point at the same app directory as `prepare-dist-package.mjs`.** When upstream renamed the packaged app directory from `dist` → `build`, the `package` / `package:nosign` scripts (`pnpm install --dir=./build`) and the config file (`directories.app: './build'`, plus both `path.join(__dirname, 'build', …)` references in the `beforePack` hook) all had to move together. A merge that updates only some of them fails CI with `ENOENT: no such file or directory, lstat '/.../src/main/dist'`. Commit `4d1ea811b`.
 
 ### platform-guard operator direction
 
@@ -263,13 +265,15 @@ Both forms now have named-script equivalents: `skip-on-windows.mjs` (`&&`, `exit
 
 Durable references to the fork-local Linux fixes this file depends on. If any of these commits are missing from either branch after a merge, something got reverted.
 
-| Fix                                                                                | master      | linux-port  |
-| ---------------------------------------------------------------------------------- | ----------- | ----------- |
-| Three gamebryo extensions use `skip-on-linux.mjs` (matches upstream `\|\|` intent) | _pending_   | _pending_   |
-| Remove win32 guard from `testPathTransfer`                                         | `7cfe61602` | `8e8b13284` |
-| Allowlist `winapi-bindings` from `nodeExternals`                                   | `e69401abf` | `0cccf116b` |
-| Pass real plugin filenames to LOOT + filter ghosts                                 | `324da1814` | `72641450c` |
-| Named `skip-on-linux.mjs` sibling guard (gamestore-xbox)                           | `5acb3d098` | `a41403030` |
+| Fix                                                                                | master      | linux-port    |
+| ---------------------------------------------------------------------------------- | ----------- | ------------- |
+| Three gamebryo extensions use `skip-on-linux.mjs` (matches upstream `\|\|` intent) | `c408173b9` | _pending_     |
+| Remove win32 guard from `testPathTransfer`                                         | `7cfe61602` | `8e8b13284`   |
+| Allowlist `winapi-bindings` from `nodeExternals`                                   | `e69401abf` | `0cccf116b`   |
+| Pass real plugin filenames to LOOT + filter ghosts                                 | `324da1814` | `72641450c`   |
+| Named `skip-on-linux.mjs` sibling guard (gamestore-xbox)                           | `5acb3d098` | `a41403030`   |
+| `src/main` packaging points at `build/` (not `dist/`) after upstream rename        | `4d1ea811b` | _master-only_ |
+| `chmod +x` pnpm-bundled `gyp_main.py` before `pnpm install` in CI                  | `f0a0d2178` | _master-only_ |
 
 Earlier-era fixes that were reverted by upstream merges (kept for archaeology):
 
