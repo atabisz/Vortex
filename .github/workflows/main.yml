@@ -66,6 +66,20 @@ jobs:
         if: runner.os == 'Linux'
         uses: Swatinem/rust-cache@v2
 
+      # pnpm 10 ships an embedded node-gyp whose gyp_main.py occasionally lands
+      # without an execute bit on fresh runners (hardlink/tarball quirk).
+      # Makefile invokes the script directly and fails with:
+      #   /bin/sh: 1: .../node-gyp/gyp/gyp_main.py: Permission denied
+      # Pre-emptive chmod is idempotent and cheap.
+      - name: Fix pnpm-bundled node-gyp script permissions
+        if: runner.os == 'Linux'
+        run: |
+          GYP_MAIN=$(find "$HOME/setup-pnpm" -path '*/node-gyp/gyp/gyp_main.py' -print -quit || true)
+          if [ -n "$GYP_MAIN" ]; then
+            chmod +x "$GYP_MAIN"
+            echo "chmod +x $GYP_MAIN"
+          fi
+
       - name: Install dependencies
         run: pnpm install
 
