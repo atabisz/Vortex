@@ -13,8 +13,7 @@ import {
 import type { AppInitMetadata } from "@vortex/shared/ipc";
 import type { IWindow } from "@vortex/shared/state";
 import { currentStatePath } from "@vortex/shared/state";
-import crashDump from "crash-dump";
-import { app, dialog, ipcMain, protocol, shell } from "electron";
+import { app, crashReporter, dialog, ipcMain, protocol, shell } from "electron";
 import type contextMenuType from "electron-context-menu";
 import isAdmin from "is-admin";
 import * as _ from "lodash";
@@ -508,8 +507,8 @@ class Application {
     if (this.mPendingDownload !== undefined) {
       const pendingUrl = this.mPendingDownload;
       this.mPendingDownload = undefined;
-      await this.applyArguments({ download: pendingUrl } as IParameters).catch(
-        (err: unknown) => log("warn", "failed to apply pending download", err),
+      await this.applyArguments({ download: pendingUrl } as IParameters).catch((err: unknown) =>
+        log("warn", "failed to apply pending download", err),
       );
     }
 

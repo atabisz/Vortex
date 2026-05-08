@@ -14,6 +14,7 @@ import type { IState } from "../../types/IState";
 import { getGame, UserCanceled } from "../../util/api";
 import * as fs from "../../util/fs";
 import type { Normalize } from "../../util/getNormalizeFunc";
+import { resolvePathCase } from "../../util/resolvePathCase";
 import { activeGameId } from "../../util/selectors";
 import { truthy } from "../../util/util";
 import type {
@@ -23,14 +24,6 @@ import type {
   IUnavailableReason,
 } from "./types/IDeploymentMethod";
 import type BlacklistSet from "./util/BlacklistSet";
-
-import { addNotification } from "../../actions/notifications";
-import { log } from "../../logging";
-import { getGame, UserCanceled } from "../../util/api";
-import * as fs from "../../util/fs";
-import { activeGameId } from "../../util/selectors";
-import { truthy } from "../../util/util";
-import { resolvePathCase } from "../../util/resolvePathCase";
 
 export interface IDeployment {
   [relPath: string]: IDeployedFile;
@@ -737,11 +730,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
     ]
       .filter((i) => truthy(i))
       .join(path.sep);
-    const outputPath = await resolvePathCase(
-      dataPath,
-      relOutputPath,
-      this.mReaddirCache,
-    );
+    const outputPath = await resolvePathCase(dataPath, relOutputPath, this.mReaddirCache);
     const sourcePath = path.join(
       installationPath,
       this.mContext.previousDeployment[key].source,
@@ -798,11 +787,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
     ]
       .filter((i) => i !== null)
       .join(path.sep);
-    const fullOutputPath = await resolvePathCase(
-      dataPath,
-      relOutputPath,
-      this.mReaddirCache,
-    );
+    const fullOutputPath = await resolvePathCase(dataPath, relOutputPath, this.mReaddirCache);
 
     const backupProm: Promise<void> = replace
       ? Promise.resolve()

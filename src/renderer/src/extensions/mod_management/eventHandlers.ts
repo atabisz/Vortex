@@ -3,6 +3,7 @@ import * as path from "path";
 import { getErrorCode, getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
 import * as _ from "lodash";
 import type { RuleType } from "modmeta-db";
+import turbowalk from "turbowalk";
 
 import { startActivity, stopActivity } from "../../actions/session";
 import type { IDialogResult } from "../../types/IDialog";
@@ -61,17 +62,6 @@ import {
 import modName from "./util/modName";
 import queryGameId from "./util/queryGameId";
 import refreshMods from "./util/refreshMods";
-
-import type InstallManager from "./InstallManager";
-import { currentActivator, installPath, installPathForGame } from "./selectors";
-import { ensureStagingDirectory } from "./stagingDirectory";
-
-import * as _ from "lodash";
-import type { RuleType } from "modmeta-db";
-import * as path from "path";
-import turbowalk from "turbowalk";
-import { getErrorCode, getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
-
 
 async function checkStagingGame(
   api: IExtensionApi,
@@ -647,11 +637,7 @@ async function synthesiseActivationFromStaging(
             fs.statAsync(gameFilePath).catch(() => null),
             fs.statAsync(stagingFilePath).catch(() => null),
           ]);
-          if (
-            gameStat !== null &&
-            stagingStat !== null &&
-            gameStat.ino === stagingStat.ino
-          ) {
+          if (gameStat !== null && stagingStat !== null && gameStat.ino === stagingStat.ino) {
             result.push({
               relPath,
               source: mod.installationPath,

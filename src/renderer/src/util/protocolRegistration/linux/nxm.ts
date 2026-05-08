@@ -64,10 +64,7 @@ export function registerLinuxNxmProtocolHandler(
   }
 
   if (desktopId === PACKAGE_DESKTOP_ID && process.env.APPIMAGE) {
-    didChangeDesktopFiles = ensureAppImageDesktopEntry(
-      applicationsDir,
-      process.env.APPIMAGE,
-    );
+    didChangeDesktopFiles = ensureAppImageDesktopEntry(applicationsDir, process.env.APPIMAGE);
   }
 
   if (didChangeDesktopFiles) {
@@ -183,13 +180,9 @@ function generateWrapperScript(executablePath: string, appPath: string): string 
     // but does not on non-handler calls (e.g., when starting from the start menu).
     // AppImage builds are self-contained: no appPath positional argument needed.
     (() => {
-      const noSandboxFlag = process.argv.includes("--no-sandbox")
-        ? " --no-sandbox"
-        : "";
+      const noSandboxFlag = process.argv.includes("--no-sandbox") ? " --no-sandbox" : "";
       const escapedExec = escapeShellScriptArgument(executablePath);
-      const appPathArg = appPath
-        ? ` "${escapeShellScriptArgument(appPath)}"`
-        : "";
+      const appPathArg = appPath ? ` "${escapeShellScriptArgument(appPath)}"` : "";
       return (
         `if [ -n "$1" ]; then\n` +
         `  exec "${escapedExec}"${appPathArg}${noSandboxFlag} --download "$@"\n` +
@@ -276,10 +269,7 @@ function ensureDevDesktopEntry(
   return wrapperChanged || desktopChanged;
 }
 
-function ensureAppImageDesktopEntry(
-  applicationsDir: string,
-  appImagePath: string,
-): boolean {
+function ensureAppImageDesktopEntry(applicationsDir: string, appImagePath: string): boolean {
   const wrapperPath = path.join(applicationsDir, APPIMAGE_WRAPPER_FILE_NAME);
   const desktopFilePath = path.join(applicationsDir, PACKAGE_DESKTOP_ID);
 
@@ -290,7 +280,7 @@ function ensureAppImageDesktopEntry(
 
   // AppImage is self-contained -- no appPath needed (the AppImage is both the
   // executable and the app bundle; Electron's appPath positional arg is not used).
-  const wrapperContent = generateWrapperScript(appImagePath);
+  const wrapperContent = generateWrapperScript(appImagePath, "");
   const wrapperChanged = writeFileIfChanged(wrapperPath, wrapperContent, 0o755);
 
   // The wrapper script adds --download conditionally when %u is provided.
@@ -312,11 +302,7 @@ function ensureAppImageDesktopEntry(
     "StartupNotify=true\n" +
     "Keywords=mod;mods;modding;nexus;games;skyrim;fallout;\n";
 
-  const desktopChanged = writeFileIfChanged(
-    desktopFilePath,
-    desktopFileContent,
-    0o755,
-  );
+  const desktopChanged = writeFileIfChanged(desktopFilePath, desktopFileContent, 0o755);
 
   return wrapperChanged || desktopChanged;
 }

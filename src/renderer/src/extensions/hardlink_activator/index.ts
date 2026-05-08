@@ -1,16 +1,11 @@
 import * as path from "path";
 import * as util from "util";
 
-import {
-  getErrorCode,
-  getErrorMessageOrDefault,
-  unknownToError,
-} from "@vortex/shared";
+import { getErrorCode, getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
 import PromiseBB from "bluebird";
 import type { TFunction } from "i18next";
 import turbowalk from "turbowalk";
 import type { IEntry } from "turbowalk";
-import * as util from "util";
 import * as winapi from "winapi-bindings";
 
 import { setSettingsPage } from "../../actions/session";
@@ -314,11 +309,7 @@ class DeploymentMethod extends LinkingDeployment {
           queue = queue.then(async () => {
             await enrichLinuxEntries(entries);
             return PromiseBB.map(entries, (entry) => {
-              if (
-                entry.linkCount > 1 &&
-                entry.idStr !== undefined &&
-                inos.has(entry.idStr)
-              ) {
+              if (entry.linkCount > 1 && entry.idStr !== undefined && inos.has(entry.idStr)) {
                 ++purged;
                 if (purged % 1000 === 0) {
                   onProgress?.(purged, total);

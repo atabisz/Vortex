@@ -1,10 +1,7 @@
-import type * as Redux from "redux";
-import type { ThunkDispatch } from "redux-thunk";
-
-import PromiseBB from "bluebird";
 import * as path from "path";
 
 import { getErrorCode, getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
+import PromiseBB from "bluebird";
 import * as React from "react";
 import {
   Alert,
@@ -70,10 +67,10 @@ import { modPathsForGame } from "../selectors";
 import { STAGING_DIR_TAG } from "../stagingDirectory";
 import getText from "../texts";
 import type { IDeploymentMethod } from "../types/IDeploymentMethod";
+import { resolveExternalChangesBeforePurge } from "../util/deploy";
 import { getSupportedActivators } from "../util/deploymentMethods";
 import { NoDeployment } from "../util/exceptions";
 import getInstallPath, { getInstallPathPattern } from "../util/getInstallPath";
-import { resolveExternalChangesBeforePurge } from "../util/deploy";
 
 interface IBaseProps {
   activators: IDeploymentMethod[];
@@ -197,18 +194,18 @@ class Settings extends ComponentEx<IProps, IComponentState> {
               {t(
                 process.platform === "linux"
                   ? "Usually, when you first manage a game, the staging folder is initially set to be in " +
-                    '"~/.local/share/Vortex/<game>" because that\'s ' +
-                    "guaranteed to exist and have the necessary file permissions set up.\n\n" +
-                    "If you enable this option, it will instead put the staging folder on the same " +
-                    "device as the primary mod folder of each game, " +
-                    "in /{{suggestionPattern}}/<game id>.\n" +
-                    "This should usually work fine for most users and ensures deployment is possible."
+                      '"~/.local/share/Vortex/<game>" because that\'s ' +
+                      "guaranteed to exist and have the necessary file permissions set up.\n\n" +
+                      "If you enable this option, it will instead put the staging folder on the same " +
+                      "device as the primary mod folder of each game, " +
+                      "in /{{suggestionPattern}}/<game id>.\n" +
+                      "This should usually work fine for most users and ensures deployment is possible."
                   : "Usually, when you first manage a game, the staging folder is initially set to be in " +
-                    '"c:\\Users\\<username>\\AppData\\Roaming\\Vortex\\<game>" because that\'s ' +
-                    "guaranteed to exist and have the necessary file permissions set up.\n\n" +
-                    "If you enable this option, it will instead put the staging folder on the same drive " +
-                    "as the primary mod folder of each game, in <drive>:\\{{suggestionPattern}}\\<game id>.\n" +
-                    "This should usually work fine for most users and ensures deployment is possible.",
+                      '"c:\\Users\\<username>\\AppData\\Roaming\\Vortex\\<game>" because that\'s ' +
+                      "guaranteed to exist and have the necessary file permissions set up.\n\n" +
+                      "If you enable this option, it will instead put the staging folder on the same drive " +
+                      "as the primary mod folder of each game, in <drive>:\\{{suggestionPattern}}\\<game id>.\n" +
+                      "This should usually work fine for most users and ensures deployment is possible.",
                 {
                   replace: {
                     suggestionPattern: suggestInstallPathDirectory,
@@ -553,7 +550,7 @@ class Settings extends ComponentEx<IProps, IComponentState> {
     return PromiseBB.resolve(
       oldInstallPath !== newInstallPath
         ? resolveExternalChangesBeforePurge(this.context.api)
-        : undefined
+        : undefined,
     )
       .then(() => {
         this.nextState.busy = t("Calculating required disk space");
