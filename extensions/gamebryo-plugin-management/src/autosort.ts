@@ -487,13 +487,22 @@ class LootInterface {
     const state = this.mExtensionApi.store.getState();
     const pluginList: IPlugins = state.session.plugins.pluginList;
 
+    // LOOT probes the filesystem with the exact strings we pass it. On
+    // case-insensitive filesystems (NTFS) the lowercased plugin id used to be
+    // sufficient; on case-sensitive filesystems (Linux ext4 without casefold)
+    // it isn't. Use the basename of the plugin's actual deployed file path
+    // so the case matches what's on disk. Ghosted plugins are excluded here
+    // because LOOT can't parse headers on .ghost-suffixed files.
+    const deployedPluginFileNames = plugins
+      .filter(
+        (id) =>
+          pluginList[id] !== undefined &&
+          pluginList[id].deployed &&
+          path.extname(pluginList[id].filePath).toLowerCase() !== GHOST_EXT,
+      )
+      .map((id) => path.basename(pluginList[id].filePath));
     try {
-      await loot.loadPluginsAsync(
-        plugins
-          .filter((id) => pluginList[id] !== undefined && pluginList[id].deployed)
-          .map((name) => name.toLowerCase()),
-        false,
-      );
+      await loot.loadPluginsAsync(deployedPluginFileNames, false);
       pluginsLoaded = true;
     } catch (err) {
       if (err.message.toLowerCase() === "already closed") {
@@ -528,13 +537,20 @@ class LootInterface {
           result[pluginName] = createEmpty();
           return;
         }
+        // LOOT looked the plugin up by its real on-disk filename during
+        // loadPlugins; use the same casing for metadata/info lookups so
+        // case-sensitive filesystems don't miss.
+        const id = pluginName.toLowerCase();
+        const lootKey =
+          pluginList[id]?.filePath !== undefined
+            ? path.basename(pluginList[id].filePath)
+            : pluginName;
         try {
-          const meta: PluginMetadata = await loot.getPluginMetadataAsync(pluginName);
+          const meta: PluginMetadata = await loot.getPluginMetadataAsync(lootKey);
           let info;
           try {
-            const id = pluginName.toLowerCase();
             if (pluginList[id] !== undefined && pluginList[id].deployed) {
-              info = await loot.getPluginAsync(pluginName);
+              info = await loot.getPluginAsync(lootKey);
             }
           } catch (err) {
             const gameMode = selectors.activeGameId(this.mExtensionApi.store.getState());
@@ -819,14 +835,8 @@ class LootInterface {
             ELECTRON_RUN_AS_NODE: "1",
             ...(process.platform === "linux"
               ? {
-                  LD_PRELOAD: path.join(
-                    path.dirname(modulePath),
-                    "libloot_wstring_stub.so",
-                  ),
-                  LD_LIBRARY_PATH: [
-                    path.dirname(modulePath),
-                    process.env.LD_LIBRARY_PATH,
-                  ]
+                  LD_PRELOAD: path.join(path.dirname(modulePath), "libloot_wstring_stub.so"),
+                  LD_LIBRARY_PATH: [path.dirname(modulePath), process.env.LD_LIBRARY_PATH]
                     .filter(Boolean)
                     .join(":"),
                 }
