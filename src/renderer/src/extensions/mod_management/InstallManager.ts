@@ -2482,8 +2482,16 @@ class InstallManager {
               err,
               renderModReference(dep.reference),
             );
+            // Notify InstallDriver so it can advance session tracking to
+            // "failed". Without this, pollAllPhasesComplete waits for the
+            // 5-minute stall timeout before resolving because the mod stays
+            // in "downloaded" status forever and isComplete never fires.
+            api.events.emit("did-fail-dependency", gameId, downloadId, dep.reference);
           } else {
             this.mDependencyRetryCount.delete(installKey);
+            // User-canceled is treated as skipped in session tracking so
+            // isComplete can fire and the poll exits cleanly.
+            api.events.emit("did-skip-dependency", gameId, downloadId, dep.reference);
           }
           // Don't rethrow to avoid crashing the concurrency limiter
         } finally {

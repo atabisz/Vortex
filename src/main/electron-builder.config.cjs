@@ -118,6 +118,25 @@ const config = {
         if (fs.existsSync(bluebirdSrc) && !fs.existsSync(bluebirdDest)) {
             fs.cpSync(bluebirdSrc, bluebirdDest, { recursive: true });
         }
+
+        // The @nexusmods/fomod-installer-ipc package ships ModInstallerIPC (a .NET
+        // self-contained ELF binary) without the execute bit set — a bug in the npm
+        // package. electron-builder preserves whatever permissions exist in node_modules,
+        // so the binary ends up non-executable in app.asar.unpacked, causing every FOMOD
+        // install to fail with EACCES / connection timeout on Linux.
+        // Fix: set +x before packing so the bit is preserved into the AppImage/deb.
+        const fomodIpcBinary = path.join(
+            __dirname,
+            "build",
+            "node_modules",
+            "@nexusmods",
+            "fomod-installer-ipc",
+            "dist",
+            "ModInstallerIPC",
+        );
+        if (fs.existsSync(fomodIpcBinary)) {
+            fs.chmodSync(fomodIpcBinary, 0o755);
+        }
     },
     asar: true,
     asarUnpack: [

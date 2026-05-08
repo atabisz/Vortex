@@ -444,6 +444,56 @@ class InstallDriver {
         this.onDidInstallDependencies(gameId, modId, recommendations);
       },
     );
+
+    // Update session tracking when a dependency install permanently fails or is
+    // skipped after user cancellation. Without these handlers the mod stays as
+    // "downloaded" forever, pollAllPhasesComplete never sees isComplete=true,
+    // and the collection install hangs until the 5-minute stall timeout fires.
+    const updateFailedOrSkipped = (
+      _gameId: string,
+      downloadId: string,
+      reference: types.IModReference,
+      status: types.CollectionModStatus,
+    ) => {
+      // Use the download object to build a proper IModLookupInfo for matching,
+      // consistent with the did-finish-download and did-import-downloads handlers.
+      // Fall back to direct reference field comparison when the download is gone.
+      const state = api.getState();
+      const download = state.persistent.downloads.files[downloadId];
+      const matchingRule = this.mDependentMods.find((rule) => {
+        const { patches, fileList, installerChoices, ...refWithoutExtras } = rule.reference;
+        if (download) {
+          const lookup = util.lookupFromDownload(download);
+          return util.testModReference(lookup, refWithoutExtras);
+        }
+        // Fallback: match by tag, MD5, or logicalFileName directly
+        if (reference.tag && rule.reference.tag === reference.tag) return true;
+        if (reference.fileMD5 && rule.reference.fileMD5 === reference.fileMD5) return true;
+        if (
+          reference.logicalFileName &&
+          rule.reference.logicalFileName === reference.logicalFileName
+        )
+          return true;
+        return false;
+      });
+      if (matchingRule) {
+        this.updateModTracking(matchingRule, status);
+      }
+    };
+
+    api.events.on(
+      "did-fail-dependency",
+      (gameId: string, downloadId: string, reference: types.IModReference) => {
+        updateFailedOrSkipped(gameId, downloadId, reference, "failed");
+      },
+    );
+
+    api.events.on(
+      "did-skip-dependency",
+      (gameId: string, downloadId: string, reference: types.IModReference) => {
+        updateFailedOrSkipped(gameId, downloadId, reference, "skipped");
+      },
+    );
   }
 
   public async prepare(func: () => Bluebird<void>) {
@@ -947,7 +997,8 @@ class InstallDriver {
     const gvMatch = (gv) => gv.reference === gameVersion;
     const revGameVersions = this.mRevisionInfo?.gameVersions ?? [];
     if (
-      gameVersion !== undefined && gameVersion !== '' &&
+      gameVersion !== undefined &&
+      gameVersion !== "" &&
       (revGameVersions.length ?? 0 !== 0) &&
       revGameVersions.find(gvMatch) === undefined
     ) {
