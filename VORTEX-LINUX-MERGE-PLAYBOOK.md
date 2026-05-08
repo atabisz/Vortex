@@ -179,6 +179,71 @@ The bell alerts are sticky across Vortex restarts — dismiss them manually afte
 
 ---
 
+## Historical gotchas by subsystem
+
+Each entry is a real bug we hit once — captured so the next merge-regression of the same category is recognisable on sight. Sourced from the ~85-commit Linux-port history; every item has a commit ref for the full context.
+
+### asar packaging
+
+- **Native addons inside `app.asar` silently return `[]` from `readdirSync`.** `leveldown`'s `node-gyp-build` can't find prebuilds, `modmeta-db` silently exports `ModDB=undefined`, `connectMetaDB` crashes at runtime. Fix: add the whole chain (`modmeta-db`, `leveldown`, `levelup`, `encoding-down`) to `asarUnpack`. But `asarUnpack` globs only match packages that actually exist in `dist/node_modules/` — peerDeps of `modmeta-db` must be promoted to direct deps of `@vortex/main` first, otherwise `pnpm install --dir=./dist` never installs them and the globs match nothing. Commits `538aef374`, `d7281c06c`.
+- **bundledPlugins extensions can't `require()` into `app.asar`.** They run from `app.asar.unpacked/bundledPlugins/` and resolution only walks up to `app.asar.unpacked/node_modules/`. If a dep is inside the asar, the extension fails to load (`Cannot find module modmeta-db` in `mo-import` / `nmm-import-tool`). Same fix as above — unpack.
+- **Adding something to `asarUnpack` that's already a direct dep causes `EEXIST` hardlink errors** in electron-builder (e.g. `bluebird`, covered once by the direct-dep scan, again by `asarUnpack`). Workaround: `beforePack` hook copies `bluebird` into `dist/node_modules/modmeta-db/node_modules/bluebird/`, which rides along under the existing `modmeta-db/**` glob. Commit `90b8de750`.
+- **`winapi-bindings` as a transitive native dep causes EEXIST on Linux packaging.** It's pulled in by `exe-version`, `permissions`, `turbowalk`, `wholocks`, `vortex-parse-ini`. The Linux shim replaces the JS at build time, but the `.node` binary still ships unless explicitly excluded. Fix: `electron-builder.config.cjs` with platform-conditional `files` array — `!**/winapi-bindings/**` on Linux. Commit `0ccaff0ed`.
+
+### native addon loading (loot, esptk, bsatk)
+
+- **Static top-level `require('esptk')` can take down the entire extension.** If `esptk.node` fails to dlopen (wrong arch, missing deps), the whole `gamebryo-plugin-management` extension fails to register and the Plugins tab disappears silently. Fix: lazy-load via `require()` inside the functions that need it, with graceful degradation. Commit `c219b460b`.
+- **`LD_LIBRARY_PATH` is not inherited by `fork()` by default** — Node forks clear path-adjacent env vars. `node-loot.node` has `RUNPATH $ORIGIN/../../loot_api` which is correct in the source tree but broken in packaged deb/AppImage where `libloot.so.0` is co-located inside `bundledPlugins/gamebryo-plugin-management/`. Two complementary fixes needed: prepend `bundledPlugins/gamebryo-plugin-management` to `LD_LIBRARY_PATH` in `main.ts` at app startup (commit `3a6488b9b`), AND pass `LD_LIBRARY_PATH` explicitly in the loot subprocess `fork()` env block (commit `0875e3db2`).
+- **loot's binding.gyp uses `-l../loot_api/libloot`, which `ld` can't resolve.** On Linux needs `-L../loot_api -llibloot` + RPATH. The patch lives in `patches/loot@6.2.1.patch`; a previous well-meaning rewrite of the patch to only carry IPC guards dropped the binding.gyp hunk. Commit `6cc8cbf2a`. Rule: **never rewrite a patch file wholesale — additive hunks only.**
+- **loot/bsatk `prebuild-install || node-gyp rebuild` fallback is easy to break.** A "helpful" `execSync` rewrite that throws on first failure strips the `|| node-gyp rebuild` fallback, so Windows CI fails because prebuild-install has no binaries for its napi version. Always keep the `||` fallback in the shell string, let `execSync` inspect the final exit code. Commits `ffe331d98`, `e49a4a5cd`.
+- **loot's index.js / async.js hard-coded `\\?\pipe\loot-ipc-*`** (Windows named-pipe path) causes `EACCES` on Linux startup. Patched in `patches/loot@6.2.1.patch`. Commit `8fd69eab9`.
+
+### case-sensitive filesystem (ext4 without casefold)
+
+- **Game extension `requiredFiles` casing ≠ on-disk exe casing.** `verifyToolDir` stats the declared name (e.g. `oblivion.exe`) and fails with ENOENT when disk has `Oblivion.exe`, clearing the active profile and returning the UI to the home screen. Fix: `resolvePathCase` before stat-ing. Applies to all games. Commit `e2c8ee6a8`.
+- **`resolvePathCase` must resolve every segment, including the filename.** Early version only case-resolved directories, so `removeDeployedFile` with a mismatched filename case would still `unlinkAsync` an ENOENT path (silently swallowed), leaving the file deployed. Extended to match every segment against parent `readdir`. Commit `bbf7c8f39`.
+- **Windows archive extraction produces case-conflicting directory trees on Linux.** `7z` extracts entries literally, so a mod archive with mixed `Data/SKSE/plugins/` and `data/SKSE/plugins/` entries creates two separate directories. Fix: `mergeCaseConflictingDirs()` run immediately after `normalizeBackslashPaths()` in both `simulate()` and `installInner()`. Commit `850a3cb40`.
+- **Filenames with backslashes in archives become filenames, not paths.** Windows-packaged archives using `\` as separator land as single filenames `Data\SKSE\plugins\foo.dll` on ext4. Normalise before file list build. Commit `728c91a85`.
+- **FOMOD `extractArchive` join paths case-sensitively.** `path.join(tempPath, source)` fails if the archive manifest declares `Data/` and the archive contains `data/`. Use `resolvePathCase` with a per-call `readdir` cache. Commit `cbff6b891`.
+- **LOOT is the cautionary tale.** See the dedicated lesson above — `toLowerCase()` on plugin names + ext4 + LOOT's ghost probe = the misleading `dlccoast.esm.ghost` error. Commit `324da1814`.
+
+### deployment manifests
+
+- **Wine/Proton-era manifests have Windows-style paths.** `loadActivation` must detect them (`isWineEraManifest()`), offer a purge dialog, and normalise backslashes before the instance-mismatch check otherwise runs. Commit `6f47dbf2b`.
+- **Primary manifest may be missing when backup is present.** Wine/Proton-era Vortex only wrote to the staging backup, never the game Data dir. If primary fails with ENOENT, fall through to backup2 (msgpack) and backup (JSON) before returning `emptyManifest`. Otherwise Wine-era detection in `loadActivation` never triggers. Commit `7e4034b77`.
+- **Synthesise a manifest when `loadActivation` returns `[]`.** Walk each mod's staging directory with `turbowalk` and confirm hardlinks into the game directory via inode comparison. Use the synthesised manifest as `lastActivation` so `deactivate()/finalize()` can correctly diff and unlink. Commit `0748357d6`.
+- **`deployMods` crashes with no mods installed.** Add `?? {}` guard on the mods access. Trivial but real crash on fresh Linux profile. Commit `7e4034b77`.
+
+### NXM protocol & single-instance
+
+- **`getVortexPath("package")` in dev returns `src/main/out/`, not `src/main/`.** Electron 37+ sets `app.getAppPath()` to the output directory. The second-instance lock uses this path; `src/main/out/` has no `package.json`, so the second Electron uses app name "Electron" with a different userData lock. The single-instance conflict never fires, the second-instance event never runs, and NXM downloads from the browser fail to route. Fix: `path.dirname(getVortexPath("package"))` to walk up to `src/main/`. Commit `f2f6e06d6`.
+- **Disabled guard that outlived its prerequisite.** A `disabled={process.platform === 'linux'}` on the NXM Toggle remained long after `xdg-settings`/`xdg-mime` support shipped. Check guards against current capability, not historical state. Commit `809d4b80a`.
+
+### game discovery / game stores
+
+- **`EpicGamesLauncher` exports `undefined` on Linux** (Windows-only). Any code that puts it in a `mKnownGameStores: [Steam, EpicGamesLauncher, ...]` array crashes `manualGameStoreSelection` with "Cannot read properties of undefined (reading 'id')". Filter undefined stores. Commit `04f5c9bf5`.
+- **Game extensions calling `epicGamesLauncher.findByAppId()` unconditionally crash on Linux.** Epic Games Launcher is Windows-only. Guard with `process.platform !== 'win32'` early reject so discovery fails gracefully with `ProcessCanceled`. Commit `ddaed178e` (game-untitledgoose).
+- **Bundled game extensions `require('winapi-bindings')` at runtime** — bypasses the webpack compile-time alias to `winapi-shim.ts`, so `winapi.RegGetValue` is undefined. Fix: intercept `winapi-bindings` in `extensionRequire` on Linux and return the shim directly. Commit `ddaed178e` (survivingmars, modtype-gedosato).
+
+### dist / CI config
+
+- **VSCode inherits `ELECTRON_RUN_AS_NODE=1` to child shells.** Launching Vortex from VSCode's terminal runs the Electron binary as plain Node, `require('electron')` returns a string path instead of the API, crashes immediately. Fix: `ELECTRON_RUN_AS_NODE=` in `start` script. Also guard `electron-context-menu` (loads at module import time, also calls `require('electron')`). Commit `e69ee23b5`.
+- **`electron-builder` `neverBuiltDependencies` isn't enough to stop transitive native builds.** `winapi-bindings` still gets compiled as a transitive. Also add to `pnpm-workspace.yaml`'s `neverBuiltDependencies` in `dist/`, AND use `electron-builder.config.cjs` with a `!**/winapi-bindings/**` files exclusion. Belt and braces. Commits `c0c4bf2a8`, `0ccaff0ed`.
+- **`prepare-dist-package` catalog regex stops at blank lines.** `pnpm-workspace.yaml` has a blank line mid-catalog; a naive `((?:[ \t]+\S.*\n?)*)` excludes everything after it from `dist/pnpm-workspace.yaml`, causing `ERR_PNPM_CATALOG_ENTRY_NOT_FOUND_FOR_SPEC` for deps listed after the blank line. Fix: allow indented-with-content or pure-whitespace lines, stop only on next top-level key. Commit `f66a99962`.
+
+### platform-guard operator direction
+
+Platform guards in `package.json` scripts come in TWO forms — and they use OPPOSITE shell operators. Don't assume one pattern fits all:
+
+| Guard intent | Predicate | Correct operator |
+|--------------|-----------|------------------|
+| Skip on Windows, build elsewhere | `exit(1)` if `win32` | `&&` (Windows exits 1, `&&` short-circuits; Linux exits 0, continues) |
+| Skip on Linux, build elsewhere | `exit(0)` if `linux` | `\|\|` (Linux exits 0, `\|\|` short-circuits; Windows exits 1, continues) |
+
+The `skip-on-windows.mjs` named script above makes the first form explicit and upstream-revert-resistant. The second form (used in `gamebryo-savegame-management`, which is Windows-only and should NOT build on Linux) is currently still inline. If we later introduce a `skip-on-linux.mjs` sibling, the match for "is this guard correct?" becomes just reading the filename. Until then, the checklist `grep "node -e.*process.platform.*win32"` only covers the `exit(1)` form; the `exit(0)` savegame guard is watched separately. Commits `77fdabb67` (flip to `||` for savegame), `e8f05bedb`, `d8b60ab35`.
+
+---
+
 ## Commit index
 
 Durable references to the fork-local Linux fixes this file depends on. If any of these commits are missing from either branch after a merge, something reverted them.
