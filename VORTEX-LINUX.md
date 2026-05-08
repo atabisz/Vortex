@@ -8,7 +8,7 @@ Vortex Linux is an independent fork of [nexus-mods/Vortex](https://github.com/Ne
 
 **Fork identity:** I'm not aware of a native Linux port for MO2 at this time, and there is no widely-available native Linux mod manager for Bethesda-engine games that I know of. Vortex is well-suited to fill that gap — it is already a mature, actively maintained mod manager built on excellent foundations. We build and distribute independently while staying current with the upstream work we depend on.
 
-**Upstream relationship:** The door is open. Four PR branches (devcontainer, XDG paths, winapi shim, IPC utility) are ready on the `linux-port` branch. We have not yet found a path to working together with the nexus-mods team. When that changes, the branches are there. In the meantime: ship to users, build an install base, and let demonstrated adoption do the talking. We stay current with upstream merges and our changes remain surgical — nothing stops a future reconciliation.
+**Upstream relationship:** The door is open. We have not yet found a path to working together with the nexus-mods team. In the meantime: ship to users, build an install base, and let demonstrated adoption do the talking. We stay current with upstream merges and our changes remain surgical — nothing stops a future reconciliation.
 
 ---
 
@@ -36,8 +36,8 @@ Vortex Linux is an independent fork of [nexus-mods/Vortex](https://github.com/Ne
 
 We have not found a way to work together with the nexus-mods team yet. That is not a permanent state.
 
-The `linux-port` branch stays clean and current. The four PR branches (pr-a through pr-d) remain as candidates. When there is an opening — a new maintainer, a community push, a change in upstream priorities — the branches are ready.
+The `linux-port` branch stays clean and current. When there is an opening — a new maintainer, a community push, a change in upstream priorities — the work is ready.
 
-In the meantime, one action worth taking: file a single GitHub Discussion in nexus-mods/Vortex asking "We maintain a Linux-compatible fork — what would a mergeable contribution look like to your team?" No PR. No pressure. Just an open question that keeps the conversation available. Then let the install base speak.
+In the meantime, one action worth taking: file a single GitHub Discussion in nexus-mods/Vortex asking "We maintain a Linux-compatible fork — what would a mergeable contribution look like to your team?" No pressure. Just an open question that keeps the conversation available. Then let the install base speak.
 
 The platform guards are additive, the diff is minimal, and the Windows build never breaks. If upstream ever wants to merge, the work is designed to land cleanly.
