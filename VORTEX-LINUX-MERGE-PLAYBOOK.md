@@ -1,8 +1,8 @@
 # Vortex Linux — Upstream Merge Playbook
 
-Companion to [VORTEX-LINUX.md](VORTEX-LINUX.md). VORTEX-LINUX.md is the strategic forward plan; this file is the tactical playbook for keeping the fork working after every upstream merge.
+Companion to [VORTEX-LINUX.md](VORTEX-LINUX.md). VORTEX-LINUX.md is the forward plan; this file is the post-merge checklist for keeping the fork working.
 
-Every entry here is a hard-won lesson from a real incident — not speculation. If something lands in this file, it has already bitten.
+Everything in here is something we actually hit — not speculation. If it's in this file, it's bitten us at least once.
 
 ---
 
@@ -18,24 +18,28 @@ The playbook below is the checklist we run after every upstream merge and the pr
 
 Run these **before** finalising any merge commit.
 
-### 1. Platform guards on gamebryo extension build scripts
+### 1. Platform guards on extension build scripts
 
 ```bash
-grep -l "node -e.*process.platform.*win32" extensions/gamebryo-*/package.json
+grep -l "node -e.*process.platform" extensions/*/package.json extensions/games/*/package.json
 ```
 
-If anything matches, upstream reintroduced the inline guard. Replace each hit with the named-script form:
+If anything matches, upstream reintroduced an inline guard. Replace each hit with the appropriate named-script form based on which platform should skip:
 
 ```json
 "build": "node ../skip-on-windows.mjs && (pnpm run _build && node ../copy-extension.mjs)"
+"build": "node ../skip-on-linux.mjs || (pnpm run _build && node ../copy-extension.mjs)"
 ```
 
-Watched files:
-- `extensions/gamebryo-plugin-management/package.json`
-- `extensions/gamebryo-bsa-support/package.json` *(has both `build` and `dist`)*
-- `extensions/gamebryo-archive-support/package.json`
+Note the operator asymmetry — see "platform-guard operator direction" in Historical gotchas for the full explanation. Quick rule: skip-on-windows uses `&&`, skip-on-linux uses `||`. Filename states the skipped platform.
 
-Sentinel: `extensions/skip-on-windows.mjs` must exist and be referenced by each of the three package.jsons above.
+Currently-known guarded extensions:
+- `extensions/gamebryo-plugin-management/package.json` *(skip-on-windows)*
+- `extensions/gamebryo-bsa-support/package.json` *(skip-on-windows, has both `build` and `dist`)*
+- `extensions/gamebryo-archive-support/package.json` *(skip-on-windows)*
+- `extensions/gamestore-xbox/package.json` *(skip-on-linux)*
+
+Sentinels: `extensions/skip-on-windows.mjs` and `extensions/skip-on-linux.mjs` must exist and be referenced by the package.jsons above.
 
 ### 2. Webpack externals allowlist for `winapi-bindings`
 
@@ -240,7 +244,7 @@ Platform guards in `package.json` scripts come in TWO forms — and they use OPP
 | Skip on Windows, build elsewhere | `exit(1)` if `win32` | `&&` (Windows exits 1, `&&` short-circuits; Linux exits 0, continues) |
 | Skip on Linux, build elsewhere | `exit(0)` if `linux` | `\|\|` (Linux exits 0, `\|\|` short-circuits; Windows exits 1, continues) |
 
-The `skip-on-windows.mjs` named script above makes the first form explicit and upstream-revert-resistant. The second form (used in `gamebryo-savegame-management`, which is Windows-only and should NOT build on Linux) is currently still inline. If we later introduce a `skip-on-linux.mjs` sibling, the match for "is this guard correct?" becomes just reading the filename. Until then, the checklist `grep "node -e.*process.platform.*win32"` only covers the `exit(1)` form; the `exit(0)` savegame guard is watched separately. Commits `77fdabb67` (flip to `||` for savegame), `e8f05bedb`, `d8b60ab35`.
+Both forms now have named-script equivalents: `skip-on-windows.mjs` (`&&`, `exit(1)` on Windows) and `skip-on-linux.mjs` (`||`, `exit(0)` on Linux). The asymmetric operator follows the exit code which follows the skipped platform — the filename is the source of truth. Checklist now uses `grep "node -e.*process.platform"` (platform-agnostic) to catch inline guards of either direction. Commits `77fdabb67` (flip to `||` for savegame), `e8f05bedb`, `d8b60ab35`.
 
 ---
 
@@ -254,6 +258,7 @@ Durable references to the fork-local Linux fixes this file depends on. If any of
 | Remove win32 guard from `testPathTransfer` | `7cfe61602` | `8e8b13284` |
 | Allowlist `winapi-bindings` from `nodeExternals` | `e69401abf` | `0cccf116b` |
 | Pass real plugin filenames to LOOT + filter ghosts | `324da1814` | `72641450c` |
+| Named `skip-on-linux.mjs` sibling guard (gamestore-xbox) | `5acb3d098` | `a41403030` |
 
 Earlier-era fixes that were reverted by upstream merges (kept for archaeology):
 - `d8b60ab35` — first `||` → `&&` flip on gamebryo guards
