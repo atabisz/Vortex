@@ -10,8 +10,16 @@
     "typecheck": "pnpm tsc -p tsconfig.json",
     "lint": "pnpm eslint --concurrency auto .",
     "lint:quiet": "pnpm eslint --concurrency auto --quiet .",
-    "api:build": "pnpm rimraf ./lib && pnpm tsc -p tsconfig.api.json",
-    "api:docs": "pnpm api-extractor run --local"
+    "api": "pnpm rimraf ./lib && pnpm tsc -p tsconfig.api.json && pnpm api-extractor run --local"
+  },
+  "nx": {
+    "targets": {
+      "api": {
+        "dependsOn": [
+          "^build"
+        ]
+      }
+    }
   },
   "devDependencies": {
     "@babel/polyfill": "catalog:",
@@ -90,7 +98,6 @@
     "commander": "catalog:",
     "content-disposition": "catalog:",
     "content-type": "catalog:",
-    "crash-dump": "catalog:",
     "csstype": "catalog:",
     "d3": "catalog:",
     "date-fns": "catalog:",

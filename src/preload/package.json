@@ -5,8 +5,7 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "build": "pnpm cross-env NODE_ENV=development node ./build.mjs",
-    "dist": "pnpm cross-env NODE_ENV=production node ./build.mjs",
+    "build": "node ./build.mjs",
     "typecheck": "pnpm tsc",
     "lint": "pnpm eslint --concurrency auto .",
     "lint:quiet": "pnpm eslint --concurrency auto --quiet ."

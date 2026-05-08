@@ -1,9 +1,17 @@
 import { defineConfig } from "tsdown";
 
 export default defineConfig({
-  entry: { index: "./src/index.ts" },
-  format: ["cjs"],
-  dts: true,
+  entry: {
+    index: "./src/index.ts",
+  },
+  format: ["esm", "cjs"],
   platform: "node",
-  outputOptions: { exports: "named" },
+  tsconfig: "./tsconfig.json",
+  dts: { sourcemap: true },
+  exports: {
+    devExports: "development",
+  },
+  outputOptions: {
+    exports: "named",
+  },
 });

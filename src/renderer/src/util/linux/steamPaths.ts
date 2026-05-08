@@ -1,5 +1,6 @@
-import * as path from "path";
 import * as fs from "fs";
+import * as path from "path";
+
 import getVortexPath from "../getVortexPath";
 import { xdgDataHome } from "./xdg";
 
@@ -28,15 +29,7 @@ export function getLinuxSteamPaths(): string[] {
     path.join(xdgDataHome(), "Steam"),
     path.join(home, ".steam", "debian-installation"), // Debian/Ubuntu
     path.join(home, ".var", "app", "com.valvesoftware.Steam", "data", "Steam"), // Flatpak
-    path.join(
-      home,
-      ".var",
-      "app",
-      "com.valvesoftware.Steam",
-      ".local",
-      "share",
-      "Steam",
-    ),
+    path.join(home, ".var", "app", "com.valvesoftware.Steam", ".local", "share", "Steam"),
     path.join(home, "snap", "steam", "common", ".local", "share", "Steam"), // Snap
     path.join(home, ".steam", "steam"), // Legacy
   );
@@ -49,11 +42,7 @@ export function getLinuxSteamPaths(): string[] {
  * Check if a path is a valid Steam installation
  */
 export function isValidSteamPath(steamPath: string): boolean {
-  const libraryFoldersPath = path.join(
-    steamPath,
-    "config",
-    "libraryfolders.vdf",
-  );
+  const libraryFoldersPath = path.join(steamPath, "config", "libraryfolders.vdf");
   try {
     fs.statSync(libraryFoldersPath);
     return true;

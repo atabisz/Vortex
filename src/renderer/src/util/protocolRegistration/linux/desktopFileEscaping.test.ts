@@ -1,10 +1,7 @@
 import { describe as _describe, test, expect } from "vitest";
 const describe = _describe.skipIf(process.platform !== "linux");
 
-import {
-  escapeDesktopExecFilePath,
-  escapeDesktopFilePath,
-} from "./desktopFileEscaping";
+import { escapeDesktopExecFilePath, escapeDesktopFilePath } from "./desktopFileEscaping";
 
 // Note(sewer)
 // Source (ported from code I wrote in NMA originally):

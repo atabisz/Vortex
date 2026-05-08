@@ -2,92 +2,72 @@
   "spawn": [],
   "copy": [
     {
-      "srcPath": "src/main/build/duckdb-extensions/**/*.duckdb_extension",
-      "outPath": "duckdb-extensions",
-      "skipPaths": 4,
-      "target": ["out", "dist"]
-    },
-    {
       "srcPath": "./LICENSE.md",
       "outPath": "",
-      "skipPaths": 0,
-      "target": ["out", "dist"]
+      "skipPaths": 0
     },
     {
       "srcPath": "src/stylesheets",
       "outPath": "assets/css",
-      "skipPaths": 2,
-      "target": ["out", "dist"]
+      "skipPaths": 2
     },
     {
       "srcPath": "node_modules/bootstrap-sass/assets/stylesheets/_bootstrap.scss",
       "outPath": "assets/css",
       "rename": "bootstrap.scss",
-      "skipPaths": 4,
-      "target": ["out", "dist"]
+      "skipPaths": 4
     },
     {
       "srcPath": "src/renderer/src/index.html",
       "outPath": "",
-      "target": ["out", "dist"],
       "skipPaths": 3
     },
     {
       "srcPath": "src/queries",
       "outPath": "",
-      "target": ["out", "dist"],
       "skipPaths": 1
     },
     {
       "srcPath": "src/renderer/src/splash.html",
       "outPath": "",
-      "target": ["out", "dist"],
       "skipPaths": 3
     },
     {
       "srcPath": "locales/*/*",
       "outPath": "",
-      "target": ["out"]
+      "devOnly": true
     },
     {
       "srcPath": "assets/images/",
-      "outPath": "",
-      "target": ["out", "dist"]
+      "outPath": ""
     },
     {
       "srcPath": "assets/icons/",
-      "outPath": "",
-      "target": ["out", "dist"]
+      "outPath": ""
     },
     {
       "srcPath": "assets/pictograms/",
-      "outPath": "",
-      "target": ["out", "dist"]
+      "outPath": ""
     },
     {
       "srcPath": "assets/fonts/*",
-      "outPath": "",
-      "target": ["out", "dist"]
+      "outPath": ""
     },
     {
       "srcPath": "assets/dotnetprobe.exe",
-      "outPath": "",
-      "target": ["out", "dist"]
+      "outPath": ""
     },
     {
       "srcPath": "assets/dotnetprobe",
-      "outPath": "",
-      "target": ["out", "dist"]
+      "outPath": ""
     },
     {
       "srcPath": "assets/*.json",
-      "outPath": "",
-      "target": ["out", "dist"]
+      "outPath": ""
     },
     {
       "srcPath": "assets/licenses/*",
-      "outPath": "",
-      "target": ["out", "dist"]
+      "outPath": ""
     }
   ]
 }

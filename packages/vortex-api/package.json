@@ -22,11 +22,21 @@
   "scripts": {
     "typecheck": "pnpm tsc -p tsconfig.lib.json"
   },
+  "nx": {
+    "targets": {
+      "typecheck": {
+        "dependsOn": [
+          "^api"
+        ]
+      }
+    }
+  },
   "devDependencies": {
     "@nexusmods/nexus-api": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/redux": "catalog:",
+    "@vortex/renderer": "workspace:*",
     "date-fns": "catalog:",
     "electron": "catalog:",
     "i18next": "catalog:",

@@ -1,6 +1,7 @@
-import { glob } from "glob";
 import { mkdir, cp } from "node:fs/promises";
-import { join, dirname, basename } from "node:path";
+import { join, dirname } from "node:path";
+
+import { glob } from "glob";
 
 import data from "./InstallAssets.json" with { type: "json" };
 
@@ -17,7 +18,7 @@ let copies = -1;
 
 try {
   const promises = data.copy.map(async (file) => {
-    if (file.target.indexOf(basename(tgt)) === -1) {
+    if (file.devOnly && process.env.NODE_ENV === "production") {
       return;
     }
 
@@ -25,9 +26,7 @@ try {
     copies = copies === -1 ? files.length : (copies += files.length);
 
     const filePromises = files.map(async (globResult) => {
-      let globTarget = join(
-        ...globResult.split(/[\/\\]/).slice(file.skipPaths),
-      );
+      let globTarget = join(...globResult.split(/[\/\\]/).slice(file.skipPaths));
 
       if (file.rename) {
         globTarget = join(dirname(globTarget), file.rename);

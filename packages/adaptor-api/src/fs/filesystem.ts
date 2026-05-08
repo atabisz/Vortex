@@ -1,15 +1,7 @@
+/// <reference lib="webworker" />
+
 import type { Pattern } from "./matcher";
 import type { QualifiedPath, ResolvedPath } from "./paths";
-
-/**
- * Interface-only alias for {@link FileSystem}. The `I`-prefixed name
- * matches the convention used by `@nexusmods/adaptor-api` service
- * contracts, so a contract file can declare the host filesystem
- * service with `ServiceRegistry["vortex:host/filesystem"]: IFileSystem`
- * without introducing a parallel duplicate interface.
- *
- * @public */
-export type IFileSystem = FileSystem;
 
 /**
  * Filesystem operations.
@@ -89,10 +81,7 @@ export interface FileSystem {
    *
    * @throws {@link FileSystemError}
    * */
-  stat(
-    path: QualifiedPath,
-    options?: { parseSymLink: boolean },
-  ): Promise<StatResult>;
+  stat(path: QualifiedPath, options?: { parseSymLink: boolean }): Promise<StatResult>;
 
   /**
    * Returns an async iterator to enumerate the directory.
@@ -150,12 +139,7 @@ export interface FileSystem {
       exclude?: Pattern;
     },
   ): Promise<AsyncIterator<QualifiedPath | [QualifiedPath, Status]>>;
-}
 
-/**
- * Filesystem APIs extended with Web-safe methods and types.
- * @public */
-export interface WebFileSystem extends FileSystem {
   /**
    * Creates a readable stream.
    *
@@ -188,21 +172,20 @@ export interface WebFileSystem extends FileSystem {
     mode: string,
     options?: { start?: number; end?: number },
   ): Promise<ReadableStream | WritableStream>;
+
+  /**
+   * Creates a hardlink or symlink at `to` pointing to `from`.
+   *
+   * @throws {@link FileSystemError}
+   * */
+  createLink(from: QualifiedPath, to: QualifiedPath, type: "hardlink" | "symlink"): Promise<void>;
 }
 
 /** @public */
 export interface FileSystemBackend {
-  copy(
-    source: ResolvedPath,
-    target: ResolvedPath,
-    options?: { overwrite: boolean },
-  ): Promise<void>;
+  copy(source: ResolvedPath, target: ResolvedPath, options?: { overwrite: boolean }): Promise<void>;
 
-  move(
-    source: ResolvedPath,
-    target: ResolvedPath,
-    options?: { overwrite: boolean },
-  ): Promise<void>;
+  move(source: ResolvedPath, target: ResolvedPath, options?: { overwrite: boolean }): Promise<void>;
 
   readFile(path: ResolvedPath): Promise<Uint8Array>;
   writeFile(path: ResolvedPath, contents: Uint8Array): Promise<void>;
@@ -212,10 +195,7 @@ export interface FileSystemBackend {
   delete(path: ResolvedPath): Promise<void>;
   deleteRecursive(path: ResolvedPath): Promise<void>;
 
-  stat(
-    path: ResolvedPath,
-    options?: { parseSymLink: boolean },
-  ): Promise<StatResult>;
+  stat(path: ResolvedPath, options?: { parseSymLink: boolean }): Promise<StatResult>;
 
   enumerateDirectory(
     path: ResolvedPath,
@@ -249,10 +229,7 @@ export interface FileSystemBackend {
       exclude?: Pattern;
     },
   ): Promise<AsyncIterator<ResolvedPath | [ResolvedPath, Status]>>;
-}
 
-/** @public */
-export interface WebFileSystemBackend extends FileSystemBackend {
   createStream(
     path: ResolvedPath,
     mode: "r",
@@ -269,12 +246,12 @@ export interface WebFileSystemBackend extends FileSystemBackend {
     mode: string,
     options?: { start?: number; end?: number },
   ): Promise<ReadableStream | WritableStream>;
+
+  createLink(from: ResolvedPath, to: ResolvedPath, type: "hardlink" | "symlink"): Promise<void>;
 }
 
 /** @public */
-export type StatResult =
-  | { readonly exists: false }
-  | ({ readonly exists: true } & Status);
+export type StatResult = { readonly exists: false } | ({ readonly exists: true } & Status);
 
 /** @public */
 export type Status = (FileStatus | DirectoryStatus) & SymLinkStatus;

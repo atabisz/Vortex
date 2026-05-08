@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir, readdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, glob } from "node:fs/promises";
 import { resolve, relative, dirname, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -10,7 +10,7 @@ const PNPM_WORKSPACE_PATH = resolve(ROOT_DIR, "pnpm-workspace.yaml");
 
 const MAIN_DIR = resolve(__dirname);
 const MAIN_PACKAGE_PATH = resolve(MAIN_DIR, "package.json");
-const DIST_DIR = resolve(MAIN_DIR, "dist");
+const DIST_DIR = resolve(MAIN_DIR, "build");
 const DIST_PACKAGE_PATH = resolve(DIST_DIR, "package.json");
 
 /** Parse catalog from pnpm-workspace.yaml
@@ -56,11 +56,7 @@ function parseCatalog(yamlText) {
 
 /** Rewrite relative file dependencies to absolute file dependencies,
  *  and resolve workspace: dependencies to absolute file dependencies */
-function rewriteFileDependencies(
-  deps = {},
-  workspacePackageMap = {},
-  catalog = {},
-) {
+function rewriteFileDependencies(deps = {}, workspacePackageMap = {}, catalog = {}) {
   const rewritten = {};
 
   for (const [name, version] of Object.entries(deps)) {
@@ -136,33 +132,19 @@ function extractWorkspacePackageGlobs(yamlText) {
 async function buildWorkspacePackageMap(packagePaths) {
   const map = {};
 
+  const resolvedPaths = [];
   for (const pkgPath of packagePaths) {
-    if (pkgPath.endsWith("/*")) {
-      // Expand single-level glob by listing the directory
-      const dirPath = resolve(ROOT_DIR, pkgPath.slice(0, -2));
-      try {
-        const entries = await readdir(dirPath, { withFileTypes: true });
-        for (const entry of entries) {
-          if (!entry.isDirectory()) continue;
-          const pkgJsonPath = resolve(dirPath, entry.name, "package.json");
-          try {
-            const raw = await readFile(pkgJsonPath, "utf8");
-            const pkg = JSON.parse(raw);
-            if (pkg.name) {
-              map[pkg.name] = resolve(dirPath, entry.name);
-            }
-          } catch {
-            // Skip packages whose package.json cannot be read
-          }
-        }
-      } catch {
-        // Skip unreadable directories
+    if (pkgPath.includes("*")) {
+      const matches = await Array.fromAsync(glob(pkgPath, { cwd: ROOT_DIR }));
+      for (const match of matches) {
+        resolvedPaths.push(match);
       }
-      continue;
+    } else {
+      resolvedPaths.push(pkgPath);
     }
+  }
 
-    if (pkgPath.includes("*")) continue;
-
+  for (const pkgPath of resolvedPaths) {
     const pkgDir = resolve(ROOT_DIR, pkgPath);
     const pkgJsonPath = resolve(pkgDir, "package.json");
 
@@ -191,7 +173,7 @@ async function createMinimalPackageJson(workspacePackageMap, catalog) {
   const minimal = {
     name: "Vortex",
     version: process.env.VORTEX_VERSION || "1.0.0",
-    main: mainPkg.main.replace(/^out\//, ""),
+    main: mainPkg.main.replace(/^build\//, ""),
     author: "Black Tree Gaming Ltd.",
     description:
       "The elegant, powerful, and open-source mod manager from Nexus Mods",
@@ -213,13 +195,9 @@ async function createMinimalPackageJson(workspacePackageMap, catalog) {
 
   await mkdir(DIST_DIR, { recursive: true });
 
-  await writeFile(
-    DIST_PACKAGE_PATH,
-    JSON.stringify(minimal, null, 2) + "\n",
-    "utf8",
-  );
+  await writeFile(DIST_PACKAGE_PATH, JSON.stringify(minimal, null, 2) + "\n", "utf8");
 
-  console.log("✔  Created dist/package.json");
+  console.log("✔  Created build/package.json");
 }
 
 /**
@@ -320,7 +298,7 @@ async function collectNeededWorkspacePkgs(workspacePackageMap) {
 async function preparePNPM(rawWorkspaceYaml, neededWorkspaceDirs) {
   const npmrc = ["node-linker=hoisted", "shamefully-hoist=true"].join("\n");
   await writeFile(resolve(DIST_DIR, ".npmrc"), npmrc);
-  console.log("✔  Created dist/.npmrc");
+  console.log("✔  Created build/.npmrc");
 
   const allowBuilds = extractAllowBuildsBlock(rawWorkspaceYaml);
   const catalog = extractCatalogBlock(rawWorkspaceYaml);
@@ -346,7 +324,7 @@ async function preparePNPM(rawWorkspaceYaml, neededWorkspaceDirs) {
     "\n";
 
   await writeFile(resolve(DIST_DIR, "pnpm-workspace.yaml"), minimalYaml);
-  console.log("✔  Created dist/pnpm-workspace.yaml");
+  console.log("✔  Created build/pnpm-workspace.yaml");
 }
 
 async function main() {

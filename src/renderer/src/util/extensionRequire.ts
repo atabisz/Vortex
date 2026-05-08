@@ -4,14 +4,12 @@ const Module = require("module");
 import * as reduxAct from "redux-act";
 import * as winapiShim from "./winapi-shim";
 
-import type { IRegisteredExtension } from "../types/extensions";
-import type { LogLevel } from "./log";
-
-import { webpackRequireHack } from "./webpack-hacks";
-
 import * as api from "../api";
 import * as reactSelect from "../controls/ReactSelectWrap";
 import ExtensionManager from "../ExtensionManager";
+import type { IRegisteredExtension } from "../types/extensions";
+import type { LogLevel } from "./log";
+import { webpackRequireHack } from "./webpack-hacks";
 
 const identity = (input) => input;
 
@@ -86,11 +84,7 @@ class ExtProxyHandlerReduxAct implements ProxyHandler<typeof reduxAct> {
         if (description === undefined) {
           return reduxAct.createAction(payloadReducer, metaReducer);
         } else {
-          return reduxAct.createAction(
-            description,
-            payloadReducer,
-            metaReducer,
-          );
+          return reduxAct.createAction(description, payloadReducer, metaReducer);
         }
       };
     } else {
@@ -112,9 +106,7 @@ function extensionRequire(orig, getExtensions: () => IRegisteredExtension[]) {
   const extensionPaths = ExtensionManager.getExtensionPaths();
   return function (id) {
     if (id === "vortex-api") {
-      const ext = getExtensions().find((iter) =>
-        this.filename.startsWith(iter.path),
-      );
+      const ext = getExtensions().find((iter) => this.filename.startsWith(iter.path));
       if (ext !== undefined) {
         if (handlerMapAPI[ext.name] === undefined) {
           handlerMapAPI[ext.name] = new Proxy(api, new ExtProxyHandler(ext));
@@ -133,23 +125,15 @@ function extensionRequire(orig, getExtensions: () => IRegisteredExtension[]) {
       // here so they get the Linux shim instead of the missing native module.
       return winapiShim;
     } else if (id === "redux-act") {
-      const ext = getExtensions().find((iter) =>
-        this.filename.startsWith(iter.path),
-      );
+      const ext = getExtensions().find((iter) => this.filename.startsWith(iter.path));
       if (ext !== undefined) {
         if (handlerMapReactAct[ext.name] === undefined) {
-          handlerMapReactAct[ext.name] = new Proxy(
-            reduxAct,
-            new ExtProxyHandlerReduxAct(ext),
-          );
+          handlerMapReactAct[ext.name] = new Proxy(reduxAct, new ExtProxyHandlerReduxAct(ext));
         }
         return handlerMapReactAct[ext.name];
       }
     }
-    if (
-      extensionPaths.find((iter) => this.filename.startsWith(iter.path)) !==
-      undefined
-    ) {
+    if (extensionPaths.find((iter) => this.filename.startsWith(iter.path)) !== undefined) {
       let res;
       try {
         res = webpackRequireHack(id);

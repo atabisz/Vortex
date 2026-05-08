@@ -16,11 +16,8 @@ import * as path from "path";
 
 import getVortexPath from "../../getVortexPath";
 import { log } from "../../log";
-import {
-  deregisterLinuxNxmProtocolHandler,
-  registerLinuxNxmProtocolHandler,
-} from "./nxm";
 import type { IProtocolRegistrationOptions } from "../types";
+import { deregisterLinuxNxmProtocolHandler, registerLinuxNxmProtocolHandler } from "./nxm";
 
 const NXM_PROTOCOL = "nxm";
 
@@ -30,9 +27,7 @@ const NXM_PROTOCOL = "nxm";
  * At present only `nxm` has a custom Linux route; other protocols are not
  * supported and return `false` (registration fails silently).
  */
-export function registerLinuxProtocolHandler(
-  options: IProtocolRegistrationOptions,
-): boolean {
+export function registerLinuxProtocolHandler(options: IProtocolRegistrationOptions): boolean {
   if (options.protocol !== NXM_PROTOCOL) {
     log(
       "warn",

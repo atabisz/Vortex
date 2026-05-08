@@ -1,21 +1,14 @@
-import type { TFunction } from "i18next";
-import type { IniFile } from "vortex-parse-ini";
+import * as path from "path";
 
 import PromiseBB from "bluebird";
-import * as path from "path";
+import type { TFunction } from "i18next";
+import type { IniFile } from "vortex-parse-ini";
 import IniParser, { WinapiFormat } from "vortex-parse-ini";
 
-import type {
-  IExtensionApi,
-  IExtensionContext,
-} from "../../types/IExtensionContext";
+import { log } from "../../logging";
+import type { IExtensionApi, IExtensionContext } from "../../types/IExtensionContext";
 import type { IProfile, IState } from "../../types/IState";
 import type { ITestResult } from "../../types/ITestResult";
-import type { IDiscoveryResult } from "../gamemode_management/types/IDiscoveryResult";
-import type { IMod } from "../mod_management/types/IMod";
-import type { IModWithState } from "../mod_management/types/IModProps";
-
-import { log } from "../../logging";
 import { UserCanceled } from "../../util/CustomErrors";
 import deepMerge from "../../util/deepMerge";
 import { disableErrorReport } from "../../util/errorHandling";
@@ -26,7 +19,10 @@ import { getSafe } from "../../util/storeHelper";
 import { objDiff, setdefault } from "../../util/util";
 import steam from "../../util/Steam";
 import type { ISteamEntry } from "../../util/Steam";
+import type { IDiscoveryResult } from "../gamemode_management/types/IDiscoveryResult";
 import { INI_TWEAKS_PATH } from "../mod_management/InstallManager";
+import type { IMod } from "../mod_management/types/IMod";
+import type { IModWithState } from "../mod_management/types/IModProps";
 import { NEXUS_DOMAIN } from "../nexus_integration/constants";
 import { activeGameId } from "../profile_management/selectors";
 import { iniFiles, iniFormat } from "./gameSupport";
@@ -188,10 +184,7 @@ function getBaseFile(input: string): string {
   }
 }
 
-type ApplySettings = (
-  fileName: string,
-  parser: IniFile<any>,
-) => PromiseBB<void>;
+type ApplySettings = (fileName: string, parser: IniFile<any>) => PromiseBB<void>;
 
 async function bakeSettings(
   t: TFunction,
@@ -219,9 +212,7 @@ async function bakeSettings(
     // got an error report that I can only explain by baseFiles containing undefined
     // but I don't see how that could happen.
     .filter((name) => name !== undefined);
-  const baseFileNames = baseFiles.map((name) =>
-    path.basename(name).toLowerCase(),
-  );
+  const baseFileNames = baseFiles.map((name) => path.basename(name).toLowerCase());
   const parser = new IniParser(iniFormatter);
 
   // get a list of all tweaks we need to apply
@@ -229,28 +220,16 @@ async function bakeSettings(
     if (mod.installationPath === undefined) {
       return PromiseBB.resolve();
     }
-    const tweaksPath = path.join(
-      modsPath,
-      mod.installationPath,
-      INI_TWEAKS_PATH,
-    );
-    const modTweaks = getSafe(mod, ["enabledINITweaks"], []).map((name) =>
-      name.toLowerCase(),
-    );
+    const tweaksPath = path.join(modsPath, mod.installationPath, INI_TWEAKS_PATH);
+    const modTweaks = getSafe(mod, ["enabledINITweaks"], []).map((name) => name.toLowerCase());
     return fs
       .readdirAsync(tweaksPath)
       .then((files) => {
         files
           .map((file) => file.toLowerCase())
-          .filter(
-            (file) =>
-              baseFileNames.indexOf(file) !== -1 ||
-              modTweaks.indexOf(file) !== -1,
-          )
+          .filter((file) => baseFileNames.indexOf(file) !== -1 || modTweaks.indexOf(file) !== -1)
           .forEach((file) => {
-            setdefault(enabledTweaks, getBaseFile(file), []).push(
-              path.join(tweaksPath, file),
-            );
+            setdefault(enabledTweaks, getBaseFile(file), []).push(path.join(tweaksPath, file));
           });
         return PromiseBB.resolve();
       })
@@ -267,11 +246,7 @@ async function bakeSettings(
           .then(() =>
             fs
               .unlinkAsync(iniFileName + ".baked")
-              .catch((err) =>
-                err.code === "ENOENT"
-                  ? PromiseBB.resolve()
-                  : PromiseBB.reject(err),
-              )
+              .catch((err) => (err.code === "ENOENT" ? PromiseBB.resolve() : PromiseBB.reject(err)))
               .then(() =>
                 fs
                   .copyAsync(iniFileName + ".base", iniFileName + ".baked", {
@@ -308,12 +283,7 @@ async function bakeSettings(
               }),
             )
               .then(() => onApplySettings(iniFileName, ini))
-              .then(() =>
-                fs.forcePerm(
-                  t,
-                  () => parser.write(iniFileName + ".baked", ini) as any,
-                ),
-              )
+              .then(() => fs.forcePerm(t, () => parser.write(iniFileName + ".baked", ini) as any))
               .then(() => {
                 if (iniFileName === undefined) {
                   return PromiseBB.reject(
@@ -386,10 +356,7 @@ function testProtectedFolderAccess(): PromiseBB<ITestResult> {
 
   const canary = path.join(writablePath, "__vortex_canary.tmp");
   return fs
-    .writeFileAsync(
-      canary,
-      "Should only exist temporarily, feel free to delete",
-    )
+    .writeFileAsync(canary, "Should only exist temporarily, feel free to delete")
     .then(() => fs.removeAsync(canary))
     .then(() => PromiseBB.resolve(undefined))
     .catch((err) => {
@@ -432,9 +399,7 @@ function main(context: IExtensionContext) {
     edit: {},
   });
 
-  context.registerTest("controlled-folder-access", "startup", () =>
-    testProtectedFolderAccess(),
-  );
+  context.registerTest("controlled-folder-access", "startup", () => testProtectedFolderAccess());
 
   context.once(() => {
     let deactivated: boolean = false;
@@ -459,10 +424,7 @@ function main(context: IExtensionContext) {
         })
         .catch((err: any) => {
           deactivated = true;
-          if (
-            err.code === "EINVAL" &&
-            err.path.toLowerCase().indexOf("onedrive") !== -1
-          ) {
+          if (err.code === "EINVAL" && err.path.toLowerCase().indexOf("onedrive") !== -1) {
             context.api.showErrorNotification(
               "Failed to create backups of the ini files for this game.",
               "Due to Microsoft using undocumented functionality for the new feature " +
@@ -490,61 +452,48 @@ function main(context: IExtensionContext) {
         });
     });
 
-    context.api.onAsync(
-      "bake-settings",
-      (gameId: string, mods: IMod[], profile: IProfile) => {
-        log("debug", "baking settings", { gameId, deactivated });
-        if (deactivated) {
-          return PromiseBB.resolve();
-        }
-        const state: IState = context.api.store.getState();
-        const discovery: IDiscoveryResult =
-          state.settings.gameMode.discovered[profile.gameId];
+    context.api.onAsync("bake-settings", (gameId: string, mods: IMod[], profile: IProfile) => {
+      log("debug", "baking settings", { gameId, deactivated });
+      if (deactivated) {
+        return PromiseBB.resolve();
+      }
+      const state: IState = context.api.store.getState();
+      const discovery: IDiscoveryResult = state.settings.gameMode.discovered[profile.gameId];
 
-        if (discovery === undefined || discovery.path === undefined) {
-          return PromiseBB.resolve();
-        }
+      if (discovery === undefined || discovery.path === undefined) {
+        return PromiseBB.resolve();
+      }
 
-        const onApplySettings = (
-          fileName: string,
-          parser: IniFile<any>,
-        ): PromiseBB<void> =>
-          context.api.emitAndAwait("apply-settings", profile, fileName, parser);
+      const onApplySettings = (fileName: string, parser: IniFile<any>): PromiseBB<void> =>
+        context.api.emitAndAwait("apply-settings", profile, fileName, parser);
 
-        return PromiseBB.resolve(
-          discoverSettingsChanges(context.api, profile.gameId, discovery),
+      return discoverSettingsChanges(context.api, profile.gameId, discovery)
+        .then(() =>
+          bakeSettings(
+            context.api.translate,
+            profile.gameId,
+            discovery,
+            mods,
+            state,
+            onApplySettings,
+          ),
         )
-          .then(() =>
-            bakeSettings(
-              context.api.translate,
-              profile.gameId,
-              discovery,
-              mods,
-              state,
-              onApplySettings,
-            ),
-          )
-          .catch(UserCanceled, () => {
-            // nop
-            log("info", "user canceled baking game settings");
-          })
-          .catch((err: any) => {
-            const nonReportable = [362, 1359, "EBUSY"];
-            const allowReport = !(
-              err.stack.includes("not enough space on the disk") ||
-              err.stack.includes("The cloud operation was unsuccessful") ||
-              nonReportable.includes(err.systemCode) ||
-              nonReportable.includes(err.errno) ||
-              nonReportable.includes(err.code)
-            );
-            context.api.showErrorNotification(
-              "Failed to bake settings files",
-              err,
-              { allowReport },
-            );
-          });
-      },
-    );
+        .catch(UserCanceled, () => {
+          // nop
+          log("info", "user canceled baking game settings");
+        })
+        .catch((err) => {
+          const nonReportable = [362, 1359, "EBUSY"];
+          const allowReport = !(
+            err.stack.includes("not enough space on the disk") ||
+            err.stack.includes("The cloud operation was unsuccessful") ||
+            nonReportable.includes(err.systemCode) ||
+            nonReportable.includes(err.errno) ||
+            nonReportable.includes(err.code)
+          );
+          context.api.showErrorNotification("Failed to bake settings files", err, { allowReport });
+        });
+    });
 
     context.api.events.on("purge-mods", () => {
       if (deactivated) {
@@ -552,22 +501,17 @@ function main(context: IExtensionContext) {
       }
       const state: IState = context.api.store.getState();
       const gameMode = activeGameId(state);
-      const discovery: IDiscoveryResult =
-        state.settings.gameMode.discovered[gameMode];
-      PromiseBB.resolve(
-        discoverSettingsChanges(context.api, gameMode, discovery),
-      )
+      const discovery: IDiscoveryResult = state.settings.gameMode.discovered[gameMode];
+      discoverSettingsChanges(context.api, gameMode, discovery)
         .then(() => purgeChanges(context.api.translate, gameMode, discovery))
         .catch(UserCanceled, () => {
-          context.api.showErrorNotification(
-            "Ini files were not restored",
-            undefined,
-            { allowReport: false },
-          );
+          context.api.showErrorNotification("Ini files were not restored", undefined, {
+            allowReport: false,
+          });
         })
         .catch((err: any) => {
           context.api.showErrorNotification("Failed to purge ini edits", err, {
-            allowReport: (err).code !== "ENOENT",
+            allowReport: err.code !== "ENOENT",
           });
         });
     });

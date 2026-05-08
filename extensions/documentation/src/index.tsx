@@ -1,5 +1,7 @@
 import * as path from "path";
+
 import * as React from "react";
+import { types, util } from "vortex-api";
 
 import { closeTutorials, setTutorialOpen } from "./actions/session";
 import TutorialButton from "./controls/TutorialButton";
@@ -7,8 +9,6 @@ import TutorialDropdown from "./controls/TutorialDropdown";
 import sessionReducer from "./reducers/session";
 import { getTutorialData, TODO_GROUP } from "./tutorialManager";
 import DocumentationView from "./views/DocumentationView";
-
-import { types, util } from "vortex-api";
 
 const WIKI_TOPICS = {
   ["adding-games"]: "MODDINGWIKI-Users-UI-Games-section",
@@ -70,11 +70,7 @@ export default function init(context: types.IExtensionContext) {
               ),
             ),
           );
-          context.api.events.emit(
-            "analytics-track-click-event",
-            "Dashboard",
-            "Intro Video",
-          );
+          context.api.events.emit("analytics-track-click-event", "Dashboard", "Intro Video");
         },
         undefined,
         (t) => <TutorialButton video={element} />,
@@ -97,10 +93,7 @@ export default function init(context: types.IExtensionContext) {
   });
 
   context.once(() => {
-    context.api.setStylesheet(
-      "documentation",
-      path.join(__dirname, "documentation.scss"),
-    );
+    context.api.setStylesheet("documentation", path.join(__dirname, "documentation.scss"));
 
     // User has moved onto a different page; we can close any open tutorial
     //  videos.
@@ -108,11 +101,7 @@ export default function init(context: types.IExtensionContext) {
       const { store } = context.api;
       if (
         false !==
-        util.getSafe(
-          store.getState(),
-          ["session", "tutorials", "currentTutorial", "isOpen"],
-          false,
-        )
+        util.getSafe(store.getState(), ["session", "tutorials", "currentTutorial", "isOpen"], false)
       ) {
         store.dispatch(closeTutorials());
       }

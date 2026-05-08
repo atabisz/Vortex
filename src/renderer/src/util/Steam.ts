@@ -1,35 +1,21 @@
-import PromiseBB from "bluebird";
-
-import * as fs from "./fs";
-import { log } from "./log";
-import { getSafeCI } from "./storeHelper";
-
 import * as fsOG from "fs/promises";
 import * as path from "path";
+
+import { getErrorMessageOrDefault } from "@vortex/shared";
+import PromiseBB from "bluebird";
 import { parse } from "simple-vdf";
 import * as winapi from "winapi-bindings";
-import type {
-  ICustomExecutionInfo,
-  IExecInfo,
-  IGameStore,
-  IGameStoreEntry,
-} from "../types/api";
 
-import opn from "./opn";
-
+import type { ICustomExecutionInfo, IExecInfo, IGameStore, IGameStoreEntry } from "../types/api";
 import type { IExtensionApi } from "../types/IExtensionContext";
 import { GameEntryNotFound } from "../types/IGameStore";
+import * as fs from "./fs";
 import getVortexPath from "./getVortexPath";
-import { getErrorMessageOrDefault } from "@vortex/shared";
-import {
-  findAllLinuxSteamPaths,
-  findLinuxSteamPath,
-} from "./linux/steamPaths";
-import {
-  getProtonInfo,
-  buildProtonEnvironment,
-  buildProtonCommand,
-} from "./linux/proton";
+import { getProtonInfo, buildProtonEnvironment, buildProtonCommand } from "./linux/proton";
+import { findAllLinuxSteamPaths, findLinuxSteamPath } from "./linux/steamPaths";
+import { log } from "./log";
+import opn from "./opn";
+import { getSafeCI } from "./storeHelper";
 
 const STORE_ID = "steam";
 const STORE_NAME = "Steam";
@@ -112,10 +98,7 @@ class Steam implements IGameStore {
     //      is used by the gameinfo-steam extension as well).
     //  - The steam Id in string form.
     //  - The directory path which contains the game's executable.
-    if (
-      this.isCustomExecObject(appInfo) &&
-      appInfo.launchType === "gamestore"
-    ) {
+    if (this.isCustomExecObject(appInfo) && appInfo.launchType === "gamestore") {
       return this.getPosixPath(appInfo).then((posix) =>
         opn(posix).catch((err) => PromiseBB.resolve()),
       );
@@ -186,10 +169,7 @@ class Steam implements IGameStore {
       const entry = entries.find(matcher);
       if (entry === undefined) {
         return PromiseBB.reject(
-          new GameEntryNotFound(
-            Array.isArray(appId) ? appId.join(", ") : appId,
-            STORE_ID,
-          ),
+          new GameEntryNotFound(Array.isArray(appId) ? appId.join(", ") : appId, STORE_ID),
         );
       } else {
         return PromiseBB.resolve(entry);
@@ -321,18 +301,14 @@ class Steam implements IGameStore {
         return PromiseBB.resolve(fsOG.readdir(steamAppsPath))
           .then((names) => {
             const filtered = names.filter(
-              (name) =>
-                name.startsWith("appmanifest_") &&
-                path.extname(name) === ".acf",
+              (name) => name.startsWith("appmanifest_") && path.extname(name) === ".acf",
             );
             log("debug", "got steam manifests", { manifests: filtered });
             return PromiseBB.map(filtered, (name: string) =>
-              fs
-                .readFileAsync(path.join(steamAppsPath, name))
-                .then((manifestData) => ({
-                  manifestData,
-                  name,
-                })),
+              fs.readFileAsync(path.join(steamAppsPath, name)).then((manifestData) => ({
+                manifestData,
+                name,
+              })),
             );
           })
           .then((appsData) => {
@@ -367,15 +343,9 @@ class Steam implements IGameStore {
                     appid: obj["AppState"]["appid"],
                     gameStoreId: STORE_ID,
                     name: obj["AppState"]["name"],
-                    gamePath: path.join(
-                      steamAppsPath,
-                      "common",
-                      obj["AppState"]["installdir"],
-                    ),
+                    gamePath: path.join(steamAppsPath, "common", obj["AppState"]["installdir"]),
                     lastUser: obj["AppState"]["LastOwner"],
-                    lastUpdated: new Date(
-                      obj["AppState"]["LastUpdated"] * 1000,
-                    ),
+                    lastUpdated: new Date(obj["AppState"]["LastUpdated"] * 1000),
                     manifestData: obj,
                   };
                   return result;
@@ -433,10 +403,7 @@ class Steam implements IGameStore {
           });
       })
         .then((games) =>
-          games.reduce(
-            (prev, current) => (current ? prev.concat(current) : prev),
-            [],
-          ),
+          games.reduce((prev, current) => (current ? prev.concat(current) : prev), []),
         )
         .then((games: ISteamEntry[]) => {
           const seen = new Set<string>();
@@ -462,11 +429,7 @@ class Steam implements IGameStore {
     options: any,
     gameEntry: ISteamEntry,
   ): Promise<void> {
-    if (
-      !gameEntry.usesProton ||
-      !gameEntry.protonPath ||
-      !gameEntry.compatDataPath
-    ) {
+    if (!gameEntry.usesProton || !gameEntry.protonPath || !gameEntry.compatDataPath) {
       return api.runExecutable(exePath, args, options);
     }
 
@@ -476,11 +439,7 @@ class Steam implements IGameStore {
       exePath,
       args,
     );
-    const protonEnv = buildProtonEnvironment(
-      gameEntry.compatDataPath,
-      steamPath,
-      options.env,
-    );
+    const protonEnv = buildProtonEnvironment(gameEntry.compatDataPath, steamPath, options.env);
 
     return api.runExecutable(executable, protonArgs, {
       ...options,

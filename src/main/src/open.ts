@@ -22,9 +22,7 @@ export function openUrl(url: URL): void {
 
 /** Opens the file using the default application for the file extension */
 export function openFile(filePath: string): void {
-  const resolvedPath = path.isAbsolute(filePath)
-    ? filePath
-    : path.resolve(filePath);
+  const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(filePath);
 
   shell
     .openPath(resolvedPath)
