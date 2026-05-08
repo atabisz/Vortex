@@ -20,7 +20,6 @@ import {
   InsufficientDiskSpace,
   NotFound,
   ProcessCanceled,
-  UnsupportedOperatingSystem,
   UserCanceled,
 } from "./CustomErrors";
 import * as fs from "./fs";
