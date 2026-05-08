@@ -14,7 +14,6 @@ import {
   InsufficientDiskSpace,
   NotFound,
   ProcessCanceled,
-  UnsupportedOperatingSystem,
   UserCanceled,
 } from "./CustomErrors";
 import * as fs from "./fs";
@@ -36,10 +35,6 @@ const MIN_DISK_SPACE_OFFSET = 512 * 1024 * 1024;
  * @param destination The proposed destination folder.
  */
 export function testPathTransfer(source: string, destination: string): PromiseBB<void> {
-  if (process.platform !== "win32") {
-    return PromiseBB.reject(new UnsupportedOperatingSystem());
-  }
-
   let destinationRoot: string;
   try {
     destinationRoot = winapi.GetVolumePathName(destination);
