@@ -1,5 +1,7 @@
 # Vortex Linux — Forward Plan
 
+> Operational playbook for post-merge recovery lives in [VORTEX-LINUX-MERGE-PLAYBOOK.md](VORTEX-LINUX-MERGE-PLAYBOOK.md). Read it after every upstream merge, before assuming a fresh regression.
+
 ## Strategic Position
 
 Vortex Linux is an independent fork of [nexus-mods/Vortex](https://github.com/Nexus-Mods/Vortex) targeting Linux users. Phases 1–3 are complete and shipped (v1.0–v5.0, March–April 2026). A Linux user can today install Vortex, detect their Steam/Proton games, download mods via NXM link, run FOMOD installers, manage save games, and deploy mods with hardlink/symlink activation — without leaving the Vortex UI.
