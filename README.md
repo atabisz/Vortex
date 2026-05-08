@@ -8,19 +8,22 @@ Linux builds (AppImage + .deb) are published as [releases on this fork](../../re
 
 ## Installing
 
-| Package | Download |
-|---|---|
+| Package                | Download                                                                                                        |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------- |
 | AppImage (recommended) | [vortex-setup.AppImage](https://github.com/atabisz/Vortex/releases/download/latest-linux/vortex-setup.AppImage) |
-| Debian/Ubuntu .deb | [vortex_amd64.deb](https://github.com/atabisz/Vortex/releases/download/latest-linux/vortex_amd64.deb) |
+| Debian/Ubuntu .deb     | [vortex_amd64.deb](https://github.com/atabisz/Vortex/releases/download/latest-linux/vortex_amd64.deb)           |
 
 **AppImage:**
+
 ```sh
 chmod +x vortex-setup.AppImage
 ./vortex-setup.AppImage
 ```
+
 > Ubuntu 22.04+ users: `sudo apt install libfuse2` first.
 
 **Debian/Ubuntu (.deb):**
+
 ```sh
 sudo apt install ./vortex_amd64.deb
 ```
@@ -41,7 +44,7 @@ makepkg -si
 
 ## What Works
 
-**As of v1.16.9 (2026-04-09) + unreleased master:**
+**As of v2.0.0-linux (2026-05-08):**
 
 - **Launches on Linux** — `pnpm run start` works on Linux without crashing; all native addons (bsatk, esptk, loot, vortexmt, xxhash-addon, bsdiff-node) compile and load
 - **FOMOD installer** — C#/.NET FOMOD installers work via native Linux binaries (no Wine dependency)
@@ -60,14 +63,14 @@ makepkg -si
 
 ## What Doesn't Work
 
-| Feature | Status | Notes |
-|---|---|---|
-| Save game viewer/parser (Skyrim SE, Fallout 4) | Untested | `gamebryo-savegame` compiles on Linux (build issues were fixed in v3.0) but has not been tested at runtime. Save *transfer* between profiles works — see What Works above. |
-| Elevated privilege operations (AppImage) | Degraded | AppImage builds do not include the polkit rules file — users are prompted on every elevation call. Install the `.deb` for session-scoped credential caching. |
-| NXM via Steam Browser overlay (Steam Deck) | Unknown | WebKit-based overlay `xdg-open` behavior undocumented; requires hardware access and coordination with both Valve and Nexus Mods web teams |
-| AppImage delta auto-updates on SteamOS | Not implemented | `electron-updater` behavior on SteamOS immutable filesystem needs validation |
-| GOG / itch.io / Heroic Launcher games | Not supported | Steam/Proton only for now |
-| Flathub / Flatpak distribution | Planned | AppImage works today; Flathub submission is on the roadmap using the same permission model as Lutris |
+| Feature                                        | Status          | Notes                                                                                                                                                                      |
+| ---------------------------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Save game viewer/parser (Skyrim SE, Fallout 4) | Untested        | `gamebryo-savegame` compiles on Linux (build issues were fixed in v3.0) but has not been tested at runtime. Save _transfer_ between profiles works — see What Works above. |
+| Elevated privilege operations (AppImage)       | Degraded        | AppImage builds do not include the polkit rules file — users are prompted on every elevation call. Install the `.deb` for session-scoped credential caching.               |
+| NXM via Steam Browser overlay (Steam Deck)     | Unknown         | WebKit-based overlay `xdg-open` behavior undocumented; requires hardware access and coordination with both Valve and Nexus Mods web teams                                  |
+| AppImage delta auto-updates on SteamOS         | Not implemented | `electron-updater` behavior on SteamOS immutable filesystem needs validation                                                                                               |
+| GOG / itch.io / Heroic Launcher games          | Not supported   | Steam/Proton only for now                                                                                                                                                  |
+| Flathub / Flatpak distribution                 | Planned         | AppImage works today; Flathub submission is on the roadmap using the same permission model as Lutris                                                                       |
 
 ## Roadmap
 
@@ -75,7 +78,7 @@ The full development plan is in [VORTEX-LINUX.md](VORTEX-LINUX.md).
 
 ### Recently shipped
 
-- **master (unreleased)** — chattr+F kernel casefold for mod staging directories (ext4/btrfs); upstream rebase automation (daily CI workflow merges latest upstream tags)
+- **v2.0.0-linux (2026-05-08)** — First tagged Linux release of the fork. chattr+F kernel casefold for mod staging directories (ext4/btrfs); upstream-rebase automation (daily CI workflow merges latest upstream tags); upstream-merge survival hardening (named `skip-on-windows.mjs` / `skip-on-linux.mjs` guards, LOOT case-sensitivity fix, `testPathTransfer` platform guard, `nodeExternals` allowlist for `winapi-bindings`); CI hardening (pnpm-bundled `gyp_main.py` chmod, `src/main` packaging `dist` → `build` sync, fork-gated `fingerprint-*` workflows); post-merge playbook published.
 - **v1.16.9 (2026-04-09)** — FOMOD source path normalization for Linux, CSharpScript Linux notice, vortex-api declarations updated
 - **v1.16.8 (2026-04-07)** — Persistent elevation token (.deb), Steam Deck Game Mode error UX, save file transfer across Wine prefix paths, Linux case-folding fs wrapper
 
