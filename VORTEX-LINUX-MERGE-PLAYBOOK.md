@@ -220,6 +220,7 @@ Each entry is a real bug we hit at least once — written down so the next merge
 - **Windows archive extraction produces case-conflicting directory trees on Linux.** `7z` extracts entries literally, so a mod archive with mixed `Data/SKSE/plugins/` and `data/SKSE/plugins/` entries creates two separate directories. Fix: run `mergeCaseConflictingDirs()` right after `normalizeBackslashPaths()` in both `simulate()` and `installInner()`. Commit `850a3cb40`.
 - **Filenames with backslashes in archives become filenames, not paths.** Windows-packaged archives using `\` as separator land as single filenames `Data\SKSE\plugins\foo.dll` on ext4. Normalise before building the file list. Commit `728c91a85`.
 - **FOMOD `extractArchive` joins paths case-sensitively.** `path.join(tempPath, source)` fails if the archive manifest says `Data/` but the archive contains `data/`. Use `resolvePathCase` with a per-call `readdir` cache. Commit `cbff6b891`.
+- **`externalChanges` didn't case-resolve manifest paths.** Deploy manifests record the staging folder's casing (`SKSE/Plugins/...`) but files land on disk with whatever casing the game `Data/` tree already had (`skse/plugins/...`). `deployFile` already used `resolvePathCase` to find the target directory when creating hardlinks; `externalChanges` didn't, so `lstat` hit ENOENT on every manifest entry, flagged everything `destDeleted`, and popped the "External Changes" dialog on every deploy. Downstream symptom: the redundancy check saw zero deployed files from the affected mods and fired "Some mods are redundant" for every SKSE-plugin mod. Fix: `resolvePathCase` in `externalChanges` before `statLink`, with a per-call readdir cache (same pattern as FOMOD `extractArchive`). Commit `140a57217`.
 - **LOOT is the cautionary tale.** See the lesson above — `toLowerCase()` on plugin names + ext4 + LOOT's ghost probe = the misleading `dlccoast.esm.ghost` error. Commit `324da1814`.
 
 ### deployment manifests
@@ -272,6 +273,7 @@ Durable references to the fork-local Linux fixes this file depends on. If any of
 | Remove win32 guard from `testPathTransfer`                                         | `7cfe61602` | `8e8b13284`   |
 | Allowlist `winapi-bindings` from `nodeExternals`                                   | `e69401abf` | `0cccf116b`   |
 | Pass real plugin filenames to LOOT + filter ghosts                                 | `324da1814` | `72641450c`   |
+| `resolvePathCase` in `externalChanges` (stops spurious "mods are redundant")       | `140a57217` | _pending_     |
 | Named `skip-on-linux.mjs` sibling guard (gamestore-xbox)                           | `5acb3d098` | `a41403030`   |
 | `src/main` packaging points at `build/` (not `dist/`) after upstream rename        | `4d1ea811b` | _master-only_ |
 | `chmod +x` pnpm-bundled `gyp_main.py` before `pnpm install` in CI                  | `f0a0d2178` | _master-only_ |
