@@ -43,12 +43,7 @@ const config = {
         extensions: [".js", ".jsx", ".ts", ".tsx", ".json"],
         ...(process.platform === "linux" && {
             alias: {
-                "winapi-bindings": path.resolve(
-                    __dirname,
-                    "src",
-                    "util",
-                    "winapi-shim.ts",
-                ),
+                "winapi-bindings": path.resolve(__dirname, "src", "util", "winapi-shim.ts"),
             },
         }),
     },
@@ -87,7 +82,14 @@ const config = {
     devtool: "source-map",
     externals: [
         nodeExternals({
-            allowlist: [/@vortex\/shared/],
+            // On Linux, winapi-bindings must be bundled (not externalized) so
+            // the resolve.alias redirect to winapi-shim.ts fires. Externalized
+            // modules bypass aliasing and go straight to Node's require(),
+            // which fails on Linux because the package is Windows-only.
+            allowlist: [
+                /@vortex\/shared/,
+                ...(process.platform === "linux" ? ["winapi-bindings"] : []),
+            ],
         }),
     ],
 };
