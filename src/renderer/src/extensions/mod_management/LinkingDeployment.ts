@@ -503,15 +503,24 @@ abstract class LinkingActivator implements IDeploymentMethod {
     activation: IDeployedFile[],
   ): Promise<IFileChange[]> {
     const changes: IFileChange[] = [];
+    // Shared readdir cache so repeated lookups against the same parent
+    // directory (e.g. many files under skse/plugins) avoid re-reading the
+    // directory listing on case-sensitive filesystems.
+    const dirCache = new Map<string, string[]>();
 
     return mapWithConcurrency(
       activation ?? [],
-      (fileEntry) => {
-        const fileDataPath = (
-          truthy(fileEntry.target)
-            ? [dataPath, fileEntry.target, fileEntry.relPath]
-            : [dataPath, fileEntry.relPath]
-        ).join(path.sep);
+      async (fileEntry) => {
+        const relDataPath = truthy(fileEntry.target)
+          ? [fileEntry.target, fileEntry.relPath].join(path.sep)
+          : fileEntry.relPath;
+        // On case-sensitive filesystems (Linux ext4) the manifest may record
+        // casing that differs from what ends up on disk — the deploy path
+        // uses resolvePathCase when creating the link, but the manifest keeps
+        // the source casing. Resolve the on-disk casing here so that statLink
+        // below can find the actual file instead of spuriously reporting it
+        // as externally deleted.
+        const fileDataPath = await resolvePathCase(dataPath, relDataPath, dirCache);
         const fileModPath = [installPath, fileEntry.source, fileEntry.relPath].join(path.sep);
         let sourceDeleted: boolean = false;
         let destDeleted: boolean = false;
