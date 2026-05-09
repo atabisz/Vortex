@@ -168,6 +168,7 @@ import filterModInfo from "./util/filterModInfo";
 import metaLookupMatch from "./util/metaLookupMatch";
 import modName, { renderModReference } from "./util/modName";
 import queryGameId from "./util/queryGameId";
+import { stagingDirHasFiles } from "./util/stagingIntegrity";
 import testModReference, {
   downloadToModRef,
   idOnlyRef,
@@ -5985,7 +5986,7 @@ class InstallManager {
             return Promise.resolve(downloadId);
           }
         })
-        .then((downloadId: string) => {
+        .then(async (downloadId: string) => {
           downloads = api.getState().persistent.downloads.files;
 
           if (downloadId === undefined || downloads[downloadId] === undefined) {
@@ -6033,6 +6034,23 @@ class InstallManager {
           // whether the tag matched above.
           if (dep.patches != null && Object.keys(dep.patches).length > 0) {
             dep.mod = undefined;
+          }
+
+          // Guard against stale "installed" state where a prior broken
+          // install left an empty staging dir. Without this, dep.mod != null
+          // short-circuits re-extraction forever and the "Redundant mods"
+          // dialog keeps flagging the mod (see Plans/validated-yawning-wave.md).
+          if (dep.mod != null && dep.mod.installationPath) {
+            const modStagingPath = path.join(stagingPath, dep.mod.installationPath);
+            const hasAnyFile = await stagingDirHasFiles(modStagingPath);
+            if (!hasAnyFile) {
+              log(
+                "warn",
+                "mod recorded as installed but staging dir is empty — clearing to force re-extract",
+                { modId: dep.mod.id, stagingPath: modStagingPath },
+              );
+              dep.mod = undefined;
+            }
           }
 
           return dep.mod == null
@@ -6947,18 +6965,27 @@ class InstallManager {
     const dirs = new Set<string>();
     const jobs: Array<{ src: string; dst: string; rel: string }> = [];
     const missingFiles = new Set<string>();
+    const copyFailures = new Set<string>();
 
-    const copyAsyncWrap = async (src: string, dst: string) => {
+    const copyAsyncWrap = async (src: string, dst: string): Promise<boolean> => {
       try {
         await fs.copyAsync(src, dst);
+        return true;
       } catch (err) {
         if (
           err instanceof SelfCopyCheckError ||
           getErrorMessage(err)?.includes("and destination must")
         ) {
           // File is already there - don't care
-          return;
+          return true;
         }
+        log("warn", "copy fallback failed", {
+          src,
+          dst,
+          code: getErrorCode(err),
+          message: getErrorMessage(err),
+        });
+        return false;
       }
     };
 
@@ -7004,9 +7031,13 @@ class InstallManager {
               // destination exists (stale from a previous
               // failed install?) - remove it and fall back to copy
               await fs.removeAsync(job.dst);
-              await copyAsyncWrap(job.src, job.dst);
+              if (!(await copyAsyncWrap(job.src, job.dst))) {
+                copyFailures.add(job.src);
+              }
             } else if (code && ["EXDEV", "EPERM", "EACCES", "ENOTSUP"].includes(code)) {
-              await copyAsyncWrap(job.src, job.dst);
+              if (!(await copyAsyncWrap(job.src, job.dst))) {
+                copyFailures.add(job.src);
+              }
             } else {
               throw err;
             }
@@ -7014,6 +7045,16 @@ class InstallManager {
         },
         ioConcurrency,
       );
+
+      // If every intended copy/link failed, fail loudly instead of silently
+      // resolving — a "successful" install with zero files on disk leaves
+      // Vortex state out of sync with reality (see Plans/validated-yawning-wave.md).
+      if (jobs.length > 0 && missingFiles.size + copyFailures.size === jobs.length) {
+        throw new ArchiveBrokenError(
+          path.basename(archivePath),
+          `No files installed (missing: ${missingFiles.size}, copy failures: ${copyFailures.size})`,
+        );
+      }
 
       if (missingFiles.size > 0) {
         api.showErrorNotification(
