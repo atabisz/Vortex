@@ -124,6 +124,7 @@ import { NoDeployment } from "./util/exceptions";
 import extendApi from "./util/extendAPI";
 import { dealWithExternalChanges } from "./util/externalChanges";
 import { registerAttributeExtractor } from "./util/filterModInfo";
+import { validateModInstallation } from "./util/installationValidation";
 import ModHistory from "./util/ModHistory";
 import renderModName from "./util/modName";
 import { getModSources, registerModSource } from "./util/modSource";
@@ -1494,6 +1495,19 @@ function once(api: IExtensionApi) {
     deploymentTimer.wait(callback);
   });
 
+  api.events.on("did-install-mod", (gameId: string, archiveId: string, modId: string) => {
+    validateModInstallation(api, gameId, modId)
+      .then((result) => {
+        if (!result.valid) {
+          const count = result.discrepancies.filter((d) => d.severity === "error").length;
+          log("warn", "Post-install validation failed", { gameId, modId, count });
+        }
+      })
+      .catch(() => {
+        /* best-effort */
+      });
+  });
+
   api.events.on("mods-enabled", onModsEnabled(api, deploymentTimer));
 
   api.events.on("gamemode-activated", (newMode: string) =>
@@ -2283,6 +2297,65 @@ function init(context: IExtensionContext): boolean {
   context.registerAction("mod-icons", 200, "history", {}, "History", () => {
     context.api.ext.showHistory?.("mods");
   });
+
+  context.registerAction(
+    "mods-action-icons",
+    200,
+    "inspect",
+    {},
+    "Validate Installation",
+    (instanceIds: string[]) => {
+      const state = context.api.getState();
+      const gameMode = activeGameId(state);
+      const validateAll = async () => {
+        for (const modId of instanceIds) {
+          const result = await validateModInstallation(context.api, gameMode, modId);
+          if (!result.valid) {
+            const count = result.discrepancies.filter((d) => d.severity === "error").length;
+            context.api.sendNotification({
+              type: "warning",
+              message: `Validation failed for mod "${modId}": ${count} issue(s) found`,
+              actions: [
+                {
+                  title: "Details",
+                  action: () => {
+                    const details = result.discrepancies
+                      .map((d) => `[${d.severity}] ${d.kind}: ${d.filePath}`)
+                      .join("\n");
+                    log("info", "Mod validation results", { modId, details });
+                    context.api.showDialog(
+                      "info",
+                      "Validation Results",
+                      {
+                        text: details,
+                      },
+                      [{ label: "Close" }],
+                    );
+                  },
+                },
+              ],
+            });
+          } else {
+            context.api.sendNotification({
+              type: "success",
+              message: `Mod "${modId}" validated successfully`,
+              displayMS: 4000,
+            });
+          }
+        }
+      };
+      void validateAll();
+    },
+    (instanceIds: string[]) => {
+      const state = context.api.getState();
+      const gameMode = activeGameId(state);
+      const mods = state.persistent.mods[gameMode] ?? {};
+      return (
+        instanceIds.every((id) => mods[id]?.state === "installed") ||
+        "Only installed mods can be validated"
+      );
+    },
+  );
 
   context.once(() => {
     once(context.api);
