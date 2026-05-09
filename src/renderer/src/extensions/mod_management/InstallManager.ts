@@ -7971,7 +7971,13 @@ class InstallManager {
 
     const folderCopies: string[] = [];
     for (const copy of sorted) {
-      const source = copy.source;
+      // Normalise Windows-style backslash separators in copy instruction
+      // paths. Archives built on Windows frequently have FOMOD XML or file
+      // lists that use `\` as separator; on Linux these don't round-trip
+      // through `path.join` into the nested layout `normalizeBackslashPaths`
+      // produces on disk. Re-applied from commit ca8e99941 after the upstream
+      // merge that reverted normalizeBackslashPaths also reverted this.
+      const source = copy.source.replaceAll("\\", "/");
       const destination = copy.destination.replaceAll("\\", "/");
       if (source.endsWith("/")) {
         folderCopies.push(source);
