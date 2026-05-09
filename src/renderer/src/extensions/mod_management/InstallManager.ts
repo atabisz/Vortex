@@ -165,6 +165,7 @@ import gatherDependencies, {
   lookupFromDownload,
 } from "./util/dependencies";
 import filterModInfo from "./util/filterModInfo";
+import { mergeCaseConflictingDirs } from "./util/mergeCaseConflictingDirs";
 import metaLookupMatch from "./util/metaLookupMatch";
 import modName, { renderModReference } from "./util/modName";
 import { normalizeBackslashPaths } from "./util/normalizeBackslashPaths";
@@ -1029,6 +1030,7 @@ class InstallManager {
       })
       .then(async () => {
         await normalizeBackslashPaths(tempPath);
+        await mergeCaseConflictingDirs(tempPath);
         fileList = await buildFileList(tempPath);
         if (truthy(extractList) && extractList.length > 0) {
           return makeListInstaller(extractList, tempPath);
@@ -3616,6 +3618,7 @@ class InstallManager {
       })
       .then(async () => {
         await normalizeBackslashPaths(tempPath);
+        await mergeCaseConflictingDirs(tempPath);
         fileList = await buildFileList(tempPath);
         const hasFomodSegment = (file: string) => {
           const segments = file.toLowerCase().split(path.sep);

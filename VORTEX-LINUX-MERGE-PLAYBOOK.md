@@ -97,27 +97,35 @@ grep -n "stagingDirHasFiles" src/renderer/src/extensions/mod_management/InstallM
 
 Should return two hits: the import at the top and the call inside the `.then(async (downloadId) => { ... })` block in `doDownload`. Without these, a broken install that leaves an empty staging dir persists across every subsequent install attempt because `dep.mod != null` short-circuits re-extraction forever, and the "Redundant mods" dialog keeps flagging affected mods after every deploy. Sibling sentinel `src/renderer/src/extensions/mod_management/util/stagingIntegrity.ts` must exist. See "stale empty staging dir" in the case-sensitive filesystem section below for the full story.
 
-### 7. Backslash path normalisation after extraction (paired fix — disk + instructions)
+### 7. Three-fix backslash/case cluster after extraction
 
-This is TWO call sites that must travel together. Reverting one and keeping the other surfaces as cryptic ENOENTs listing literal backslashed paths in `extractArchive`.
+Three call sites that must travel as a unit. Reverting ANY ONE of them surfaces as cryptic ENOENTs listing either literal backslashed paths OR forward-slash paths whose casing differs from disk. Upstream PR #22607 (merge `5f44c9fdb`) has reverted all three at once; `grep` for each and re-apply any that are missing.
 
-**(a) On-disk rename:**
+**(a) On-disk rename of backslashed entries:**
 
 ```bash
 grep -n "normalizeBackslashPaths" src/renderer/src/extensions/mod_management/InstallManager.ts
 ```
 
-Should return three hits: the import and two call sites (before each `buildFileList(tempPath)` in the simulate and real-install flows). Sibling sentinel `src/renderer/src/extensions/mod_management/util/normalizeBackslashPaths.ts` must exist.
+Expect three hits: import + two call sites (before each `buildFileList(tempPath)`). Sibling sentinel `src/renderer/src/extensions/mod_management/util/normalizeBackslashPaths.ts` must exist.
 
-**(b) Copy-instruction normalisation:**
+**(b) Merge case-duplicate sibling directories:**
+
+```bash
+grep -n "mergeCaseConflictingDirs" src/renderer/src/extensions/mod_management/InstallManager.ts
+```
+
+Expect three hits: import + two call sites (immediately after each `normalizeBackslashPaths(tempPath)`). Sibling sentinel `src/renderer/src/extensions/mod_management/util/mergeCaseConflictingDirs.ts` must exist.
+
+**(c) Copy-instruction normalisation:**
 
 ```bash
 grep -n 'replaceAll("\\\\\\\\", "/")' src/renderer/src/extensions/mod_management/InstallManager.ts
 ```
 
-Should return two hits in the `extractArchive` copy loop (one for `source`, one for `destination`). Without this, the installer's copy instructions still carry `\` separators even when the disk has been normalised — and `path.join(tempPath, copy.source)` with a backslashed source path produces an ENOENT miss on ext4.
+Expect two hits in the `extractArchive` copy loop (one for `source`, one for `destination`).
 
-Upstream has reverted both fixes together (PR #22607 / `5f44c9fdb`) — see the case-sensitive filesystem section for the paired-invariant lesson.
+See the case-sensitive filesystem section for the paired-invariant lesson — the three fixes address different layers (disk names, disk tree, instruction strings) of the same root cause.
 
 ### 8. Cross-compiled Linux native binaries
 
@@ -256,7 +264,7 @@ Each entry is a real bug we hit at least once — written down so the next merge
 
 - **Game extension `requiredFiles` casing ≠ on-disk exe casing.** `verifyToolDir` stats the declared name (e.g. `oblivion.exe`) and fails with ENOENT when the disk has `Oblivion.exe`, which clears the active profile and dumps the UI back to the home screen. Fix: `resolvePathCase` before stat-ing. Applies to all games. Commit `e2c8ee6a8`.
 - **`resolvePathCase` has to resolve every segment, including the filename.** The early version only case-resolved directories, so `removeDeployedFile` with a mismatched filename case would still `unlinkAsync` an ENOENT path (silently swallowed), leaving the file deployed. Extended to match every segment against parent `readdir`. Commit `bbf7c8f39`.
-- **Windows archive extraction produces case-conflicting directory trees on Linux.** `7z` extracts entries literally, so a mod archive with mixed `Data/SKSE/plugins/` and `data/SKSE/plugins/` entries creates two separate directories. Fix: run `mergeCaseConflictingDirs()` right after `normalizeBackslashPaths()` in both `simulate()` and `installInner()`. Commit `850a3cb40`.
+- **Windows archive extraction produces case-conflicting directory trees on Linux.** `7z` extracts entries literally, so a mod archive with mixed `Data/SKSE/plugins/` and `data/SKSE/plugins/` entries creates two separate directories. Fix: run `mergeCaseConflictingDirs()` right after `normalizeBackslashPaths()` in both extraction flows. Original commit `850a3cb40`; **reverted by upstream PR #22607 (merge `5f44c9fdb`)** as part of the same batch that took out `normalizeBackslashPaths` and `ca8e99941`. Re-applied as its own helper at `src/renderer/src/extensions/mod_management/util/mergeCaseConflictingDirs.ts`. This fix is part of the **three-fix backslash/case cluster** — all three must travel together or installs fail with cryptic ENOENTs (the current error will list either literal backslashed paths OR forward-slash paths whose casing differs from disk, depending on which of the three is missing). See commit index.
 - **Filenames with backslashes in archives become filenames, not paths.** Windows-packaged archives using `\` as separator land as single filenames `Data\SKSE\plugins\foo.dll` on ext4. Normalise before building the file list. Original commit `728c91a85`; **reverted by upstream PR #22607 (merge `5f44c9fdb`)** and re-applied as its own helper at `src/renderer/src/extensions/mod_management/util/normalizeBackslashPaths.ts` (easier to spot in a diff next time). Two call sites before each `buildFileList(tempPath)` in `InstallManager.ts`. Re-apply commit: see commit index below.
 - **The on-disk rename isn't enough — copy instructions still carry `\`.** `normalizeBackslashPaths` fixes the filesystem, but FOMOD XML or archive listings can still hand the installer `copy` instructions with Windows-style `\` in `source` / `destination` fields. Those get `path.join`'d verbatim in `extractArchive`, miss the normalised on-disk tree, and surface as the "Invalid installer" dialog listing literal backslashed paths. Fix: `replaceAll("\\", "/")` on both `source` and `destination` at the top of the copy loop; the `endsWith` directory check then only needs to test `/`. Original commit `ca8e99941`; **reverted by the same upstream merge as `normalizeBackslashPaths`**. Re-apply commit: see commit index below. Lesson: backslash normalisation is a paired invariant — disk layout AND instruction strings. Reverting one and leaving the other produces cryptic failures downstream.
 - **FOMOD `extractArchive` joins paths case-sensitively.** `path.join(tempPath, source)` fails if the archive manifest says `Data/` but the archive contains `data/`. Use `resolvePathCase` with a per-call `readdir` cache. Commit `cbff6b891`.
