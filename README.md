@@ -72,6 +72,29 @@ makepkg -si
 | GOG / itch.io / Heroic Launcher games          | Not supported   | Steam/Proton only for now.                                                                                                                                                                |
 | Flathub / Flatpak distribution                 | Planned         | AppImage works today; Flathub submission is on the list, using the same permission model as Lutris.                                                                                       |
 
+## Installing runtime libraries into Proton prefixes
+
+Many games and mods require additional Windows libraries — most commonly Microsoft's Visual C++ Redistributable — installed inside the game's Proton prefix. These aren't part of Proton's default Wine environment, so mods that depend on them will fail to load with cryptic errors (e.g., SKSE reporting `couldn't load plugin (000003E6)`).
+
+**Install with protontricks (recommended):**
+
+```sh
+# Example: Skyrim SE (App ID 489830)
+protontricks-launch --appid 489830 ~/Downloads/VC_redist.x64.exe
+```
+
+Replace the app ID with your game's Steam ID. Download the redistributable from Microsoft: `https://aka.ms/vs/17/release/vc_redist.x64.exe`
+
+**Manual alternative (no protontricks):**
+
+```sh
+WINEPREFIX=~/.steam/steam/steamapps/compatdata/<appid>/pfx \
+  ~/.steam/steam/steamapps/common/"Proton - Experimental"/files/bin/wine64 \
+  ~/Downloads/VC_redist.x64.exe
+```
+
+Adjust the Proton path to match whichever version the game is using.
+
 ## Roadmap
 
 The full development plan is in [VORTEX-LINUX.md](VORTEX-LINUX.md).
