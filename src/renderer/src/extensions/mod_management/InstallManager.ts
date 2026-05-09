@@ -93,6 +93,7 @@ import {
 import * as fs from "../../util/fs";
 import type { TFunction } from "../../util/i18n";
 import { prettifyNodeErrorMessage } from "../../util/message";
+import { resolvePathCase } from "../../util/resolvePathCase";
 import {
   activeGameId,
   activeProfile,
@@ -6972,6 +6973,15 @@ class InstallManager {
     const jobs: Array<{ src: string; dst: string; rel: string }> = [];
     const missingFiles = new Set<string>();
     const copyFailures = new Set<string>();
+    // resolvePathCase walks the tempPath tree to find case-insensitive matches
+    // for source paths recorded in installer override instructions or FOMOD
+    // XML. Archives like Engine Fixes ship a vortex_override_instructions.json
+    // with "Data\\..." paths while the archive entries are "data/...". Without
+    // this, the hardlink misses and every file lands in `missingFiles`. Cache
+    // readdir results across the per-call loop. Re-applied from commit
+    // cbff6b891 after the upstream merge that reverted the backslash/case
+    // cluster also reverted this one.
+    const caseCache = new Map<string, string[]>();
 
     const copyAsyncWrap = async (src: string, dst: string): Promise<boolean> => {
       try {
@@ -7009,7 +7019,7 @@ class InstallManager {
         folderCopies.push(source);
         continue;
       }
-      const src = path.join(tempPath, source);
+      const src = await resolvePathCase(tempPath, source, caseCache);
       const dst = path.join(destinationPath, destination);
       dirs.add(path.dirname(dst));
       jobs.push({ src, dst, rel: destination });
