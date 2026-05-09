@@ -127,6 +127,7 @@ import {
 } from "../../util/errorHandling";
 import * as fs from "../../util/fs";
 import { prettifyNodeErrorMessage } from "../../util/message";
+import { resolvePathCase } from "../../util/resolvePathCase";
 import {
   activeGameId,
   activeProfile,
@@ -208,7 +209,6 @@ import testModReference, {
   referenceEqual,
   testRefByIdentifiers,
 } from "./util/testModReference";
-import { resolvePathCase } from "../../util/resolvePathCase";
 
 // Interface for tracking active installation information
 interface IActiveInstallation {
@@ -7861,6 +7861,14 @@ class InstallManager {
     const dirs = new Set<string>();
     const jobs: Array<{ src: string; dst: string; rel: string }> = [];
     const missingFiles = new Set<string>();
+    // resolvePathCase walks the tempPath tree to find case-insensitive matches
+    // for source paths recorded in installer override instructions or FOMOD
+    // XML. Archives like Engine Fixes ship a vortex_override_instructions.json
+    // with "Data\\..." paths while the archive entries are "data/...". Without
+    // this, the hardlink misses and every file lands in `missingFiles`. Cache
+    // readdir results across the per-call loop. Re-applied from commit
+    // cbff6b891 after the upstream merge that reverted the backslash/case
+    // cluster also reverted this one.
     const dirCache = new Map<string, string[]>();
     const copyFailures = new Set<string>();
 
