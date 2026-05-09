@@ -35,14 +35,17 @@ Note the operator asymmetry — see "platform-guard operator direction" in Past 
 
 Extensions with guards we know about:
 
-- `extensions/gamebryo-plugin-management/package.json` _(skip-on-linux — needs `loot`/`esptk` native builds that don't exist in CI)_
-- `extensions/gamebryo-bsa-support/package.json` _(skip-on-linux — needs `bsatk.node` native build that doesn't exist in CI; has both `build` and `dist`)_
-- `extensions/gamebryo-archive-support/package.json` _(skip-on-linux — matches sibling behaviour and the upstream intent)_
 - `extensions/gamestore-xbox/package.json` _(skip-on-linux — Windows-only registry/Game Pass integration)_
 
-Sentinels: `extensions/skip-on-windows.mjs` and `extensions/skip-on-linux.mjs` must exist and be referenced by the package.jsons above.
+Previously skipped but now fixed (guards removed, CI rebuilds native deps):
 
-**Heads-up on gamebryo guard direction:** three of the gamebryo extensions (`plugin-management`, `bsa-support`, `archive-support`) skip on Linux — they need native binaries (`node-loot.node`, `esptk.node`, `bsatk.node`) that neither pnpm install nor the current workflow produces in CI. The tree has pre-built artefacts in each extension's `dist/` on the dev machine, but those are `.gitignore`d and don't reach CI. Flipping these to skip-on-windows (so they build on Linux) crashes CI with `Missing native files` — don't "fix" this without also wiring a rebuild step for bsatk/esptk in `.github/workflows/main.yml`.
+- `extensions/gamebryo-plugin-management/package.json` — guard removed `ba23aee71`; uses `copy-native-loot.mjs` for platform-aware native copy (libloot.so.0 on Linux, libloot.dll on Windows)
+- `extensions/gamebryo-bsa-support/package.json` — guard removed `833f02db0`; CI fetches bsatk source and rebuilds with node-gyp
+- `extensions/gamebryo-archive-support/package.json` — guard removed `833f02db0`; has no native deps (pure TS + lz4js), guard was never needed
+
+Sentinels: `extensions/skip-on-windows.mjs` and `extensions/skip-on-linux.mjs` must exist (gamestore-xbox still uses the latter).
+
+**Native addon CI pattern:** pnpm's isolated store hides addons from `@electron/rebuild`. For any native addon in an extension workspace, add an explicit rebuild step in both `main.yml` and `release-linux.yml` — resolve the package dir, fetch source if needed, then `npx node-gyp rebuild --target=<electron-version>`. Current explicit rebuilds: loot, bsatk, font-scanner.
 
 ### 2. Webpack externals allowlist for `winapi-bindings`
 
@@ -167,11 +170,16 @@ Not a new bug, not a fresh regression — a straight revert of a fix we already 
 - Fork-local fixes should be named and structured to make reverts obvious in a diff, not buried inside inline `node -e "..."` one-liners that read identically either way.
 - `git log -- <file>` is your first tool when a Linux-only thing stops working: the alternating `fix(linux): …` / `Update scripts` / `fix(linux): …` pattern is usually right there.
 
-### Before flipping a platform-guard direction, check that CI passed in that direction
+### The right fix for "extension skipped on Linux" is making the build work, not flipping guards
 
-Painful one. Commit `bafb67265` switched the three gamebryo extensions from skip-on-Linux (`||`) to skip-on-Windows (`&&`), believing upstream had accidentally inverted the guard. Upstream had not — these extensions genuinely skip on Linux because they need `bsatk.node` / `esptk.node` / `node-loot.node` native builds that CI doesn't produce. Flipping the direction "fixed" the guard intent on paper but turned CI red on the `_native` step (`Missing native files: ./node_modules/bsatk/build/Release/bsatk.node`). Reverted in a follow-up fix.
+The original instinct was to flip skip-on-linux to skip-on-windows — that crashed CI because native deps weren't being built. The subsequent "fix" was to restore skip-on-linux — that hid the problem and left the extensions missing from packaged debs.
 
-**Rule:** before naming a guard flip "fix(linux)", confirm the last green Main CI had the other direction. `gh run list --workflow=main.yml` → find the most recent success → `git show <that-commit>:extensions/<ext>/package.json`. If upstream has been running the guard one way for months without Linux CI failures, the direction is probably intentional and the broken Linux symptom is downstream (missing native binaries, missing copy step, something else). The guard is a signal, not the disease.
+The actual fix (`ba23aee71`, `833f02db0`) was to make the extensions build on Linux by:
+
+1. Making native copy scripts platform-aware (libloot.so.0 vs libloot.dll)
+2. Adding explicit CI steps to fetch source and rebuild native addons that pnpm's isolation hides from @electron/rebuild
+
+**Rule:** if an extension is needed on Linux, don't guard it out — make it build. Add CI rebuild steps for native addons that pnpm isolates. The pattern is: resolve → fetch source if needed → node-gyp rebuild with Electron headers.
 
 ### "Symptom at call site" is rarely the actual cause — always trace the import chain
 
@@ -324,18 +332,20 @@ Both forms now have named-script equivalents: `skip-on-windows.mjs` (`&&`, `exit
 
 Durable references to the fork-local Linux fixes this file depends on. If any of these commits are missing from either branch after a merge, something got reverted.
 
-| Fix                                                                                | master      | linux-port    |
-| ---------------------------------------------------------------------------------- | ----------- | ------------- |
-| Three gamebryo extensions use `skip-on-linux.mjs` (matches upstream `\|\|` intent) | `c408173b9` | _pending_     |
-| Remove win32 guard from `testPathTransfer`                                         | `7cfe61602` | `8e8b13284`   |
-| Allowlist `winapi-bindings` from `nodeExternals`                                   | `e69401abf` | `0cccf116b`   |
-| Pass real plugin filenames to LOOT + filter ghosts                                 | `324da1814` | `72641450c`   |
-| `resolvePathCase` in `externalChanges` (stops spurious "mods are redundant")       | `140a57217` | _pending_     |
-| Heal stale empty staging dirs across install attempts                              | `7e2c40e94` | `be30e0c05`   |
-| Named `skip-on-linux.mjs` sibling guard (gamestore-xbox)                           | `5acb3d098` | `a41403030`   |
-| `src/main` packaging points at `build/` (not `dist/`) after upstream rename        | `4d1ea811b` | _master-only_ |
-| `chmod +x` pnpm-bundled `gyp_main.py` before `pnpm install` in CI                  | `f0a0d2178` | _master-only_ |
-| Gate `fingerprint-*.yml` workflows to `Nexus-Mods/Vortex` repo only                | `7fd37ff71` | _master-only_ |
+| Fix                                                                                         | master      | linux-port    |
+| ------------------------------------------------------------------------------------------- | ----------- | ------------- |
+| ~~Three gamebryo extensions use `skip-on-linux.mjs`~~ — **superseded** by native CI rebuild | `c408173b9` | _pending_     |
+| Remove skip-on-linux from gamebryo-plugin-management + platform-aware native copy           | `ba23aee71` | _pending_     |
+| Remove skip-on-linux from bsa-support + archive-support; CI rebuilds bsatk                  | `833f02db0` | _pending_     |
+| Remove win32 guard from `testPathTransfer`                                                  | `7cfe61602` | `8e8b13284`   |
+| Allowlist `winapi-bindings` from `nodeExternals`                                            | `e69401abf` | `0cccf116b`   |
+| Pass real plugin filenames to LOOT + filter ghosts                                          | `324da1814` | `72641450c`   |
+| `resolvePathCase` in `externalChanges` (stops spurious "mods are redundant")                | `140a57217` | _pending_     |
+| Heal stale empty staging dirs across install attempts                                       | `7e2c40e94` | `be30e0c05`   |
+| Named `skip-on-linux.mjs` sibling guard (gamestore-xbox)                                    | `5acb3d098` | `a41403030`   |
+| `src/main` packaging points at `build/` (not `dist/`) after upstream rename                 | `4d1ea811b` | _master-only_ |
+| `chmod +x` pnpm-bundled `gyp_main.py` before `pnpm install` in CI                           | `f0a0d2178` | _master-only_ |
+| Gate `fingerprint-*.yml` workflows to `Nexus-Mods/Vortex` repo only                         | `7fd37ff71` | _master-only_ |
 
 Earlier-era fixes that were reverted by upstream merges (kept for archaeology):
 
