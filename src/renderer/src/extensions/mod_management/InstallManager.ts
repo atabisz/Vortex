@@ -197,6 +197,7 @@ import gatherDependencies, {
 import filterModInfo from "./util/filterModInfo";
 import metaLookupMatch from "./util/metaLookupMatch";
 import modName, { renderModReference } from "./util/modName";
+import { normalizeBackslashPaths } from "./util/normalizeBackslashPaths";
 import queryGameId from "./util/queryGameId";
 import { stagingDirHasFiles } from "./util/stagingIntegrity";
 import testModReference, {
@@ -320,39 +321,6 @@ class InstructionGroups {
   public error: IInstruction[] = [];
   public rule: IInstruction[] = [];
   public enableallplugins: IInstruction[] = [];
-}
-
-/**
- * On Linux, p7zip extracts ZIP entries that use Windows-style backslash path
- * separators (e.g. "Data\SKSE\Plugins\file.dll") as literal files whose name
- * contains the backslash character, rather than creating a nested directory
- * tree.  This function walks the extraction root and moves any such files into
- * the correct directory structure so that the file list and FOMOD installer
- * see the expected paths.
- */
-async function normalizeBackslashPaths(basePath: string): Promise<void> {
-  if (process.platform === "win32") {
-    return;
-  }
-  const entries = await fs.readdirAsync(basePath);
-  for (const entry of entries) {
-    const fullPath = path.join(basePath, entry);
-    if (entry.includes("\\")) {
-      const normalizedRel = entry.replace(/\\/g, "/");
-      const destPath = path.join(basePath, normalizedRel);
-      await fs.ensureDirAsync(path.dirname(destPath));
-      await fs.renameAsync(fullPath, destPath);
-    } else {
-      try {
-        const stat = await fs.statAsync(fullPath);
-        if (stat.isDirectory()) {
-          await normalizeBackslashPaths(fullPath);
-        }
-      } catch {
-        // ignore stat errors for entries that disappear during iteration
-      }
-    }
-  }
 }
 
 /**
