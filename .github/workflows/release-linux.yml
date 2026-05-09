@@ -71,15 +71,19 @@ jobs:
       - name: Rebuild native addons for Electron
         run: npx @electron/rebuild -f -v 39.8.0
 
-      # @electron/rebuild doesn't traverse pnpm's isolated store, so it misses loot.
-      # Loot's own postinstall fails during pnpm install because libloot.so is built
-      # by the root postinstall-libloot.cjs which runs after all package postinstalls.
-      # By this step libloot.so exists — rebuild loot explicitly.
-      - name: Rebuild loot addon for Electron
+      # @electron/rebuild doesn't traverse pnpm's isolated store, so it misses
+      # addons in extension workspaces. Rebuild them explicitly.
+      - name: Rebuild pnpm-isolated native addons for Electron
         run: |
           LOOT_DIR=$(node -e "process.stdout.write(require('path').dirname(require.resolve('loot/package.json', {paths: ['extensions/gamebryo-plugin-management/node_modules', 'node_modules']})))")
           echo "Rebuilding loot at: $LOOT_DIR"
           cd "$LOOT_DIR"
+          npx node-gyp rebuild --target=39.8.0 --arch=x64 --dist-url=https://electronjs.org/headers
+
+          BSATK_DIR=$(node -e "process.stdout.write(require('path').dirname(require.resolve('bsatk/package.json', {paths: ['extensions/gamebryo-bsa-support/node_modules', 'node_modules']})))")
+          echo "Rebuilding bsatk at: $BSATK_DIR"
+          cd "$BSATK_DIR"
+          node fetch_bsatk.js
           npx node-gyp rebuild --target=39.8.0 --arch=x64 --dist-url=https://electronjs.org/headers
 
       - name: Verify native addons load

@@ -33,21 +33,20 @@ const projectRoot = path.resolve(__dirname, "..");
 // pnpm symlinks the addon into that package's node_modules, which then resolves
 // into the shared pnpm store. We pass these paths to require.resolve().
 const addonWorkspaces = {
-  bsatk: path.join(projectRoot, "extensions", "gamebryo-bsa-support", "node_modules"),
-  esptk: path.join(projectRoot, "extensions", "gamebryo-plugin-management", "node_modules"),
-  "bsdiff-node": path.join(projectRoot, "extensions", "collections", "node_modules"),
-  "xxhash-addon": path.join(projectRoot, "src", "main", "node_modules"),
-  vortexmt: path.join(projectRoot, "src", "main", "node_modules"),
-  loot: path.join(projectRoot, "extensions", "gamebryo-plugin-management", "node_modules"),
+    bsatk: path.join(projectRoot, "extensions", "gamebryo-bsa-support", "node_modules"),
+    esptk: path.join(projectRoot, "extensions", "gamebryo-plugin-management", "node_modules"),
+    "bsdiff-node": path.join(projectRoot, "extensions", "collections", "node_modules"),
+    "xxhash-addon": path.join(projectRoot, "src", "main", "node_modules"),
+    vortexmt: path.join(projectRoot, "src", "main", "node_modules"),
+    loot: path.join(projectRoot, "extensions", "gamebryo-plugin-management", "node_modules"),
 };
 
 // Resolve the actual filesystem path for a given addon using workspace-relative lookup.
 function resolveAddon(addonName) {
-  const searchPaths = [
-    addonWorkspaces[addonName],
-    path.join(projectRoot, "node_modules"),
-  ].filter(Boolean);
-  return require.resolve(addonName + "/package.json", { paths: searchPaths });
+    const searchPaths = [addonWorkspaces[addonName], path.join(projectRoot, "node_modules")].filter(
+        Boolean,
+    );
+    return require.resolve(addonName + "/package.json", { paths: searchPaths });
 }
 
 // Verify loot using ldd instead of require() because:
@@ -56,88 +55,94 @@ function resolveAddon(addonName) {
 //   1. node-loot.node exists at the expected build path
 //   2. ldd confirms liblibloot.so (via libloot.so.0 SONAME) resolves via RUNPATH
 function verifyLootViaDependencyCheck(lootPkgPath) {
-  const lootDir = path.dirname(lootPkgPath);
-  const lootNode = path.join(lootDir, "build", "Release", "node-loot.node");
+    const lootDir = path.dirname(lootPkgPath);
+    const lootNode = path.join(lootDir, "build", "Release", "node-loot.node");
 
-  if (!fs.existsSync(lootNode)) {
-    return { ok: false, reason: `node-loot.node not found at ${lootNode} — run @electron/rebuild first` };
-  }
+    if (!fs.existsSync(lootNode)) {
+        return {
+            ok: false,
+            reason: `node-loot.node not found at ${lootNode} — run @electron/rebuild first`,
+        };
+    }
 
-  // Check RPATH/RUNPATH resolves liblibloot.so at runtime using ldd
-  let lddOutput = "";
-  try {
-    lddOutput = execSync(`ldd "${lootNode}"`, { encoding: "utf8" });
-  } catch (e) {
-    return { ok: false, reason: `ldd failed: ${e.message}` };
-  }
+    // Check RPATH/RUNPATH resolves liblibloot.so at runtime using ldd
+    let lddOutput = "";
+    try {
+        lddOutput = execSync(`ldd "${lootNode}"`, { encoding: "utf8" });
+    } catch (e) {
+        return { ok: false, reason: `ldd failed: ${e.message}` };
+    }
 
-  // libloot.so.0 is the SONAME embedded by cmake; it must appear as "found" (path, not "not found")
-  const lootSoLine = lddOutput.split("\n").find((l) => l.includes("libloot.so"));
-  if (!lootSoLine) {
-    return { ok: false, reason: "ldd output does not mention libloot.so — binary may not link against it" };
-  }
-  if (lootSoLine.includes("not found")) {
-    return {
-      ok: false,
-      reason: `libloot.so.0 not found at runtime — RUNPATH: ${
-        (lddOutput.match(/runpath:\s*\[(.+?)\]/i) || [])[1] || "missing"
-      }`,
-    };
-  }
+    // libloot.so.0 is the SONAME embedded by cmake; it must appear as "found" (path, not "not found")
+    const lootSoLine = lddOutput.split("\n").find((l) => l.includes("libloot.so"));
+    if (!lootSoLine) {
+        return {
+            ok: false,
+            reason: "ldd output does not mention libloot.so — binary may not link against it",
+        };
+    }
+    if (lootSoLine.includes("not found")) {
+        return {
+            ok: false,
+            reason: `libloot.so.0 not found at runtime — RUNPATH: ${
+                (lddOutput.match(/runpath:\s*\[(.+?)\]/i) || [])[1] || "missing"
+            }`,
+        };
+    }
 
-  const resolvedPath = (lootSoLine.match(/=>\s*(\S+)/) || [])[1] || "(resolved)";
-  return { ok: true, detail: `libloot.so.0 => ${resolvedPath}` };
+    const resolvedPath = (lootSoLine.match(/=>\s*(\S+)/) || [])[1] || "(resolved)";
+    return { ok: true, detail: `libloot.so.0 => ${resolvedPath}` };
 }
 
 const addonResults = {};
 
 // Windows-only addons: not installed on Linux; skip verification there.
-// - bsatk: BSA archive support (Bethesda) — Windows prebuilt only
 // - esptk: ESP/ESM plugin toolkit — Windows prebuilt only
 // - bsdiff-node: binary diff (collections) — Windows prebuilt only
 // - vortexmt: multi-threading util — Windows prebuilt only
-const windowsOnlyAddons = ["bsatk", "esptk", "bsdiff-node", "vortexmt"];
-const crossPlatformAddons = ["xxhash-addon"];
-const addonsToVerify = process.platform === "win32"
-  ? [...windowsOnlyAddons, ...crossPlatformAddons]
-  : crossPlatformAddons;
+const windowsOnlyAddons = ["esptk", "bsdiff-node", "vortexmt"];
+const crossPlatformAddons = ["xxhash-addon", "bsatk"];
+const addonsToVerify =
+    process.platform === "win32"
+        ? [...windowsOnlyAddons, ...crossPlatformAddons]
+        : crossPlatformAddons;
 
 // Verify non-loot addons via require()
 for (const addonName of addonsToVerify) {
-  try {
-    const pkgPath = resolveAddon(addonName);
-    const addonDir = path.dirname(pkgPath);
-    // Require from the resolved package directory so relative paths inside work
-    require(addonDir);
-    addonResults[addonName] = { ok: true };
-  } catch (err) {
-    addonResults[addonName] = { ok: false, reason: err.message.split("\n")[0] };
-  }
+    try {
+        const pkgPath = resolveAddon(addonName);
+        const addonDir = path.dirname(pkgPath);
+        // Require from the resolved package directory so relative paths inside work
+        require(addonDir);
+        addonResults[addonName] = { ok: true };
+    } catch (err) {
+        addonResults[addonName] = { ok: false, reason: err.message.split("\n")[0] };
+    }
 }
 
 // Verify loot via ldd (not require) because it uses Electron V8 headers
 try {
-  const lootPkgPath = resolveAddon("loot");
-  addonResults["loot"] = verifyLootViaDependencyCheck(lootPkgPath);
+    const lootPkgPath = resolveAddon("loot");
+    addonResults["loot"] = verifyLootViaDependencyCheck(lootPkgPath);
 } catch (err) {
-  addonResults["loot"] = { ok: false, reason: err.message.split("\n")[0] };
+    addonResults["loot"] = { ok: false, reason: err.message.split("\n")[0] };
 }
 
 // Print results
 let failed = false;
 for (const [name, result] of Object.entries(addonResults)) {
-  if (result.ok) {
-    const detail = result.detail ? ` (${result.detail})` : "";
-    console.log(`  OK: ${name}${detail}`);
-  } else {
-    console.error(`  FAIL: ${name} — ${result.reason}`);
-    failed = true;
-  }
+    if (result.ok) {
+        const detail = result.detail ? ` (${result.detail})` : "";
+        console.log(`  OK: ${name}${detail}`);
+    } else {
+        console.error(`  FAIL: ${name} — ${result.reason}`);
+        failed = true;
+    }
 }
 
 if (failed) {
-  console.error("\nNative addon verification FAILED");
-  process.exit(1);
+    console.error("\nNative addon verification FAILED");
+    process.exit(1);
 } else {
-  console.log("\nAll native addons verified successfully");
+    console.log("\nAll native addons verified successfully");
 }

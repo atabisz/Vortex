@@ -89,10 +89,6 @@ jobs:
 
       # @electron/rebuild doesn't traverse pnpm's isolated store, so it misses addons
       # installed into store-isolated workspaces. Rebuild them explicitly here.
-      # - loot: postinstall builds libloot.so after pnpm install completes, so loot
-      #   must be rebuilt after @electron/rebuild rather than during it.
-      # - font-scanner: lives in extensions/theme-switcher's isolated store path,
-      #   not discoverable by @electron/rebuild's directory traversal.
       - name: Rebuild pnpm-isolated native addons for Electron
         if: runner.os == 'Linux'
         run: |
@@ -100,6 +96,13 @@ jobs:
           echo "Rebuilding loot at: $LOOT_DIR"
           cd "$LOOT_DIR"
           npx node-gyp rebuild --target=39.8.0 --arch=x64 --dist-url=https://electronjs.org/headers
+
+          BSATK_DIR=$(node -e "process.stdout.write(require('path').dirname(require.resolve('bsatk/package.json', {paths: ['extensions/gamebryo-bsa-support/node_modules', 'node_modules']})))")
+          echo "Rebuilding bsatk at: $BSATK_DIR"
+          cd "$BSATK_DIR"
+          node fetch_bsatk.js
+          npx node-gyp rebuild --target=39.8.0 --arch=x64 --dist-url=https://electronjs.org/headers
+
           FONT_SCANNER_DIR=$(node -e "process.stdout.write(require('path').dirname(require.resolve('font-scanner/package.json', {paths: ['extensions/theme-switcher/node_modules', 'node_modules']})))")
           echo "Rebuilding font-scanner at: $FONT_SCANNER_DIR"
           cd "$FONT_SCANNER_DIR"
