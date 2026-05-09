@@ -97,13 +97,27 @@ grep -n "stagingDirHasFiles" src/renderer/src/extensions/mod_management/InstallM
 
 Should return two hits: the import at the top and the call inside the `.then(async (downloadId) => { ... })` block in `doDownload`. Without these, a broken install that leaves an empty staging dir persists across every subsequent install attempt because `dep.mod != null` short-circuits re-extraction forever, and the "Redundant mods" dialog keeps flagging affected mods after every deploy. Sibling sentinel `src/renderer/src/extensions/mod_management/util/stagingIntegrity.ts` must exist. See "stale empty staging dir" in the case-sensitive filesystem section below for the full story.
 
-### 7. Backslash path normalisation after extraction
+### 7. Backslash path normalisation after extraction (paired fix — disk + instructions)
+
+This is TWO call sites that must travel together. Reverting one and keeping the other surfaces as cryptic ENOENTs listing literal backslashed paths in `extractArchive`.
+
+**(a) On-disk rename:**
 
 ```bash
 grep -n "normalizeBackslashPaths" src/renderer/src/extensions/mod_management/InstallManager.ts
 ```
 
-Should return three hits: the import and two call sites (before each `buildFileList(tempPath)` in the simulate and real-install flows). Sibling sentinel `src/renderer/src/extensions/mod_management/util/normalizeBackslashPaths.ts` must exist. Without this, Windows-packaged ZIP archives using `\` as path separator extract as literal filenames containing backslashes on ext4, which the installer then reports as "files that were not part of the archive." Upstream has reverted this fix at least once (PR #22607 / `5f44c9fdb`) — see the case-sensitive filesystem section for the full story.
+Should return three hits: the import and two call sites (before each `buildFileList(tempPath)` in the simulate and real-install flows). Sibling sentinel `src/renderer/src/extensions/mod_management/util/normalizeBackslashPaths.ts` must exist.
+
+**(b) Copy-instruction normalisation:**
+
+```bash
+grep -n 'replaceAll("\\\\\\\\", "/")' src/renderer/src/extensions/mod_management/InstallManager.ts
+```
+
+Should return two hits in the `extractArchive` copy loop (one for `source`, one for `destination`). Without this, the installer's copy instructions still carry `\` separators even when the disk has been normalised — and `path.join(tempPath, copy.source)` with a backslashed source path produces an ENOENT miss on ext4.
+
+Upstream has reverted both fixes together (PR #22607 / `5f44c9fdb`) — see the case-sensitive filesystem section for the paired-invariant lesson.
 
 ### 8. Cross-compiled Linux native binaries
 
@@ -244,6 +258,7 @@ Each entry is a real bug we hit at least once — written down so the next merge
 - **`resolvePathCase` has to resolve every segment, including the filename.** The early version only case-resolved directories, so `removeDeployedFile` with a mismatched filename case would still `unlinkAsync` an ENOENT path (silently swallowed), leaving the file deployed. Extended to match every segment against parent `readdir`. Commit `bbf7c8f39`.
 - **Windows archive extraction produces case-conflicting directory trees on Linux.** `7z` extracts entries literally, so a mod archive with mixed `Data/SKSE/plugins/` and `data/SKSE/plugins/` entries creates two separate directories. Fix: run `mergeCaseConflictingDirs()` right after `normalizeBackslashPaths()` in both `simulate()` and `installInner()`. Commit `850a3cb40`.
 - **Filenames with backslashes in archives become filenames, not paths.** Windows-packaged archives using `\` as separator land as single filenames `Data\SKSE\plugins\foo.dll` on ext4. Normalise before building the file list. Original commit `728c91a85`; **reverted by upstream PR #22607 (merge `5f44c9fdb`)** and re-applied as its own helper at `src/renderer/src/extensions/mod_management/util/normalizeBackslashPaths.ts` (easier to spot in a diff next time). Two call sites before each `buildFileList(tempPath)` in `InstallManager.ts`. Re-apply commit: see commit index below.
+- **The on-disk rename isn't enough — copy instructions still carry `\`.** `normalizeBackslashPaths` fixes the filesystem, but FOMOD XML or archive listings can still hand the installer `copy` instructions with Windows-style `\` in `source` / `destination` fields. Those get `path.join`'d verbatim in `extractArchive`, miss the normalised on-disk tree, and surface as the "Invalid installer" dialog listing literal backslashed paths. Fix: `replaceAll("\\", "/")` on both `source` and `destination` at the top of the copy loop; the `endsWith` directory check then only needs to test `/`. Original commit `ca8e99941`; **reverted by the same upstream merge as `normalizeBackslashPaths`**. Re-apply commit: see commit index below. Lesson: backslash normalisation is a paired invariant — disk layout AND instruction strings. Reverting one and leaving the other produces cryptic failures downstream.
 - **FOMOD `extractArchive` joins paths case-sensitively.** `path.join(tempPath, source)` fails if the archive manifest says `Data/` but the archive contains `data/`. Use `resolvePathCase` with a per-call `readdir` cache. Commit `cbff6b891`.
 - **`externalChanges` didn't case-resolve manifest paths.** Deploy manifests record the staging folder's casing (`SKSE/Plugins/...`) but files land on disk with whatever casing the game `Data/` tree already had (`skse/plugins/...`). `deployFile` already used `resolvePathCase` to find the target directory when creating hardlinks; `externalChanges` didn't, so `lstat` hit ENOENT on every manifest entry, flagged everything `destDeleted`, and popped the "External Changes" dialog on every deploy. Downstream symptom: the redundancy check saw zero deployed files from the affected mods and fired "Some mods are redundant" for every SKSE-plugin mod. Fix: `resolvePathCase` in `externalChanges` before `statLink`, with a per-call readdir cache (same pattern as FOMOD `extractArchive`). Commit `140a57217`.
 - **Stale empty staging dirs persist across install attempts.** A partially-broken extract (e.g. the FOMOD execute-bit bug fixed in `053a30424`, or any silent `copyAsync` failure in `extractArchive`) leaves the mod's staging folder with parent directories only — no files — while Vortex state still records the mod as installed. `doDownload` then short-circuits re-install for every subsequent attempt because `dep.mod != null`, so the broken state perpetuates forever and the "Redundant mods" dialog keeps flagging affected mods at every deploy. The first-order cause (silent copy swallowing) was sibling to the case-mismatch bug above but orthogonal — fixing `externalChanges` didn't heal mods that already had zero files in staging. Two-part fix: (a) `extractArchive` throws `ArchiveBrokenError` when every intended copy/link failed (partial failures still resolve via existing notification path); (b) `doDownload` runs `stagingDirHasFiles` before the `dep.mod != null` short-circuit and clears `dep.mod` when the dir is empty, forcing the normal `queueInstallation` path to re-extract. Helper lives at `src/renderer/src/extensions/mod_management/util/stagingIntegrity.ts`. Commit `7e2c40e94` (master) / `be30e0c05` (linux-port).
