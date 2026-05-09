@@ -89,7 +89,15 @@ If this is 0, upstream renamed the output path (`out` → `build` or the other w
 pnpm run build:extensions
 ```
 
-### 6. Cross-compiled Linux native binaries
+### 6. Staging-integrity guard in `doDownload`
+
+```bash
+grep -n "stagingDirHasFiles" src/renderer/src/extensions/mod_management/InstallManager.ts
+```
+
+Should return two hits: the import at the top and the call inside the `.then(async (downloadId) => { ... })` block in `doDownload`. Without these, a broken install that leaves an empty staging dir persists across every subsequent install attempt because `dep.mod != null` short-circuits re-extraction forever, and the "Redundant mods" dialog keeps flagging affected mods after every deploy. Sibling sentinel `src/renderer/src/extensions/mod_management/util/stagingIntegrity.ts` must exist. See "stale empty staging dir" in the case-sensitive filesystem section below for the full story.
+
+### 7. Cross-compiled Linux native binaries
 
 ```bash
 ls extensions/gamebryo-plugin-management/dist/{node-loot.node,libloot.so.0,libloot_wstring_stub.so}
@@ -168,6 +176,15 @@ stat -c '%y %n' src/main/build/renderer.js src/renderer/src/util/<file>.ts
 
 Source newer than bundle → rebuild.
 
+### "Silent catch swallows error" + "state caches success" = stuck-forever state
+
+Two-part hazard that's bitten us once and will again. The 2026-05-09 collection-install bug had both ingredients:
+
+- **Silent swallow:** `extractArchive`'s `copyAsyncWrap` caught every `fs.copyAsync` error and threw away everything except two specific error strings. The outer flow resolved successfully even when zero files landed on disk.
+- **Cached success:** The mod got recorded in Vortex state with `installationPath` set (i.e. "installed"), so `doDownload` short-circuited every future re-install at `dep.mod != null`. The broken state was self-perpetuating — every remedy the user tried (re-run collection, install mod directly, deploy again) hit the short-circuit and bypassed the code that would have healed it.
+
+When writing any code that handles an irreversible side effect (extract, install, deploy, download), audit for both properties together: **can any error be silently swallowed?** AND **does a downstream system cache "done" based on state that could have been corrupted?** A "yes" on both is the shape of a bug class, not a specific bug. Add a loud-fail on the swallow path AND a integrity check before the downstream cache is trusted. One without the other only closes half the door.
+
 ### Stray working-tree diffs will block cherry-picks
 
 `etc/Dependency Report.md` and `packages/vortex-api/lib/api.d.ts` regenerate whenever the build runs and show up dirty in `git status`. They're out of scope for basically every Linux fix. Stash before `git checkout` / `git cherry-pick`, pop after:
@@ -221,6 +238,7 @@ Each entry is a real bug we hit at least once — written down so the next merge
 - **Filenames with backslashes in archives become filenames, not paths.** Windows-packaged archives using `\` as separator land as single filenames `Data\SKSE\plugins\foo.dll` on ext4. Normalise before building the file list. Commit `728c91a85`.
 - **FOMOD `extractArchive` joins paths case-sensitively.** `path.join(tempPath, source)` fails if the archive manifest says `Data/` but the archive contains `data/`. Use `resolvePathCase` with a per-call `readdir` cache. Commit `cbff6b891`.
 - **`externalChanges` didn't case-resolve manifest paths.** Deploy manifests record the staging folder's casing (`SKSE/Plugins/...`) but files land on disk with whatever casing the game `Data/` tree already had (`skse/plugins/...`). `deployFile` already used `resolvePathCase` to find the target directory when creating hardlinks; `externalChanges` didn't, so `lstat` hit ENOENT on every manifest entry, flagged everything `destDeleted`, and popped the "External Changes" dialog on every deploy. Downstream symptom: the redundancy check saw zero deployed files from the affected mods and fired "Some mods are redundant" for every SKSE-plugin mod. Fix: `resolvePathCase` in `externalChanges` before `statLink`, with a per-call readdir cache (same pattern as FOMOD `extractArchive`). Commit `140a57217`.
+- **Stale empty staging dirs persist across install attempts.** A partially-broken extract (e.g. the FOMOD execute-bit bug fixed in `053a30424`, or any silent `copyAsync` failure in `extractArchive`) leaves the mod's staging folder with parent directories only — no files — while Vortex state still records the mod as installed. `doDownload` then short-circuits re-install for every subsequent attempt because `dep.mod != null`, so the broken state perpetuates forever and the "Redundant mods" dialog keeps flagging affected mods at every deploy. The first-order cause (silent copy swallowing) was sibling to the case-mismatch bug above but orthogonal — fixing `externalChanges` didn't heal mods that already had zero files in staging. Two-part fix: (a) `extractArchive` throws `ArchiveBrokenError` when every intended copy/link failed (partial failures still resolve via existing notification path); (b) `doDownload` runs `stagingDirHasFiles` before the `dep.mod != null` short-circuit and clears `dep.mod` when the dir is empty, forcing the normal `queueInstallation` path to re-extract. Helper lives at `src/renderer/src/extensions/mod_management/util/stagingIntegrity.ts`. Commit `7e2c40e94` (master) / `be30e0c05` (linux-port).
 - **LOOT is the cautionary tale.** See the lesson above — `toLowerCase()` on plugin names + ext4 + LOOT's ghost probe = the misleading `dlccoast.esm.ghost` error. Commit `324da1814`.
 
 ### deployment manifests
@@ -274,6 +292,7 @@ Durable references to the fork-local Linux fixes this file depends on. If any of
 | Allowlist `winapi-bindings` from `nodeExternals`                                   | `e69401abf` | `0cccf116b`   |
 | Pass real plugin filenames to LOOT + filter ghosts                                 | `324da1814` | `72641450c`   |
 | `resolvePathCase` in `externalChanges` (stops spurious "mods are redundant")       | `140a57217` | _pending_     |
+| Heal stale empty staging dirs across install attempts                              | `7e2c40e94` | `be30e0c05`   |
 | Named `skip-on-linux.mjs` sibling guard (gamestore-xbox)                           | `5acb3d098` | `a41403030`   |
 | `src/main` packaging points at `build/` (not `dist/`) after upstream rename        | `4d1ea811b` | _master-only_ |
 | `chmod +x` pnpm-bundled `gyp_main.py` before `pnpm install` in CI                  | `f0a0d2178` | _master-only_ |
