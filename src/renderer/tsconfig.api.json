@@ -1,7 +1,15 @@
 {
   "$schema": "https://www.schemastore.org/tsconfig.json",
   "extends": "../../tsconfig.base.json",
+<<<<<<< HEAD
   "include": ["src/api.ts", "src/preload.ts", "src/typings.custom/*.d.ts"],
+=======
+  "include": [
+    "src/api.ts",
+    "src/preload.ts",
+    "src/typings.custom/*.d.ts"
+  ],
+>>>>>>> v2.0.0
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",

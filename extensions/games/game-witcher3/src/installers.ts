@@ -1,10 +1,17 @@
 /* eslint-disable */
+<<<<<<< HEAD
 import path from "path";
 
 import { types, util } from "vortex-api";
 
 import { CONFIG_MATRIX_REL_PATH, GAME_ID, SCRIPT_MERGER_FILES, PART_SUFFIX } from "./common";
 import { PrefixType } from "./types";
+=======
+import path from 'path';
+import { types, util } from 'vortex-api';
+import { CONFIG_MATRIX_REL_PATH, GAME_ID, SCRIPT_MERGER_FILES, PART_SUFFIX } from './common';
+import { PrefixType } from './types';
+>>>>>>> v2.0.0
 
 export function scriptMergerTest(files, gameId) {
   const matcher = (file) => SCRIPT_MERGER_FILES.includes(file);
@@ -13,6 +20,7 @@ export function scriptMergerTest(files, gameId) {
   return Promise.resolve({ supported, requiredFiles: SCRIPT_MERGER_FILES });
 }
 
+<<<<<<< HEAD
 export function scriptMergerDummyInstaller(
   api: types.IExtensionApi,
 ): Promise<types.IInstallResult> {
@@ -25,6 +33,17 @@ export function scriptMergerDummyInstaller(
     { allowReport: false },
   );
   return Promise.reject(new util.ProcessCanceled("Invalid mod"));
+=======
+export function scriptMergerDummyInstaller(api: types.IExtensionApi): Promise<types.IInstallResult> {
+  api.showErrorNotification?.(
+    'The Witcher 3 Script Merger is a tool, not a mod — it can\'t be installed this way.',
+    'The script merger should\'ve been installed automatically by Vortex as soon as you activated this extension. '
+    + 'If the download or installation failed, please let us know via the feedback system and include your Vortex logs. '
+    + 'Note: if you installed the script merger as a mod in an older Vortex and it\'s still in your mod list, '
+    + 'uninstall it and restart Vortex — the automatic installer will then set it up for you.',
+    { allowReport: false });
+  return Promise.reject(new util.ProcessCanceled('Invalid mod'));
+>>>>>>> v2.0.0
 }
 
 export function testMenuModRoot(

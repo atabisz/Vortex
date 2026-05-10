@@ -25,8 +25,21 @@ import type { IState } from "../types/IState";
 import { UserCanceled } from "./CustomErrors";
 import * as fs from "./fs";
 import { log } from "./log";
+<<<<<<< HEAD
 import makeCI from "./makeCaseInsensitive";
 import { batchDispatch } from "./util";
+=======
+
+import PromiseBB from "bluebird";
+import type { BrowserWindow } from "electron";
+import { dialog } from "electron";
+import * as path from "path";
+import type * as Redux from "redux";
+import * as semver from "semver";
+import format from "string-template";
+import { getErrorCode } from "@vortex/shared";
+import { batchDispatch } from './util';
+>>>>>>> v2.0.0
 
 interface IMigration {
   id: string;
@@ -213,7 +226,14 @@ function enableModernLayout_2_0(
   _window: BrowserWindow,
   store: Redux.Store<IState>,
 ): PromiseBB<void> {
+<<<<<<< HEAD
   batchDispatch(store, [setUseModernLayout(true), setProfilesVisible(true)]);
+=======
+  batchDispatch(store, [
+    setUseModernLayout(true),
+    setProfilesVisible(true),
+  ]);
+>>>>>>> v2.0.0
   return PromiseBB.resolve();
 }
 

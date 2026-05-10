@@ -462,6 +462,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
     const directoryCleaning = game.directoryCleaning || "tag";
 
     // stat to ensure the target directory exists
+<<<<<<< HEAD
     return Promise.resolve(
       fs
         .statAsync(dataPath)
@@ -475,6 +476,19 @@ abstract class LinkingActivator implements IDeploymentMethod {
           return Promise.reject(err);
         }),
     );
+=======
+    return Promise.resolve(fs
+      .statAsync(dataPath)
+      .then(() => this.purgeLinks(installPath, dataPath, onProgress))
+      .then(() => this.postLinkPurge(dataPath, false, true, directoryCleaning))
+      .then(() => undefined)
+      .catch((err: unknown) => {
+        if (getErrorCode(err) === "ENOENT") {
+          return Promise.resolve(undefined);
+        }
+        return Promise.reject(err);
+      }));
+>>>>>>> v2.0.0
   }
 
   public postPurge(): PromiseLike<void> {

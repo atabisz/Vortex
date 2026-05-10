@@ -23,11 +23,22 @@ import {
   profilesPath,
 } from "./util";
 
+<<<<<<< HEAD
 export async function serialize(
   context: types.IExtensionContext,
   loadOrder: types.LoadOrder,
   profileId?: string,
 ): Promise<void> {
+=======
+import { DivineAborted, DivineExecMissing, DivinePakInvalid } from './divineCore';
+import { findNode, forceRefresh, getActivePlayerProfile, getDefaultModSettingsFormat, getPlayerProfiles, logDebug, modsPath, profilesPath } from './util';
+
+import PakInfoCache, { ICacheEntry } from './cache';
+
+export async function serialize(context: types.IExtensionContext,
+                                loadOrder: types.LoadOrder,
+                                profileId?: string): Promise<void> {
+>>>>>>> v2.0.0
   const props: IProps = genProps(context);
   if (props === undefined) {
     return Promise.reject(new util.ProcessCanceled("invalid props"));
@@ -727,6 +738,7 @@ async function readPAKs(api: types.IExtensionApi): Promise<Array<ICacheEntry>> {
                 ? state.persistent.mods[GAME_ID]?.[manifestEntry.source]
                 : undefined;
 
+<<<<<<< HEAD
             const pakPath = path.join(modsPath(), fileName);
             // `return await` (not bare `return`) so this try/catch sees the
             // promise rejection — without await, the catch is dead code.
@@ -773,6 +785,43 @@ async function readPAKs(api: types.IExtensionApi): Promise<Array<ICacheEntry>> {
     }),
   );
   api.dismissNotification("bg3-reading-paks-activity");
+=======
+          const pakPath = path.join(modsPath(), fileName);
+          return cache.getCacheEntry(api, pakPath, mod);
+        } catch (err) {
+          // Game switched (or similar) while we were reading paks — bail out
+          // without notifying the user; the new game context will re-scan.
+          if (err instanceof DivineAborted) {
+            return undefined;
+          }
+          // The pak itself is malformed — common with third-party mods and
+          // not actionable by the user. Log it and move on rather than
+          // spamming a notification per bad pak.
+          if (err instanceof DivinePakInvalid) {
+            log('warn', 'pak is invalid', { fileName, details: err.details });
+            return undefined;
+          }
+          if (err instanceof DivineExecMissing) {
+            const message = 'The installed copy of LSLib/Divine is corrupted - please '
+              + 'delete the existing LSLib mod entry and re-install it. Make sure to '
+              + 'disable or add any necessary exceptions to your security software to '
+              + 'ensure it does not interfere with Vortex/LSLib file operations.';
+            api.showErrorNotification('Divine executable is missing', message,
+              { allowReport: false });
+            return undefined;
+          }
+          api.showErrorNotification('Failed to read pak. Please make sure you are using the latest version of LSLib by using the "Re-install LSLib/Divine" toolbar button on the Mods page.', err, {
+            allowReport: false,
+            message: fileName,
+          });
+          return undefined;
+        }
+      };
+      return Bluebird.resolve(func());
+    });
+  }));
+  api.dismissNotification('bg3-reading-paks-activity');
+>>>>>>> v2.0.0
 
   return res.filter((iter): iter is ICacheEntry => iter !== undefined);
 }

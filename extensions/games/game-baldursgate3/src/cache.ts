@@ -39,11 +39,17 @@ export default class PakInfoCache {
     this.load(api);
   }
 
+<<<<<<< HEAD
   public async getCacheEntry(
     api: types.IExtensionApi,
     filePath: string,
     mod?: types.IMod,
   ): Promise<ICacheEntry | undefined> {
+=======
+  public async getCacheEntry(api: types.IExtensionApi,
+                             filePath: string,
+                             mod?: types.IMod): Promise<ICacheEntry | undefined> {
+>>>>>>> v2.0.0
     const id = this.fileId(filePath);
     // Pak files can vanish between readPAKs listing them and this stat call
     // (mod updates, user deletions, antivirus). Treat that as "no entry"
@@ -52,7 +58,11 @@ export default class PakInfoCache {
     try {
       stat = await fs.statAsync(filePath);
     } catch (err) {
+<<<<<<< HEAD
       if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+=======
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+>>>>>>> v2.0.0
         return undefined;
       }
       throw err;

@@ -76,8 +76,30 @@ import {
 
 const STOP_PATTERNS = ["[^/]*\\.pak$"];
 
+<<<<<<< HEAD
 const GOG_ID = "1456460669";
 const STEAM_ID = "1086940";
+=======
+import { abortDivineOperations } from './divineWrapper';
+
+import {
+  isBG3SE, isLSLib, isLoose, isReplacer,
+} from './modTypes';
+
+import {
+  deserialize, importModSettingsFile, importModSettingsGame,
+  importFromBG3MM, serialize, exportToGame, exportToFile, validate,
+  getNodes,
+} from './loadOrder';
+
+import { InfoPanelWrap } from './InfoPanel'
+import PakInfoCache from './cache';
+
+const STOP_PATTERNS = ['[^/]*\\.pak$'];
+
+const GOG_ID = '1456460669';
+const STEAM_ID = '1086940';
+>>>>>>> v2.0.0
 
 function toWordExp(input) {
   return "(^|/)" + input + "(/|$)";

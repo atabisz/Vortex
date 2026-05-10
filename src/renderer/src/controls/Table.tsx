@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+=======
+import type * as Redux from "redux";
+import type { OutputSelector } from "reselect";
+
+>>>>>>> v2.0.0
 import { getErrorMessageOrDefault } from "@vortex/shared";
 import PromiseBB from "bluebird";
 import update from "immutability-helper";
@@ -5,10 +11,23 @@ import * as _ from "lodash";
 import * as React from "react";
 import { Button } from "react-bootstrap";
 import * as ReactDOM from "react-dom";
+<<<<<<< HEAD
 import type * as Redux from "redux";
 import type { OutputSelector } from "reselect";
 import { createSelector } from "reselect";
 
+=======
+import { createSelector } from "reselect";
+
+import type { IActionDefinition } from "../types/IActionDefinition";
+import type { IAttributeState } from "../types/IAttributeState";
+import type { IExtensibleProps } from "../types/IExtensionProvider";
+import type { II18NProps } from "../types/II18NProps";
+import type { IRowState, IState, ITableState } from "../types/IState";
+import type { ITableAttribute } from "../types/ITableAttribute";
+import type { SortDirection } from "../types/SortDirection";
+
+>>>>>>> v2.0.0
 import {
   collapseGroup,
   setAttributeFilter,
@@ -18,6 +37,7 @@ import {
   setGroupingAttribute,
 } from "../actions/tables";
 import smoothScroll from "../smoothScroll";
+<<<<<<< HEAD
 import type { IActionDefinition } from "../types/IActionDefinition";
 import type { IAttributeState } from "../types/IAttributeState";
 import type { IExtensibleProps } from "../types/IExtensionProvider";
@@ -25,6 +45,8 @@ import type { II18NProps } from "../types/II18NProps";
 import type { IRowState, IState, ITableState } from "../types/IState";
 import type { ITableAttribute } from "../types/ITableAttribute";
 import type { SortDirection } from "../types/SortDirection";
+=======
+>>>>>>> v2.0.0
 import Debouncer from "../util/Debouncer";
 import { log } from "../util/log";
 import { getSafe, setSafe } from "../util/storeHelper";
@@ -39,7 +61,15 @@ import TableRow from "./table/TableRow";
 import ToolbarIcon from "./ToolbarIcon";
 import Usage from "./Usage";
 
+<<<<<<< HEAD
 export type ChangeDataHandler = (rowId: string, attributeId: string, newValue: any) => void;
+=======
+export type ChangeDataHandler = (
+  rowId: string,
+  attributeId: string,
+  newValue: any,
+) => void;
+>>>>>>> v2.0.0
 
 export interface ITableRowAction extends IActionDefinition {
   singleRowAction?: boolean;
@@ -379,7 +409,13 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
     return (
       <THead className="table-header">
         <TR domRef={proxy ? this.setProxyHeaderRef : this.setVisibleHeaderRef}>
+<<<<<<< HEAD
           {this.mVisibleAttributes.map((attribute) => this.renderHeaderField(attribute, proxy))}
+=======
+          {this.mVisibleAttributes.map((attribute) =>
+            this.renderHeaderField(attribute, proxy),
+          )}
+>>>>>>> v2.0.0
 
           {actionHeader}
         </TR>
@@ -387,11 +423,22 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
         {filterActive ? (
           <TR className="table-pinned" domRef={this.setPinnedRef}>
             <TD colSpan={this.mVisibleAttributes.length + 1}>
+<<<<<<< HEAD
               {t("This table is filtered, showing {{shown}}/{{hidden}} items.", {
                 replace: { shown: filteredLength, hidden: totalLength },
               })}
 
               <Button onClick={this.clearFilters}>{t("Clear all filters")}</Button>
+=======
+              {t(
+                "This table is filtered, showing {{shown}}/{{hidden}} items.",
+                { replace: { shown: filteredLength, hidden: totalLength } },
+              )}
+
+              <Button onClick={this.clearFilters}>
+                {t("Clear all filters")}
+              </Button>
+>>>>>>> v2.0.0
             </TD>
           </TR>
         ) : null}
@@ -719,7 +766,13 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
     return (
       <TH className={`table-${tableId} header-action`}>
         <div>
+<<<<<<< HEAD
           {hasActions ? <div className="header-action-label">{t("Actions")}</div> : null}
+=======
+          {hasActions ? (
+            <div className="header-action-label">{t("Actions")}</div>
+          ) : null}
+>>>>>>> v2.0.0
 
           {columnToggles.length > 0 ? (
             <IconBar
@@ -783,7 +836,13 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
         rawData={data[rowId]}
         rowClasses={extraClasses}
         selected={getSafe(rowState, [rowId, "selected"], false)}
+<<<<<<< HEAD
         sortAttribute={sortAttribute !== undefined ? sortAttribute.id : undefined}
+=======
+        sortAttribute={
+          sortAttribute !== undefined ? sortAttribute.id : undefined
+        }
+>>>>>>> v2.0.0
         t={t}
         tableId={tableId}
         visible={rowVisibility[tableRowId] === true}
@@ -836,7 +895,13 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
           {attribute.filter !== undefined ? (
             <attribute.filter.component
               attributeId={attribute.id}
+<<<<<<< HEAD
               domRef={attribute.isDefaultFilter ? this.setDefaultFilterRef : undefined}
+=======
+              domRef={
+                attribute.isDefaultFilter ? this.setDefaultFilterRef : undefined
+              }
+>>>>>>> v2.0.0
               filter={filt}
               t={t}
               onSetFilter={this.setFilter}

@@ -77,6 +77,7 @@ export const useTools = (onShowError: ShowErrorCallback, api: IExtensionApi): Us
   // Hidden tools (removed in classic) are excluded. Only explicitly pinned tools show.
   // Excludes the launcher (shown in Play button). Capped at MAX_VISIBLE_TOOLS for the sidebar.
   const visibleTools = useMemo(() => {
+<<<<<<< HEAD
     const nonLauncher = tools.filter((starter) => starter.id !== primaryToolId);
 
     // Exclude hidden tools, then only show explicitly pinned ones
@@ -87,6 +88,20 @@ export const useTools = (onShowError: ShowErrorCallback, api: IExtensionApi): Us
         pinnedToolsMap[starter.id] === true,
     );
 
+=======
+    const nonLauncher = tools.filter(
+      (starter) => starter.id !== primaryToolId,
+    );
+
+    // Exclude hidden tools, then only show explicitly pinned ones
+    const pinned = nonLauncher.filter(
+      (starter) =>
+        (discoveredTools[starter.id] === undefined ||
+          discoveredTools[starter.id].hidden !== true) &&
+        pinnedToolsMap[starter.id] === true,
+    );
+
+>>>>>>> v2.0.0
     return pinned.slice(0, MAX_VISIBLE_TOOLS);
   }, [tools, discoveredTools, primaryToolId, pinnedToolsMap]);
 

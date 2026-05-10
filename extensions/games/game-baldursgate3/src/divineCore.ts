@@ -1,8 +1,16 @@
+<<<<<<< HEAD
 import * as child_process from "child_process";
 import * as fs from "fs/promises";
 import * as nodeUtil from "util";
 
 import type { DivineAction, IDivineOptions, IDivineOutput } from "./types";
+=======
+import * as nodeUtil from 'util';
+import * as child_process from 'child_process';
+import * as fs from 'fs/promises';
+
+import type { DivineAction, IDivineOptions, IDivineOutput } from './types';
+>>>>>>> v2.0.0
 
 const exec = nodeUtil.promisify(child_process.exec);
 
@@ -10,29 +18,49 @@ export const DEFAULT_TIMEOUT_MS = 10000;
 
 export class DivineExecMissing extends Error {
   constructor() {
+<<<<<<< HEAD
     super("Divine executable is missing");
     this.name = "DivineExecMissing";
+=======
+    super('Divine executable is missing');
+    this.name = 'DivineExecMissing';
+>>>>>>> v2.0.0
   }
 }
 
 export class DivineMissingDotNet extends Error {
   constructor() {
+<<<<<<< HEAD
     super("LSLib requires .NET 8 Desktop Runtime to be installed.");
     this.name = "DivineMissingDotNet";
+=======
+    super('LSLib requires .NET 8 Desktop Runtime to be installed.');
+    this.name = 'DivineMissingDotNet';
+>>>>>>> v2.0.0
   }
 }
 
 export class DivineTimedOut extends Error {
   constructor() {
+<<<<<<< HEAD
     super("Divine process timed out");
     this.name = "DivineTimedOut";
+=======
+    super('Divine process timed out');
+    this.name = 'DivineTimedOut';
+>>>>>>> v2.0.0
   }
 }
 
 export class DivineAborted extends Error {
   constructor() {
+<<<<<<< HEAD
     super("Divine operation was aborted");
     this.name = "DivineAborted";
+=======
+    super('Divine operation was aborted');
+    this.name = 'DivineAborted';
+>>>>>>> v2.0.0
   }
 }
 
@@ -40,7 +68,11 @@ export class DivinePakInvalid extends Error {
   public readonly details: string;
   constructor(details: string) {
     super(`divine.exe reported pak is invalid: ${details}`);
+<<<<<<< HEAD
     this.name = "DivinePakInvalid";
+=======
+    this.name = 'DivinePakInvalid';
+>>>>>>> v2.0.0
     this.details = details;
   }
 }
@@ -63,6 +95,7 @@ export function buildDivineArgs(action: DivineAction, opts: IDivineOptions): str
   // stdout — the exit-code path alone doesn't distinguish "empty pak" from
   // "unreadable pak" for the list-package action.
   const args = [
+<<<<<<< HEAD
     "--action",
     action,
     "--source",
@@ -77,6 +110,18 @@ export function buildDivineArgs(action: DivineAction, opts: IDivineOptions): str
   }
   if (opts.expression !== undefined) {
     args.push("--expression", `"${opts.expression}"`);
+=======
+    '--action', action,
+    '--source', `"${opts.source}"`,
+    '--game', 'bg3',
+    '--loglevel', opts.loglevel ?? 'error',
+  ];
+  if (opts.destination !== undefined) {
+    args.push('--destination', `"${opts.destination}"`);
+  }
+  if (opts.expression !== undefined) {
+    args.push('--expression', `"${opts.expression}"`);
+>>>>>>> v2.0.0
   }
   return args;
 }
@@ -104,6 +149,7 @@ export function translateDivineError(
   if (signalAborted) {
     return new DivineAborted();
   }
+<<<<<<< HEAD
   if (err.code === "ENOENT") {
     return new DivineExecMissing();
   }
@@ -116,6 +162,20 @@ export function translateDivineError(
 
   const stderrStr = typeof err.stderr === "string" ? err.stderr : "";
   const stdoutStr = typeof err.stdout === "string" ? err.stdout : "";
+=======
+  if (err.code === 'ENOENT') {
+    return new DivineExecMissing();
+  }
+  if (err.message?.includes('You must install or update .NET')) {
+    return new DivineMissingDotNet();
+  }
+  if (err.signal === 'SIGTERM') {
+    return new DivineTimedOut();
+  }
+
+  const stderrStr = typeof err.stderr === 'string' ? err.stderr : '';
+  const stdoutStr = typeof err.stdout === 'string' ? err.stdout : '';
+>>>>>>> v2.0.0
 
   const pakInvalid = classifyPakInvalid(stdoutStr, stderrStr);
   if (pakInvalid !== undefined) {
@@ -125,9 +185,15 @@ export function translateDivineError(
   const stderrTrim = stderrStr.trim();
   const stdoutTrim = stdoutStr.trim();
   const parts: string[] = [`action=${action}`];
+<<<<<<< HEAD
   if (typeof err.code === "number") {
     parts.push(`exitCode=${err.code}`);
   } else if (typeof err.code === "string") {
+=======
+  if (typeof err.code === 'number') {
+    parts.push(`exitCode=${err.code}`);
+  } else if (typeof err.code === 'string') {
+>>>>>>> v2.0.0
     parts.push(`code=${err.code}`);
   }
   if (err.signal) {
@@ -139,15 +205,25 @@ export function translateDivineError(
   if (stdoutTrim) {
     parts.push(`stdout=${stdoutTrim}`);
   }
+<<<<<<< HEAD
   const detail = parts.length > 1 ? parts.join("; ") : (err.message ?? "unknown");
+=======
+  const detail = parts.length > 1 ? parts.join('; ') : (err.message ?? 'unknown');
+>>>>>>> v2.0.0
   return new Error(`divine.exe failed: ${detail}`);
 }
 
 export function parsePackageListOutput(stdout: string): string[] {
   return stdout
+<<<<<<< HEAD
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
+=======
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+>>>>>>> v2.0.0
 }
 
 export async function runDivineCore(
@@ -162,14 +238,22 @@ export async function runDivineCore(
   try {
     await fs.stat(exePath);
   } catch (e) {
+<<<<<<< HEAD
     if ((e as NodeJS.ErrnoException).code === "ENOENT") {
+=======
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
+>>>>>>> v2.0.0
       throw new DivineExecMissing();
     }
     throw e;
   }
 
   const args = buildDivineArgs(action, opts);
+<<<<<<< HEAD
   const command = `"${exePath}" ${args.join(" ")}`;
+=======
+  const command = `"${exePath}" ${args.join(' ')}`;
+>>>>>>> v2.0.0
   const execOpts: child_process.ExecOptions = {
     timeout: runOpts.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     signal: runOpts.signal,
@@ -179,10 +263,21 @@ export async function runDivineCore(
   let stderr: string;
   try {
     const result = await exec(command, execOpts);
+<<<<<<< HEAD
     stdout = typeof result.stdout === "string" ? result.stdout : (result.stdout?.toString() ?? "");
     stderr = typeof result.stderr === "string" ? result.stderr : (result.stderr?.toString() ?? "");
   } catch (e) {
     throw translateDivineError(e as IExecErrorShape, action, runOpts.signal?.aborted ?? false);
+=======
+    stdout = typeof result.stdout === 'string' ? result.stdout : result.stdout?.toString() ?? '';
+    stderr = typeof result.stderr === 'string' ? result.stderr : result.stderr?.toString() ?? '';
+  } catch (e) {
+    throw translateDivineError(
+      e as IExecErrorShape,
+      action,
+      runOpts.signal?.aborted ?? false,
+    );
+>>>>>>> v2.0.0
   }
 
   // exec succeeded (exit 0) but divine may still have reported a problem:
@@ -196,8 +291,13 @@ export async function runDivineCore(
     // Non-bracketed stderr on exit 0 — unusual but surface it anyway.
     throw new Error(`divine.exe failed: ${stderr.trim()}`);
   }
+<<<<<<< HEAD
   if (!stdout && action !== "list-package") {
     return { stdout: "", returnCode: 2 };
+=======
+  if (!stdout && action !== 'list-package') {
+    return { stdout: '', returnCode: 2 };
+>>>>>>> v2.0.0
   }
   return { stdout, returnCode: 0 };
 }
@@ -207,7 +307,11 @@ export async function listPackageCore(
   pakPath: string,
   runOpts: IDivineRunOptions = {},
 ): Promise<string[]> {
+<<<<<<< HEAD
   const res = await runDivineCore(exePath, "list-package", { source: pakPath }, runOpts);
+=======
+  const res = await runDivineCore(exePath, 'list-package', { source: pakPath }, runOpts);
+>>>>>>> v2.0.0
   return parsePackageListOutput(res.stdout);
 }
 
@@ -220,7 +324,11 @@ export async function extractPakCore(
 ): Promise<IDivineOutput> {
   return runDivineCore(
     exePath,
+<<<<<<< HEAD
     "extract-package",
+=======
+    'extract-package',
+>>>>>>> v2.0.0
     { source: pakPath, destination: destPath, expression: pattern },
     runOpts,
   );

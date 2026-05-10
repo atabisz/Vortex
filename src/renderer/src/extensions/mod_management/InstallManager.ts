@@ -19,6 +19,43 @@ import Zip from "node-7z";
 import type * as Redux from "redux";
 import { generate as shortid } from "shortid";
 
+<<<<<<< HEAD
+=======
+import type { ICheckbox, IDialogResult } from "../../types/IDialog";
+import type { IExtensionApi, ThunkStore } from "../../types/IExtensionContext";
+import type { IProfile, IState } from "../../types/IState";
+import type { TFunction } from "../../util/i18n";
+import type { IDownload } from "../download_management/types/IDownload";
+import type { IModType } from "../gamemode_management/types/IModType";
+import type {
+  Dependency,
+  IDependency,
+  IDependencyError,
+  IModInfoEx,
+} from "./types/IDependency";
+import type { IInstallContext } from "./types/IInstallContext";
+import type { IInstallOptions } from "./types/IInstallOptions";
+import type {
+  IInstallResult,
+  IInstruction,
+  InstructionType,
+} from "./types/IInstallResult";
+import type {
+  IFileListItem,
+  IMod,
+  IModAttributes,
+  IModReference,
+  IModRule,
+} from "./types/IMod";
+import type { IModInstaller, ISupportedInstaller } from "./types/IModInstaller";
+import type { IInstallationDetails, InstallFunc } from "./types/InstallFunc";
+import type {
+  ISupportedResult,
+  ITestSupportedDetails,
+  TestSupported,
+} from "./types/TestSupported";
+
+>>>>>>> v2.0.0
 /**
  * InstallManager - Handles mod installation with phased collection support.
  *
@@ -68,9 +105,12 @@ import {
   dismissNotification,
 } from "../../actions/notifications";
 import { log } from "../../logging";
+<<<<<<< HEAD
 import type { ICheckbox, IDialogResult } from "../../types/IDialog";
 import type { IExtensionApi, ThunkStore } from "../../types/IExtensionContext";
 import type { IProfile, IState } from "../../types/IState";
+=======
+>>>>>>> v2.0.0
 import { getBatchContext, type IBatchContext } from "../../util/BatchContext";
 import calculateFolderSize from "../../util/calculateFolderSize";
 import ConcurrencyLimiter from "../../util/ConcurrencyLimiter";
@@ -91,7 +131,10 @@ import {
   withTrackedActivity,
 } from "../../util/errorHandling";
 import * as fs from "../../util/fs";
+<<<<<<< HEAD
 import type { TFunction } from "../../util/i18n";
+=======
+>>>>>>> v2.0.0
 import { prettifyNodeErrorMessage } from "../../util/message";
 import { resolvePathCase } from "../../util/resolvePathCase";
 import {
@@ -198,6 +241,75 @@ interface IDeploymentDetails {
 }
 
 // Function to get current download manager free slots
+<<<<<<< HEAD
+=======
+function getDownloadFreeSlots(api: IExtensionApi): Promise<number> {
+  return new Promise((resolve) => {
+    api.events.emit("get-download-free-slots", (freeSlots: number) => {
+      resolve(freeSlots);
+    });
+  });
+}
+
+// Dynamic concurrency limiter that respects download manager's free slots
+class DynamicDownloadConcurrencyLimiter {
+  private mQueue: Array<{
+    cb: () => PromiseLike<any>;
+    resolve: (value: any) => void;
+    reject: (reason: any) => void;
+  }> = [];
+  private mRunning = 0;
+  private mApi: IExtensionApi;
+
+  constructor(api: IExtensionApi) {
+    this.mApi = api;
+  }
+
+  public do<T>(cb: () => PromiseLike<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      this.mQueue.push({ cb, resolve, reject });
+      void this.process();
+    });
+  }
+
+  private async process(): Promise<void> {
+    if (this.mQueue.length === 0) {
+      return;
+    }
+
+    const freeSlots = await getDownloadFreeSlots(this.mApi);
+    const availableSlots = Math.max(0, freeSlots);
+
+    const toProcess = Math.min(availableSlots, this.mQueue.length);
+
+    for (let i = 0; i < toProcess; i++) {
+      const item = this.mQueue.shift();
+      if (!item) {
+        break; // Queue was emptied by another process
+      }
+
+      const { cb, resolve, reject } = item;
+      this.mRunning++;
+
+      // Process each item concurrently
+      Promise.resolve(cb())
+        .then(resolve)
+        .catch(reject)
+        .finally(() => {
+          this.mRunning--;
+          // Process next items after a short delay to allow state to update
+          setTimeout(() => void this.process(), 100);
+        });
+    }
+
+    // If we still have items queued but no slots, check again later
+    // Also periodically check for paused downloads that might need to be resumed
+    if (this.mQueue.length > 0 && toProcess === 0) {
+      setTimeout(() => void this.process(), 500);
+    }
+  }
+}
+>>>>>>> v2.0.0
 
 type ReplaceChoice = "replace" | "variant";
 interface IReplaceChoice {
@@ -349,7 +461,12 @@ function findCollectionByDownload(
     // Download lookups will not hold any patch/filelist/installerChoices info.
     //  Which is why in this case we want to ensure that we only match using regular reference fields.
     const matchingRule = collectionMod.rules?.find((rule) => {
+<<<<<<< HEAD
       const { patches, fileList, installerChoices, ...refWithoutExtras } = rule.reference;
+=======
+      const { patches, fileList, installerChoices, ...refWithoutExtras } =
+        rule.reference;
+>>>>>>> v2.0.0
       return testModReference(lookup, refWithoutExtras);
     });
 
@@ -540,7 +657,13 @@ class InstallManager {
         const instPath = this.mGetInstallPath(profile.gameId);
 
         const filtered = rules.filter(
+<<<<<<< HEAD
           (iter) => collection.rules?.find((rule) => _.isEqual(iter, rule)) !== undefined,
+=======
+          (iter) =>
+            collection.rules?.find((rule) => _.isEqual(iter, rule)) !==
+            undefined,
+>>>>>>> v2.0.0
         );
 
         if (recommended) {
@@ -1030,8 +1153,11 @@ class InstallManager {
         }
       })
       .then(async () => {
+<<<<<<< HEAD
         await normalizeBackslashPaths(tempPath);
         await mergeCaseConflictingDirs(tempPath);
+=======
+>>>>>>> v2.0.0
         fileList = await buildFileList(tempPath);
         if (truthy(extractList) && extractList.length > 0) {
           return makeListInstaller(extractList, tempPath);
@@ -1167,9 +1293,20 @@ class InstallManager {
     };
 
     const state = api.getState();
+<<<<<<< HEAD
     const batchContext = getBatchContext(["install-dependencies", "install-recommendations"], "");
     const profileId = batchContext?.get<string>("profileId") ?? activeProfile(state)?.id;
     const currentProfile = profileById(state, profileId) ?? activeProfile(state);
+=======
+    const batchContext = getBatchContext(
+      ["install-dependencies", "install-recommendations"],
+      "",
+    );
+    const profileId =
+      batchContext?.get<string>("profileId") ?? activeProfile(state)?.id;
+    const currentProfile =
+      profileById(state, profileId) ?? activeProfile(state);
+>>>>>>> v2.0.0
 
     // Use parallel installation concurrency limiter instead of sequential mQueue
     this.mMainInstallsLimit
@@ -1268,7 +1405,13 @@ class InstallManager {
                     });
                     if (currentProfile === undefined) {
                       return Promise.reject(
+<<<<<<< HEAD
                         new ProcessCanceled("You need to manage a game before installing this mod"),
+=======
+                        new ProcessCanceled(
+                          "You need to manage a game before installing this mod",
+                        ),
+>>>>>>> v2.0.0
                       );
                     }
                     installGameId = currentProfile.gameId;
@@ -1630,12 +1773,21 @@ class InstallManager {
                   setAttribute("mod.modId", modId);
                   setAttribute("mod.installerId", result.installerId ?? "unknown");
                   if (!Array.isArray(result.instructions)) {
+<<<<<<< HEAD
                     return Promise.reject(new DataInvalid("Installer produced no instructions"));
                   }
                   setAttribute(
                     "mod.fileCount",
                     result.instructions.filter((i) => i.type === "copy").length,
                   );
+=======
+                    return Promise.reject(
+                      new DataInvalid("Installer produced no instructions"),
+                    );
+                  }
+                  setAttribute("mod.fileCount",
+                    result.instructions.filter(i => i.type === "copy").length);
+>>>>>>> v2.0.0
                   // update choices now that the installer may have produced new ones
                   if (fullInfo.choices != null) {
                     setAttribute("mod.installerChoices", JSON.stringify(fullInfo.choices));
@@ -2366,14 +2518,25 @@ class InstallManager {
           // Mods with patches are always reinstalled as variants so the
           // correct diffs are applied to clean files - skip the lookup.
           const hasPatches =
+<<<<<<< HEAD
             currentDep.patches != null && Object.keys(currentDep.patches).length > 0;
+=======
+            currentDep.patches != null &&
+            Object.keys(currentDep.patches).length > 0;
+>>>>>>> v2.0.0
           const fullReference: IModReference = {
             ...currentDep.reference,
             installerChoices: currentDep.installerChoices,
             patches: currentDep.patches,
             fileList: currentDep.fileList,
           };
+<<<<<<< HEAD
           const existingMod = hasPatches ? undefined : findModByRef(fullReference, mods);
+=======
+          const existingMod = hasPatches
+            ? undefined
+            : findModByRef(fullReference, mods);
+>>>>>>> v2.0.0
           const modId =
             existingMod != null
               ? existingMod.id
@@ -3618,8 +3781,11 @@ class InstallManager {
         }
       })
       .then(async () => {
+<<<<<<< HEAD
         await normalizeBackslashPaths(tempPath);
         await mergeCaseConflictingDirs(tempPath);
+=======
+>>>>>>> v2.0.0
         fileList = await buildFileList(tempPath);
         const hasFomodSegment = (file: string) => {
           const segments = file.toLowerCase().split(path.sep);
@@ -4391,7 +4557,13 @@ class InstallManager {
   ): IMod | undefined {
     const mods = (store.getState().persistent.mods[gameMode] || {}) as Record<string, IMod>;
 
+<<<<<<< HEAD
     const candidates: IMod[] = Object.values(mods).filter((m: IMod) => m.type !== "collection");
+=======
+    const candidates: IMod[] = Object.values(mods).filter(
+      (m: IMod) => m.type !== "collection",
+    );
+>>>>>>> v2.0.0
 
     // Primary: the update check already told us which fileId is newest
     const byNewestId: IMod | undefined = candidates.find((m: IMod) => {
@@ -4410,7 +4582,12 @@ class InstallManager {
       return candidates.find(
         (m: IMod) =>
           m.attributes?.modId === nexusModId &&
+<<<<<<< HEAD
           (logicalFileName == null || m.attributes?.logicalFileName === logicalFileName) &&
+=======
+          (logicalFileName == null ||
+            m.attributes?.logicalFileName === logicalFileName) &&
+>>>>>>> v2.0.0
           m.attributes?.fileId !== fileId,
       );
     }
@@ -4492,7 +4669,14 @@ class InstallManager {
     return profiles.length;
   }
 
+<<<<<<< HEAD
   private userVersionChoice(oldMod: IMod, store: ThunkStore<IState>): Promise<string> {
+=======
+  private userVersionChoice(
+    oldMod: IMod,
+    store: ThunkStore<IState>,
+  ): Promise<string> {
+>>>>>>> v2.0.0
     const totalProfiles = this.queryProfileCount(store);
     const batchAction = "remember-user-version-choice-action";
     const handleAction = (action: string, remember: boolean) => {
@@ -4698,12 +4882,23 @@ class InstallManager {
               context?.set?.("canceled", true);
               return Promise.reject(new UserCanceled());
             } else if (result.input.variant) {
+<<<<<<< HEAD
               return queryVariantNameDialog(result.input.remember).then((variant) => ({
                 action: "variant",
                 variant,
                 remember: result.input.remember,
                 preserveChoices: result.input.preserveChoices ?? true,
               }));
+=======
+              return queryVariantNameDialog(result.input.remember).then(
+                (variant) => ({
+                  action: "variant",
+                  variant,
+                  remember: result.input.remember,
+                  preserveChoices: result.input.preserveChoices ?? true,
+                }),
+              );
+>>>>>>> v2.0.0
             } else if (result.input.replace) {
               return {
                 action: "replace",
@@ -4799,12 +4994,24 @@ class InstallManager {
         }
       }
 
+<<<<<<< HEAD
       const hasInstallerChoices = mods.some((m) => m.attributes?.installerChoices?.options != null);
+=======
+      const hasInstallerChoices = mods.some(
+        (m) => m.attributes?.installerChoices?.options != null,
+      );
+>>>>>>> v2.0.0
       if (hasInstallerChoices) {
         checkRoVRemember.push({
           id: "preserveChoices",
           value: true,
+<<<<<<< HEAD
           text: api.translate("Pre-populate installer options from existing mod"),
+=======
+          text: api.translate(
+            "Pre-populate installer options from existing mod",
+          ),
+>>>>>>> v2.0.0
         });
       }
 
@@ -4841,11 +5048,15 @@ class InstallManager {
           });
         } else {
           // No other profile uses this mod, safe to replace
+<<<<<<< HEAD
           choices = Promise.resolve({
             action: "replace",
             remember: false,
             preserveChoices: true,
           });
+=======
+          choices = Promise.resolve({ action: "replace", remember: false, preserveChoices: true });
+>>>>>>> v2.0.0
         }
       } else {
         choices = choices ?? Promise.resolve(queryDialog());
@@ -4853,12 +5064,16 @@ class InstallManager {
 
       choices
         .then(
+<<<<<<< HEAD
           (result: {
             action: string;
             variant: string;
             remember: boolean;
             preserveChoices?: boolean;
           }) => {
+=======
+          (result: { action: string; variant: string; remember: boolean; preserveChoices?: boolean }) => {
+>>>>>>> v2.0.0
             const wasEnabled = (modId: string) => {
               return currentProfile?.gameId === gameId
                 ? getSafe(currentProfile.modState, [modId, "enabled"], false)
@@ -4877,7 +5092,15 @@ class InstallManager {
                     const error = unknownToError(err);
                     reject(error);
                   } else {
+<<<<<<< HEAD
                     const omittedAttributes = ["version", "fileName", "fileVersion"];
+=======
+                    const omittedAttributes = [
+                      "version",
+                      "fileName",
+                      "fileVersion",
+                    ];
+>>>>>>> v2.0.0
                     if (!result.preserveChoices) {
                       omittedAttributes.push("installerChoices");
                     }
@@ -6043,6 +6266,7 @@ class InstallManager {
             dep.mod = undefined;
           }
 
+<<<<<<< HEAD
           // Guard against stale "installed" state where a prior broken
           // install left an empty staging dir. Without this, dep.mod != null
           // short-circuits re-extraction forever and the "Redundant mods"
@@ -6060,6 +6284,8 @@ class InstallManager {
             }
           }
 
+=======
+>>>>>>> v2.0.0
           return dep.mod == null
             ? Promise.resolve()
                 .then(() => {

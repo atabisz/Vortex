@@ -2,6 +2,11 @@ import type { IModFile, IModFileQuery } from "@nexusmods/nexus-api";
 import type Nexus from "@nexusmods/nexus-api";
 import { getErrorMessageOrDefault } from "@vortex/shared";
 import type { TFunction } from "i18next";
+<<<<<<< HEAD
+=======
+
+import { getErrorMessageOrDefault } from "@vortex/shared";
+>>>>>>> v2.0.0
 import * as React from "react";
 import { Button } from "react-bootstrap";
 import { useSelector } from "react-redux";
@@ -15,7 +20,10 @@ import { Campaign, Content, nexusModsURL, Section } from "../../../util/util";
 import { MainContext } from "../../../views/MainWindow";
 import { NEXUS_BASE_URL, PREMIUM_PATH } from "../constants";
 import NXMUrl from "../NXMUrl";
+<<<<<<< HEAD
 import type { IValidateKeyDataV2 } from "../types/IValidateKeyData";
+=======
+>>>>>>> v2.0.0
 import { nexusGamesProm } from "../util";
 import { makeFileUID } from "../util/UIDs";
 import NewFreeDownloadModal from "./NewFreeDownloadModal";

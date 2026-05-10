@@ -794,6 +794,7 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
             pluginsIn[pluginName].filePath,
             esp.isMaster,
             this.props.gameMode,
+<<<<<<< HEAD
           ),
           isLight: this.props.isLight(
             pluginsIn[pluginName].filePath,
@@ -829,6 +830,55 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
           revision: 999,
         };
       }
+=======
+          );
+          pluginsParsed[pluginName] = {
+            isMaster: this.props.isMaster(
+              pluginsIn[pluginName].filePath,
+              esp.isMaster,
+              this.props.gameMode,
+            ),
+            isLight: this.props.isLight(
+              pluginsIn[pluginName].filePath,
+              esp.isLight,
+              this.props.gameMode,
+            ),
+            isMedium: this.props.isMediumMaster(
+              pluginsIn[pluginName].filePath,
+              esp.isMedium,
+              this.props.gameMode,
+            ),
+            isBlueprint: esp.isBlueprint,
+            parseFailed: false,
+            description: esp.description,
+            author: esp.author,
+            masterList: esp.masterList,
+            revision: (esp as any).revision,
+          };
+        } catch (err) {
+          // TODO: there is a time window where this is called on a file that
+          //   no longer exists. Since the error message reported from the native
+          //   lib isn't super informative we can't differentiate yet, so not
+          //   treating this as a big problem.
+          log("info", "failed to parse esp", {
+            path: pluginsIn[pluginName].filePath,
+            error: err.message,
+          });
+          pluginsParsed[pluginName] = {
+            isMaster: false,
+            isLight: false,
+            isMedium: false,
+            isBlueprint: false,
+            parseFailed: true,
+            description: "",
+            author: "",
+            masterList: [],
+            revision: 999,
+          };
+        }
+        resolve();
+      });
+>>>>>>> v2.0.0
     })
       .then(
         () =>
@@ -892,7 +942,15 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
     pluginIds.forEach((key: string) => {
       const plugin = plugins[key];
       const combined = this.state.pluginsCombined[key];
+<<<<<<< HEAD
       if (plugin === undefined || plugin.isNative || combined?.isBlueprint) {
+=======
+      if (
+        plugin === undefined ||
+        plugin.isNative ||
+        combined?.isBlueprint
+      ) {
+>>>>>>> v2.0.0
         return;
       }
       if (plugin.filePath.toLowerCase().endsWith(GHOST_EXT)) {
@@ -909,7 +967,15 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
     pluginIds.forEach((key: string) => {
       const plugin = plugins[key];
       const combined = this.state.pluginsCombined[key];
+<<<<<<< HEAD
       if (plugin === undefined || plugin.isNative || combined?.isBlueprint) {
+=======
+      if (
+        plugin === undefined ||
+        plugin.isNative ||
+        combined?.isBlueprint
+      ) {
+>>>>>>> v2.0.0
         return;
       }
 

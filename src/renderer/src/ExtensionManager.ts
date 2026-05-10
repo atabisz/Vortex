@@ -866,10 +866,15 @@ class ExtensionManager {
           // file handles yet despite waitForRendererExit in the main process.
           // Log and continue — the remove flag stays in state so it retries on
           // next startup.
+<<<<<<< HEAD
           log("warn", "failed to remove extension, will retry on next startup", {
             extId,
             error: getErrorMessageOrDefault(err),
           });
+=======
+          log("warn", "failed to remove extension, will retry on next startup",
+            { extId, error: getErrorMessageOrDefault(err) });
+>>>>>>> v2.0.0
         }
       });
 
@@ -1740,7 +1745,11 @@ class ExtensionManager {
         const extProxy = new Proxy(contextProxy, apiProxy);
         const init = ext.initFunc();
         if (typeof init !== "function") {
+<<<<<<< HEAD
           const relevantInfo = _.pick(ext, ["name", "namespace", "path"]);
+=======
+        const relevantInfo = _.pick(ext, ["name", "namespace", "path"]);
+>>>>>>> v2.0.0
           throw new Error(
             `corrupt extension, failed to initialize: ${JSON.stringify(relevantInfo)}`,
           );

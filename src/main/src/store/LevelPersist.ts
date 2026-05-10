@@ -5,8 +5,14 @@ import { unknownToError } from "@vortex/shared";
 import { DataInvalid } from "@vortex/shared/errors";
 import type { IPersistor } from "@vortex/shared/state";
 
+<<<<<<< HEAD
 import { getVortexPath } from "../getVortexPath";
+=======
+import * as path from "node:path";
+
+>>>>>>> v2.0.0
 import { log } from "../logging";
+import { getVortexPath } from "../getVortexPath";
 import DuckDBSingleton from "./DuckDBSingleton";
 
 const SEPARATOR: string = "###";

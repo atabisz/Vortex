@@ -45,9 +45,13 @@ class DuckDBSingleton {
     }
 
     this.#mInitPromise = (async () => {
+<<<<<<< HEAD
       log("debug", "duckdb-singleton: creating shared instance", {
         extensionDir,
       });
+=======
+      log("debug", "duckdb-singleton: creating shared instance", { extensionDir });
+>>>>>>> v2.0.0
       this.#mDuckDB = await DuckDBInstance.create(":memory:", {
         allow_unsigned_extensions: "true",
         extension_directory: extensionDir,

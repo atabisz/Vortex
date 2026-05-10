@@ -1,8 +1,15 @@
+<<<<<<< HEAD
 import * as path from "path";
 import { pathToFileURL } from "url";
 
 import type PromiseBB from "bluebird";
 import type { TFunction } from "i18next";
+=======
+import type PromiseBB from "bluebird";
+import type { TFunction } from "i18next";
+
+import * as path from "path";
+>>>>>>> v2.0.0
 import * as React from "react";
 import { ListGroupItem, Media, Popover } from "react-bootstrap";
 import { Provider } from "react-redux";
@@ -18,6 +25,18 @@ import opn from "../../../util/opn";
 import type { IMod } from "../../mod_management/types/IMod";
 import type { IDiscoveryResult } from "../types/IDiscoveryResult";
 import type { IGameStored } from "../types/IGameStored";
+import GameInfoPopover from "./GameInfoPopover";
+
+import type { IActionDefinition } from "../../../types/IActionDefinition";
+import type { IMod } from "../../mod_management/types/IMod";
+import type { IDiscoveryResult } from "../types/IDiscoveryResult";
+import type { IGameStored } from "../types/IGameStored";
+
+import { ComponentEx } from "../../../controls/ComponentEx";
+import IconBar from "../../../controls/IconBar";
+import OverlayTrigger from "../../../controls/OverlayTrigger";
+import { IconButton } from "../../../controls/TooltipControls";
+import opn from "../../../util/opn";
 import GameInfoPopover from "./GameInfoPopover";
 
 export interface IProps {
@@ -103,6 +122,7 @@ class GameRow extends ComponentEx<IProps, {}> {
       </Popover>
     );
 
+<<<<<<< HEAD
     let imgurl = null;
     if (logoPath != null) {
       let protocol = null;
@@ -114,6 +134,13 @@ class GameRow extends ComponentEx<IProps, {}> {
       imgurl =
         protocol != null && protocol.startsWith("http") ? logoPath : pathToFileURL(logoPath).href;
     }
+=======
+    const protocol = new URL(logoPath)?.protocol;
+    const imgurl =
+      protocol != null && protocol.startsWith("http")
+        ? logoPath
+        : pathToFileURL(logoPath).href;
+>>>>>>> v2.0.0
 
     return (
       <ListGroupItem className={classes.join(" ")}>

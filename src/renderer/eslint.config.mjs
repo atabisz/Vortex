@@ -42,6 +42,13 @@ export default defineConfig([
     languageOptions: {
       // TODO: remove Node globals after disabling nodeIntegration
       globals: { ...globals.node, ...globals.browser },
+<<<<<<< HEAD
+=======
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+>>>>>>> v2.0.0
     },
     plugins: {
       "@stylistic": stylistic,

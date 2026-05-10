@@ -1,4 +1,5 @@
 import { mdiPin, mdiPlus, mdiFlash, mdiWrench } from "@mdi/js";
+<<<<<<< HEAD
 import React, { type FC, type PropsWithChildren, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -6,6 +7,15 @@ import { Button } from "@/ui/components/button/Button";
 import { Icon } from "@/ui/components/icon/Icon";
 import { Pictogram } from "@/ui/components/pictogram/Pictogram";
 import { Typography } from "@/ui/components/typography/Typography";
+=======
+import React, { type FC, type PropsWithChildren, type ReactNode } from 'react';
+import { useTranslation } from "react-i18next";
+
+import { Button } from '@/ui/components/button/Button';
+import { Icon } from '@/ui/components/icon/Icon';
+import { Pictogram } from '@/ui/components/pictogram/Pictogram';
+import { Typography } from '@/ui/components/typography/Typography';
+>>>>>>> v2.0.0
 
 import EmptyPlaceholder from "../../../controls/EmptyPlaceholder";
 import ToolEditDialog from "../../../extensions/starter_dashlet/ToolEditDialog";
@@ -13,6 +23,7 @@ import MainPage from "../../MainPage";
 import { ToolRow } from "./ToolRow";
 import { useToolsPage } from "./useToolsPage";
 
+<<<<<<< HEAD
 const Panel = ({
   actions,
   children,
@@ -33,6 +44,20 @@ const Panel = ({
         typographyType="body-sm"
       >
         <Icon className="shrink-0" path={iconPath} size="sm" />
+=======
+const Panel = ({ actions, children, heading, iconPath, tooltip }: PropsWithChildren<{ actions?: () => ReactNode; heading:string; iconPath: string; tooltip: string; }>) => (
+  <div className="space-y-2">
+    <div
+      className="flex items-center gap-x-4"
+      title={tooltip}
+    >
+      <Typography appearance="subdued" className="flex grow items-center gap-x-2 font-semibold" typographyType="body-sm">
+        <Icon
+          className="shrink-0"
+          path={iconPath}
+          size="sm"
+        />
+>>>>>>> v2.0.0
 
         {heading}
       </Typography>
@@ -40,7 +65,13 @@ const Panel = ({
       {actions?.()}
     </div>
 
+<<<<<<< HEAD
     <div className="space-y-2">{children}</div>
+=======
+    <div className="space-y-2">
+      {children}
+    </div>
+>>>>>>> v2.0.0
   </div>
 );
 
@@ -107,11 +138,24 @@ export const ToolsPage: FC = () => {
           <div className="space-y-6">
             {/* Edit dialog */}
             {toolBeingEdited !== undefined && (
+<<<<<<< HEAD
               <ToolEditDialog tool={toolBeingEdited} onClose={closeEditDialog} />
             )}
 
             {/* Default launcher & pinned tools - only shown when tools exist */}
             {(launcherTool || otherPinnedTools.length > 0 || unpinnedTools.length > 0) && (
+=======
+              <ToolEditDialog
+                tool={toolBeingEdited}
+                onClose={closeEditDialog}
+              />
+            )}
+
+            {/* Default launcher & pinned tools - only shown when tools exist */}
+            {(launcherTool ||
+              otherPinnedTools.length > 0 ||
+              unpinnedTools.length > 0) && (
+>>>>>>> v2.0.0
               <>
                 {/* Default launcher section */}
                 <Panel
@@ -142,10 +186,14 @@ export const ToolsPage: FC = () => {
 
                 {/* Pinned tools section */}
                 <Panel
+<<<<<<< HEAD
                   heading={t("Pinned tools {{count}}/{{max}}", {
                     count: pinnedCount,
                     max: MAX_PINNED_TOOLS,
                   })}
+=======
+                  heading={t("Pinned tools {{count}}/{{max}}", {count: pinnedCount, max: MAX_PINNED_TOOLS })}
+>>>>>>> v2.0.0
                   iconPath={mdiPin}
                   tooltip={t("Pin shortcuts to your most used tools in the left menu")}
                 >
@@ -206,10 +254,17 @@ export const ToolsPage: FC = () => {
                     isValid={isToolValid(starter)}
                     key={starter.id}
                     pinDisabled={maxPinnedReached}
+<<<<<<< HEAD
                     pinDisabledReason={t("Max pinned tools reached ({{count}}/{{max}})", {
                       count: pinnedCount,
                       max: MAX_PINNED_TOOLS,
                     })}
+=======
+                    pinDisabledReason={t(
+                      "Max pinned tools reached ({{count}}/{{max}})",
+                      { count: pinnedCount, max: MAX_PINNED_TOOLS },
+                    )}
+>>>>>>> v2.0.0
                     starter={starter}
                     onEdit={editTool}
                     onRemove={removeTool}

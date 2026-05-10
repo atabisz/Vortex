@@ -2,6 +2,10 @@ import { getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
 
 import type { IDiscoveredTool, IToolStored } from "../../../types/api";
 import type { IDiscoveryResult, IGameStored } from "../../../types/IState";
+<<<<<<< HEAD
+=======
+
+>>>>>>> v2.0.0
 import { log } from "../../../util/log";
 import StarterInfo from "../../../util/StarterInfo";
 import { getSafe } from "../../../util/storeHelper";
@@ -52,7 +56,13 @@ export const generateToolStarters = (
 
   knownTools.forEach((tool: IToolStored) => {
     try {
+<<<<<<< HEAD
       starters.push(new StarterInfo(game, discoveredGame, tool, discoveredTools[tool.id]));
+=======
+      starters.push(
+        new StarterInfo(game, discoveredGame, tool, discoveredTools[tool.id]),
+      );
+>>>>>>> v2.0.0
     } catch (err) {
       log("warn", "invalid tool", { err });
     }
@@ -67,7 +77,18 @@ export const generateToolStarters = (
     })
     .forEach((toolId) => {
       try {
+<<<<<<< HEAD
         starters.push(new StarterInfo(game, discoveredGame, undefined, discoveredTools[toolId]));
+=======
+        starters.push(
+          new StarterInfo(
+            game,
+            discoveredGame,
+            undefined,
+            discoveredTools[toolId],
+          ),
+        );
+>>>>>>> v2.0.0
       } catch (err) {
         log("error", "tool configuration invalid", {
           gameId,
@@ -77,6 +98,7 @@ export const generateToolStarters = (
       }
     });
 
+<<<<<<< HEAD
   if (toolsOrder !== undefined && toolsOrder.length > 0) {
     const findIdx = (starter: StarterInfo) => {
       const idx = toolsOrder.findIndex((toolId) => toolId === starter.id);
@@ -84,5 +106,12 @@ export const generateToolStarters = (
     };
     starters.sort((lhs, rhs) => findIdx(lhs) - findIdx(rhs));
   }
+=======
+  const findIdx = (starter: StarterInfo) => {
+    const idx = toolsOrder.findIndex((toolId) => toolId === starter.id);
+    return idx !== -1 ? idx : starters.length;
+  };
+  starters.sort((lhs, rhs) => findIdx(lhs) - findIdx(rhs));
+>>>>>>> v2.0.0
   return starters;
 };

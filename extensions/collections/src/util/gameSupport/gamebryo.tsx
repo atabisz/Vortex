@@ -41,8 +41,18 @@ interface IGamebryoRules {
   groups?: IUserlistEntry[];
 }
 
+<<<<<<< HEAD
 function extractPluginRules(state: IStateWithLootLists, plugins: string[]): IGamebryoRules {
   const installedPlugins: Set<string> = new Set(plugins.map((name) => name.toLowerCase()));
+=======
+function extractPluginRules(
+  state: IStateWithLootLists,
+  plugins: string[],
+): IGamebryoRules {
+  const installedPlugins: Set<string> = new Set(
+    plugins.map((name) => name.toLowerCase()),
+  );
+>>>>>>> v2.0.0
   const customisedPlugins = (state.userlist?.plugins ?? []).filter(
     (plug: IUserlistEntry) =>
       installedPlugins.has(plug.name.toLowerCase()) &&
@@ -156,6 +166,7 @@ export async function parser(
 
   // set up groups and their rules (skipped if user opted out)
   if (!skipPluginRules && Array.isArray(collection.pluginRules?.groups)) {
+<<<<<<< HEAD
     util.batchDispatch(
       api.store,
       collection.pluginRules.groups.reduce((prev, group) => {
@@ -178,6 +189,17 @@ export async function parser(
               reference: after,
             },
           });
+=======
+    util.batchDispatch(api.store, collection.pluginRules.groups.reduce((prev, group) => {
+      const isNew = userlist.groups.find(
+        (g) => g.name.toUpperCase() === group.name.toUpperCase(),
+      ) === undefined;
+      if (isNew) {
+        prev.push({
+          type: 'ADD_PLUGIN_GROUP', payload: {
+            group: group.name,
+          },
+>>>>>>> v2.0.0
         });
         return prev;
       }, []),
@@ -327,6 +349,10 @@ type IStateWithLootLists = types.IState & {
   masterlist?: ILOOTList;
 };
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> v2.0.0
 function ruleName(rule: string | ILootReference): string {
   if (typeof rule === "string") {
     return rule;

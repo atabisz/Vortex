@@ -1,7 +1,14 @@
+<<<<<<< HEAD
 const path = require("path");
 const semver = require("semver");
 const { actions, log, selectors, util } = require("vortex-api");
 const { MORROWIND_ID } = require("./constants");
+=======
+const path = require('path');
+const semver = require('semver');
+const { actions, log, selectors, util } = require('vortex-api');
+const { MORROWIND_ID } = require('./constants');
+>>>>>>> v2.0.0
 
 const walk = require("turbowalk").default;
 
@@ -25,6 +32,7 @@ async function migrate103(api, oldVersion) {
     const modPath = path.join(installPath, mod.installationPath);
     const plugins = [];
     try {
+<<<<<<< HEAD
       await walk(
         modPath,
         (entries) => {
@@ -45,6 +53,22 @@ async function migrate103(api, oldVersion) {
     }
     if (plugins.length > 0) {
       batched.push(actions.setModAttribute(MORROWIND_ID, mod.id, "plugins", plugins));
+=======
+      await walk(modPath, entries => {
+        for (let entry of entries) {
+          if (['.esp', '.esm'].includes(path.extname(entry.filePath.toLowerCase()))) {
+            plugins.push(path.basename(entry.filePath));
+          }
+        }
+      }, { recurse: true, skipLinks: true, skipInaccessible: true });
+    } catch {
+      // don't know, don't care, just skip it
+      log('warn', 'morrowind migrate103: mod directory missing or inaccessible, skipping', { modPath });
+      continue;
+    }
+    if ( plugins.length > 0) {
+      batched.push(actions.setModAttribute(MORROWIND_ID, mod.id, 'plugins', plugins));
+>>>>>>> v2.0.0
     }
   }
 

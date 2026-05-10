@@ -174,7 +174,13 @@ class Application {
   }
 
   private async initMainWindow(): Promise<void> {
+<<<<<<< HEAD
     const windowSettings = await readPersistedValue<IWindow>("settings", ["window"]);
+=======
+    const windowSettings = await readPersistedValue<IWindow>("settings", [
+      "window",
+    ]);
+>>>>>>> v2.0.0
 
     this.mMainWindow = new MainWindow(this.mArgs.inspector, windowSettings);
     log("debug", "creating main window");
@@ -194,7 +200,13 @@ class Application {
     log("debug", "window ready");
   }
 
+<<<<<<< HEAD
   private showDialog(options: Electron.MessageBoxOptions): Promise<Electron.MessageBoxReturnValue> {
+=======
+  private showDialog(
+    options: Electron.MessageBoxOptions,
+  ): Promise<Electron.MessageBoxReturnValue> {
+>>>>>>> v2.0.0
     const parent = this.mMainWindow?.getHandle();
     if (parent) {
       return dialog.showMessageBox(parent, options);
@@ -246,8 +258,13 @@ class Application {
 
     app.on("second-instance", (_event: Event, secondaryArgv: string[]) => {
       log("debug", "getting arguments from second instance", secondaryArgv);
+<<<<<<< HEAD
       this.applyArguments(parseCommandline(secondaryArgv, true)).catch((err: unknown) =>
         log("error", "error applying arguments", unknownToError(err)),
+=======
+      this.applyArguments(parseCommandline(secondaryArgv, true)).catch(
+        (err: unknown) => log("error", "error applying arguments", unknownToError(err)),
+>>>>>>> v2.0.0
       );
     });
 
@@ -502,6 +519,7 @@ class Application {
 
     log("debug", "waiting for user interface");
     await this.awaitMainWindowReady();
+<<<<<<< HEAD
 
     // Apply buffered cold-start NXM URL now that renderer is ready (PROT-01)
     if (this.mPendingDownload !== undefined) {
@@ -511,6 +529,8 @@ class Application {
         log("warn", "failed to apply pending download", err),
       );
     }
+=======
+>>>>>>> v2.0.0
 
     log("debug", "setting up tray icon");
     this.createTray();
@@ -755,10 +775,46 @@ class Application {
 
     let backupData: Record<string, unknown>;
     try {
+<<<<<<< HEAD
       backupData = JSON.parse(await readFile(backupPath, "utf-8")) as Record<string, unknown>;
     } catch (err) {
       log("error", "failed to parse state backup", { backupPath, error: err });
       throw new DataInvalid(`The state backup file is invalid: ${getErrorMessageOrDefault(err)}`);
+    }
+
+    // Wrap all operations in a single transaction to avoid concurrent
+    // BEGIN TRANSACTION calls from individual setItem/removeItem calls.
+    await persistor.beginTransaction();
+    try {
+      for (const [hive, hiveData] of Object.entries(backupData)) {
+        const sub = new SubPersistor(persistor, hive);
+
+        if (replace) {
+          const existingKeys = await sub.getAllKeys();
+          for (const key of existingKeys) {
+            await sub.removeItem(key);
+          }
+        }
+
+        const leaves = this.flattenState(hiveData, []);
+        for (const { key, value } of leaves) {
+          await sub.setItem(key, JSON.stringify(value));
+        }
+      }
+      await persistor.commitTransaction();
+    } catch (err) {
+      await persistor.rollbackTransaction();
+      throw err;
+=======
+      backupData = JSON.parse(
+        await readFile(backupPath, "utf-8"),
+      ) as Record<string, unknown>;
+    } catch (err) {
+      log("error", "failed to parse state backup", { backupPath, error: err });
+      throw new DataInvalid(
+        `The state backup file is invalid: ${getErrorMessageOrDefault(err)}`,
+      );
+>>>>>>> v2.0.0
     }
 
     // Wrap all operations in a single transaction to avoid concurrent

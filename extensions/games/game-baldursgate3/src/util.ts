@@ -370,7 +370,11 @@ export async function extractMeta(
   const metaPath = path.join(util.getVortexPath("temp"), "lsmeta", shortid());
   await fs.ensureDirAsync(metaPath);
   try {
+<<<<<<< HEAD
     await extractPak(api, pakPath, metaPath, "*/meta.lsx");
+=======
+    await extractPak(api, pakPath, metaPath, '*/meta.lsx');
+>>>>>>> v2.0.0
     // the meta.lsx may be in a subdirectory. There is probably a pattern here
     // but we'll just use it from wherever
     let metaLSXPath: string = path.join(metaPath, "meta.lsx");

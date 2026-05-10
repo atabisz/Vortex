@@ -144,6 +144,7 @@ export function purgeMods(
       "deployment.gameId": effectiveGameId,
       "deployment.isUnmanaging": isUnmanaging ?? false,
     },
+<<<<<<< HEAD
     () =>
       getManifest(api, "", gameId).then((manifest) => {
         if (manifest?.deploymentMethod !== undefined) {
@@ -166,6 +167,29 @@ export function purgeMods(
           });
         }
       }),
+=======
+    () => getManifest(api, "", gameId).then((manifest) => {
+      if (manifest?.deploymentMethod !== undefined) {
+        log("info", "using deployment method from manifest", {
+          method: manifest?.deploymentMethod,
+        });
+        const deployedActivator = getActivator(manifest?.deploymentMethod);
+        return purgeModsImpl(api, deployedActivator, profile);
+      } else {
+        return purgeModsImpl(api, undefined, profile).catch((err: unknown) => {
+          // If the user is unmanaging the game and the purge was unable to find any
+          //  of the game's mods path during the purge, that suggests that the user
+          //  has uninstalled the game and is trying to "unmanage" the game.
+          //  In this case, there's nothing left to purge so we can safely resolve.
+          if (["ENOENT"].includes(getErrorCode(err)) && isUnmanaging) {
+            return Promise.resolve();
+          } else {
+            return Promise.reject(err);
+          }
+        });
+      }
+    }),
+>>>>>>> v2.0.0
   );
 }
 

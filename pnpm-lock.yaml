@@ -421,6 +421,15 @@ catalogs:
     eslint-plugin-perfectionist:
       specifier: ^5.4.0
       version: 5.7.0
+<<<<<<< HEAD
+=======
+    esptk:
+      specifier: git+https://github.com/Nexus-Mods/node-esptk#7b7db98d2c69b6b6cad2cb3dcd7972143adaa7bd
+      version: 2.2.2
+    exe-version:
+      specifier: git+https://github.com/Nexus-Mods/node-exe-version#eded60fc0a0f3c234e1d586d2eb9952401945406
+      version: 2.3.0
+>>>>>>> v2.0.0
     feedparser:
       specifier: ^2.2.9
       version: 2.3.0
@@ -436,6 +445,12 @@ catalogs:
     fuzzball:
       specifier: ^1.3.0
       version: 1.4.0
+<<<<<<< HEAD
+=======
+    gamebryo-savegame:
+      specifier: git+https://github.com/Nexus-Mods/node-gamebryo-savegames#9149445e798a632a38337229dd0b60b67efb74bd
+      version: 2.1.3
+>>>>>>> v2.0.0
     glob:
       specifier: ^11.0.3
       version: 11.1.0
@@ -991,6 +1006,12 @@ importers:
       '@nexusmods/nexus-api':
         specifier: 'catalog:'
         version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/4dd3460c2d02d93ba8f1bbeeeb2c5fa9af039a67
+<<<<<<< HEAD
+=======
+      '@types/jest':
+        specifier: 'catalog:'
+        version: 29.5.14
+>>>>>>> v2.0.0
       '@types/lodash':
         specifier: 'catalog:'
         version: 4.17.24
@@ -1673,9 +1694,18 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vortex-api
     optionalDependencies:
+<<<<<<< HEAD
       loot:
         specifier: 'catalog:'
         version: https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d(patch_hash=3d4c1edc7a442f9db9c091845b9f808f1d84517b03a9612fef4e41bd141f47bc)
+=======
+      esptk:
+        specifier: 'catalog:'
+        version: https://codeload.github.com/Nexus-Mods/node-esptk/tar.gz/7b7db98d2c69b6b6cad2cb3dcd7972143adaa7bd
+      loot:
+        specifier: 'catalog:'
+        version: https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d
+>>>>>>> v2.0.0
 
   extensions/gamebryo-savegame-management:
     dependencies:
@@ -1755,6 +1785,13 @@ importers:
       vortex-parse-ini:
         specifier: 'catalog:'
         version: https://codeload.github.com/Nexus-Mods/vortex-parse-ini/tar.gz/2425af99d1cff2331ccf3aacfa892c314e99e18d
+<<<<<<< HEAD
+=======
+    optionalDependencies:
+      gamebryo-savegame:
+        specifier: 'catalog:'
+        version: https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/9149445e798a632a38337229dd0b60b67efb74bd
+>>>>>>> v2.0.0
 
   extensions/gamebryo-test-settings:
     devDependencies:
@@ -4066,6 +4103,12 @@ importers:
         specifier: 'catalog:'
         version: 4.6.5
       encoding-down:
+<<<<<<< HEAD
+=======
+        specifier: 'catalog:'
+        version: 6.3.0
+      exe-version:
+>>>>>>> v2.0.0
         specifier: 'catalog:'
         version: 6.3.0
       exe-version:
@@ -9231,6 +9274,13 @@ packages:
     engines: {node: '>=4'}
     hasBin: true
 
+<<<<<<< HEAD
+=======
+  esptk@https://codeload.github.com/Nexus-Mods/node-esptk/tar.gz/7b7db98d2c69b6b6cad2cb3dcd7972143adaa7bd:
+    resolution: {tarball: https://codeload.github.com/Nexus-Mods/node-esptk/tar.gz/7b7db98d2c69b6b6cad2cb3dcd7972143adaa7bd}
+    version: 2.2.2
+
+>>>>>>> v2.0.0
   esquery@1.7.0:
     resolution: {integrity: sha512-Ap6G0WQwcU/LHsvLwON1fAQX9Zp0A2Y6Y/cJBl9r/JbW90Zyg4/zbG6zzKa2OTALELarYHmKu0GhpM5EO+7T0g==}
     engines: {node: '>=0.10'}
@@ -9527,6 +9577,13 @@ packages:
   fuzzball@1.4.0:
     resolution: {integrity: sha512-ufKO0SHW65RSqZNu4rmLmraQVuwb8kVf8S/ICpkih/PfIff2YW3sa8zTvt7d7hJFXY1IvOOGJTeXxs69XLBd4Q==}
 
+<<<<<<< HEAD
+=======
+  gamebryo-savegame@https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/9149445e798a632a38337229dd0b60b67efb74bd:
+    resolution: {tarball: https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/9149445e798a632a38337229dd0b60b67efb74bd}
+    version: 2.1.3
+
+>>>>>>> v2.0.0
   gauge@2.7.4:
     resolution: {integrity: sha512-14x4kjc6lkD3ltw589k0NrPD6cCNTD6CWoVUNpB85+DrtONoZn+Rug6xZU5RvSC4+TZPxA5AnBibQYAvZn41Hg==}
     deprecated: This package is no longer supported.
@@ -15917,7 +15974,11 @@ snapshots:
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
+<<<<<<< HEAD
       vite: 8.0.3(@types/node@25.5.0)(jiti@2.6.1)(sass@1.97.3)(terser@5.46.1)(yaml@2.8.0)
+=======
+      vite: 8.0.3(@types/node@25.5.0)(jiti@2.6.1)(sass@1.97.3)(terser@5.46.1)
+>>>>>>> v2.0.0
 
   '@vitest/pretty-format@4.1.0':
     dependencies:
@@ -18041,7 +18102,20 @@ snapshots:
       acorn-jsx: 5.3.2(acorn@8.16.0)
       eslint-visitor-keys: 4.2.1
 
+<<<<<<< HEAD
   esprima@4.0.1:
+=======
+  esprima@4.0.1: {}
+
+  esptk@https://codeload.github.com/Nexus-Mods/node-esptk/tar.gz/7b7db98d2c69b6b6cad2cb3dcd7972143adaa7bd:
+    dependencies:
+      autogypi: 0.2.2
+      node-addon-api: 8.5.0
+      node-gyp: 10.3.1
+      prebuild-install: 7.1.3
+    transitivePeerDependencies:
+      - supports-color
+>>>>>>> v2.0.0
     optional: true
 
   esquery@1.7.0:
@@ -18403,6 +18477,23 @@ snapshots:
       string.fromcodepoint: 0.2.1
       string.prototype.codepointat: 0.2.1
 
+<<<<<<< HEAD
+=======
+  gamebryo-savegame@https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/9149445e798a632a38337229dd0b60b67efb74bd:
+    dependencies:
+      autogypi: 0.2.2
+      copyfiles: 2.4.1
+      cross-fetch: 3.2.0(encoding@0.1.13)
+      node-addon-api: 8.5.0
+      node-gyp: 10.3.1
+      node-stream-zip: 1.15.0
+      prebuild-install: 7.1.3
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+    optional: true
+
+>>>>>>> v2.0.0
   gauge@2.7.4:
     dependencies:
       aproba: 1.2.0
@@ -19419,7 +19510,11 @@ snapshots:
     dependencies:
       js-tokens: 4.0.0
 
+<<<<<<< HEAD
   loot@https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d(patch_hash=3d4c1edc7a442f9db9c091845b9f808f1d84517b03a9612fef4e41bd141f47bc):
+=======
+  loot@https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d:
+>>>>>>> v2.0.0
     dependencies:
       autogypi: 0.2.2
       lodash: 4.17.23
@@ -22225,6 +22320,37 @@ snapshots:
       tinyglobby: 0.2.15
       tinyrainbow: 3.1.0
       vite: 8.0.3(@types/node@25.5.0)(jiti@2.6.1)(sass@1.97.3)(terser@5.46.1)(yaml@2.8.0)
+      why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.1
+      '@types/node': 25.5.0
+      '@vitest/ui': 4.1.0(vitest@4.1.2)
+      happy-dom: 20.8.8
+      jsdom: 20.0.3
+    transitivePeerDependencies:
+      - msw
+
+  vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.5.0)(@vitest/ui@4.1.0)(happy-dom@20.8.8)(jsdom@20.0.3)(vite@8.0.3):
+    dependencies:
+      '@vitest/expect': 4.1.2
+      '@vitest/mocker': 4.1.2(vite@8.0.3)
+      '@vitest/pretty-format': 4.1.2
+      '@vitest/runner': 4.1.2
+      '@vitest/snapshot': 4.1.2
+      '@vitest/spy': 4.1.2
+      '@vitest/utils': 4.1.2
+      es-module-lexer: 2.0.0
+      expect-type: 1.3.0
+      magic-string: 0.30.21
+      obug: 2.1.1
+      pathe: 2.0.3
+      picomatch: 4.0.4
+      std-env: 4.0.0
+      tinybench: 2.9.0
+      tinyexec: 1.0.4
+      tinyglobby: 0.2.15
+      tinyrainbow: 3.1.0
+      vite: 8.0.3(@types/node@25.5.0)(jiti@2.6.1)(sass@1.97.3)(terser@5.46.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.1

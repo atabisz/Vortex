@@ -29,8 +29,11 @@ permissions:
 
 jobs:
   sync:
+<<<<<<< HEAD
     # Needs upstream's self-hosted runner + ClickHouse secrets; no-op in forks.
     if: github.repository == 'Nexus-Mods/Vortex'
+=======
+>>>>>>> v2.0.0
     runs-on: [self-hosted]
     steps:
       - uses: actions/checkout@v6

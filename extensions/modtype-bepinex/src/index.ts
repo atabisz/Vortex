@@ -12,7 +12,14 @@ import {
   testSupportedBepInExInjector,
   testSupportedRootMod,
 } from "./installers";
+<<<<<<< HEAD
 import { IBepInExGameConfig, INexusDownloadInfo } from "./types";
+=======
+import {
+  IBepInExGameConfig,
+  INexusDownloadInfo,
+} from "./types";
+>>>>>>> v2.0.0
 import { createDirectories, dismissNotifications, toBlue } from "./util";
 
 function showAttrib(state: types.IState) {
@@ -418,7 +425,14 @@ function init(context: types.IExtensionContext) {
           }),
         )
         .catch((err) =>
+<<<<<<< HEAD
           context.api.showErrorNotification("Failed to download/install BepInEx", err),
+=======
+          context.api.showErrorNotification(
+            "Failed to download/install BepInEx",
+            err,
+          ),
+>>>>>>> v2.0.0
         )
         .finally(() => {
           const state = context.api.getState();
@@ -451,7 +465,14 @@ function init(context: types.IExtensionContext) {
         return;
       }
       return ensureBepInExPack(context.api, profile.gameId).catch((err) =>
+<<<<<<< HEAD
         context.api.showErrorNotification("Failed to download/install BepInEx", err),
+=======
+        context.api.showErrorNotification(
+          "Failed to download/install BepInEx",
+          err,
+        ),
+>>>>>>> v2.0.0
       );
     });
 

@@ -17,8 +17,17 @@ const ctx = vi.hoisted(() => ({
 
 vi.mock("@actions/core", () => ({
   info: vi.fn(),
+<<<<<<< HEAD
   getInput: vi.fn((name: string) => (inputs as Record<string, string>)[name] ?? ""),
   getBooleanInput: vi.fn((name: string) => (inputs as Record<string, string>)[name] === "true"),
+=======
+  getInput: vi.fn(
+    (name: string) => (inputs as Record<string, string>)[name] ?? "",
+  ),
+  getBooleanInput: vi.fn(
+    (name: string) => (inputs as Record<string, string>)[name] === "true",
+  ),
+>>>>>>> v2.0.0
 }));
 
 vi.mock("@actions/github", () => ({ context: ctx }));
@@ -43,7 +52,15 @@ describe("collectFromInput", () => {
   it("parses whitespace-separated fingerprints (spaces and newlines)", () => {
     inputs.fingerprints = "a1b2c3d4 f0e1d2c3\n12345678";
     const r = collectFromInput();
+<<<<<<< HEAD
     expect(r.rows.map((x) => x.fingerprint).sort()).toEqual(["12345678", "a1b2c3d4", "f0e1d2c3"]);
+=======
+    expect(r.rows.map((x) => x.fingerprint).sort()).toEqual([
+      "12345678",
+      "a1b2c3d4",
+      "f0e1d2c3",
+    ]);
+>>>>>>> v2.0.0
   });
 
   it("dedupes repeated fingerprints", () => {
@@ -98,7 +115,13 @@ describe("collectFromInput", () => {
   it("stamps each row with the workflow run URL and the actor", () => {
     inputs.fingerprints = "a1b2c3d4";
     const r = collectFromInput();
+<<<<<<< HEAD
     expect(r.rows[0].pr_url).toBe("https://github.com/org/repo/actions/runs/42");
+=======
+    expect(r.rows[0].pr_url).toBe(
+      "https://github.com/org/repo/actions/runs/42",
+    );
+>>>>>>> v2.0.0
     expect(r.rows[0].updated_by).toBe("tester");
     expect(r.rows[0].status).toBe("fixed");
   });

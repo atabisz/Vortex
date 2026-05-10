@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+=======
+import type { IParameters, ISetItem } from "@vortex/shared/cli";
+
+import program from "commander";
+import { app, BrowserWindow } from "electron";
+>>>>>>> v2.0.0
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 

@@ -2,6 +2,11 @@
   "recommendations": [
     "esbenp.prettier-vscode",
     "oxc.oxc-vscode",
+<<<<<<< HEAD
     "mermaidchart.vscode-mermaid-chart"
   ]
+=======
+    "mermaidchart.vscode-mermaid-chart",
+  ],
+>>>>>>> v2.0.0
 }

@@ -1,6 +1,9 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
+<<<<<<< HEAD
 
+=======
+>>>>>>> v2.0.0
 import { applyToClickHouse } from "./clickhouse";
 import { collectFromInput } from "./collect-input";
 import { collectFromPR } from "./collect-pr";
@@ -23,7 +26,13 @@ const dispatch = async (mode: Mode): Promise<CollectResult> => {
 
     default: {
       const exhaustive: never = mode;
+<<<<<<< HEAD
       throw new Error(`Unknown mode "${exhaustive}" — must be one of: ${MODES.join(", ")}`);
+=======
+      throw new Error(
+        `Unknown mode "${exhaustive}" — must be one of: ${MODES.join(", ")}`,
+      );
+>>>>>>> v2.0.0
     }
   }
 };
@@ -35,7 +44,13 @@ const dispatch = async (mode: Mode): Promise<CollectResult> => {
 const run = async (): Promise<void> => {
   const mode = core.getInput("mode", { required: true });
   if (!isMode(mode)) {
+<<<<<<< HEAD
     throw new Error(`Invalid mode "${mode}" — must be one of: ${MODES.join(", ")}`);
+=======
+    throw new Error(
+      `Invalid mode "${mode}" — must be one of: ${MODES.join(", ")}`,
+    );
+>>>>>>> v2.0.0
   }
   const result = await dispatch(mode);
 

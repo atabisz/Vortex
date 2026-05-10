@@ -104,7 +104,14 @@ export const useNotificationFiltering = ({
         continue;
       }
       const ref = notis.find((n) => n?.id === item.id);
+<<<<<<< HEAD
       if (ref !== undefined && (item.message !== ref.message || item.progress !== ref.progress)) {
+=======
+      if (
+        ref !== undefined &&
+        (item.message !== ref.message || item.progress !== ref.progress)
+      ) {
+>>>>>>> v2.0.0
         updates.push({ ...item, message: ref.message, progress: ref.progress });
       }
     }
@@ -112,7 +119,13 @@ export const useNotificationFiltering = ({
     if (updates.length > 0) {
       setFiltered((prev) => {
         const byId = new Map(updates.map((u) => [u.id, u]));
+<<<<<<< HEAD
         return prev.map((item) => (item?.id !== undefined ? (byId.get(item.id) ?? item) : item));
+=======
+        return prev.map((item) =>
+          item?.id !== undefined ? (byId.get(item.id) ?? item) : item,
+        );
+>>>>>>> v2.0.0
       });
     }
   }, []);

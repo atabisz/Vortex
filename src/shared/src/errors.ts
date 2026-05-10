@@ -122,7 +122,14 @@ export function isErrorWithSystemCode(err: unknown): err is ErrorWithSystemCode 
  *   "at f (chrome-extension://id/page.js:1:2)" → unchanged
  */
 export const sanitizeFramePath = (frame: string): string =>
+<<<<<<< HEAD
   frame.replace(INSTALL_PATH_RE, "").replace(/\\/g, "/").replace(USER_HOME_RE, "$1<USER>");
+=======
+  frame
+    .replace(INSTALL_PATH_RE, "")
+    .replace(/\\/g, "/")
+    .replace(USER_HOME_RE, "$1<USER>");
+>>>>>>> v2.0.0
 
 const _SEP = String.raw`[/\\]`;
 const _WIN = String.raw`[A-Za-z]:${_SEP}`; // C:\ or C:/
@@ -142,6 +149,7 @@ const INSTALL_PATH_RE = new RegExp(
  * already-redacted `<USER>` is not matched again (idempotence). */
 const USER_HOME_RE = /(\/(?:Users|home)\/)([^/\s'"<>:|?*]+)/gi;
 
+<<<<<<< HEAD
 /** Strips the trailing `:column` from a `:line:col` position, keeping `:line`.
  *  V8 reports the call-site column for each frame, which differs per invocation
  *  even for the same minified line — same function calling out at multiple
@@ -153,6 +161,8 @@ const STRIP_COLUMN_RE = /(:\d+):\d+(?=\)|$)/g;
  *  context that varies per invocation and prevents grouping. */
 const FINGERPRINT_FRAME_LIMIT = 5;
 
+=======
+>>>>>>> v2.0.0
 /**
  * Compute a fingerprint from the stack trace call frames and app version.
  * Same error from the same code path in the same version produces the same hash,

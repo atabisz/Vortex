@@ -845,9 +845,47 @@ function genUpdateModDeployment(installManager: InstallManager) {
               );
             });
 
+<<<<<<< HEAD
             // at this point the deployment lock gets released so another deployment
             // can be started during post-deployment
             progress(t("Running post-deployment events"), 99);
+=======
+            // Wait for active mod installations to complete before deploying
+            // so we don't deploy half-installed mods.
+            if (installManager.getActiveInstallationCount() > 0) {
+              log("debug", "waiting for active installations before deploying");
+              await installManager.waitForIdle();
+            }
+
+            // Consume the set of installation paths whose mods finished
+            // installing or were removed since the last deployment. Their
+            // external changes (refchange / srcdeleted) are expected and
+            // will be auto-resolved per-mod.
+            const recentChanges = installManager.consumeRecentChanges();
+
+            let mergeResult: { [modType: string]: IMergeResultByType };
+            const lastDeployment: { [typeId: string]: IDeployedFile[] } = {};
+            const mods: Record<string, IMod> = state.persistent.mods?.[profile?.gameId] ?? {};
+            notification.message = t("Deploying mods");
+            api.sendNotification(notification);
+            api.store.dispatch(startActivity("mods", "deployment"));
+            progress(t("Loading deployment manifest"), 0);
+
+            // sequential: load activation order matters per mod type
+            for (const typeId of deployableModTypes(modPaths)) {
+              const deployedFiles = await loadActivation(
+                api,
+                gameId,
+                typeId,
+                modPaths[typeId],
+                stagingPath,
+                activator,
+              );
+              lastDeployment[typeId] = deployedFiles;
+            }
+
+            progress(t("Running pre-deployment events"), 2);
+>>>>>>> v2.0.0
             await api.emitAndAwait(
               "did-deploy",
               profile.id,
@@ -859,7 +897,20 @@ function genUpdateModDeployment(installManager: InstallManager) {
             api.events.emit("mods-did-deploy", profile.id, newDeployment);
             progress(t("Preparing game settings"), 100);
 
+<<<<<<< HEAD
             await bakeSettings(api, profile, sortedModList);
+=======
+            progress(t("Checking for external changes"), 5);
+            await dealWithExternalChanges(
+              api,
+              activator,
+              profileId,
+              stagingPath,
+              modPaths,
+              lastDeployment,
+              recentChanges,
+            );
+>>>>>>> v2.0.0
 
             api.store.dispatch(setDeploymentNecessary(game.id, false));
           } catch (unknownErr) {
@@ -1656,8 +1707,26 @@ function once(api: IExtensionApi) {
 
   api.events.on(
     "remove-mod",
+<<<<<<< HEAD
     (gameId: string, modId: string, cb?: (error: Error) => void, options?: IRemoveModOptions) =>
       onRemoveMod(api, getAllActivators(), installManager, gameId, modId, cb, options),
+=======
+    (
+      gameId: string,
+      modId: string,
+      cb?: (error: Error) => void,
+      options?: IRemoveModOptions,
+    ) =>
+      onRemoveMod(
+        api,
+        getAllActivators(),
+        installManager,
+        gameId,
+        modId,
+        cb,
+        options,
+      ),
+>>>>>>> v2.0.0
   );
 
   api.events.on(
@@ -1668,7 +1737,19 @@ function once(api: IExtensionApi) {
       cb?: (error: Error) => void,
       options?: IRemoveModOptions,
     ) => {
+<<<<<<< HEAD
       onRemoveMods(api, getAllActivators(), installManager, gameId, modIds, cb, options);
+=======
+      onRemoveMods(
+        api,
+        getAllActivators(),
+        installManager,
+        gameId,
+        modIds,
+        cb,
+        options,
+      );
+>>>>>>> v2.0.0
     },
   );
 
@@ -2026,7 +2107,12 @@ function init(context: IExtensionContext): boolean {
                   id: "useFolderContents",
                   value: true,
                   text:
+<<<<<<< HEAD
                     "Use the folder's contents as the mod " + "(folder name becomes the mod name)",
+=======
+                    "Use the folder's contents as the mod " +
+                    "(folder name becomes the mod name)",
+>>>>>>> v2.0.0
                 },
               ],
             }
@@ -2039,7 +2125,13 @@ function init(context: IExtensionContext): boolean {
       return;
     }
 
+<<<<<<< HEAD
     const flatten = singleFolderPath !== undefined && result.input.useFolderContents === true;
+=======
+    const flatten =
+      singleFolderPath !== undefined
+      && result.input.useFolderContents === true;
+>>>>>>> v2.0.0
 
     const baseName = flatten
       ? path.basename(singleFolderPath)
@@ -2048,7 +2140,13 @@ function init(context: IExtensionContext): boolean {
         : undefined;
 
     const modName = baseName ?? "New Mod";
+<<<<<<< HEAD
     const modId = baseName !== undefined ? deriveModInstallName(baseName, {}) : shortid();
+=======
+    const modId = baseName !== undefined
+      ? deriveModInstallName(baseName, {})
+      : shortid();
+>>>>>>> v2.0.0
 
     const mod: IMod = {
       id: modId,
@@ -2073,11 +2171,25 @@ function init(context: IExtensionContext): boolean {
         if (flatten && singleFolderPath !== undefined) {
           const children = await fs.readdirAsync(singleFolderPath);
           for (const child of children) {
+<<<<<<< HEAD
             await fs.copyAsync(path.join(singleFolderPath, child), path.join(modPath, child));
           }
         } else {
           for (const filePath of filePaths) {
             await fs.copyAsync(filePath, path.join(modPath, path.basename(filePath)));
+=======
+            await fs.copyAsync(
+              path.join(singleFolderPath, child),
+              path.join(modPath, child),
+            );
+          }
+        } else {
+          for (const filePath of filePaths) {
+            await fs.copyAsync(
+              filePath,
+              path.join(modPath, path.basename(filePath)),
+            );
+>>>>>>> v2.0.0
           }
         }
       } catch (copyErr) {

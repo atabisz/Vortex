@@ -132,7 +132,13 @@ describe("sanitizeFramePath", () => {
         sanitizeFramePath(
           `C:\\Users\\user\\AppData\\Local\\Larian Studios\\Baldur's Gate 3\\Mods\\foo.pak`,
         ),
+<<<<<<< HEAD
       ).toBe(`C:/Users/<USER>/AppData/Local/Larian Studios/Baldur's Gate 3/Mods/foo.pak`);
+=======
+      ).toBe(
+        `C:/Users/<USER>/AppData/Local/Larian Studios/Baldur's Gate 3/Mods/foo.pak`,
+      );
+>>>>>>> v2.0.0
     });
 
     it("redacts the username inside an ENOENT message body", () => {
@@ -193,7 +199,13 @@ describe("sanitizeFramePath", () => {
 
     it("redacts every occurrence in a single string", () => {
       const input = `C:\\Users\\user\\a.txt and C:\\Users\\user\\b.txt`;
+<<<<<<< HEAD
       expect(sanitizeFramePath(input)).toBe(`C:/Users/<USER>/a.txt and C:/Users/<USER>/b.txt`);
+=======
+      expect(sanitizeFramePath(input)).toBe(
+        `C:/Users/<USER>/a.txt and C:/Users/<USER>/b.txt`,
+      );
+>>>>>>> v2.0.0
     });
 
     it("is idempotent — running twice gives the same result", () => {

@@ -13,6 +13,12 @@ import { useSelector, useDispatch } from "react-redux";
 
 import { setOpenMainPage, setSettingsPage } from "../../../actions/session";
 import type { IExtensionApi } from "../../../types/IExtensionContext";
+<<<<<<< HEAD
+=======
+import type { IModFileInfo, IModRequirementExt } from "../types";
+
+import { setOpenMainPage, setSettingsPage } from "../../../actions/session";
+>>>>>>> v2.0.0
 import { Button } from "../../../ui/components/button/Button";
 import { Icon } from "../../../ui/components/icon/Icon";
 import { NoResults } from "../../../ui/components/no_results/NoResults";

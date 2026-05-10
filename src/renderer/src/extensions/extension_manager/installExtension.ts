@@ -1,8 +1,13 @@
+<<<<<<< HEAD
 import * as path from "path";
+=======
+import type ZipT from "node-7z";
+>>>>>>> v2.0.0
 
 import { unknownToError } from "@vortex/shared";
 import PromiseBB from "bluebird";
 import * as _ from "lodash";
+<<<<<<< HEAD
 import type ZipT from "node-7z";
 import rimraf from "rimraf";
 
@@ -12,13 +17,32 @@ import { log } from "../../logging";
 import type { ExtensionType, IExtension } from "../../types/extensions";
 import type { IExtensionApi } from "../../types/IExtensionContext";
 import type { IState } from "../../types/IState";
+=======
+import * as path from "path";
+import rimraf from "rimraf";
+
+import type { ExtensionType, IExtension } from "../../types/extensions";
+import type { IExtensionApi } from "../../types/IExtensionContext";
+import type { IState } from "../../types/IState";
+
+import { removeExtension } from "../../actions";
+import ExtensionManager from "../../ExtensionManager";
+import { log } from "../../logging";
+>>>>>>> v2.0.0
 import { DataInvalid } from "../../util/CustomErrors";
 import { withTrackedActivity } from "../../util/errorHandling";
 import * as fs from "../../util/fs";
 import getVortexPath from "../../util/getVortexPath";
 import { INVALID_FILENAME_RE } from "../../util/util";
 import { webpackRequireHack } from "../../util/webpack-hacks";
+<<<<<<< HEAD
 import { countryExists, languageExists } from "../settings_interface/languagemap";
+=======
+import {
+  countryExists,
+  languageExists,
+} from "../settings_interface/languagemap";
+>>>>>>> v2.0.0
 import { readExtensionInfo } from "./util";
 
 const rimrafAsync: (removePath: string, options: any) => PromiseBB<void> =

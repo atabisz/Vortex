@@ -667,7 +667,12 @@ function processAttributes(state: IState, input: any, quick: boolean): PromiseBB
       modVersion: nexusModInfo?.version ?? nexusCollectionInfo?.revisionNumber?.toString?.(),
       allowRating: input?.download?.modInfo?.nexus?.modInfo?.allow_rating,
       customFileName: fuzzRatio < 50 ? `${modName} - ${fileName}` : undefined,
+<<<<<<< HEAD
       newestFileId: nexusCollectionInfo?.collection?.latestPublishedRevision?.id,
+=======
+      newestFileId:
+        nexusCollectionInfo?.collection?.latestPublishedRevision?.id,
+>>>>>>> v2.0.0
       newestVersion:
         nexusCollectionInfo?.collection?.latestPublishedRevision?.revisionNumber?.toString?.(),
       rating: nexusCollectionInfo?.rating,

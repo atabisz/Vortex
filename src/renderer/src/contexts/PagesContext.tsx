@@ -49,8 +49,17 @@ export const PagesProvider: FC<IPagesProviderProps> = ({ children }) => {
   const mainPage = useSelector(mainPageSelector);
   const activeProfileId = useSelector(activeProfileIdSelector);
   const activeGameId = useSelector(activeGameIdSelector);
+<<<<<<< HEAD
   const useModernLayout = useSelector((state: IState) => state.settings.window.useModernLayout);
   const profilesVisible = useSelector((state: IState) => state.settings.interface.profilesVisible);
+=======
+  const useModernLayout = useSelector(
+    (state: IState) => state.settings.window.useModernLayout,
+  );
+  const profilesVisible = useSelector(
+    (state: IState) => state.settings.interface.profilesVisible,
+  );
+>>>>>>> v2.0.0
 
   const sortedPages = useMemo(
     () =>

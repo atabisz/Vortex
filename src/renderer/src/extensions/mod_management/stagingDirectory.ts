@@ -12,6 +12,10 @@ import { getApplication } from "../../util/application";
 import { ProcessCanceled, UserCanceled } from "../../util/CustomErrors";
 import * as fs from "../../util/fs";
 import lazyRequire from "../../util/lazyRequire";
+<<<<<<< HEAD
+=======
+import { log } from "../../logging";
+>>>>>>> v2.0.0
 import { activeGameId, installPathForGame } from "../../util/selectors";
 import { getSafe } from "../../util/storeHelper";
 import { truthy } from "../../util/util";

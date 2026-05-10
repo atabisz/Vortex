@@ -41,7 +41,14 @@ const settings = (props: IInstructionProps) => {
   const toggleExcludePluginRules = React.useCallback(() => {
     const newValue = !excludePluginRules;
     setExcludePluginRules(newValue);
+<<<<<<< HEAD
     onSetCollectionAttribute(["collectionConfig", "excludePluginRules"], newValue);
+=======
+    onSetCollectionAttribute(
+      ["collectionConfig", "excludePluginRules"],
+      newValue,
+    );
+>>>>>>> v2.0.0
   }, [onSetCollectionAttribute, excludePluginRules, setExcludePluginRules]);
 
   return (
@@ -62,6 +69,7 @@ const settings = (props: IInstructionProps) => {
         </More>
       </Toggle>
 
+<<<<<<< HEAD
       {showExcludePluginRules ? (
         <Toggle
           id={"settings-exclude-plugin-rules"}
@@ -77,6 +85,24 @@ const settings = (props: IInstructionProps) => {
           </More>
         </Toggle>
       ) : null}
+=======
+      <Toggle
+        id={"settings-exclude-plugin-rules"}
+        onToggle={toggleExcludePluginRules}
+        checked={excludePluginRules}
+      >
+        {t("Exclude plugin rules")}
+        <More
+          id="collection-settings-excludepluginrules"
+          name={t("Exclude plugin rules")}
+        >
+          {t(
+            "If enabled, custom LOOT plugin rules and groups will not be included when exporting this collection. "
+            + "This prevents inherited rules from spreading between collections.",
+          )}
+        </More>
+      </Toggle>
+>>>>>>> v2.0.0
     </FlexLayout>
   );
 };

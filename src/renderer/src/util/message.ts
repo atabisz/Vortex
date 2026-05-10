@@ -12,6 +12,12 @@ import { NoDeployment } from "../extensions/mod_management/util/exceptions";
 import type { IErrorOptions } from "../types/IExtensionContext";
 import type { IState } from "../types/IState";
 import type { HTTPError } from "./CustomErrors";
+<<<<<<< HEAD
+=======
+
+import { addNotification, showDialog } from "../actions/notifications";
+import { NoDeployment } from "../extensions/mod_management/util/exceptions";
+>>>>>>> v2.0.0
 import {
   StalledError,
   TemporaryError,
@@ -136,10 +142,17 @@ function shouldAllowReport(err: string | Error | any, options?: IErrorOptions): 
 }
 
 const hasStringStack = (v: unknown): v is { stack: string } =>
+<<<<<<< HEAD
   typeof v === "object" &&
   v != null &&
   "stack" in v &&
   typeof (v as { stack: unknown }).stack === "string";
+=======
+  typeof v === "object"
+  && v != null
+  && "stack" in v
+  && typeof (v as { stack: unknown }).stack === "string";
+>>>>>>> v2.0.0
 
 /**
  * show an error notification with an optional "more" button that displays further details

@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 import * as path from "path";
 
+=======
+>>>>>>> v2.0.0
 import type {
   EndorsedStatus,
   ICollection,
@@ -22,7 +25,9 @@ import type {
   IPreference,
 } from "@nexusmods/nexus-api";
 import type Nexus from "@nexusmods/nexus-api";
+
 import { NexusError, RateLimitError, TimeoutError } from "@nexusmods/nexus-api";
+<<<<<<< HEAD
 import { getErrorCode, getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
 import { AlreadyDownloaded, DownloadIsHTML } from "@vortex/shared/errors";
 import Bluebird from "bluebird";
@@ -57,6 +62,62 @@ import { NEXUS_BASE_URL, NEXUS_GAMES_URL } from "./constants";
 import { isLoggedIn } from "./selectors";
 import type { IValidateKeyDataV2 } from "./types/IValidateKeyData";
 import {
+=======
+import {
+  getErrorCode,
+  getErrorMessageOrDefault,
+  unknownToError,
+} from "@vortex/shared";
+import Bluebird from "bluebird";
+import * as path from "path";
+import * as semver from "semver";
+
+import type {
+  IExtensionApi,
+  StateChangeCallback,
+} from "../../types/IExtensionContext";
+import type { IDownload, IMod, IModTable, IState } from "../../types/IState";
+import type { IGameStoredExt } from "../gamemode_management/types/IGameStored";
+import type { IModListItem } from "../news_dashlet/types";
+import type { IValidateKeyDataV2 } from "./types/IValidateKeyData";
+import type { ITokenReply } from "./util/oauth";
+
+import { setDownloadModInfo } from "../../actions";
+import { log } from "../../logging";
+import {
+  DataInvalid,
+  ProcessCanceled,
+  UserCanceled,
+} from "../../util/CustomErrors";
+import Debouncer from "../../util/Debouncer";
+import * as fs from "../../util/fs";
+import { calcDuration, showError } from "../../util/message";
+import { upload } from "../../util/network";
+import opn from "../../util/opn";
+import {
+  activeGameId,
+  currentGame,
+  downloadPathForGame,
+  gameById,
+  knownGames,
+} from "../../util/selectors";
+import { getSafe } from "../../util/storeHelper";
+import { batchDispatch, truthy } from "../../util/util";
+import { resolveCategoryName } from "../category_management";
+import {
+  AlreadyDownloaded,
+  DownloadIsHTML,
+} from "../download_management/DownloadManager";
+import { SITE_ID } from "../gamemode_management/constants";
+import { setUpdatingMods } from "../mod_management/actions/session";
+import { setUserInfo } from "./actions/persistent";
+import {
+  NEXUS_BASE_URL,
+  NEXUS_GAMES_URL,
+} from "./constants";
+import { isLoggedIn } from "./selectors";
+import {
+>>>>>>> v2.0.0
   checkModVersionsImpl,
   endorseDirectImpl,
   endorseThing,
@@ -71,7 +132,15 @@ import {
   updateToken,
 } from "./util";
 import { findLatestUpdate, retrieveModInfo } from "./util/checkModsVersion";
+<<<<<<< HEAD
 import { nexusGameId, toNXMId, convertGameIdReverse } from "./util/convertGameId";
+=======
+import {
+  nexusGameId,
+  toNXMId,
+  convertGameIdReverse,
+} from "./util/convertGameId";
+>>>>>>> v2.0.0
 import {
   FULL_COLLECTION_INFO,
   FULL_REVISION_INFO,
@@ -79,7 +148,10 @@ import {
   MOD_REQUIREMENTS_INFO,
   MY_COLLECTIONS_SEARCH_QUERY,
 } from "./util/graphQueries";
+<<<<<<< HEAD
 import type { ITokenReply } from "./util/oauth";
+=======
+>>>>>>> v2.0.0
 import submitFeedback from "./util/submitFeedback";
 import { makeModUID } from "./util/UIDs";
 
@@ -726,7 +798,11 @@ export function onGetNexusCollectionRevision(
         collectionSlug,
         revisionNumber > 0 ? revisionNumber : undefined,
       ),
+<<<<<<< HEAD
     ).catch((err: NexusError & { collectionSlug?: string; revisionNumber?: number }) => {
+=======
+    ).catch((err: NexusError & { collectionSlug?: string, revisionNumber?: number }) => {
+>>>>>>> v2.0.0
       const message = getErrorMessageOrDefault(err);
       const isRevisionUnavailable = [
         "NOT_FOUND",
@@ -901,6 +977,7 @@ export function onGetModRequirements(
       return Bluebird.resolve({});
     }
 
+<<<<<<< HEAD
     return Bluebird.resolve(
       (async () => {
         // makeModUID needs the nexus games list to map domain -> numeric game id.
@@ -945,6 +1022,50 @@ export function onGetModRequirements(
         );
       })(),
     )
+=======
+    return Bluebird.resolve((async () => {
+      // makeModUID needs the nexus games list to map domain -> numeric game id.
+      // This should've been done on startup, but there appears to be
+      // a race condition https://github.com/Nexus-Mods/Vortex/issues/22466
+      await nexusGamesProm();
+
+      // Build UIDs for all mods (64-bit: game ID in upper 32 bits, mod ID in lower 32 bits)
+      // Pass Vortex gameId so makeModUID can convert to numeric Nexus game ID
+      const validUids: string[] = [];
+
+      for (const modId of modIds) {
+        const modUid = makeModUID({
+          gameId,
+          modId: modId.toString(),
+          fileId: "0", // Not needed for mod UID but required by interface
+        });
+
+        if (modUid) {
+          validUids.push(modUid);
+        } else {
+          log("warn", "Failed to create mod UID for requirements lookup", {
+            gameId: nexusGameDomain,
+            modId,
+          });
+        }
+      }
+
+      if (validUids.length === 0) {
+        return [];
+      }
+
+      // Query must include modId to map results back to mods
+      return nexus.modsByUid(
+        {
+          modId: true,
+          modRequirements: MOD_REQUIREMENTS_INFO,
+          uid: true,
+          thumbnailUrl: true,
+        },
+        validUids,
+      );
+    })())
+>>>>>>> v2.0.0
       .then((mods) => {
         const result: Record<number, Partial<IModRequirements>> = {};
         for (const mod of mods) {
@@ -970,6 +1091,7 @@ export function onGetModRequirements(
         const defaultDetails = {
           gameId: nexusGameDomain,
           modIds,
+<<<<<<< HEAD
         };
         if (err instanceof RateLimitError) {
           log("warn", "Rate limited when fetching mod requirements", {
@@ -978,6 +1100,16 @@ export function onGetModRequirements(
         } else if (err instanceof TimeoutError) {
           log("warn", "Timeout when fetching mod requirements", {
             ...defaultDetails,
+=======
+        }
+        if (err instanceof RateLimitError) {
+          log("warn", "Rate limited when fetching mod requirements", {
+            ...defaultDetails
+          });
+        } else if (err instanceof TimeoutError) {
+          log("warn", "Timeout when fetching mod requirements", {
+            ...defaultDetails
+>>>>>>> v2.0.0
           });
         } else {
           const detail = processErrorMessage(err as NexusError);

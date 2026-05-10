@@ -167,10 +167,17 @@ export function setupAutoUpdater(installType: string): void {
         // Auto-download patch updates for regular installs;
         // minor/major updates require user-initiated download via renderer
         if (
+<<<<<<< HEAD
           installType === "regular" &&
           currentVersion != null &&
           updateVersion != null &&
           semver.satisfies(updateVersion, `~${currentVersion.version}`, {
+=======
+          installType === "regular"
+          && currentVersion != null
+          && updateVersion != null
+          && semver.satisfies(updateVersion, `~${currentVersion.version}`, {
+>>>>>>> v2.0.0
             includePrerelease: true,
           })
         ) {

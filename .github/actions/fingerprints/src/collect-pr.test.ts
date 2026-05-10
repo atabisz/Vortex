@@ -40,7 +40,14 @@ describe("collectFromPR", () => {
 
   it("extracts multiple fingerprints from separate lines", () => {
     setPR("Fixes fingerprint a1b2c3d4\nFixes fingerprint f0e1d2c3");
+<<<<<<< HEAD
     expect(collectFromPR().rows.map((r) => r.fingerprint)).toEqual(["a1b2c3d4", "f0e1d2c3"]);
+=======
+    expect(collectFromPR().rows.map((r) => r.fingerprint)).toEqual([
+      "a1b2c3d4",
+      "f0e1d2c3",
+    ]);
+>>>>>>> v2.0.0
   });
 
   it("dedupes repeated fingerprints", () => {
@@ -80,12 +87,24 @@ describe("collectFromPR", () => {
 
   it("accepts uppercase hex and normalizes to lowercase", () => {
     setPR("Fixes fingerprint A1B2C3D4");
+<<<<<<< HEAD
     expect(collectFromPR().rows.map((r) => r.fingerprint)).toEqual(["a1b2c3d4"]);
+=======
+    expect(collectFromPR().rows.map((r) => r.fingerprint)).toEqual([
+      "a1b2c3d4",
+    ]);
+>>>>>>> v2.0.0
   });
 
   it("accepts lowercase prefix verb (case-insensitive)", () => {
     setPR("fixes fingerprint e6fdfae9\nCherry-pick of #22841");
+<<<<<<< HEAD
     expect(collectFromPR().rows.map((r) => r.fingerprint)).toEqual(["e6fdfae9"]);
+=======
+    expect(collectFromPR().rows.map((r) => r.fingerprint)).toEqual([
+      "e6fdfae9",
+    ]);
+>>>>>>> v2.0.0
   });
 
   it("accepts mixed-case prefix verb", () => {
@@ -95,7 +114,13 @@ describe("collectFromPR", () => {
 
   it("accepts plural verb form (fingerprints) with a single hex", () => {
     setPR("Fixes fingerprints a1b2c3d4");
+<<<<<<< HEAD
     expect(collectFromPR().rows.map((r) => r.fingerprint)).toEqual(["a1b2c3d4"]);
+=======
+    expect(collectFromPR().rows.map((r) => r.fingerprint)).toEqual([
+      "a1b2c3d4",
+    ]);
+>>>>>>> v2.0.0
   });
 
   it("captures multiple comma-separated fingerprints in plural form", () => {
@@ -109,6 +134,13 @@ describe("collectFromPR", () => {
 
   it("captures whitespace-separated fingerprints in plural form", () => {
     setPR("Fixes fingerprints a1b2c3d4 b5c6d7e8");
+<<<<<<< HEAD
     expect(collectFromPR().rows.map((r) => r.fingerprint)).toEqual(["a1b2c3d4", "b5c6d7e8"]);
+=======
+    expect(collectFromPR().rows.map((r) => r.fingerprint)).toEqual([
+      "a1b2c3d4",
+      "b5c6d7e8",
+    ]);
+>>>>>>> v2.0.0
   });
 });

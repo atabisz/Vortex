@@ -461,6 +461,7 @@ export const supportsMediumMasters = memoizeOne((gameMode: string): boolean => {
   return supportsMediumMasters;
 });
 
+<<<<<<< HEAD
 export const supportsBlueprintPlugins = memoizeOne((gameMode: string): boolean => {
   if (!gameSupport.has(gameMode)) {
     return false;
@@ -471,6 +472,21 @@ export const supportsBlueprintPlugins = memoizeOne((gameMode: string): boolean =
   }
   return supported;
 });
+=======
+export const supportsBlueprintPlugins = memoizeOne(
+  (gameMode: string): boolean => {
+    if (!gameSupport.has(gameMode)) {
+      return false;
+    }
+    const supported =
+      gameSupport.get(gameMode, "supportsBlueprintPlugins") ?? false;
+    if (typeof supported === "function") {
+      return supported();
+    }
+    return supported;
+  },
+);
+>>>>>>> v2.0.0
 
 export function pluginExtensions(gameMode: string): string[] {
   return supportsESL(gameMode) ? [".esm", ".esp", ".esl"] : [".esm", ".esp"];

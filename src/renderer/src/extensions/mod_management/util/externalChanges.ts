@@ -260,7 +260,12 @@ export function dealWithExternalChanges(
   return checkForExternalChanges(api, activator, profileId, stagingPath, modPaths, lastDeployment)
     .then((changes: { [typeId: string]: IFileChange[] }) => {
       const automaticActions: IFileEntry[] = [];
+<<<<<<< HEAD
       const isInstallingCollection = getCollectionActiveSession(api.store.getState()) !== undefined;
+=======
+      const isInstallingCollection =
+        getCollectionActiveSession(api.store.getState()) !== undefined;
+>>>>>>> v2.0.0
       const userChanges = Object.keys(changes).reduce((prev, typeId) => {
         const { merged, rest, autoResolved } = changes[typeId].reduce(
           (prevInner, change) => {
@@ -269,7 +274,12 @@ export function dealWithExternalChanges(
               prevInner.merged.push(change);
               return prevInner;
             }
+<<<<<<< HEAD
             if (isInstallingCollection || recentChanges?.has(change.source)) {
+=======
+            if (isInstallingCollection
+                || recentChanges?.has(change.source)) {
+>>>>>>> v2.0.0
               prevInner.autoResolved.push(change);
               return prevInner;
             }
@@ -282,7 +292,13 @@ export function dealWithExternalChanges(
         );
 
         if (merged.length > 0) {
+<<<<<<< HEAD
           merged.forEach((change) => automaticActions.push(defaultInternalAction(typeId, change)));
+=======
+          merged.forEach((change) =>
+            automaticActions.push(defaultInternalAction(typeId, change)),
+          );
+>>>>>>> v2.0.0
         }
 
         if (autoResolved.length > 0) {

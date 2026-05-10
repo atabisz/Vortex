@@ -21,14 +21,37 @@ import type {
   IModFileQuery,
 } from "@nexusmods/nexus-api";
 import type Nexus from "@nexusmods/nexus-api";
+<<<<<<< HEAD
 import { GraphError, NexusError, RateLimitError, TimeoutError } from "@nexusmods/nexus-api";
 import { getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
 import { AlreadyDownloaded, DownloadIsHTML } from "@vortex/shared/errors";
 import BluebirdPromise from "bluebird";
+=======
+>>>>>>> v2.0.0
 import type { TFunction } from "i18next";
+import type * as Redux from "redux";
+
+import { GraphError, NexusError, RateLimitError, TimeoutError } from "@nexusmods/nexus-api";
+import {
+  getErrorMessageOrDefault,
+  unknownToError,
+} from "@vortex/shared";
+import BluebirdPromise from "bluebird";
 import jwt from "jsonwebtoken";
 import * as _ from "lodash";
+<<<<<<< HEAD
 import type * as Redux from "redux";
+=======
+import * as path from "path";
+import * as util from "util";
+
+import type { IExtensionApi, ThunkStore } from "../../types/IExtensionContext";
+import type { IMod, IState } from "../../types/IState";
+import type { RedownloadMode } from "../download_management/DownloadManager";
+import type { IJWTAccessToken } from "./types/IJWTAccessToken";
+import type { IValidateKeyDataV2 } from "./types/IValidateKeyData";
+import type { ITokenReply } from "./util/oauth";
+>>>>>>> v2.0.0
 
 import {
   addNotification,
@@ -39,8 +62,11 @@ import {
   setOAuthCredentials,
 } from "../../actions";
 import { log } from "../../logging";
+<<<<<<< HEAD
 import type { IExtensionApi, ThunkStore } from "../../types/IExtensionContext";
 import type { IMod, IState } from "../../types/IState";
+=======
+>>>>>>> v2.0.0
 import {
   DataInvalid,
   HTTPError,
@@ -59,7 +85,14 @@ import { getPreloadApi, getWindowId } from "../../util/preloadAccess";
 import { activeGameId } from "../../util/selectors";
 import { getSafe } from "../../util/storeHelper";
 import { batchDispatch, toPromise, truthy } from "../../util/util";
+<<<<<<< HEAD
 import type { RedownloadMode } from "../download_management/types/IDownload";
+=======
+import {
+  AlreadyDownloaded,
+  DownloadIsHTML,
+} from "../download_management/DownloadManager";
+>>>>>>> v2.0.0
 import { SITE_ID } from "../gamemode_management/constants";
 import { gameById, knownGames } from "../gamemode_management/selectors";
 import modName from "../mod_management/util/modName";
@@ -68,14 +101,28 @@ import { setLoginId, setOauthPending } from "./actions/session";
 import { OAUTH_CLIENT_ID, OAUTH_REDIRECT_URL, OAUTH_URL, getOAuthRedirectUrl } from "./constants";
 import NXMUrl from "./NXMUrl";
 import { isLoggedIn } from "./selectors";
+<<<<<<< HEAD
 import type { IJWTAccessToken } from "./types/IJWTAccessToken";
 import type { IValidateKeyDataV2 } from "./types/IValidateKeyData";
 import { IAccountStatus } from "./types/IValidateKeyData";
 import { checkModVersion, fetchRecentUpdates, ONE_DAY, ONE_MINUTE } from "./util/checkModsVersion";
 import { convertGameIdReverse, convertNXMIdReverse, nexusGameId } from "./util/convertGameId";
+=======
+import { IAccountStatus } from "./types/IValidateKeyData";
+import {
+  checkModVersion,
+  fetchRecentUpdates,
+  ONE_DAY,
+  ONE_MINUTE,
+} from "./util/checkModsVersion";
+import {
+  convertGameIdReverse,
+  convertNXMIdReverse,
+  nexusGameId,
+} from "./util/convertGameId";
+>>>>>>> v2.0.0
 import { endorseCollection, endorseMod } from "./util/endorseMod";
 import { FULL_REVISION_INFO, MOD_FILE_INFO } from "./util/graphQueries";
-import type { ITokenReply } from "./util/oauth";
 import OAuth from "./util/oauth";
 import { makeFileUID } from "./util/UIDs";
 
@@ -1069,7 +1116,15 @@ export function graphErrorContext(err: unknown): Record<string, unknown> {
   return ctx;
 }
 
+<<<<<<< HEAD
 export function resolveGraphError(t: TFunction, isLoggedIn: boolean, err: Error): string {
+=======
+export function resolveGraphError(
+  t: TFunction,
+  isLoggedIn: boolean,
+  err: Error,
+): string {
+>>>>>>> v2.0.0
   if (err.message === "You must provide a version") {
     // is this still reported in this way?
     return t("You can't endorse a mod that has no version set.");
@@ -1879,7 +1934,10 @@ export function updateToken(
     ),
   )
     .then(() => getUserInfo(api, nexus)) // update userinfo as we've set some new nexus credentials, either by launch, login or token refresh
-    .then(() => true)
+    .then(() => {
+      api.events.emit("did-login", null);
+      return BluebirdPromise.resolve(true);
+    })
     .catch((err) => {
       api.showErrorNotification("Authentication failed, please log in again", err, {
         allowReport: false,

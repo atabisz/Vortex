@@ -61,11 +61,19 @@ Separate from the renderer-side `errorIgnored` flag in `src/renderer/util/errorH
 
 ### Main Process — `terminate()`
 
+<<<<<<< HEAD
 | File                                  | Trigger                                                                                                                               |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/main/main.ts`                    | `uncaughtException` / `unhandledRejection` during startup (after app ready); filtered through `Application.shouldIgnoreError()`       |
 | `src/main/Application.ts`             | `uncaughtException` / `unhandledRejection` during normal operation (replaces the startup handler once persistence is set up)          |
 | `src/main/Application.ts`             | Startup failure that is not `UserCanceled`, `ProcessCanceled`, `DocumentsPathMissing`, `DatabaseLocked`, or `DatabaseOpenError`       |
+=======
+| File | Trigger |
+|------|---------|
+| `src/main/main.ts` | `uncaughtException` / `unhandledRejection` during startup (after app ready); filtered through `Application.shouldIgnoreError()` |
+| `src/main/Application.ts` | `uncaughtException` / `unhandledRejection` during normal operation (replaces the startup handler once persistence is set up) |
+| `src/main/Application.ts` | Startup failure that is not `UserCanceled`, `ProcessCanceled`, `DocumentsPathMissing`, `DatabaseLocked`, or `DatabaseOpenError` |
+>>>>>>> v2.0.0
 | `src/main/store/ReduxPersistorIPC.ts` | Disk-full error during state write (`IO error: ...Append: cannot write`) — user-friendly message; `allowReport = undefined` (default) |
 | `src/main/store/ReduxPersistorIPC.ts` | Any other persistence write failure — `allowReport = true`                                                                            |
 | `src/main/MainWindow.ts`              | Renderer emits a console error but the window has not shown within 15 seconds — `allowReport = true`                                  |

@@ -175,6 +175,7 @@ function main(context: types.IExtensionContext) {
     },
   });
 
+<<<<<<< HEAD
   context.registerInstaller(
     "scriptmergerdummy",
     15,
@@ -196,6 +197,14 @@ function main(context: types.IExtensionContext) {
     installContent as any,
   );
   context.registerInstaller("witcher3dlcmod", 60, testDLCMod as any, installDLCMod as any);
+=======
+  context.registerInstaller('scriptmergerdummy', 15, scriptMergerTest as any, (() => scriptMergerDummyInstaller(context.api)) as any);
+  context.registerInstaller('witcher3menumodroot', 20, testMenuModRoot as any, installMenuMod as any);
+  context.registerInstaller('witcher3mixed', 25, testSupportedMixed as any, installMixed as any);
+  context.registerInstaller('witcher3tl', 30, testSupportedTL as any, installTL as any);
+  context.registerInstaller('witcher3content', 50, testSupportedContent as any, installContent as any);
+  context.registerInstaller('witcher3dlcmod', 60, testDLCMod as any, installDLCMod as any);
+>>>>>>> v2.0.0
 
   context.registerModType(
     "witcher3menumodroot",
