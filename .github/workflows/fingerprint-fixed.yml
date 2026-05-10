@@ -12,19 +12,12 @@ permissions:
 
 jobs:
   sync:
-<<<<<<< HEAD
     # Needs upstream's self-hosted runner + ClickHouse secrets; no-op in forks.
     # Also skip auto-cherry-pick PRs created by .github/scripts/cherry-pick.sh
     # (head branches always start with `cherry-pick/`); the original PR is
     # what fixes the fingerprint, the cherry-pick is just propagation.
     if: >-
       github.repository == 'Nexus-Mods/Vortex' &&
-=======
-    # Skip the auto-cherry-pick PRs created by .github/scripts/cherry-pick.sh
-    # (head branches always start with `cherry-pick/`); the original PR is
-    # what fixes the fingerprint, the cherry-pick is just propagation.
-    if: >-
->>>>>>> v2.0.0
       github.event.pull_request.merged == true &&
       !startsWith(github.event.pull_request.head.ref, 'cherry-pick/')
     runs-on: [self-hosted]

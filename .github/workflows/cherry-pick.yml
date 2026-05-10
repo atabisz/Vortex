@@ -15,7 +15,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-<<<<<<< HEAD
       - name: Generate GitHub App token
         id: app-token
         uses: actions/create-github-app-token@v3
@@ -42,20 +41,6 @@ jobs:
       - name: Cherry-pick to target branches
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-=======
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Cherry-pick to target branches
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
->>>>>>> v2.0.0
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_TITLE: ${{ github.event.pull_request.title }}
           MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
