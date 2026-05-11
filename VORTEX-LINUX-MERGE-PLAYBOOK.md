@@ -138,7 +138,29 @@ Expect one hit replacing `path.join(tempPath, source)` in the copy loop. Without
 
 See the case-sensitive filesystem section for the cluster lesson — the four fixes address different layers (disk entry names, disk tree shape, instruction strings, runtime lookup) of the same root cause.
 
-### 8. Cross-compiled Linux native binaries
+### 8. Proton launch logic in StarterInfo
+
+```bash
+grep -n "isPathPrefix\|shouldRunWithProton\|runToolWithProton" src/renderer/src/util/StarterInfo.ts
+```
+
+Expect three things:
+
+- `isPathPrefix()` helper with path-boundary check (character after prefix must be `/` or `path.sep`). Without this, SKSE's Steam app (365720, `installdir: "skyrim"`) false-matches Skyrim SE's gamePath (`.../common/Skyrim Special Edition/...`) because bare `startsWith` doesn't enforce a boundary.
+- `shouldRunWithProton()` that uses `isPathPrefix()` to find the matching game entry.
+- `runToolWithProton()` call with hide-instead-of-quit behavior in `onSpawned`.
+
+If upstream touches `StarterInfo.ts`'s tool-launch flow (which it does regularly), the Proton branch can silently disappear.
+
+### 9. Steam library path resolution reads ALL roots
+
+```bash
+grep -n "findAllLinuxSteamPaths\|steamRoots" src/renderer/src/util/Steam.ts
+```
+
+`resolveSteamPaths()` must call `findAllLinuxSteamPaths()` and read `libraryfolders.vdf` from every Steam root (not just `basePath`). Without this, secondary libraries are missed when the detected `basePath` isn't the real installation (e.g. `~/.local/share/Steam` found before `~/.steam/debian-installation`).
+
+### 10. Cross-compiled Linux native binaries
 
 ```bash
 ls extensions/gamebryo-plugin-management/dist/{node-loot.node,libloot.so.0,libloot_wstring_stub.so}
@@ -288,6 +310,16 @@ Each entry is a real bug we hit at least once — written down so the next merge
 - **Stale empty staging dirs persist across install attempts.** A partially-broken extract (e.g. the FOMOD execute-bit bug fixed in `053a30424`, or any silent `copyAsync` failure in `extractArchive`) leaves the mod's staging folder with parent directories only — no files — while Vortex state still records the mod as installed. `doDownload` then short-circuits re-install for every subsequent attempt because `dep.mod != null`, so the broken state perpetuates forever and the "Redundant mods" dialog keeps flagging affected mods at every deploy. The first-order cause (silent copy swallowing) was sibling to the case-mismatch bug above but orthogonal — fixing `externalChanges` didn't heal mods that already had zero files in staging. Two-part fix: (a) `extractArchive` throws `ArchiveBrokenError` when every intended copy/link failed (partial failures still resolve via existing notification path); (b) `doDownload` runs `stagingDirHasFiles` before the `dep.mod != null` short-circuit and clears `dep.mod` when the dir is empty, forcing the normal `queueInstallation` path to re-extract. Helper lives at `src/renderer/src/extensions/mod_management/util/stagingIntegrity.ts`. Commit `7e2c40e94` (master) / `be30e0c05` (linux-port).
 - **LOOT is the cautionary tale.** See the lesson above — `toLowerCase()` on plugin names + ext4 + LOOT's ghost probe = the misleading `dlccoast.esm.ghost` error. Commit `324da1814`.
 
+### Proton game launching & Snap Steam IPC
+
+- **Path-prefix matching without boundary check causes false game-entry matches.** SKSE's Steam app (365720) has `installdir: "skyrim"`, producing gamePath `.../common/skyrim`. Case-insensitive `startsWith` matches `.../common/Skyrim Special Edition/skse64_loader.exe` — wrong game entry. Fix: `isPathPrefix()` that checks the character at `prefix.length` is a path separator or end-of-string. Commit `096b6376c`.
+- **Snap-installed Steam isolates IPC from the host filesystem.** Direct Proton invocation needs `steam.pipe` and `steamclient.so` to communicate with the running Steam instance. Snap confines these to `~/snap/steam/common/.steam/`. Symptom: `SteamAPI_Init() failed` / `SteamAPI_IsSteamRunning() did not locate running Steam`. Fix: `ensureSteamSymlinks()` in `steamPaths.ts` auto-creates `~/.steam/{steam.pipe, steam.pid, steam, root, sdk64/steamclient.so, sdk32/steamclient.so}` pointing into the snap/flatpak control directory. Called from `findLinuxSteamPath()`. Commit `096b6376c`.
+- **Proton needs `SteamAppId`/`SteamGameId` env vars for Steamworks initialization.** Without these, even with IPC accessible, the game can't identify itself to Steam. `buildProtonEnvironment()` must accept an optional `appId` and set both env vars. Commit `096b6376c`.
+- **Vortex quitting kills Proton's process tree.** When `onStart === "close"`, Vortex called `getApplication().quit()` which terminated the spawned Proton process. For Proton launches, hide the window instead — Proton needs time to bootstrap Wine and start the game. Commit `096b6376c`.
+- **Proton config name → folder mapping is non-trivial.** Steam's `config.vdf` uses names like `proton_experimental` but the install folder is `Proton - Experimental`. `resolveProtonPath()` handles this with: (1) exact match in `compatibilitytools.d/` (custom Proton like GE-Proton), (2) exact match in `steamapps/common/`, (3) fuzzy keyword match scanning `Proton*` folders. No hardcoded mapping table — self-maintaining. Commit `096b6376c`.
+- **Global Proton default lives at config key `"0"`.** `getConfiguredProtonName()` must fall back to `mapping?.["0"]?.name` when no per-game entry exists. Without this fallback, games using the Steam-wide default Proton get `undefined` protonPath. Commit `096b6376c`.
+- **`/usr/games/steam` is the steam-installer package, not the real Steam.** On Ubuntu with snap Steam, `/usr/games/steam` triggers a "Steam is not installed" dialog. The real binary is `/snap/bin/steam`. Always resolve the actual Steam binary from the discovered Steam path, not from PATH lookup.
+
 ### deployment manifests
 
 - **Wine/Proton-era manifests have Windows-style paths.** `loadActivation` has to detect them (`isWineEraManifest()`), offer a purge dialog, and normalise backslashes before the instance-mismatch check otherwise runs. Commit `6f47dbf2b`.
@@ -346,6 +378,7 @@ Durable references to the fork-local Linux fixes this file depends on. If any of
 | `src/main` packaging points at `build/` (not `dist/`) after upstream rename                 | `4d1ea811b` | _master-only_ |
 | `chmod +x` pnpm-bundled `gyp_main.py` before `pnpm install` in CI                           | `f0a0d2178` | _master-only_ |
 | Gate `fingerprint-*.yml` workflows to `Nexus-Mods/Vortex` repo only                         | `7fd37ff71` | _master-only_ |
+| Direct Proton launch + Snap IPC symlinks + path-boundary matching                           | `096b6376c` | _pending_     |
 
 Earlier-era fixes that were reverted by upstream merges (kept for archaeology):
 
