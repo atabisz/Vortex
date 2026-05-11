@@ -104,6 +104,7 @@
     "react-overlays": "catalog:",
     "react-redux": "catalog:",
     "react-resize-detector": "catalog:",
+    "react-input-autosize": "2.2.2",
     "react-select": "catalog:",
     "react-sortable-tree": "catalog:",
     "recharts": "catalog:",
