@@ -46,7 +46,7 @@ function stopWatch() {
   }
 }
 
-function readGameFiles(iniFilePath: string): Promise<string[]> {
+function readGameFiles(iniFilePath: string) {
   const parser = new IniParser(new WinapiFormat());
   return parser.read(iniFilePath).then((ini) => {
     const files = ini.data["Game Files"];

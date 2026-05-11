@@ -196,9 +196,9 @@ function testSkyrimFontsImpl(context: types.IExtensionContext) {
 
 function init(context: types.IExtensionContext): boolean {
   initGameSupport(context.api);
-  const testOblivionFonts = (): Promise<types.ITestResult> => testOblivionFontsImpl(context.api);
+  const testOblivionFonts = () => testOblivionFontsImpl(context.api);
 
-  const testSkyrimFonts = (): Promise<types.ITestResult> => testSkyrimFontsImpl(context);
+  const testSkyrimFonts = () => testSkyrimFontsImpl(context);
 
   context.registerTest("oblivion-fonts", "gamemode-activated", testOblivionFonts as any);
   context.registerTest("skyrim-fonts", "gamemode-activated", testSkyrimFonts as any);

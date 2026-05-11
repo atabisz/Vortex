@@ -306,7 +306,7 @@ export function requestLogin(nexus: Nexus, api: IExtensionApi, callback: (err: E
           return callback(err);
         }
 
-        const tokenDecoded: IJWTAccessToken = jwt.decode(token.access_token);
+        const tokenDecoded = jwt.decode(token.access_token) as IJWTAccessToken;
         //log('info', 'JWT Token', { token: token.access_token });
 
         api.store.dispatch(

@@ -144,7 +144,7 @@ function genUpdateSavegameHandler(api: types.IExtensionApi) {
   };
 }
 
-async function getSavesPath(profile: types.IProfile): Promise<string> {
+async function getSavesPath(profile: types.IProfile) {
   const savePath = profileSavePath(profile);
 
   return path.join(await mygamesPath(profile.gameId), savePath);
@@ -367,7 +367,7 @@ function once(context: types.IExtensionContext, update: util.Debouncer) {
 async function onLoadSaves(
   api: types.IExtensionApi,
   profileId: string,
-): Promise<ISavegame[]> {
+) {
   const state = api.getState();
   const { profiles } = state.persistent;
   const currentProfile = selectors.activeProfile(state);
@@ -542,7 +542,7 @@ async function onTransferSavegames(
   profileId: string,
   fileNames: string[],
   keepSource: boolean,
-): Promise<{ errors: string[]; allowReport: boolean }> {
+) {
   const state = api.getState();
   const t = api.translate;
   const currentProfile = selectors.activeProfile(state);

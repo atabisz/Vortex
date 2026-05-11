@@ -905,8 +905,7 @@ function generateLoadOrder(api: types.IExtensionApi): Bluebird<void> {
   const mods = Object.keys(gameMods)
     .filter((key) => util.getSafe(profile, ["modState", key, "enabled"], false))
     .map((key) => gameMods[key]);
-  return util
-    .sortMods(gameMode, mods, api)
+  return Bluebird.resolve(util.sortMods(gameMode, mods, api))
     .then((sorted) => {
       // no error in sorting? Close cycle editor if it's open
       const newState = api.store.getState();

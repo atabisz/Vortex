@@ -384,7 +384,7 @@ function register(
     filePath: string,
     flag: boolean,
     gameMode: string,
-  ): Promise<boolean> => {
+  ) => {
     if (path.extname(filePath) === GHOST_EXT) {
       filePath = path.basename(filePath, GHOST_EXT);
     }
@@ -407,7 +407,7 @@ function register(
 
   const openLOOTSite = () => util.opn("https://loot.github.io/").catch(() => null);
 
-  const parseESPFile = async (filePath: string, gameMode: string): Promise<IESPFile> => {
+  const parseESPFile = async (filePath: string, gameMode: string) => {
     const fileInfo = await ESPFile.open(filePath, gameMode);
     return {
       isMaster: fileInfo.isMaster,
@@ -650,7 +650,7 @@ function register(
   // as a no-op and not assume anything about blueprint-ness.
   context.registerAPI(
     "isBlueprintPlugin",
-    async (pluginFilePath: string): Promise<boolean> => {
+    async (pluginFilePath: string) => {
       const gameMode = selectors.activeGameId(context.api.getState());
       if (!supportsBlueprintPlugins(gameMode)) {
         return false;
@@ -759,7 +759,7 @@ function updateCurrentProfile(api: types.IExtensionApi): Promise<void> {
 async function swapUserlistForProfile(
   oldProfile: types.IProfile | undefined,
   newProfile: types.IProfile | undefined,
-): Promise<void> {
+) {
   const oldHasLocal = oldProfile?.features?.local_loot_rules === true;
   const newHasLocal = newProfile?.features?.local_loot_rules === true;
 
@@ -1160,7 +1160,7 @@ function testMasterlistOutdated(
 async function testExceededPluginLimit(
   api: types.IExtensionApi,
   infoCache: PluginInfoCache,
-): Promise<types.ITestResult> {
+) {
   const { translate, store } = api;
   const state = store.getState();
   const gameMode = selectors.activeGameId(state);
@@ -1237,7 +1237,7 @@ class PluginInfoCache {
     this.mAPI = api;
   }
 
-  public async getInfo(filePath: string): Promise<IESPInfo> {
+  public async getInfo(filePath: string) {
     const id = this.fileId(filePath);
     let mtime: number;
     let ino: bigint;
@@ -1287,7 +1287,7 @@ function testTriggerSort(api: types.IExtensionApi): Promise<types.ITestResult> {
 async function testMissingMasters(
   api: types.IExtensionApi,
   infoCache: PluginInfoCache,
-): Promise<types.ITestResult> {
+) {
   const { translate, store } = api;
   const state = store.getState();
   const gameMode = selectors.activeGameId(state);
@@ -1394,7 +1394,7 @@ async function testMissingMasters(
 async function testBlueprintMasters(
   api: types.IExtensionApi,
   infoCache: PluginInfoCache,
-): Promise<types.ITestResult> {
+) {
   const { translate, store } = api;
   const state = store.getState();
   const gameMode = selectors.activeGameId(state);

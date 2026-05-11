@@ -990,10 +990,10 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
 
         const rulesToRemove = filteredIds.filter((key) => modsEx[key] !== undefined);
 
-        return (
+        return Bluebird.resolve(
           removeMods
             ? util.removeMods(this.context.api, profile.gameId, wereInstalled)
-            : Bluebird.resolve()
+            : undefined,
         )
           .then(() => {
             if (removeArchive) {
