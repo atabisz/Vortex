@@ -1,5 +1,6 @@
-import { type FileHandle as NodeFileHandle, open } from "node:fs/promises";
+import { type FileHandle as NodeFileHandle, mkdir, open } from "node:fs/promises";
 import type { IncomingHttpHeaders } from "node:http";
+import { dirname } from "node:path";
 
 import { unknownToError } from "@vortex/shared";
 import type {
@@ -123,6 +124,7 @@ export async function download<T>(
   let handle: FileHandle;
 
   try {
+    await mkdir(dirname(dest), { recursive: true });
     // https://nodejs.org/api/fs.html#file-system-flags
     // 'w+': Open file for reading and writing. The file is created (if it does not exist) or truncated (if it exists).
     // 'r+': Open file for reading and writing. An exception occurs if the file does not exist.
