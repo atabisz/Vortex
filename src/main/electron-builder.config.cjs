@@ -111,6 +111,67 @@ const config = {
             }
         }
 
+        // Remove build-only packages that have native .node binaries but aren't
+        // needed at runtime. These get installed because sass/@tailwindcss/cli are
+        // listed in dependencies (used at build time for stylesheet compilation)
+        // but their native file-watcher deps cause EEXIST conflicts in electron-builder.
+        const buildOnlyNative = [
+            "@parcel/watcher",
+            "@parcel/watcher-linux-x64-glibc",
+            "@parcel/watcher-linux-x64-musl",
+            "@tailwindcss/cli",
+            "@tailwindcss/oxide",
+            "@tailwindcss/oxide-linux-x64-gnu",
+            "sass",
+        ];
+        const searchDirs = [
+            path.join(__dirname, "build", "node_modules"),
+            path.join(__dirname, "node_modules"),
+            path.resolve(__dirname, "../../node_modules"),
+        ];
+        for (const pkg of buildOnlyNative) {
+            for (const base of searchDirs) {
+                const pkgDir = path.join(base, ...pkg.split("/"));
+                if (fs.existsSync(pkgDir)) {
+                    fs.rmSync(pkgDir, { recursive: true, force: true });
+                }
+            }
+        }
+
+        // Deduplicate .node files to prevent electron-builder EEXIST hardlink
+        // conflicts. When the same .node inode is reachable via multiple paths
+        // (e.g. hoisted + nested), electron-builder's async unpacker races and
+        // the second link() call fails. Fix: find all .node files, track by
+        // inode, and delete all but the first occurrence of each duplicate.
+        const appDir = path.join(__dirname, "build");
+        const findNodeFiles = (dir) => {
+            const results = [];
+            const walk = (d) => {
+                let entries;
+                try { entries = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
+                for (const e of entries) {
+                    const full = path.join(d, e.name);
+                    if (e.isDirectory()) walk(full);
+                    else if (e.name.endsWith(".node")) results.push(full);
+                }
+            };
+            walk(dir);
+            return results;
+        };
+        const nodeFiles = findNodeFiles(appDir);
+        const seenInodes = new Map();
+        for (const file of nodeFiles) {
+            try {
+                const stat = fs.statSync(file);
+                const key = `${stat.dev}:${stat.ino}`;
+                if (seenInodes.has(key)) {
+                    fs.unlinkSync(file);
+                } else {
+                    seenInodes.set(key, file);
+                }
+            } catch {}
+        }
+
         // bluebird is a direct dependency of @vortex/main (top-level in build/node_modules/)
         // so we cannot add node_modules/bluebird/** to asarUnpack without an EEXIST conflict.
         // Instead, nest a copy under modmeta-db/node_modules/bluebird/ so that it is covered
