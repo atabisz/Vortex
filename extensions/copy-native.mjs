@@ -2,6 +2,7 @@
 
 import { execSync } from "node:child_process";
 import fs from "node:fs";
+import path from "node:path";
 
 const args = process.argv.slice(2);
 
@@ -23,6 +24,14 @@ for (const file of files) {
 }
 
 if (missingFiles.length > 0) {
+  const destDir = "dist";
+  const allInDist = missingFiles.every((f) =>
+    fs.existsSync(path.join(destDir, path.basename(f))),
+  );
+  if (allInDist) {
+    console.log("Source binaries missing but dist/ already has them — skipping copy");
+    process.exit(0);
+  }
   console.error("Missing native files:");
   for (const file of missingFiles) {
     console.error(`  - ${file}`);
