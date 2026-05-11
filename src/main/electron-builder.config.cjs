@@ -95,10 +95,20 @@ const config = {
         // Replace the installed native package with the plain-JS stub so that:
         // 1. No .node binary ends up in the asar (avoids asarUnpack conflicts)
         // 2. require('winapi-bindings') from external packages resolves at runtime
-        fs.rmSync(winapiDir, { recursive: true, force: true });
-        fs.mkdirSync(winapiDir, { recursive: true });
-        for (const file of fs.readdirSync(stubDir)) {
-            fs.copyFileSync(path.join(stubDir, file), path.join(winapiDir, file));
+        // Stub both build/node_modules/ and src/main/node_modules/ — electron-builder
+        // scans parent node_modules to resolve transitive deps and will find the native
+        // .node binary there if shamefully-hoist puts it at the workspace package level.
+        const winapiDirs = [
+            winapiDir,
+            path.join(__dirname, "node_modules", "winapi-bindings"),
+        ];
+        for (const dir of winapiDirs) {
+            if (!fs.existsSync(dir)) continue;
+            fs.rmSync(dir, { recursive: true, force: true });
+            fs.mkdirSync(dir, { recursive: true });
+            for (const file of fs.readdirSync(stubDir)) {
+                fs.copyFileSync(path.join(stubDir, file), path.join(dir, file));
+            }
         }
 
         // bluebird is a direct dependency of @vortex/main (top-level in build/node_modules/)
