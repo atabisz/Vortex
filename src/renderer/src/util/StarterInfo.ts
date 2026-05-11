@@ -93,15 +93,29 @@ async function shouldRunWithProton(
     const steamStore = GameStoreHelper.getGameStore("steam") as Steam;
     const games = await steamStore.allGames();
 
-    // Find the game entry that matches this executable's location
-    return games.find(
+    // Find the game entry that matches this executable's location.
+    // Must match on a directory boundary to avoid "steamapps/common/skyrim"
+    // falsely matching "steamapps/common/Skyrim Special Edition/..."
+    const isPathPrefix = (prefix: string, full: string): boolean => {
+      const lPrefix = prefix.toLowerCase();
+      const lFull = full.toLowerCase();
+      if (!lFull.startsWith(lPrefix)) return false;
+      if (lFull.length === lPrefix.length) return true;
+      const sep = lFull[lPrefix.length];
+      return sep === "/" || sep === path.sep;
+    };
+
+    const match = games.find(
       (g) =>
-        info.workingDirectory?.toLowerCase().startsWith(g.gamePath.toLowerCase()) ||
-        info.exePath.toLowerCase().startsWith(g.gamePath.toLowerCase()),
+        (info.workingDirectory && isPathPrefix(g.gamePath, info.workingDirectory)) ||
+        isPathPrefix(g.gamePath, info.exePath),
     );
+
+    return match;
   } catch (err: any) {
     log("debug", "Could not check for Proton execution", {
       error: err?.message,
+      stack: err?.stack,
     });
     return undefined;
   }
@@ -253,13 +267,9 @@ class StarterInfo implements IStarterInfo {
     // Check if game/tool should run through Proton on Linux
     const protonGameEntry = await shouldRunWithProton(info, api);
     if (protonGameEntry?.usesProton) {
-      // On Linux with Proton, we can't track when the process exits (ProcessMonitor
-      // only works on Windows), so don't set tool as running to avoid stuck spinner
       const protonSpawned = () => {
-        if (["hide", "hide_recover"].includes(info.onStart)) {
+        if (["hide", "hide_recover", "close"].includes(info.onStart)) {
           hideWindow();
-        } else if (info.onStart === "close") {
-          getApplication().quit();
         }
       };
 

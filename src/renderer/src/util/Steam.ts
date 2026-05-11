@@ -261,11 +261,7 @@ class Steam implements IGameStore {
               });
               return;
             }
-            const libObj: any = getSafeCI(
-              parsedObj,
-              ["libraryfolders"],
-              {},
-            );
+            const libObj: any = getSafeCI(parsedObj, ["libraryfolders"], {});
             let counter = libObj.hasOwnProperty("0") ? 0 : 1;
             while (libObj.hasOwnProperty(`${counter}`)) {
               const libPath = libObj[`${counter}`]["path"];
@@ -439,7 +435,12 @@ class Steam implements IGameStore {
       exePath,
       args,
     );
-    const protonEnv = buildProtonEnvironment(gameEntry.compatDataPath, steamPath, options.env);
+    const protonEnv = buildProtonEnvironment(
+      gameEntry.compatDataPath,
+      steamPath,
+      gameEntry.appid,
+      options.env,
+    );
 
     return api.runExecutable(executable, protonArgs, {
       ...options,

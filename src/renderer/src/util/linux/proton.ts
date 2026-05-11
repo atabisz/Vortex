@@ -72,7 +72,7 @@ export async function getConfiguredProtonName(
     const configData = await fs.readFileAsync(configPath, "utf8");
     const config = parse(configData.toString()) as any;
     const mapping = config?.InstallConfigStore?.Software?.Valve?.Steam?.CompatToolMapping;
-    return mapping?.[appId]?.name;
+    return mapping?.[appId]?.name || mapping?.["0"]?.name;
   } catch (err: any) {
     log("debug", "Could not read Steam config.vdf", { error: err?.message });
     return undefined;
@@ -234,9 +234,7 @@ export async function getProtonInfo(
   // Game needs Proton if:
   // 1. compatdata directory exists (game has been launched with Proton before), OR
   // 2. oslist field does NOT contain "linux" (Windows-only game, will use Proton)
-  const needsProton = oslist
-    ? !oslist.toLowerCase().includes("linux")
-    : compatDataExists;
+  const needsProton = oslist ? !oslist.toLowerCase().includes("linux") : compatDataExists;
 
   if (!needsProton) {
     return { usesProton: false };
@@ -273,14 +271,20 @@ export function isWindowsExecutable(filePath: string): boolean {
 export function buildProtonEnvironment(
   compatDataPath: string,
   steamPath: string,
+  appId?: string,
   existingEnv?: Record<string, string>,
 ): Record<string, string> {
-  return {
+  const env: Record<string, string> = {
     ...existingEnv,
     STEAM_COMPAT_DATA_PATH: compatDataPath,
     STEAM_COMPAT_CLIENT_INSTALL_PATH: steamPath,
     WINEPREFIX: getWinePrefixPath(compatDataPath),
   };
+  if (appId) {
+    env.SteamAppId = appId;
+    env.SteamGameId = appId;
+  }
+  return env;
 }
 
 /**
