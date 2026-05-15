@@ -34,6 +34,7 @@ const projectRoot = path.resolve(__dirname, "..");
 // into the shared pnpm store. We pass these paths to require.resolve().
 const addonWorkspaces = {
     bsatk: path.join(projectRoot, "extensions", "gamebryo-bsa-support", "node_modules"),
+    ba2tk: path.join(projectRoot, "extensions", "gamebryo-ba2-support", "node_modules"),
     esptk: path.join(projectRoot, "extensions", "gamebryo-plugin-management", "node_modules"),
     "bsdiff-node": path.join(projectRoot, "extensions", "collections", "node_modules"),
     "xxhash-addon": path.join(projectRoot, "src", "main", "node_modules"),
@@ -101,7 +102,7 @@ const addonResults = {};
 // - bsdiff-node: binary diff (collections) — Windows prebuilt only
 // - vortexmt: multi-threading util — Windows prebuilt only
 const windowsOnlyAddons = ["esptk", "bsdiff-node", "vortexmt"];
-const crossPlatformAddons = ["xxhash-addon", "bsatk"];
+const crossPlatformAddons = ["xxhash-addon", "bsatk", "ba2tk"];
 const addonsToVerify =
     process.platform === "win32"
         ? [...windowsOnlyAddons, ...crossPlatformAddons]
