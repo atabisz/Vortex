@@ -2,33 +2,35 @@
 gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Upstream v2.0.0 Sync
-status: executing
-stopped_at: Phase 24 complete — pushed to fork/sync/upstream-v2.0.0 at 87784986d
-last_updated: "2026-05-15T00:20:00Z"
-last_activity: 2026-05-15 -- Phase 24 complete
+status: in_progress
+stopped_at: Phase 26 complete; force-with-lease push to fork/sync/upstream-v2.0.0 staged for orchestrator
+last_updated: "2026-05-15T10:20:27Z"
+last_activity: 2026-05-15
 progress:
-  total_phases: 7
-  completed_phases: 1
-  total_plans: 8
-  completed_plans: 8
-  percent: 14
+    total_phases: 7
+    completed_phases: 3
+    total_plans: 22
+    completed_plans: 22
+    percent: 43
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-15 after v8.0 milestone start)
+See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** Phase 24 — config-bucket
+**Current focus:** v8.0 Upstream v2.0.0 Sync — Phase 27 (Gamebryo + per-game extensions) ready to plan.
 
 ## Current Position
 
-Phase: 24 (config-bucket) — COMPLETE
-Plan: 8 of 8
-Status: Phase 24 done. fork/sync/upstream-v2.0.0 force-pushed at 87784986d. PR #4 reflects resolved tree. Next: Phase 25 (restore dropped scaffolding).
-Last activity: 2026-05-15 -- Phase 24 complete
+Phase: 27
+Plan: Not started
+Status: ready_to_plan
+Last activity: 2026-05-15
+
+Progress: [████░░░░░░] 43% (3/7 v8.0 phases complete; 22/22 plans across phases 24–26)
 
 ## Performance Metrics
 
@@ -41,26 +43,26 @@ Last activity: 2026-05-15 -- Phase 24 complete
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 11 | 1 | - | - |
-| 12 | 1 | - | - |
-| 14 | 2 | - | - |
-| 13 | 1 | - | - |
-| 15 | 3 | - | - |
-| 16 | 1 | - | - |
-| 17 | 1 | - | - |
-| 19 | 3 | - | - |
-| 20 | 2 | - | - |
-| 21 | 2 | - | - |
-| 22 | 1 | - | - |
-| 23 | 2 | - | - |
+| ----- | ----- | ----- | -------- |
+| 11    | 1     | -     | -        |
+| 12    | 1     | -     | -        |
+| 14    | 2     | -     | -        |
+| 13    | 1     | -     | -        |
+| 15    | 3     | -     | -        |
+| 16    | 1     | -     | -        |
+| 17    | 1     | -     | -        |
+| 19    | 3     | -     | -        |
+| 20    | 2     | -     | -        |
+| 21    | 2     | -     | -        |
+| 22    | 1     | -     | -        |
+| 23    | 2     | -     | -        |
 
 **Recent Trend:**
 
-- Last 5 plans: Phase 21–23 (v7.0 onboarding wizard)
+- Last 5 plans: (none yet for v7.0)
 - Trend: -
 
-*Updated after each plan completion*
+_Updated after each plan completion_
 | Phase 06-steam-proton-detection P01 | 3 | 2 tasks | 3 files |
 | Phase 06-steam-proton-detection P02 | 15 | 2 tasks | 4 files |
 | Phase 06-steam-proton-detection P03 | 5 | 1 tasks | 1 files |
@@ -94,28 +96,109 @@ Last activity: 2026-05-15 -- Phase 24 complete
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting v8.0 work:
+Recent decisions affecting current work:
 
-- Branch strategy: resolve on `sync/upstream-v2.0.0` directly (PR #4 head) and FF-merge to master — keeps PR review thread, simpler than fresh resolution branch
-- Test divergence: drop upstream's renderer Jest scaffolding entirely; fork is Vitest-only — divergence to be documented in playbook
-- Phase split: 7-phase split (24–30) preserves natural checkpoints — config first to unblock the tree, hot-zone resolution gets its own phase, build verification before land
-- Lockfile: regenerate `pnpm-lock.yaml` rather than hand-merge — diff against v2.0.0's lockfile post-Linux-tweaks for catalog drift
-- Fingerprints action: pick-theirs wholesale; fork-side disablement lives at GitHub API workflow level (workflow IDs `269710415/16/17`), survives upstream merges cleanly
-- Mod-management hot zone: per-file commit + per-file playbook re-grep — reverting any one of the four §7 fixes surfaces as cryptic ENOENTs, so checkpoint must be tight
+- FOMOD: recompile via .NET 9 (Linux binary already ships in npm packages — packaging only)
+- winapi-bindings: webpack alias shim on Linux (one config change, catches all 21 import sites)
+- Elevation: defer pkexec to v3.0 — shim ShellExecuteEx as throw; most Steam libs are user-owned
+- IPC serialisation trap: extract `getIPCPath(id)` utility and patch BOTH parent server and stringified child closure
+- [Phase 01-runtime-environment]: localAppData Linux branch: XDG_DATA_HOME ?? os.homedir()/.local/share using ?? not || to handle empty string correctly
+- [Phase 01-runtime-environment]: electron-builder: Windows .exe redistributables scoped to win.extraResources; Linux packaging references only cross-platform entries
+- [Phase 02-winapi-bindings-shim]: Test file at winapi-shim.test.ts (not **tests**/): renderer vitest.config.mts excludes **tests**/ pattern
+- [Phase 02-winapi-bindings-shim]: RegGetValue returns undefined in production shim (not object as in Jest mock)
+- [Phase 02-winapi-bindings-shim]: webpack/rolldown alias at bundle time catches all 18+ winapi-bindings import sites without source edits
+- [Phase 02-winapi-bindings-shim]: SHIM_PATH uses import.meta.dirname for ESM-safe resolution in build.mjs
+- [Phase 03-native-addon-compilation]: Build libloot 0.29.1 from source via cmake+cargo — LOOT dropped Linux prebuilts at 0.24.5; postinstall script delivers liblibloot.so to loot_api/
+- [Phase 03-native-addon-compilation]: Rust toolchain step placed before pnpm install in CI — postinstall-libloot.cjs needs cargo on PATH during dependency installation
+- [Phase 03-native-addon-compilation]: gamebryo-savegame disabled on Linux: two compile errors (MSVC exception constructor + lz4/zlib linker flags); NADD-06 clear error via ExtensionManager lazy-load failure
+- [Phase 03-native-addon-compilation]: vortexmt confirmed clean for Linux: proper WIN32 guards, portable C++ — added to CI rebuild
+- [Phase 03-native-addon-compilation]: xxhash-addon loads from NAPI prebuilds without rebuild (node-gyp-build handles linux-x64 glibc/musl)
+- [Phase 03-native-addon-compilation]: LD_LIBRARY_PATH in-process + CI wrapper chosen over patch-package RPATH for loot.node runtime .so resolution
+- [Phase 03-native-addon-compilation]: CI step ordering corrected: Rust toolchain before cmake/build-deps before pnpm install
+- [Phase 03-native-addon-compilation]: loot binding.gyp patch: replace -l../loot_api/libloot with -L../loot_api -llibloot on Linux; add RPATH $ORIGIN/../../loot_api; cmake output is libloot.so.0 (not liblibloot.so due to PREFIX=)
+- [Phase 03-native-addon-compilation]: verify-addons.cjs: loot verified via ldd not require() because Electron V8 headers (module v140) are incompatible with plain node (module v127); pnpm isolation requires workspace-relative require.resolve paths
+- [Phase 04-fomod-installer-integration]: Explicit asarUnpack paths for Linux binaries (not broad globs) per D-01 decision
+- [Phase 04-fomod-installer-integration]: platformExeName in VortexIPCConnection strips .exe on Linux; Windows behavior unchanged
+- [Phase 04-fomod-installer-integration]: FOMD-03 dotnetprobe Linux branch already correct in installer_dotnet/index.ts — no code changes needed
+- [Phase 05-ipc-and-elevation-audit]: pkexec not required for Phase 1 — all 6 runElevated call sites are user-triggered; startup path is clean
+- [Phase 05-ipc-and-elevation-audit]: Static import + vi.spyOn used instead of dynamic import() for node16 moduleResolution compat in ipc.test.ts
+- [Phase 05-ipc-and-elevation-audit]: baseFunc serialized closure in symlink_activator_elevate patched identically to elevatedMain in elevated.ts
+- [Phase 06-steam-proton-detection]: findLinuxSteamPath() kept intact for backward compat; findAllLinuxSteamPaths() is additive
+- [Phase 06-steam-proton-detection]: oslist as primary Proton signal when available — enables never-launched game detection without compatdata
+- [Phase 06-steam-proton-detection]: Appid dedup uses Set<string> first-occurrence-wins after games reduce, before tap()
+- [Phase 06-steam-proton-detection]: getMyGamesPath accepts compatDataPath string directly — simpler signature, callers already have path from Phase 06-01 work
+- [Phase 06-steam-proton-detection]: PromiseBB.resolve(asyncFn()) wrapping at ini_prep call sites preserves two-arg .catch(UserCanceled) without rewriting error handlers
+- [Phase 06-steam-proton-detection]: Bundled game extensions bypass webpack alias — Windows-only require() calls must be removed from source, not aliased
+- [Phase 06-steam-proton-detection]: Fallout 4 dead winapi-bindings removed from src/index.js; dist is gitignored and regenerated at build time
+- [Phase 06-steam-proton-detection]: steamPaths.ts: ~/.steam/root symlink resolved first; all roots read VDF for secondary library discovery
+- [Phase 06-steam-proton-detection]: GameStoreHelper.ts: result.priority guard removed — Steam entries on Linux never set priority
+- [Phase 06-steam-proton-detection]: transferPath.ts: win32-only guard removed from testPathTransfer(); diskusage.check() uses destination path on Linux
+- [Phase 07-linux-packaging]: build-linux is a parallel sibling job (no needs:) — runs concurrently with Windows build
+- [Phase 07-linux-packaging]: pnpm run package:nosign reused for Linux — electron-builder ignores Windows signing config on Linux automatically
+- [Phase 07-linux-packaging]: linux.artifactName mirrors nsis.artifactName: vortex-setup-${version}.${ext}
+- [Phase 07-linux-packaging]: Auto-updater gate: process.env.APPIMAGE only — zip/deb installs get managed (no updater)
+- [Phase 08-nxm-protocol-handler]: Buffer args.download in mPendingDownload before startup; apply after startUi() resolves
+- [Phase 08-nxm-protocol-handler]: generateWrapperScript appPath optional: AppImage self-contained, no Electron appPath needed; dev builds unaffected
+- [Phase 08-nxm-protocol-handler]: kbuildsycoca6 ENOENT logged at debug level: absence expected on non-KDE desktops
+- [Phase 09]: MoreInfoException: std::runtime_error base -- GCC rejects MSVC-specific std::exception(runtime_error) constructor form
+- [Phase 09]: No RPATH in gamebryo-savegame patch: lz4 and zlib are system libs, not bundled
+- [Phase 10-save-ui-validation-steamos-polkit]: SteamOS branch: spawn sudo -n before pkexec when isSteamOS() returns true — pkexec hangs without polkit agent in Game Mode
+- [Phase 10-save-ui-validation-steamos-polkit]: isSteamOS() cached in module-level \_isSteamOS after first call — avoids repeated file reads
+- [Phase 10-save-ui-validation-steamos-polkit]: polkit action uses auth_admin (not auth_admin_keep) — prompt every time per D-10
+- [Phase 10-save-ui-validation-steamos-polkit]: getSteamEntry uses GameStoreHelper.getGameStore('steam') — bundled extension constraint, can't import renderer src/
+- [Phase 10-save-ui-validation-steamos-polkit]: ILocalSteamEntry local interface — ISteamEntry not exported by vortex-api; bundled extension constraint
+- [Phase 10-save-ui-validation-steamos-polkit]: tsconfig.json excludes test/mock files — **mocks** outside src/ causes TS6307; production typecheck must not traverse test infrastructure
+- [Phase 16]: Use node:fs/promises import alias to avoid shadow from \* as fs from fs-extra
+- [Phase 16]: ExecFileFn stays callback-style (not promisified) to match injectable seam contract
+- [Phase 16]: vi.mock node:fs/promises factory chosen over vi.spyOn to avoid getter non-configurable issue in Vitest happy-dom
+- [Phase 17-01]: chmod +x set via git update-index --chmod=+x; sandbox filesystem read-only for scripts dir
+- [Phase 17-01]: CONFLICT_FILES captured before git add -A per RESEARCH.md Open Question 1 resolution
+- [Phase 17-01]: Always --draft on gh pr create regardless of conflict state per D-11
+- [Phase 17-upstream-rebase-ci-workflow]: gh pr create (GraphQL) replaced with gh api REST POST — GraphQL rejects fork GITHUB_TOKEN for createPullRequest mutation
+- [Phase 17-upstream-rebase-ci-workflow]: git push origin HEAD:refs/heads/BRANCH required in CI — git rebase leaves detached HEAD; named refspec avoids push failure
+- [Phase 18-01]: Injectable seam \_setDrivelistLoader added: Vitest vi.mock cannot intercept CJS require() inside function bodies; seam follows \_setSpawner pattern in elevated.ts
+- [Phase 18-01]: Platform guard placement: first line in closure/value fn before any Windows-specific API access; minDiskSpace guard before props[key] access
+- [Phase 18]: PromiseBB.delay used (not Bluebird.delay) — consistent with GameModeManager.ts bluebird alias convention
+- [Phase 18]: Test assertions use container.querySelector+textContent (not getByText) — refreshMore setTimeout causes re-renders duplicating DOM nodes
+- [Phase 18]: Retry in startQuickDiscovery (not GameStoreHelper) — needs Redux discovered-games state for zero-games check and full pipeline access
+- [Phase 19]: stagingDirectory.test.ts tests findAccessibleAncestor as named export — lazyRequire proxy prevents winapi call tracking through production function
+- [Phase 19]: discovery.test.ts win32 different-device test marked it.todo — process.platform cross-test mutation in happy-dom; passes in isolation
+- [Phase 19]: modPathsForGame mocked directly in discovery.test.ts — avoids getGame() registration complexity
+- [Phase 19]: findAccessibleAncestor exported as named export for testability: lazyRequire proxy prevents winapi call tracking through production function
+- [Phase 19]: ternary inside t() pattern for platform-specific i18n strings: Windows arm byte-for-byte unchanged, Linux arm added as new branch
+- [Phase 19]: Settings.tsx: stat modPaths[''] directly (not path.parse root) for correct device id on Linux multi-device systems
+- [Phase 19]: Settings.tsx: sequential awaits instead of Promise.all to allow await inside mountpoint walk loop body
+- [Phase 20-01]: Static test: use path.resolve(\_\_dirname) not import.meta.url (not file:// in happy-dom)
+- [Phase 20-01]: raiseUACDialog Linux arm uses t() wrapping for i18n consistency with Windows arm
+- [Phase 20-01]: confirmElevate text/button: no t() wrapping, matching existing plain string pattern
+- [Phase 20]: ONBRD-03c satisfied by nativeErrors.ts:13 guard returns undefined on non-win32; message.ts:421 EPERM handler clean — no code changes needed
+- [Phase 20]: ONBRD-03d: single Run as Administrator string in symlink_activator_elevate:121 unreachable on Linux via isSupported returning IUnavailableReason — filtered from getSupportedActivators
+- [Phase 21-mod-install-round-trip-validation]: ENOENT fix is cross-platform: staging dir missing is valid on all platforms, no process.platform guard needed
+- [Phase 21-mod-install-round-trip-validation]: hardlink isSupported returns undefined on ENOENT: defer device-comparison to deploy time when ensureStagingDirectory has run
+- [Phase 21-mod-install-round-trip-validation]: ONBRD-04 marked code-complete after Phase 21-01 ENOENT fix; UAT checklist placed in Phase 999.1 matching ELEV-04/ELEV-05/SAVE-05 precedent
+- [Phase 23-help-links]: onOpenUrlFailed returns void (not unsubscribe fn): consistent with persist.onPush/onHydrate; listener registered once for app lifetime
+- [Phase 23-help-links]: shared package must be rebuilt before preload/main tsc checks see new MainChannels types
+- [Phase 23]: (window as any).api.shell used in documentation extension: bundled extensions import from vortex-api, not src/renderer/src/; avoids new intra-renderer dependency
+- [Phase 23-help-links]: (window as any).api.shell used in documentation extension: bundled extensions import from vortex-api, not src/renderer/src/; avoids new intra-renderer dependency
+- [Phase 23-help-links]: Notification id open-url-failed is fixed (not URL-dependent) to deduplicate rapid failures per T-23-06 mitigation
+- [Phase 26-mod-management-hot-zone]: 8 conflict files resolved leaf-first (ModList → eventHandlers → util/deploy → stagingDirectory → util/externalChanges → LinkingDeployment → InstallManager → index); 9 atomic `resolve(mod-mgmt):` commits + 1 `grep-checkpoint.sh` harness (script first per D-26-01)
+- [Phase 26-mod-management-hot-zone]: Fork-side wins as default conflict stance — most regions were oxfmt single-line vs upstream multi-line cosmetic differences; one merge-driver re-paste artefact in `LinkingDeployment.ts genUpdateModDeployment` resolved by reading both parents
+- [Phase 26-mod-management-hot-zone]: D-26-03a — playbook entry "externalChanges" names a method on `LinkingDeployment.ts:513`, NOT a separate file; `util/externalChanges.ts` is unrelated UI code with ordinary conflicts. Confusion documented to prevent recurrence in v8.1+ syncs.
+- [Phase 26-mod-management-hot-zone]: Renderer-wide typecheck deferred per Rule 3 — `pnpm -F @vortex/renderer typecheck` reports zero errors from `mod_management/`; remaining errors are all in Phase 27/28 territory (`useToolsPage.ts`, `ExtensionManager.ts`, `nexus_integration/*`, etc.)
+- [Phase 26-mod-management-hot-zone]: `scripts/grep-checkpoint.sh` is durable — 7 gates encoding playbook §6, §7a–d, 140a57217, plus no-conflict-marker assertion. Reusable for future v8.1/v9.0 syncs.
 
-Older decisions (v1.0–v7.0) preserved in PROJECT.md Key Decisions table.
+### Research Context (v7.0)
 
-### Research Context (v8.0)
+Key findings from research/SUMMARY.md affecting Phase 18–23 execution:
 
-Key context from `.planning/milestones/v8.0-SCOPE-PROPOSAL.md` and `VORTEX-LINUX-MERGE-PLAYBOOK.md`:
-
-- 109 conflict files / 365 regions across 10 buckets (A–J) — Bucket A (config) is the only true tree-blocker
-- 135 files dropped by auto-merge — split into restore (paths/, paths-node/, gamebryo-ba2-support/, chunking) vs. deliberately-not-restore (Jest scaffolding)
-- Mod-management hot zone (Bucket D, 8 files) carries playbook §6 (stagingDirHasFiles), §7a–d (four-fix backslash/case cluster), and the externalChanges/`140a57217` fix — all four §7 fixes have been reverted by upstream PR #22607 before; expect re-revert on every merge
-- LinkingDeployment.ts must retain `140a57217` resolvePathCase fix — was reverted as part of the same upstream batch
-- Gamebryo extensions: §1 (no inline guards), §3 (path.basename not toLowerCase for LOOT), §10 (cross-compiled native binaries handled by CI rebuild not committed)
-- Renderer/spine: §2 (winapi-bindings allowlist), §4 (no testPathTransfer guard), §8 (Proton helpers in StarterInfo), §9 (findAllLinuxSteamPaths)
-- 41 truly-missing patches need eyes during resolution — playbook covers Linux concerns but content fixes (BG3 divine, Morrowind migrate103, FOMOD installer 0.13.1, install crash on large archives, "already running" dialog) need review
+- v7.0 is wiring + string cleanup on top of the v1.0–v6.0 infrastructure — no new subsystems or dependencies
+- Primary crash: `todos.tsx` undefined `instPath`/`dlPath` before `GetVolumePathName` — wrap with undefined guard
+- Primary wrong dialog: `stagingDirectory.ts` partition-exists check uses Windows-only error code — replace with `statAsync`
+- String changes must be NEW conditional branches, never edits to existing `t("...")` literals — silently breaks Windows wording and stales locale caches
+- `getDriveList.ts` hardcoded `"C:"` fallback on lines 23/44 — replace with `"/"` on Linux
+- Steam cache retry: 2s delay + `reloadGames()` call in firststeps_dashlet game-detection step
+- Phase 22 targets: `onboarding_dashlet/Dashlet.tsx` (overlay clamp) + `stylesheets/vortex/dialogs.scss` (modal max-height + flex-shrink)
+- Phase 23 targets: `extensions/documentation/src/index.tsx` (WIKI_TOPICS + handler) + `opn()` failure fallback
 
 ### Pending Todos
 
@@ -123,31 +206,29 @@ None.
 
 ### Blockers/Concerns
 
-None — ready for `/gsd-plan-phase 24`.
+None.
 
 ### Quick Tasks Completed
 
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 260401-m5m | fix blank game version in mismatch dialog on Linux | 2026-04-01 | e3d6638 | [260401-m5m-fix-blank-game-version-in-mismatch-dialo](./quick/260401-m5m-fix-blank-game-version-in-mismatch-dialo/) |
-| 260401-mvp | normalize backslashes in FOMOD copy source/destination paths | 2026-04-01 | 926255819 | [260401-mvp-normalize-backslashes-in-fomod-copy-sour](./quick/260401-mvp-normalize-backslashes-in-fomod-copy-sour/) |
-| 260401-oz3 | case-folding path resolver in LinkingDeployment for Linux | 2026-04-01 | 32a9b021b | [260401-oz3-case-folding-path-resolver-in-linkingdep](./quick/260401-oz3-case-folding-path-resolver-in-linkingdep/) |
-| 260401-scf | FOMOD case-sensitivity in InstallManager.extractArchive | 2026-04-01 | 6e56ba5bf | [260401-scf-fix-fomod-case-sensitivity-error-in-inst](./quick/260401-scf-fix-fomod-case-sensitivity-error-in-inst/) |
-| 260402-1b1 | Wine-era deployment manifest detection in loadActivation | 2026-04-02 | 5b2420f | [260402-1b1-implement-wine-era-deployment-manifest-d](./quick/260402-1b1-implement-wine-era-deployment-manifest-d/) |
-| 260402-iko | fix hardlink undeploy orphan when manifest missing | 2026-04-02 | ca5fffb | [260402-iko-fix-hardlink-undeploy-orphan-when-manife](./quick/260402-iko-fix-hardlink-undeploy-orphan-when-manife/) |
-| 260407-grv | Fix NXM download bugs: cli.ts argv slice and no-sandbox propagation | 2026-04-07 | d9986f6 | [260407-grv-fix-nxm-download-bug-cli-ts-argv-slice-a](./quick/260407-grv-fix-nxm-download-bug-cli-ts-argv-slice-a/) |
-| 260407-icu | Remove Linux-disabled guard from NXM toggle in Settings.tsx | 2026-04-07 | b3c474bcc | [260407-icu-remove-the-linux-disabled-guard-from-the](./quick/260407-icu-remove-the-linux-disabled-guard-from-the/) |
+| #          | Description                                                               | Date       | Commit    | Directory                                                                                                           |
+| ---------- | ------------------------------------------------------------------------- | ---------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| 260401-m5m | fix blank game version in mismatch dialog on Linux                        | 2026-04-01 | e3d6638   | [260401-m5m-fix-blank-game-version-in-mismatch-dialo](./quick/260401-m5m-fix-blank-game-version-in-mismatch-dialo/) |
+| 260401-mvp | normalize backslashes in FOMOD copy source/destination paths              | 2026-04-01 | 926255819 | [260401-mvp-normalize-backslashes-in-fomod-copy-sour](./quick/260401-mvp-normalize-backslashes-in-fomod-copy-sour/) |
+| 260401-oz3 | case-folding path resolver in LinkingDeployment for Linux                 | 2026-04-01 | 32a9b021b | [260401-oz3-case-folding-path-resolver-in-linkingdep](./quick/260401-oz3-case-folding-path-resolver-in-linkingdep/) |
+| 260401-scf | FOMOD case-sensitivity in InstallManager.extractArchive                   | 2026-04-01 | 6e56ba5bf | [260401-scf-fix-fomod-case-sensitivity-error-in-inst](./quick/260401-scf-fix-fomod-case-sensitivity-error-in-inst/) |
+| 260402-1b1 | Wine-era deployment manifest detection in loadActivation                  | 2026-04-02 | 5b2420f   | [260402-1b1-implement-wine-era-deployment-manifest-d](./quick/260402-1b1-implement-wine-era-deployment-manifest-d/) |
+| 260402-iko | fix hardlink undeploy orphan when manifest missing                        | 2026-04-02 | ca5fffb   | [260402-iko-fix-hardlink-undeploy-orphan-when-manife](./quick/260402-iko-fix-hardlink-undeploy-orphan-when-manife/) |
+| 260407-grv | Fix NXM download bugs: cli.ts argv slice and no-sandbox propagation       | 2026-04-07 | d9986f6   | [260407-grv-fix-nxm-download-bug-cli-ts-argv-slice-a](./quick/260407-grv-fix-nxm-download-bug-cli-ts-argv-slice-a/) |
+| 260407-icu | Remove Linux-disabled guard from NXM toggle in Settings.tsx               | 2026-04-07 | b3c474bcc | [260407-icu-remove-the-linux-disabled-guard-from-the](./quick/260407-icu-remove-the-linux-disabled-guard-from-the/) |
 | 260407-iv0 | Patch Firefox profiles with nxm expose pref during Linux NXM registration | 2026-04-07 | 35ba35ccb | [260407-iv0-patch-firefox-profiles-with-nxm-expose-p](./quick/260407-iv0-patch-firefox-profiles-with-nxm-expose-p/) |
-| 260407-h9r | Clear Firefox handlers.json nxm entry on registration | 2026-04-07 | e08518b20 | — |
-| 260408-haq | Set deb/AppImage version to major.minor.YYYYMMDDHHMM | 2026-04-08 | 53033d808 | [260408-haq-set-deb-package-version-to-major-minor-f](./quick/260408-haq-set-deb-package-version-to-major-minor-f/) |
-| 260408-mvp | Speed up GH Actions builds: rust cache, workflow_run chain, paths-ignore | 2026-04-08 | 30436ef73 | [260408-mvp-speed-up-gh-actions-builds-rust-cache-wo](./quick/260408-mvp-speed-up-gh-actions-builds-rust-cache-wo/) |
-| 260408-ms8 | Update planning docs with current state after v4.0 backlog analysis | 2026-04-08 | — | [260408-ms8-update-planning-docs-with-current-state-](./quick/260408-ms8-update-planning-docs-with-current-state-/) |
-| 260417-kth | fix unused IDiscoveryState import in NoGameDashlet.tsx | 2026-04-17 | 604daafed | [260417-kth-fix-unused-idiscoverystate-import-in-nog](./quick/260417-kth-fix-unused-idiscoverystate-import-in-nog/) |
-| 260509-dwt | heal stale empty staging dirs across install attempts | 2026-05-09 | 7e2c40e94 | [260509-dwt-implement-plans-validated-yawning-wave-m](./quick/260509-dwt-implement-plans-validated-yawning-wave-m/) |
-| 260509-eur | re-apply normalizeBackslashPaths reverted by upstream PR 22607 | 2026-05-09 | 356e42cdb | [260509-eur-re-apply-normalizebackslashpaths-reverte](./quick/260509-eur-re-apply-normalizebackslashpaths-reverte/) |
+| 260407-h9r | Clear Firefox handlers.json nxm entry on registration                     | 2026-04-07 | e08518b20 | —                                                                                                                   |
+| 260408-haq | Set deb/AppImage version to major.minor.YYYYMMDDHHMM                      | 2026-04-08 | 53033d808 | [260408-haq-set-deb-package-version-to-major-minor-f](./quick/260408-haq-set-deb-package-version-to-major-minor-f/) |
+| 260408-mvp | Speed up GH Actions builds: rust cache, workflow_run chain, paths-ignore  | 2026-04-08 | 30436ef73 | [260408-mvp-speed-up-gh-actions-builds-rust-cache-wo](./quick/260408-mvp-speed-up-gh-actions-builds-rust-cache-wo/) |
+| 260408-ms8 | Update planning docs with current state after v4.0 backlog analysis       | 2026-04-08 | —         | [260408-ms8-update-planning-docs-with-current-state-](./quick/260408-ms8-update-planning-docs-with-current-state-/) |
+| 260417-kth | fix unused IDiscoveryState import in NoGameDashlet.tsx                    | 2026-04-17 | 604daafed | [260417-kth-fix-unused-idiscoverystate-import-in-nog](./quick/260417-kth-fix-unused-idiscoverystate-import-in-nog/) |
 
 ## Session Continuity
 
-Last session: 2026-05-15T00:20:00Z
-Stopped at: Phase 24 complete; pushed to fork at 87784986d
-Resume file: .planning/phases/25-restore-dropped/ (next phase — needs context-gathering)
+Last session: 2026-05-15T10:20:27Z
+Stopped at: Phase 26 complete; force-with-lease push to fork/sync/upstream-v2.0.0 staged for orchestrator (run after user confirms)
+Resume file: None

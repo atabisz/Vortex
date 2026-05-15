@@ -82,7 +82,7 @@
 
 - [x] **Phase 24: Config bucket** (complete 2026-05-15) — resolve tree-blocking config conflicts; `pnpm install` succeeds
 - [x] **Phase 25: Restore dropped scaffolding** — bring back `packages/paths`, `paths-node`, `gamebryo-ba2-support`, chunking; deliberately drop Jest scaffolding (completed 2026-05-15)
-- [ ] **Phase 26: Mod-management hot zone** — resolve 8 files in `mod_management/` with playbook re-grep checkpoint per file
+- [x] **Phase 26: Mod-management hot zone** (complete 2026-05-15) — resolve 8 files in `mod_management/` with playbook re-grep checkpoint per file
 - [ ] **Phase 27: Gamebryo + per-game extensions** — resolve gamebryo plugin/savegame, collections, bepinex, BG3/Morrowind/Witcher 3
 - [ ] **Phase 28: Renderer + main spine** — resolve renderer infra, main/preload/shared, nexus_integration, scripts, fingerprints (pick-theirs)
 - [ ] **Phase 29: Build verification** — typecheck, build, tests, AppImage + .deb produced, Linux smoke test passes
@@ -142,18 +142,18 @@
 2. Per-file checkpoint: after EACH of the 8 files is resolved and committed, the playbook §6 and §7a–d grep commands re-run clean against `InstallManager.ts` (or remain clean if untouched)
 3. `LinkingDeployment.ts` retains the `140a57217` `resolvePathCase(dataPath, relDataPath, dirCache)` calls in the deploy/externalChanges flow — `git grep -n 'resolvePathCase' src/renderer/src/extensions/mod_management/LinkingDeployment.ts src/renderer/src/extensions/mod_management/externalChanges.ts` shows hits
 4. `pnpm typecheck` for `@vortex/renderer` passes after the bucket is fully resolved
-   **Plans**: 10 plans
+   **Plans**: 10/10 plans complete
 
-- [ ] 26-01-PLAN.md — Author scripts/grep-checkpoint.sh harness encoding playbook §6 + §7a–d + 140a57217 + conflict-marker gates; commit as commit 0
-- [ ] 26-02-PLAN.md — Resolve views/ModList.tsx (leaf 1/8); typecheck + checkpoint
-- [ ] 26-03-PLAN.md — Resolve eventHandlers.ts (leaf 2/8); typecheck + checkpoint
-- [ ] 26-04-PLAN.md — Resolve util/deploy.ts (leaf 3/8); typecheck + checkpoint
-- [ ] 26-05-PLAN.md — Resolve stagingDirectory.ts (leaf 4/8); typecheck + checkpoint
-- [ ] 26-06-PLAN.md — Capture 140a57217 pre-snapshot, resolve externalChanges.ts (5/8) with grep-pre/post diff
-- [ ] 26-07-PLAN.md — Resolve LinkingDeployment.ts (6/8) with 140a57217 grep-pre/post diff against plan-06 snapshot
-- [ ] 26-08-PLAN.md — Resolve InstallManager.ts (7/8) — playbook hot zone §6 + §7a–d; full per-file checkpoint
-- [ ] 26-09-PLAN.md — Resolve index.ts (8/8 barrel); first full checkpoint with conflict-marker gate enabled
-- [ ] 26-10-PLAN.md — D-26-05 done-gate (5 checks) + force-with-lease push + ROADMAP/STATE update
+- [x] 26-01-PLAN.md — Author scripts/grep-checkpoint.sh harness encoding playbook §6 + §7a–d + 140a57217 + conflict-marker gates; commit as commit 0
+- [x] 26-02-PLAN.md — Resolve views/ModList.tsx (leaf 1/8); typecheck + checkpoint
+- [x] 26-03-PLAN.md — Resolve eventHandlers.ts (leaf 2/8); typecheck + checkpoint
+- [x] 26-04-PLAN.md — Resolve util/deploy.ts (leaf 3/8); typecheck + checkpoint
+- [x] 26-05-PLAN.md — Resolve stagingDirectory.ts (leaf 4/8); typecheck + checkpoint
+- [x] 26-06-PLAN.md — Resolve util/externalChanges.ts (5/8); ordinary leaf-first, no pre-snapshot needed (D-26-03a — `140a57217` lives in LinkingDeployment.ts only)
+- [x] 26-07-PLAN.md — Resolve LinkingDeployment.ts (6/8); run-time grep gate verifies `resolvePathCase(dataPath, …)` at :523/:742/:799 preserved
+- [x] 26-08-PLAN.md — Resolve InstallManager.ts (7/8) — playbook hot zone §6 + §7a–d; full per-file checkpoint
+- [x] 26-09-PLAN.md — Resolve index.ts (8/8 barrel); first full checkpoint with conflict-marker gate enabled
+- [x] 26-10-PLAN.md — D-26-05 done-gate (5 checks) + force-with-lease push (orchestrator-driven) + ROADMAP/STATE update
 
 ### Phase 27: Gamebryo + per-game extensions
 
@@ -263,7 +263,7 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 | 23. Help Links                                            | v7.0      | 2/2            | Complete    | 2026-04-17 |
 | 24. Config bucket                                         | v8.0      | 8/8            | Complete    | 2026-05-15 |
 | 25. Restore dropped scaffolding                           | v8.0      | 4/4            | Complete    | 2026-05-15 |
-| 26. Mod-management hot zone                               | v8.0      | 0/0            | Not started | -          |
+| 26. Mod-management hot zone                               | v8.0      | 10/10          | Complete    | 2026-05-15 |
 | 27. Gamebryo + per-game extensions                        | v8.0      | 0/0            | Not started | -          |
 | 28. Renderer + main spine                                 | v8.0      | 0/0            | Not started | -          |
 | 29. Build verification                                    | v8.0      | 0/0            | Not started | -          |
