@@ -17,17 +17,44 @@ Resolve the 25 conflict files across 7 extensions on `v8.0/config-bucket` so pla
 3. `extensions/gamebryo-plugin-management/src/util/PluginPersistor.ts`
 4. `extensions/gamebryo-plugin-management/src/views/PluginList.tsx`
 
-**gamebryo-savegame-management (2):** 5. `extensions/gamebryo-savegame-management/src/actions/session.ts` 6. `extensions/gamebryo-savegame-management/src/index.ts`
+**gamebryo-savegame-management (2):**
 
-**collections (6):** 7. `extensions/collections/src/eventHandlers.ts` 8. `extensions/collections/src/index.ts` 9. `extensions/collections/src/util/gameSupport/gamebryo.tsx` 10. `extensions/collections/src/views/CollectionList/index.tsx` 11. `extensions/collections/src/views/CollectionPageEdit/Instructions.tsx` 12. `extensions/collections/src/views/InstallDialog/InstallStartDialog.tsx`
+- 5\. `extensions/gamebryo-savegame-management/src/actions/session.ts`
+- 6\. `extensions/gamebryo-savegame-management/src/index.ts`
 
-**modtype-bepinex (3):** 13. `extensions/modtype-bepinex/src/bepInExDownloader.ts` 14. `extensions/modtype-bepinex/src/common.ts` 15. `extensions/modtype-bepinex/src/index.ts`
+**collections (6):**
 
-**game-baldursgate3 (7):** 16. `extensions/games/game-baldursgate3/src/cache.ts` 17. `extensions/games/game-baldursgate3/src/divineCore.test.ts` 18. `extensions/games/game-baldursgate3/src/divineCore.ts` 19. `extensions/games/game-baldursgate3/src/divineWrapper.ts` 20. `extensions/games/game-baldursgate3/src/index.tsx` 21. `extensions/games/game-baldursgate3/src/loadOrder.ts` 22. `extensions/games/game-baldursgate3/src/util.ts`
+- 7\. `extensions/collections/src/eventHandlers.ts`
+- 8\. `extensions/collections/src/index.ts`
+- 9\. `extensions/collections/src/util/gameSupport/gamebryo.tsx`
+- 10\. `extensions/collections/src/views/CollectionList/index.tsx`
+- 11\. `extensions/collections/src/views/CollectionPageEdit/Instructions.tsx`
+- 12\. `extensions/collections/src/views/InstallDialog/InstallStartDialog.tsx`
 
-**game-morrowind (1):** 23. `extensions/games/game-morrowind/src/migrations.js`
+**modtype-bepinex (3):**
 
-**game-witcher3 (2):** 24. `extensions/games/game-witcher3/src/index.ts` 25. `extensions/games/game-witcher3/src/installers.ts`
+- 13\. `extensions/modtype-bepinex/src/bepInExDownloader.ts`
+- 14\. `extensions/modtype-bepinex/src/common.ts`
+- 15\. `extensions/modtype-bepinex/src/index.ts`
+
+**game-baldursgate3 (7):**
+
+- 16\. `extensions/games/game-baldursgate3/src/cache.ts`
+- 17\. `extensions/games/game-baldursgate3/src/divineCore.test.ts`
+- 18\. `extensions/games/game-baldursgate3/src/divineCore.ts`
+- 19\. `extensions/games/game-baldursgate3/src/divineWrapper.ts`
+- 20\. `extensions/games/game-baldursgate3/src/index.tsx`
+- 21\. `extensions/games/game-baldursgate3/src/loadOrder.ts`
+- 22\. `extensions/games/game-baldursgate3/src/util.ts`
+
+**game-morrowind (1):**
+
+- 23\. `extensions/games/game-morrowind/src/migrations.js`
+
+**game-witcher3 (2):**
+
+- 24\. `extensions/games/game-witcher3/src/index.ts`
+- 25\. `extensions/games/game-witcher3/src/installers.ts`
 
 **Out of scope this phase:** Renderer + main spine conflicts (Phase 28). Build verification — `pnpm run build` end-to-end (Phase 29). Cherry-pick to `linux-port` (post-merge, after Phase 30).
 
