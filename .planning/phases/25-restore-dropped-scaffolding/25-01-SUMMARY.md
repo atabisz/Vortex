@@ -43,7 +43,7 @@ completed: 2026-05-15
 
 ## Status
 
-**PARTIAL — checkpoint reached.** Task 1 (discovery diff + classification + ba2tk grep) complete and committed. Task 2 is the human-verify checkpoint — awaiting user accept/reject decisions on the 5 surprise files and on the rename gap (gamebryo-archive-support → gamebryo-ba2-support directory rename, flatpak doc flattening, chunking.test.ts location move) before Plans 02–04 begin.
+**COMPLETE.** Task 1 (discovery diff + classification + ba2tk grep) and Task 2 (human-verify checkpoint) both done. User approved all recommendations: ACCEPT 5 surprises, REJECT 2 deny-list anomalies, ACKNOWLEDGE 3 effective renames (Plans 03+04 amended on the fly).
 
 ## Performance
 
@@ -63,6 +63,7 @@ completed: 2026-05-15
 ## Task Commits
 
 1. **Task 1: discovery diff + ba2tk grep + 25-DISCOVERY-RESULT.md** — `34e7b49cd` (docs)
+2. **Task 2: user decisions on surprises/anomalies/renames** — `4128106e9` (docs)
 
 Worktree note: `.planning/` is gitignored repo-wide, so the artifact and plan files were force-added (`git add -f`). This is consistent with how prior phases' planning files have been handled in the fork.
 
@@ -108,8 +109,10 @@ Worktree note: `.planning/` is gitignored repo-wide, so the artifact and plan fi
 
 ## Next Plan Readiness
 
-- **Plans 02–04 cannot start until checkpoint resolves.** They need: (a) user accept/reject on the 5 surprises (4 download_management spine + structure.md); (b) acknowledgment of the rename gap so Plan 02 / Plan 04 can include the rename-handling steps; (c) the deny-list anomaly handling decision for commit 4's body.
-- All artifacts are committed to the worktree branch — even if this worktree is force-removed, Task 1's commit will be reachable from the worktree branch ref until the orchestrator's cleanup.
+- **Plans 02–04 ready to dispatch.** All checkpoint decisions captured in `25-DISCOVERY-RESULT.md` `## User Decisions on Surprises`.
+- Plan 02: standard packages/paths + paths-node restore (no changes from CONTEXT.md).
+- Plan 03: amended — also `git rm` `extensions/gamebryo-archive-support/` after restoring ba2-support; restore set is the full `git ls-tree 8b5a9f675 -- extensions/gamebryo-ba2-support/` list, not just CONTEXT.md's 2 files.
+- Plan 04: amended — commit 3 includes 4 download_management spine files + `git mv`-equivalent for chunking.test.ts; commit 4 documents both deny-list rejections + widens Playbook §11 grep; commit 5 handles flatpak doc flattening as a rename + adds structure.md.
 
 ## Self-Check: PASSED
 
