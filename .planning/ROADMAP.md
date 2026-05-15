@@ -167,7 +167,17 @@
 3. Playbook §3 re-grep clean: all four LOOT call sites in `extensions/gamebryo-plugin-management/src/autosort.ts` use `path.basename(pluginList[id].filePath)` — `git grep -n 'pluginName.toLowerCase\|filePath' extensions/gamebryo-plugin-management/src/autosort.ts` confirms
 4. Per-game fixes preserved: BG3 divine error handling present in `divineCore.ts`; Morrowind `migrate103` fix present
 5. Each touched extension passes its own `pnpm -F <ext> typecheck`
-   **Plans**: TBD
+   **Plans**: 9 plans
+
+- [ ] 27-00-PLAN.md — Extend scripts/grep-checkpoint.sh with §1 + §3 + §10 + BG3 + Morrowind gates (commit 0)
+- [ ] 27-01-PLAN.md — Resolve gamebryo-savegame-management (2 files, leaf-first)
+- [ ] 27-02-PLAN.md — Resolve gamebryo-plugin-management (4 files, leaf-first)
+- [ ] 27-03-PLAN.md — Resolve modtype-bepinex (3 files, leaf-first)
+- [ ] 27-04-PLAN.md — Resolve collections (6 files, leaf-first; depends on 27-02)
+- [ ] 27-05-PLAN.md — Resolve game-baldursgate3 (7 files, leaf-first; preserves 4 divine error classes)
+- [ ] 27-06-PLAN.md — Resolve game-morrowind (1 file; preserves migrate103 warning)
+- [ ] 27-07-PLAN.md — Resolve game-witcher3 (2 files, leaf-first)
+- [ ] 27-08-PLAN.md — D-27-05 done-gate (6 checks) + force-with-lease push
 
 ### Phase 28: Renderer + main spine
 
