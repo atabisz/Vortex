@@ -86,6 +86,14 @@ jobs:
           node fetch_bsatk.js
           npx node-gyp rebuild --target=39.8.0 --arch=x64 --dist-url=https://electronjs.org/headers
 
+      - name: Rebuild ba2tk for Linux
+        run: |
+          BA2TK_DIR=$(node -e "process.stdout.write(require('path').dirname(require.resolve('ba2tk/package.json', {paths: ['extensions/gamebryo-ba2-support/node_modules', 'node_modules']})))")
+          echo "Rebuilding ba2tk at: $BA2TK_DIR"
+          cd "$BA2TK_DIR"
+          [ -f fetch_ba2tk.js ] && node fetch_ba2tk.js || true
+          npx node-gyp rebuild --target=39.8.0 --arch=x64 --dist-url=https://electronjs.org/headers
+
       - name: Verify native addons load
         run: node scripts/verify-addons.cjs
 
