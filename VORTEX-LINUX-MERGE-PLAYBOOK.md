@@ -176,6 +176,57 @@ cd extensions/gamebryo-plugin-management && pnpm exec node ../copy-extension.mjs
 cd extensions/gamebryo-bsa-support && pnpm exec node ../copy-extension.mjs
 ```
 
+## §11 Deliberate test-runner divergences
+
+Renderer uses Vitest exclusively. Upstream Jest scaffolding is dropped on every
+sync. The following files MUST NOT exist on master:
+
+- `src/renderer/jest.config.mjs`
+- `src/renderer/src/__mocks__/` (directory)
+- `src/renderer/src/__tests__/` (directory)
+- `src/renderer/src/setupTests.js` (Jest+enzyme adapter — surfaced by Phase 25 Wave 1)
+- `src/renderer/src/**/__mocks__/` (any nested `__mocks__/` directory under the renderer — surfaced by Phase 25 Wave 1; the original deny-list pattern only matched the flat path)
+
+Verification:
+
+```bash
+! test -f src/renderer/jest.config.mjs \
+  && ! test -d src/renderer/src/__mocks__ \
+  && ! test -d src/renderer/src/__tests__ \
+  && ! test -f src/renderer/src/setupTests.js \
+  && [ -z "$(find src/renderer/src -type d -name __mocks__ -print -quit 2>/dev/null)" ] \
+  || { echo "Playbook §11 violation: Jest scaffolding present"; exit 1; }
+```
+
+Wider grep (mirrors the discovery-diff filter that future syncs use; checks the
+working tree for any of the deny-list patterns surfacing again as fresh adds):
+
+```bash
+git grep -nE 'jest\.config\.mjs|src/renderer/src/__(mocks|tests)__|src/renderer/src/setupTests\.js|src/renderer/src/.*/__mocks__/' \
+  -- ':!VORTEX-LINUX-MERGE-PLAYBOOK.md' ':!.planning/' \
+  || true
+```
+
+Rationale: fork migrated renderer to Vitest pre-v8.0; Jest config + `__mocks__/`
+would shadow Vitest's `vi.mock` and produce silent test-runner ambiguity.
+Phase 25 Wave 1 surfaced two paths that the original deny-list pattern missed:
+top-level `setupTests.js` (enzyme + Jest adapter) and nested `__mocks__/`
+directories like `src/renderer/src/util/__mocks__/log.ts` (uses
+`jest.genMockFromModule`). The grep widening above catches both shapes.
+
+Discovery-diff exclusion shape future syncs should use:
+
+```bash
+git diff --name-status <fork-branch> <upstream-parent-sha> \
+  -- ':!src/renderer/src/__mocks__' \
+     ':!src/renderer/src/__tests__' \
+     ':!src/renderer/jest.config.mjs' \
+     ':!src/renderer/src/setupTests.js' \
+     ':!src/renderer/src/**/__mocks__'
+```
+
+Decided: Phase 25 (restore-dropped-scaffolding), 2026-05-15.
+
 ---
 
 ## What we've learned the hard way
@@ -379,6 +430,11 @@ Durable references to the fork-local Linux fixes this file depends on. If any of
 | `chmod +x` pnpm-bundled `gyp_main.py` before `pnpm install` in CI                           | `f0a0d2178` | _master-only_ |
 | Gate `fingerprint-*.yml` workflows to `Nexus-Mods/Vortex` repo only                         | `7fd37ff71` | _master-only_ |
 | Direct Proton launch + Snap IPC symlinks + path-boundary matching                           | `096b6376c` | _pending_     |
+| Phase 25 / SYNC-13: restore `packages/paths` + `packages/paths-node` from upstream v2.0.0   | `f9d305d7d` | _master-only_ |
+| Phase 25 / SYNC-12: restore `gamebryo-ba2-support` + ba2tk catalog + CI rebuild step        | `b28d37e31` | _master-only_ |
+| Phase 25 / SYNC-14: restore chunking + download_management spine + bsdiff-node test         | `9a17907b6` | _master-only_ |
+| Phase 25 / SYNC-15 + SYNC-16: restore four upstream CI workflows (deny-list provenance in body — see §11) | `83995b611` | _master-only_ |
+| Phase 25 / SYNC-15 + SYNC-16: restore docs (flatpak + AGENTS-DEBUGGING + structure) + add Playbook §11    | _this commit_ | _master-only_ |
 
 Earlier-era fixes that were reverted by upstream merges (kept for archaeology):
 
