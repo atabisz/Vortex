@@ -1,8 +1,20 @@
 # Vortex Linux Support
 
-## Current Milestone: v8.0 (planning)
+## Current Milestone: v8.0 Upstream v2.0.0 Sync (planning)
 
-**Goal:** TBD — start `/gsd-new-milestone` to define next milestone.
+**Goal:** Land upstream v2.0.0 in master with all Linux fixes from `VORTEX-LINUX-MERGE-PLAYBOOK.md` preserved and Windows CI green.
+
+**Target features:**
+- Resolve 109 conflicts (365 regions) on `sync/upstream-v2.0.0` (PR #4) and FF-merge to master
+- Restore `packages/paths`, `packages/paths-node`, `extensions/gamebryo-ba2-support` (dropped by auto-merge but referenced from workspace config)
+- Re-grep all 10 playbook items clean post-resolution
+- Boot AppImage and .deb on Linux; Windows CI stays green
+- Tag `v2.0.0-linux-rebased` and update playbook with new gotchas surfaced during resolution
+
+**Key context:**
+- Drop upstream Jest scaffolding (`jest.config.mjs`, ~50 `__mocks__`/`__tests__` files) — fork is Vitest-only; document the divergence
+- Resolve in-place on the existing PR #4 branch — keeps the review thread; FF-merge at the end
+- 7-phase split (24–30) preserves natural checkpointing across config / restore / hot zones / extensions / spine / build verify / land
 
 ## Previous Milestones
 
@@ -109,7 +121,21 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 
 ### Active (v8.0)
 
-_(Define next milestone requirements via `/gsd-new-milestone`)_
+- [ ] **SYNC-01**: 109 conflict markers resolved across `sync/upstream-v2.0.0` — `git grep '^<<<<<<< '` returns zero hits
+- [ ] **SYNC-02**: `pnpm install --frozen-lockfile` fails — branch unparseable until config bucket resolved
+- [ ] **SYNC-03**: `pnpm install` succeeds; lockfile regenerated and committed
+- [ ] **SYNC-04**: All 10 items of `VORTEX-LINUX-MERGE-PLAYBOOK.md` re-grep clean post-resolution
+- [ ] **SYNC-05**: `LinkingDeployment.ts` retains the `140a57217` `resolvePathCase`-in-deploy fix
+- [ ] **SYNC-06**: `packages/paths` and `packages/paths-node` restored — workspaces resolve, typecheck passes
+- [ ] **SYNC-07**: `extensions/gamebryo-ba2-support` restored with Linux-aware build hooks (named-script guard, native CI rebuild pattern from bsa-support)
+- [ ] **SYNC-08**: Renderer test stack stays Vitest-only — upstream `jest.config.mjs` and `__mocks__`/`__tests__` directories deliberately not restored; divergence documented in playbook
+- [ ] **SYNC-09**: `pnpm run typecheck` passes across all workspaces
+- [ ] **SYNC-10**: `pnpm run build` and `pnpm run build:extensions` succeed; `src/main/build/bundledPlugins/` populates with ~132 entries
+- [ ] **SYNC-11**: `pnpm run test` (Vitest) passes
+- [ ] **SYNC-12**: AppImage and .deb produced by `release-linux.yml` boot; 5-minute manual smoke (Steam game detect → mod install → deploy → Proton launch) passes
+- [ ] **SYNC-13**: Windows CI green on the merge commit
+- [ ] **SYNC-14**: `master` fast-forwarded; tagged `v2.0.0-linux-rebased`; `linux-port` cherry-picks updated per branch policy
+- [ ] **SYNC-15**: PR #4 closed (merged) on `atabisz/Vortex`; playbook updated with any new gotchas
 
 ### Deferred (v5.0+)
 
@@ -210,4 +236,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-17 after v7.0 milestone — First-Run Onboarding Wizard shipped, all ONBRD requirements satisfied*
+*Last updated: 2026-05-15 after starting v8.0 milestone — Upstream v2.0.0 Sync (PR #4 conflict resolution); 7-phase plan covers the 109 conflicts and the dropped scaffolding restore work; scope proposal at .planning/milestones/v8.0-SCOPE-PROPOSAL.md.*
