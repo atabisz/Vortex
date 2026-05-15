@@ -212,3 +212,42 @@ Rationale:
 
 </content>
 </invoke>
+---
+
+## User Decisions on Surprises
+
+**Decided:** 2026-05-15 by Alex via /gsd:execute-phase 25 checkpoint.
+
+### Surprises (5 files) — ALL ACCEPTED
+
+| File | Decision | Rationale |
+| ---- | -------- | --------- |
+| `src/renderer/src/extensions/download_management/DownloadManager.ts` | ACCEPT | `chunking.ts` calls into this; required for compile |
+| `src/renderer/src/extensions/download_management/DownloadObserver.ts` | ACCEPT | same — download spine moved upstream |
+| `src/renderer/src/extensions/download_management/FileAssembler.ts` | ACCEPT | same |
+| `src/renderer/src/extensions/download_management/SpeedCalculator.ts` | ACCEPT | same |
+| `structure.md` | ACCEPT | small, accurate top-level project doc |
+
+**Plan-04 impact:** the 4 download_management files are added to commit 3 (alongside `chunking.ts`, `chunking.test.ts`, `downloader.test.ts`). `structure.md` joins commit 5 (docs).
+
+### Deny-list anomalies (2 files) — BOTH REJECTED
+
+| File | Decision | Rationale |
+| ---- | -------- | --------- |
+| `src/renderer/src/setupTests.js` | REJECT | enzyme + Jest adapter — Jest scaffolding stays out per Playbook §11 / D-25-03 |
+| `src/renderer/src/util/__mocks__/log.ts` | REJECT | uses `jest.genMockFromModule` — same Jest-deny rationale |
+
+**Plan-04 impact:** commit 4's body documents both rejections inline as part of D-25-14's "deny-list survives the sync" assertion. Plan 04 must also widen Playbook §11's grep (D-25-12) to catch nested `__mocks__/` and the top-level `setupTests.js`.
+
+### Renames (3 effective) — ACKNOWLEDGED, plans amended
+
+| Source → Target | Affected plan/commit | Action |
+| --------------- | -------------------- | ------ |
+| `extensions/gamebryo-archive-support/*` → `extensions/gamebryo-ba2-support/*` | Plan 03 commit 2 | Remove `extensions/gamebryo-archive-support/` directory after restoring `gamebryo-ba2-support/` byte-for-byte from `8b5a9f675`. Restore set is bigger than CONTEXT.md modeled — use `git ls-tree 8b5a9f675 -- extensions/gamebryo-ba2-support/` for the canonical file list. |
+| `docs/flatpak/{maintenance,technical}.md` → `docs/flatpak-{maintenance,technical}.md` | Plan 04 commit 5 | `git rm` the nested `docs/flatpak/` path and restore the flat `docs/flatpak-*.md` form from `8b5a9f675`. |
+| `src/shared/src/chunking.test.ts` → `src/main/src/downloading/chunking.test.ts` | Plan 04 commit 3 | `git rm` the old shared path and restore at the new downloading path from `8b5a9f675`. |
+
+### Side-finding (out of Phase 25 scope, flagged for cleanup)
+
+`CLAUDE.md:83` and `.planning/codebase/STACK.md:102` describe `node-ba2tk` as "(custom fork)". This is **incorrect** — both upstream and fork pin Nexus-Mods upstream by SHA. Worth a future tiny doc-correction commit.
+
