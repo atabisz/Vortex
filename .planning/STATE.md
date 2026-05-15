@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Upstream v2.0.0 Sync
-status: in_progress
-stopped_at: Phase 26 complete; force-with-lease push to fork/sync/upstream-v2.0.0 staged for orchestrator
-last_updated: "2026-05-15T10:20:27Z"
+status: ready_to_plan
+stopped_at: Phase 27 context gathered
+last_updated: "2026-05-15T11:01:27.040Z"
 last_activity: 2026-05-15
 progress:
-    total_phases: 7
-    completed_phases: 3
-    total_plans: 22
-    completed_plans: 22
-    percent: 43
+    total_phases: 8
+    completed_phases: 2
+    total_plans: 18
+    completed_plans: 18
+    percent: 100
 ---
 
 # Project State
@@ -229,6 +229,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-15T10:20:27Z
-Stopped at: Phase 26 complete; force-with-lease push to fork/sync/upstream-v2.0.0 staged for orchestrator (run after user confirms)
-Resume file: None
+Last session: 2026-05-15T11:01:27.028Z
+Stopped at: Phase 27 context gathered
+Resume file: .planning/phases/27-gamebryo-per-game-extensions/27-CONTEXT.md
