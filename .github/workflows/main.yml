@@ -2,17 +2,13 @@ name: Main
 
 on:
   push:
-<<<<<<< HEAD
     branches: [master, rebase/*]
     paths-ignore:
       - ".planning/**"
       - "packaging/**"
       - "*.md"
-=======
-    branches: [master, v2*]
->>>>>>> v2.0.1
   pull_request:
-    branches: [master, v2*]
+    branches: [master]
   workflow_dispatch:
 
 concurrency:
