@@ -1,16 +1,29 @@
 import Bluebird from "bluebird";
 import { log, util } from "vortex-api";
+<<<<<<< HEAD
 
+=======
+>>>>>>> v2.0.1
 import { GAME_ID } from "./statics";
 
 // We _should_ just export this from vortex-api, but I guess it's not wise to make it
 //  easy for users since we want to move away from bluebird in the future ?
-export function toBlue<T>(func: (...args: any[]) => Promise<T>): (...args: any[]) => Bluebird<T> {
+export function toBlue<T>(
+  func: (...args: any[]) => Promise<T>,
+): (...args: any[]) => Bluebird<T> {
   return (...args: any[]) => Bluebird.resolve(func(...args));
 }
 
 export function getDiscoveryPath(state) {
+<<<<<<< HEAD
   const discovery = util.getSafe(state, ["settings", "gameMode", "discovered", GAME_ID], undefined);
+=======
+  const discovery = util.getSafe(
+    state,
+    ["settings", "gameMode", "discovered", GAME_ID],
+    undefined,
+  );
+>>>>>>> v2.0.1
   if (discovery === undefined || discovery.path === undefined) {
     log("debug", "untitledgoosegame was not discovered");
     return undefined;

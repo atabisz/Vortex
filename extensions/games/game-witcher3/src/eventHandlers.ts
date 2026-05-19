@@ -1,5 +1,10 @@
 /* eslint-disable */
 import { actions, types, selectors, util } from "vortex-api";
+<<<<<<< HEAD
+=======
+
+import { setPriorityType } from "./actions";
+>>>>>>> v2.0.1
 
 import { setPriorityType } from "./actions";
 import {
@@ -10,18 +15,32 @@ import {
   SCRIPT_MERGER_ID,
   I18N_NAMESPACE,
 } from "./common";
+<<<<<<< HEAD
 import IniStructure from "./iniParser";
 import * as menuMod from "./menumod";
 import { storeToProfile, restoreFromProfile } from "./mergeBackup";
 import { getPersistentLoadOrder } from "./migrations";
 import { PriorityManager } from "./priorityManager";
 import { IRemoveModOptions } from "./types";
+=======
+
+import * as menuMod from "./menumod";
+import { storeToProfile, restoreFromProfile } from "./mergeBackup";
+>>>>>>> v2.0.1
 import {
   validateProfile,
   forceRefresh,
   suppressEventHandlers,
   notifyMissingScriptMerger,
 } from "./util";
+<<<<<<< HEAD
+=======
+import { PriorityManager } from "./priorityManager";
+import { IRemoveModOptions } from "./types";
+
+import IniStructure from "./iniParser";
+import { getPersistentLoadOrder } from "./migrations";
+>>>>>>> v2.0.1
 
 type Deployment = { [modType: string]: types.IDeployedFile[] };
 
@@ -35,6 +54,7 @@ export function onGameModeActivation(api: types.IExtensionApi) {
       const state = api.getState();
       const lastProfId = selectors.lastActiveProfileForGame(state, gameMode);
       const activeProf = selectors.activeProfile(state);
+<<<<<<< HEAD
       const priorityType = util.getSafe(state, getPriorityTypeBranch(), "prefix-based");
       api.store.dispatch(setPriorityType(priorityType));
       if (lastProfId !== activeProf?.id) {
@@ -42,6 +62,24 @@ export function onGameModeActivation(api: types.IExtensionApi) {
           await storeToProfile(api, lastProfId).then(() => restoreFromProfile(api, activeProf?.id));
         } catch (err) {
           api.showErrorNotification("Failed to restore profile merged files", err);
+=======
+      const priorityType = util.getSafe(
+        state,
+        getPriorityTypeBranch(),
+        "prefix-based",
+      );
+      api.store.dispatch(setPriorityType(priorityType));
+      if (lastProfId !== activeProf?.id) {
+        try {
+          await storeToProfile(api, lastProfId).then(() =>
+            restoreFromProfile(api, activeProf?.id),
+          );
+        } catch (err) {
+          api.showErrorNotification(
+            "Failed to restore profile merged files",
+            err,
+          );
+>>>>>>> v2.0.1
         }
       }
     }
@@ -58,7 +96,15 @@ export const onWillDeploy = (api: types.IExtensionApi) => {
 
     return menuMod
       .onWillDeploy(api, deployment, activeProfile)
+<<<<<<< HEAD
       .catch((err) => (err instanceof util.UserCanceled ? Promise.resolve() : Promise.reject(err)));
+=======
+      .catch((err) =>
+        err instanceof util.UserCanceled
+          ? Promise.resolve()
+          : Promise.reject(err),
+      );
+>>>>>>> v2.0.1
   };
 };
 
@@ -92,7 +138,15 @@ export const onDidRemoveMod = (
   api: types.IExtensionApi,
   priorityManager: () => PriorityManager,
 ) => {
+<<<<<<< HEAD
   return async (gameId: string, modId: string, removeOpts: IRemoveModOptions) => {
+=======
+  return async (
+    gameId: string,
+    modId: string,
+    removeOpts: IRemoveModOptions,
+  ) => {
+>>>>>>> v2.0.1
     if (GAME_ID !== gameId || removeOpts?.willBeReplaced) {
       return Promise.resolve();
     }
@@ -100,7 +154,10 @@ export const onDidRemoveMod = (
   };
 };
 
-export const onDidPurge = (api: types.IExtensionApi, priorityManager: () => PriorityManager) => {
+export const onDidPurge = (
+  api: types.IExtensionApi,
+  priorityManager: () => PriorityManager,
+) => {
   return async (profileId: string, deployment: Deployment) => {
     const state = api.getState();
     const activeProfile = validateProfile(profileId, state);
@@ -135,15 +192,34 @@ export const onDidDeploy = (api: types.IExtensionApi) => {
     const loadOrder = getPersistentLoadOrder(api);
     const docFiles = (deployment["witcher3menumodroot"] ?? []).filter(
       (file) =>
+<<<<<<< HEAD
         file.relPath.endsWith(PART_SUFFIX) && file.relPath.indexOf(INPUT_XML_FILENAME) === -1,
+=======
+        file.relPath.endsWith(PART_SUFFIX) &&
+        file.relPath.indexOf(INPUT_XML_FILENAME) === -1,
+>>>>>>> v2.0.1
     );
     const menuModPromise = () => {
       if (docFiles.length === 0) {
         // If there are no menu mods deployed - remove the mod.
         return menuMod.removeMenuMod(api, activeProfile);
       } else {
+<<<<<<< HEAD
         return menuMod.onDidDeploy(api, deployment, activeProfile).then(async (modId: string) => {
           if (modId === undefined) {
+=======
+        return menuMod
+          .onDidDeploy(api, deployment, activeProfile)
+          .then(async (modId: string) => {
+            if (modId === undefined) {
+              return Promise.resolve();
+            }
+
+            api.store.dispatch(
+              actions.setModEnabled(activeProfile.id, modId, true),
+            );
+            await api.emitAndAwait("deploy-single-mod", GAME_ID, modId, true);
+>>>>>>> v2.0.1
             return Promise.resolve();
           }
 
@@ -161,7 +237,14 @@ export const onDidDeploy = (api: types.IExtensionApi) => {
         return Promise.resolve();
       })
       .catch((err) =>
+<<<<<<< HEAD
         IniStructure.getInstance().modSettingsErrorHandler(err, "Failed to modify load order file"),
+=======
+        IniStructure.getInstance().modSettingsErrorHandler(
+          err,
+          "Failed to modify load order file",
+        ),
+>>>>>>> v2.0.1
       );
   };
 };
@@ -174,15 +257,38 @@ export const onProfileWillChange = (api: types.IExtensionApi) => {
       return;
     }
 
+<<<<<<< HEAD
     const priorityType = util.getSafe(state, getPriorityTypeBranch(), "prefix-based");
+=======
+    const priorityType = util.getSafe(
+      state,
+      getPriorityTypeBranch(),
+      "prefix-based",
+    );
+>>>>>>> v2.0.1
     api.store.dispatch(setPriorityType(priorityType));
 
-    const lastProfId = selectors.lastActiveProfileForGame(state, profile.gameId);
+    const lastProfId = selectors.lastActiveProfileForGame(
+      state,
+      profile.gameId,
+    );
     try {
+<<<<<<< HEAD
       await storeToProfile(api, lastProfId).then(() => restoreFromProfile(api, profile.id));
     } catch (err) {
       if (!(err instanceof util.UserCanceled)) {
         api.showErrorNotification("Failed to store profile specific merged items", err);
+=======
+      await storeToProfile(api, lastProfId).then(() =>
+        restoreFromProfile(api, profile.id),
+      );
+    } catch (err) {
+      if (!(err instanceof util.UserCanceled)) {
+        api.showErrorNotification(
+          "Failed to store profile specific merged items",
+          err,
+        );
+>>>>>>> v2.0.1
       }
     }
   };
@@ -199,7 +305,15 @@ export const onSettingsChange = (
       return;
     }
 
+<<<<<<< HEAD
     const priorityType = util.getSafe(state, getPriorityTypeBranch(), "prefix-based");
+=======
+    const priorityType = util.getSafe(
+      state,
+      getPriorityTypeBranch(),
+      "prefix-based",
+    );
+>>>>>>> v2.0.1
     priorityManager().priorityType = priorityType;
   };
 };
@@ -225,11 +339,21 @@ function runScriptMerger(api) {
     return Promise.resolve();
   }
 
+<<<<<<< HEAD
   return api.runExecutable(tool.path, [], { suggestDeploy: true }).catch((err) =>
     api.showErrorNotification("Failed to run tool", err, {
       allowReport: ["EPERM", "EACCESS", "ENOENT"].indexOf(err.code) !== -1,
     }),
   );
+=======
+  return api
+    .runExecutable(tool.path, [], { suggestDeploy: true })
+    .catch((err) =>
+      api.showErrorNotification("Failed to run tool", err, {
+        allowReport: ["EPERM", "EACCESS", "ENOENT"].indexOf(err.code) !== -1,
+      }),
+    );
+>>>>>>> v2.0.1
 }
 
 function queryScriptMerge(api: types.IExtensionApi, reason: string) {
@@ -248,7 +372,13 @@ function queryScriptMerge(api: types.IExtensionApi, reason: string) {
     api.sendNotification({
       id: "witcher3-merge",
       type: "warning",
+<<<<<<< HEAD
       message: t("Witcher Script merger may need to be executed", { ns: I18N_NAMESPACE }),
+=======
+      message: t("Witcher Script merger may need to be executed", {
+        ns: I18N_NAMESPACE,
+      }),
+>>>>>>> v2.0.1
       allowSuppress: true,
       actions: [
         {

@@ -1,10 +1,18 @@
 import path from "path";
+<<<<<<< HEAD
 
 import semver from "semver";
 import { actions, fs, selectors, types, util } from "vortex-api";
 
 import { GAME_ID, modsRelPath } from "./common";
 import { serialize } from "./loadOrder";
+=======
+import semver from "semver";
+import { actions, fs, selectors, types, util } from "vortex-api";
+import { serialize } from "./loadOrder";
+
+import { GAME_ID, modsRelPath } from "./common";
+>>>>>>> v2.0.1
 import { LoadOrder } from "./types";
 
 export async function migrate100(context, oldVersion) {
@@ -34,6 +42,7 @@ export async function migrate100(context, oldVersion) {
   }
 
   const profiles = util.getSafe(state, ["persistent", "profiles"], {});
+<<<<<<< HEAD
   const loProfiles = Object.keys(profiles).filter((id) => profiles[id]?.gameId === GAME_ID);
   const loMap: { [profId: string]: LoadOrder } = loProfiles.reduce((accum, iter) => {
     const current = util.getSafe(state, ["persistent", "loadOrder", iter], []);
@@ -48,6 +57,32 @@ export async function migrate100(context, oldVersion) {
     accum[iter] = newLO;
     return accum;
   }, {});
+=======
+  const loProfiles = Object.keys(profiles).filter(
+    (id) => profiles[id]?.gameId === GAME_ID,
+  );
+  const loMap: { [profId: string]: LoadOrder } = loProfiles.reduce(
+    (accum, iter) => {
+      const current = util.getSafe(
+        state,
+        ["persistent", "loadOrder", iter],
+        [],
+      );
+      const newLO: LoadOrder = current.map((entry) => {
+        return {
+          enabled: true,
+          name:
+            mods[entry] !== undefined ? util.renderModName(mods[entry]) : entry,
+          id: entry,
+          modId: entry,
+        };
+      });
+      accum[iter] = newLO;
+      return accum;
+    },
+    {},
+  );
+>>>>>>> v2.0.1
 
   for (const profileId of Object.keys(loMap)) {
     await serialize(context, loMap[profileId], profileId);
@@ -57,6 +92,15 @@ export async function migrate100(context, oldVersion) {
   return context.api
     .awaitUI()
     .then(() => fs.ensureDirWritableAsync(modsPath))
+<<<<<<< HEAD
     .then(() => context.api.emitAndAwait("purge-mods-in-path", GAME_ID, "", modsPath))
     .then(() => context.api.store.dispatch(actions.setDeploymentNecessary(GAME_ID, true)));
+=======
+    .then(() =>
+      context.api.emitAndAwait("purge-mods-in-path", GAME_ID, "", modsPath),
+    )
+    .then(() =>
+      context.api.store.dispatch(actions.setDeploymentNecessary(GAME_ID, true)),
+    );
+>>>>>>> v2.0.1
 }

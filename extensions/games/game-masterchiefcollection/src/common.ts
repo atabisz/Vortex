@@ -1,5 +1,6 @@
 /* eslint-disable */
 import path from "path";
+<<<<<<< HEAD
 
 import { util } from "vortex-api";
 
@@ -21,6 +22,37 @@ export const MOD_CONFIG_DEST_ELEMENT = "$MCC_home\\";
 export const ASSEMBLY_EXT = ".asmp";
 export const MAP_EXT = ".map";
 
+=======
+import { util } from "vortex-api";
+
+import { IHaloGame } from "./types";
+
+export const MCC_LOCAL_LOW = path.resolve(
+  util.getVortexPath("appData"),
+  "..",
+  "LocalLow",
+  "MCC",
+);
+export const MOD_MANIFEST_FILE = "ModManifest.txt";
+export const MOD_MANIFEST_FILE_PATH = path.join(
+  MCC_LOCAL_LOW,
+  "Config",
+  MOD_MANIFEST_FILE,
+);
+export const MOD_INFO_JSON_FILE = "modinfo.json";
+
+export const HALO1_MAPS_RELPATH = path.join("halo1", "maps");
+
+export const MS_APPID = "Microsoft.Chelan";
+export const STEAM_ID = "976730";
+export const GAME_ID = "halothemasterchiefcollection";
+
+export const MOD_CONFIG_FILE = "modpack_config.cfg";
+export const MOD_CONFIG_DEST_ELEMENT = "$MCC_home\\";
+export const ASSEMBLY_EXT = ".asmp";
+export const MAP_EXT = ".map";
+
+>>>>>>> v2.0.1
 export const MODTYPE_PLUG_AND_PLAY = "halo-mcc-plug-and-play-modtype";
 
 // At the time of writing this extension, only Halo: Combat Evolved and Halo Reach were available.

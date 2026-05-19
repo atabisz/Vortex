@@ -2,11 +2,18 @@ import path from "path";
 
 /* eslint-disable */
 import _ from "lodash";
+<<<<<<< HEAD
 import { generate } from "shortid";
 import turbowalk from "turbowalk";
 import { fs, log, selectors, types, util } from "vortex-api";
 
 import { hex2Buffer, prepareFileData, restoreFileData } from "./collections/util";
+=======
+import path from "path";
+import turbowalk from "turbowalk";
+import { fs, log, selectors, types, util } from "vortex-api";
+
+>>>>>>> v2.0.1
 import {
   GAME_ID,
   getLoadOrderFilePath,
@@ -15,11 +22,31 @@ import {
   W3_TEMP_DATA_DIR,
   MergeDataViolationError,
 } from "./common";
+<<<<<<< HEAD
 import { getNamesOfMergedMods } from "./mergeInventoryParsing";
 import { getMergedModName, downloadScriptMerger } from "./scriptmerger";
 import { IDeployedFile, IDeployment } from "./types";
 import { getDeployment } from "./util";
 
+=======
+
+import { generate } from "shortid";
+
+import {
+  hex2Buffer,
+  prepareFileData,
+  restoreFileData,
+} from "./collections/util";
+
+import { getNamesOfMergedMods } from "./mergeInventoryParsing";
+
+import { getMergedModName, downloadScriptMerger } from "./scriptmerger";
+
+import { getDeployment } from "./util";
+
+import { IDeployedFile, IDeployment } from "./types";
+
+>>>>>>> v2.0.1
 type OpType = "import" | "export";
 interface IBaseProps {
   api: types.IExtensionApi;
@@ -32,7 +59,15 @@ interface IBaseProps {
 const sortInc = (lhs: string, rhs: string) => lhs.length - rhs.length;
 const sortDec = (lhs: string, rhs: string) => rhs.length - lhs.length;
 
+<<<<<<< HEAD
 function genBaseProps(api: types.IExtensionApi, profileId: string, force?: boolean): IBaseProps {
+=======
+function genBaseProps(
+  api: types.IExtensionApi,
+  profileId: string,
+  force?: boolean,
+): IBaseProps {
+>>>>>>> v2.0.1
   if (!profileId) {
     return undefined;
   }
@@ -44,7 +79,15 @@ function genBaseProps(api: types.IExtensionApi, profileId: string, force?: boole
 
   const localMergedScripts: boolean = force
     ? true
+<<<<<<< HEAD
     : util.getSafe(state, ["persistent", "profiles", profileId, "features", "local_merges"], false);
+=======
+    : util.getSafe(
+        state,
+        ["persistent", "profiles", profileId, "features", "local_merges"],
+        false,
+      );
+>>>>>>> v2.0.1
   if (!localMergedScripts) {
     return undefined;
   }
@@ -54,7 +97,12 @@ function genBaseProps(api: types.IExtensionApi, profileId: string, force?: boole
     ["settings", "gameMode", "discovered", GAME_ID],
     undefined,
   );
+<<<<<<< HEAD
   const scriptMergerTool: types.IDiscoveredTool = discovery?.tools?.[SCRIPT_MERGER_ID];
+=======
+  const scriptMergerTool: types.IDiscoveredTool =
+    discovery?.tools?.[SCRIPT_MERGER_ID];
+>>>>>>> v2.0.1
   if (!scriptMergerTool?.path) {
     // Regardless of the user's profile settings - there's no point in backing up
     //  the merges if we don't know where the script merger is!
@@ -77,7 +125,13 @@ function getFileEntries(filePath: string): Promise<string[]> {
     { recurse: true },
   )
     .catch((err) =>
+<<<<<<< HEAD
       ["ENOENT", "ENOTFOUND"].includes(err.code) ? Promise.resolve() : Promise.reject(err),
+=======
+      ["ENOENT", "ENOTFOUND"].includes(err.code)
+        ? Promise.resolve()
+        : Promise.reject(err),
+>>>>>>> v2.0.1
     )
     .then(() => Promise.resolve(files));
 }
@@ -143,7 +197,14 @@ async function moveFiles(src: string, dest: string, props: IBaseProps) {
             ),
           },
           [
+<<<<<<< HEAD
             { label: "Cancel", action: () => Promise.reject(new util.UserCanceled()) },
+=======
+            {
+              label: "Cancel",
+              action: () => Promise.reject(new util.UserCanceled()),
+            },
+>>>>>>> v2.0.1
             { label: "Try Again", action: () => removeDestFiles() },
           ],
         );
@@ -202,7 +263,11 @@ function backupPath(profile: types.IProfile): string {
   );
 }
 
-async function handleMergedScripts(props: IBaseProps, opType: OpType, dest?: string) {
+async function handleMergedScripts(
+  props: IBaseProps,
+  opType: OpType,
+  dest?: string,
+) {
   const { scriptMergerTool, profile, gamePath } = props;
   if (!scriptMergerTool?.path) {
     return Promise.reject(new util.NotFound("Script merging tool path"));
@@ -213,7 +278,12 @@ async function handleMergedScripts(props: IBaseProps, opType: OpType, dest?: str
 
   try {
     const mergerToolDir = path.dirname(scriptMergerTool.path);
+<<<<<<< HEAD
     const profilePath: string = dest === undefined ? path.join(mergerToolDir, profile.id) : dest;
+=======
+    const profilePath: string =
+      dest === undefined ? path.join(mergerToolDir, profile.id) : dest;
+>>>>>>> v2.0.1
     const loarOrderFilepath: string = getLoadOrderFilePath();
     const mergedModName = await getMergedModName(mergerToolDir);
     const mergedScriptsPath = path.join(gamePath, "Mods", mergedModName);
@@ -228,7 +298,15 @@ async function handleMergedScripts(props: IBaseProps, opType: OpType, dest?: str
         profilePath,
         path.basename(loarOrderFilepath),
       );
+<<<<<<< HEAD
       await moveFiles(mergedScriptsPath, path.join(profilePath, mergedModName), props);
+=======
+      await moveFiles(
+        mergedScriptsPath,
+        path.join(profilePath, mergedModName),
+        props,
+      );
+>>>>>>> v2.0.1
     } else if (opType === "import") {
       await moveFile(profilePath, mergerToolDir, MERGE_INV_MANIFEST);
       await moveFile(
@@ -236,7 +314,15 @@ async function handleMergedScripts(props: IBaseProps, opType: OpType, dest?: str
         path.dirname(loarOrderFilepath),
         path.basename(loarOrderFilepath),
       );
+<<<<<<< HEAD
       await moveFiles(path.join(profilePath, mergedModName), mergedScriptsPath, props);
+=======
+      await moveFiles(
+        path.join(profilePath, mergedModName),
+        mergedScriptsPath,
+        props,
+      );
+>>>>>>> v2.0.1
     }
     return Promise.resolve();
   } catch (err) {
@@ -245,7 +331,10 @@ async function handleMergedScripts(props: IBaseProps, opType: OpType, dest?: str
   }
 }
 
-export async function storeToProfile(api: types.IExtensionApi, profileId: string) {
+export async function storeToProfile(
+  api: types.IExtensionApi,
+  profileId: string,
+) {
   const props: IBaseProps = genBaseProps(api, profileId);
   if (props === undefined) {
     return;
@@ -260,7 +349,10 @@ export async function storeToProfile(api: types.IExtensionApi, profileId: string
   return handleMergedScripts(props, "export");
 }
 
-export async function restoreFromProfile(api: types.IExtensionApi, profileId: string) {
+export async function restoreFromProfile(
+  api: types.IExtensionApi,
+  profileId: string,
+) {
   const props: IBaseProps = genBaseProps(api, profileId);
   if (props === undefined) {
     return;
@@ -286,6 +378,7 @@ export async function queryScriptMerges(
     ["persistent", "mods", GAME_ID],
     {},
   );
+<<<<<<< HEAD
   const modTypes: { [typeId: string]: string } = selectors.modPathsForGame(state, GAME_ID);
   const deployment: IDeployment = await getDeployment(api, includedModIds);
   const deployedNames: string[] = Object.keys(modTypes).reduce((accum, typeId) => {
@@ -304,6 +397,34 @@ export async function queryScriptMerges(
     accum = accum.concat(names.filter((name) => !!name));
     return accum;
   }, []);
+=======
+  const modTypes: { [typeId: string]: string } = selectors.modPathsForGame(
+    state,
+    GAME_ID,
+  );
+  const deployment: IDeployment = await getDeployment(api, includedModIds);
+  const deployedNames: string[] = Object.keys(modTypes).reduce(
+    (accum, typeId) => {
+      const modPath = modTypes[typeId];
+      const files: IDeployedFile[] = deployment[typeId];
+      const isRootMod =
+        modPath.toLowerCase().split(path.sep).indexOf("mods") === -1;
+      const names = files.map((file) => {
+        const nameSegments = file.relPath.split(path.sep);
+        if (isRootMod) {
+          const nameIdx =
+            nameSegments.map((seg) => seg.toLowerCase()).indexOf("mods") + 1;
+          return nameIdx > 0 ? nameSegments[nameIdx] : undefined;
+        } else {
+          return nameSegments[0];
+        }
+      });
+      accum = accum.concat(names.filter((name) => !!name));
+      return accum;
+    },
+    [],
+  );
+>>>>>>> v2.0.1
   const uniqueDeployed = Array.from(new Set(deployedNames));
   const merged = await getNamesOfMergedMods(api);
   const diff = _.difference(merged, uniqueDeployed);
@@ -391,7 +512,13 @@ export async function exportScriptMerges(
           [{ label: "Cancel" }, { label: "Upload Collection" }],
         )
         .then((res) =>
+<<<<<<< HEAD
           res.action === "Cancel" ? Promise.reject(new util.UserCanceled()) : exportMergedData(),
+=======
+          res.action === "Cancel"
+            ? Promise.reject(new util.UserCanceled())
+            : exportMergedData(),
+>>>>>>> v2.0.1
         );
     }
     return Promise.reject(err);
@@ -441,7 +568,10 @@ export async function importScriptMerges(
   }
 }
 
-export async function makeOnContextImport(api: types.IExtensionApi, collectionId: string) {
+export async function makeOnContextImport(
+  api: types.IExtensionApi,
+  collectionId: string,
+) {
   const state = api.getState();
   const mods: { [modId: string]: types.IMod } = util.getSafe(
     state,
@@ -457,7 +587,15 @@ export async function makeOnContextImport(api: types.IExtensionApi, collectionId
   const stagingFolder = selectors.installPathForGame(state, GAME_ID);
   try {
     const fileData = await fs.readFileAsync(
+<<<<<<< HEAD
       path.join(stagingFolder, collectionMod.installationPath, "collection.json"),
+=======
+      path.join(
+        stagingFolder,
+        collectionMod.installationPath,
+        "collection.json",
+      ),
+>>>>>>> v2.0.1
       { encoding: "utf8" },
     );
     const collection = JSON.parse(fileData);
@@ -466,7 +604,18 @@ export async function makeOnContextImport(api: types.IExtensionApi, collectionId
       // Make sure we have the script merger installed straight away!
       const scriptMergerTool = util.getSafe(
         state,
+<<<<<<< HEAD
         ["settings", "gameMode", "discovered", GAME_ID, "tools", SCRIPT_MERGER_ID],
+=======
+        [
+          "settings",
+          "gameMode",
+          "discovered",
+          GAME_ID,
+          "tools",
+          SCRIPT_MERGER_ID,
+        ],
+>>>>>>> v2.0.1
         undefined,
       );
       if (scriptMergerTool === undefined) {

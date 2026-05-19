@@ -20,7 +20,10 @@ import { Pictogram } from "../../../ui/components/pictogram/Pictogram";
 import { Typography, TypographyLink } from "../../../ui/components/typography/Typography";
 import { opn } from "../../../util/api";
 import { log } from "../../../util/log";
+<<<<<<< HEAD
 import { shouldShowPremiumAd } from "../../../util/selectors";
+=======
+>>>>>>> v2.0.1
 import { Campaign, Content, Section, nexusModsURL } from "../../../util/util";
 import MainPage from "../../../views/MainPage";
 import { HealthCheckFeedbackEvent } from "../../analytics/mixpanel/MixpanelEvents";
@@ -263,7 +266,9 @@ function HealthCheckDetailPage({ mod, api, onBack, onDownloadMod }: IHealthCheck
                 showPremiumBadge={showPremiumAd}
                 onConfirmInstall={handleConfirmInstall}
                 onShowVortexModal={
-                  !showPremiumAd ? handleDownload : () => setShowPremiumModal(true)
+                  !showPremiumAd
+                    ? handleDownload
+                    : () => setShowPremiumModal(true)
                 }
               />
             </div>

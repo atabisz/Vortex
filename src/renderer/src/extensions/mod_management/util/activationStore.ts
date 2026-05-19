@@ -100,7 +100,14 @@ function readManifest(data: string | Buffer): IDeploymentManifest {
   return repairManifest(parsed);
 }
 
+<<<<<<< HEAD
 export function purgeDeployedFiles(basePath: string, files: IDeployedFile[]): Promise<void> {
+=======
+export function purgeDeployedFiles(
+  basePath: string,
+  files: IDeployedFile[],
+): Promise<void> {
+>>>>>>> v2.0.1
   return Promise.all(
     files.map((file) => {
       const fullPath = path.join(basePath, file.relPath);
@@ -182,6 +189,7 @@ function queryPurge(
       return Promise.reject(new UserCanceled());
     }
   });
+<<<<<<< HEAD
 }
 
 /**
@@ -241,14 +249,20 @@ function queryPurgeWineEra(
       return Promise.reject(new UserCanceled());
     }
   });
+=======
+>>>>>>> v2.0.1
 }
 
 function readManifestFile(filePath: string): Promise<any> {
-  return Promise.resolve(fs.readFileAsync(filePath, "utf8")).then((data) => readManifest(data));
+  return Promise.resolve(fs.readFileAsync(filePath, "utf8")).then((data) =>
+    readManifest(data),
+  );
 }
 
 function readManifestFileBinary(filePath: string): Promise<any> {
-  return Promise.resolve(fs.readFileAsync(filePath)).then((data) => readManifest(data));
+  return Promise.resolve(fs.readFileAsync(filePath)).then((data) =>
+    readManifest(data),
+  );
 }
 
 function getManifestImpl(
@@ -334,7 +348,8 @@ function getManifestImpl(
             }),
         )
         .catch((backupErr: unknown) => {
-          errObj.message += "\nBackup couldn't be read: " + unknownToError(backupErr).message;
+          errObj.message +=
+            "\nBackup couldn't be read: " + unknownToError(backupErr).message;
           return Promise.reject(errObj);
         });
     })
@@ -593,11 +608,22 @@ export function saveActivation(
   return activation.length === 0
     ? fs.removeAsync(tagFilePath).catch(() => undefined)
     : writeFileAtomic(tagFilePath, dataJSON).then(() =>
+<<<<<<< HEAD
         fs.removeAsync(path.join(stagingPath, tagFileName)).catch((err: unknown) => {
           if (getErrorCode(err) === "ENOENT") {
             return null;
           }
           throw err;
         }),
+=======
+        fs
+          .removeAsync(path.join(stagingPath, tagFileName))
+          .catch((err: unknown) => {
+            if (getErrorCode(err) === "ENOENT") {
+              return null;
+            }
+            throw err;
+          }),
+>>>>>>> v2.0.1
       );
 }

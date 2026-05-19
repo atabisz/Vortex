@@ -37,7 +37,13 @@ let version;
 function queryModPath(api, gamePath) {
   if (version === undefined) {
     try {
+<<<<<<< HEAD
       const data = fs.readFileSync(path.join(gamePath, "version.xml"), { encoding: "utf8" });
+=======
+      const data = fs.readFileSync(path.join(gamePath, "version.xml"), {
+        encoding: "utf8",
+      });
+>>>>>>> v2.0.1
       parseString(data, (err, res) => {
         if (err) {
           throw err;

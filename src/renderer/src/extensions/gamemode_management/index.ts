@@ -357,7 +357,16 @@ function browseGameLocation(api: IExtensionApi, gameId: string): PromiseBB<void>
                         "install files into store-specific directories (e.g. win64 for Steam " +
                         "vs winGDK for Xbox). These may need to be re-installed for the game " +
                         "to function correctly at the new location.",
+<<<<<<< HEAD
                       { replace: { oldStore: previousStore, newStore: store ?? "unknown" } },
+=======
+                      {
+                        replace: {
+                          oldStore: previousStore,
+                          newStore: store ?? "unknown",
+                        },
+                      },
+>>>>>>> v2.0.1
                     ),
                   },
                   [{ label: "Close" }],
@@ -735,6 +744,7 @@ function init(context: IExtensionContext): boolean {
   context.registerGame = ((game: IGame, extensionPath: string) => {
     try {
       game.extensionPath = extensionPath;
+<<<<<<< HEAD
       const infoPath = path.join(extensionPath, "info.json");
       if (fsExtra.existsSync(infoPath)) {
         const gameExtInfo = JSON.parse(
@@ -754,6 +764,20 @@ function init(context: IExtensionContext): boolean {
         game.final = true;
         game.version = "1.0.0";
       }
+=======
+      const gameExtInfo = JSON.parse(
+        fs.readFileSync(path.join(extensionPath, "info.json"), {
+          encoding: "utf8",
+        }),
+      );
+      game.contributed =
+        gameExtInfo.author === COMPANY_ID ||
+        gameExtInfo.author === NEXUSMODS_EXT_ID
+          ? undefined
+          : gameExtInfo.author;
+      game.final = semver.gte(gameExtInfo.version, "1.0.0");
+      game.version = gameExtInfo.version;
+>>>>>>> v2.0.1
       $.extensionGames.push(game);
     } catch (err) {
       context.api.showErrorNotification("Game Extension not loaded", err, {

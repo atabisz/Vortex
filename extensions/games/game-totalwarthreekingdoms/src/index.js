@@ -71,12 +71,24 @@ function getExecutable(discoveryPath) {
 }
 
 function prepareForModding(discovery) {
+<<<<<<< HEAD
   return fs.ensureDirWritableAsync(path.join(discovery.path, "data"), () => Promise.resolve());
+=======
+  return fs.ensureDirWritableAsync(path.join(discovery.path, "data"), () =>
+    Promise.resolve(),
+  );
+>>>>>>> v2.0.1
 }
 
 function installContent(files) {
   // The .pack file is expected to always be positioned in the data directory we're going to disregard anything placed outside the root.
+<<<<<<< HEAD
   const modFile = files.find((file) => path.extname(file).toLowerCase() === MOD_FILE_EXT);
+=======
+  const modFile = files.find(
+    (file) => path.extname(file).toLowerCase() === MOD_FILE_EXT,
+  );
+>>>>>>> v2.0.1
   const idx = modFile.indexOf(path.basename(modFile));
   const rootPath = path.dirname(modFile);
 
@@ -99,7 +111,12 @@ function installContent(files) {
 function testSupportedContent(files, gameId) {
   const supported =
     gameId === TW3KINDOMS_ID &&
+<<<<<<< HEAD
     files.find((file) => path.extname(file).toLowerCase() === MOD_FILE_EXT) !== undefined;
+=======
+    files.find((file) => path.extname(file).toLowerCase() === MOD_FILE_EXT) !==
+      undefined;
+>>>>>>> v2.0.1
   return Promise.resolve({
     supported,
     requiredFiles: [],
@@ -128,7 +145,16 @@ function main(context) {
     },
   });
 
+<<<<<<< HEAD
   context.registerInstaller("tw3kingdoms-mod", 25, testSupportedContent, installContent);
+=======
+  context.registerInstaller(
+    "tw3kingdoms-mod",
+    25,
+    testSupportedContent,
+    installContent,
+  );
+>>>>>>> v2.0.1
 
   return true;
 }

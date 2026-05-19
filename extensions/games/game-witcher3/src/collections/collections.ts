@@ -2,6 +2,7 @@
 import { selectors, types, util } from "vortex-api";
 
 import { GAME_ID, SCRIPT_MERGER_ID } from "../common";
+<<<<<<< HEAD
 import { exportMenuMod, importMenuMod } from "../menumod";
 import { exportScriptMerges, importScriptMerges } from "../mergeBackup";
 import { downloadScriptMerger } from "../scriptmerger";
@@ -9,6 +10,20 @@ import { exportLoadOrder, importLoadOrder } from "./loadOrder";
 import { ILoadOrder, IW3CollectionsData, IW3MergedData } from "./types";
 import { CollectionParseError, hex2Buffer } from "./util";
 
+=======
+
+import { ILoadOrder, IW3CollectionsData, IW3MergedData } from "./types";
+
+import { exportLoadOrder, importLoadOrder } from "./loadOrder";
+
+import { exportMenuMod, importMenuMod } from "../menumod";
+import { exportScriptMerges, importScriptMerges } from "../mergeBackup";
+
+import { downloadScriptMerger } from "../scriptmerger";
+
+import { CollectionParseError, hex2Buffer } from "./util";
+
+>>>>>>> v2.0.1
 export async function genCollectionsData(
   context: types.IExtensionContext,
   gameId: string,
@@ -24,11 +39,26 @@ export async function genCollectionsData(
     {},
   );
   try {
-    const loadOrder: types.LoadOrder = await exportLoadOrder(api, includedMods, mods);
+    const loadOrder: types.LoadOrder = await exportLoadOrder(
+      api,
+      includedMods,
+      mods,
+    );
     const menuModData = await exportMenuMod(api, profile, includedMods);
     const scriptMergerTool = util.getSafe(
       state,
+<<<<<<< HEAD
       ["settings", "gameMode", "discovered", GAME_ID, "tools", SCRIPT_MERGER_ID],
+=======
+      [
+        "settings",
+        "gameMode",
+        "discovered",
+        GAME_ID,
+        "tools",
+        SCRIPT_MERGER_ID,
+      ],
+>>>>>>> v2.0.1
       undefined,
     );
     let scriptMergesData;
@@ -41,9 +71,18 @@ export async function genCollectionsData(
       );
     }
     const mergedData: IW3MergedData = {
+<<<<<<< HEAD
       menuModSettingsData: menuModData !== undefined ? menuModData.toString("hex") : undefined,
       scriptMergedData:
         scriptMergesData !== undefined ? scriptMergesData.toString("hex") : undefined,
+=======
+      menuModSettingsData:
+        menuModData !== undefined ? menuModData.toString("hex") : undefined,
+      scriptMergedData:
+        scriptMergesData !== undefined
+          ? scriptMergesData.toString("hex")
+          : undefined,
+>>>>>>> v2.0.1
     };
     const collectionData: IW3CollectionsData = {
       loadOrder: loadOrder as any,
@@ -70,7 +109,14 @@ export async function parseCollectionsData(
         ? collection["info"]["name"]
         : "Witcher 3 Collection";
     return Promise.reject(
+<<<<<<< HEAD
       new CollectionParseError(collectionName, "Last active profile is missing"),
+=======
+      new CollectionParseError(
+        collectionName,
+        "Last active profile is missing",
+      ),
+>>>>>>> v2.0.1
     );
   }
   const { menuModSettingsData, scriptMergedData } = collection.mergedData;
@@ -84,13 +130,28 @@ export async function parseCollectionsData(
       // Make sure we have the script merger installed straight away!
       const scriptMergerTool = util.getSafe(
         state,
+<<<<<<< HEAD
         ["settings", "gameMode", "discovered", GAME_ID, "tools", SCRIPT_MERGER_ID],
+=======
+        [
+          "settings",
+          "gameMode",
+          "discovered",
+          GAME_ID,
+          "tools",
+          SCRIPT_MERGER_ID,
+        ],
+>>>>>>> v2.0.1
         undefined,
       );
       if (scriptMergerTool === undefined) {
         await downloadScriptMerger(api);
       }
-      await importScriptMerges(context.api, profile.id, hex2Buffer(scriptMergedData));
+      await importScriptMerges(
+        context.api,
+        profile.id,
+        hex2Buffer(scriptMergedData),
+      );
     }
   } catch (err) {
     return Promise.reject(err);

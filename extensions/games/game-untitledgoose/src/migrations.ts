@@ -1,9 +1,15 @@
 // import { runPatcher } from 'harmony-patcher';
 import path from "path";
+<<<<<<< HEAD
 
 import semver from "semver";
 import { fs } from "vortex-api";
 
+=======
+import semver from "semver";
+import { fs } from "vortex-api";
+
+>>>>>>> v2.0.1
 import { DATAPATH, ENTRY_POINT, GAME_ID } from "./statics";
 import { getDiscoveryPath } from "./util";
 
@@ -47,5 +53,11 @@ export function migrate020(context, oldVersion) {
   return context.api
     .awaitUI()
     .then(() => fs.ensureDirWritableAsync(modsPath))
+<<<<<<< HEAD
     .then(() => context.api.emitAndAwait("purge-mods-in-path", GAME_ID, "", modsPath));
+=======
+    .then(() =>
+      context.api.emitAndAwait("purge-mods-in-path", GAME_ID, "", modsPath),
+    );
+>>>>>>> v2.0.1
 }

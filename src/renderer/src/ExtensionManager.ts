@@ -866,10 +866,18 @@ class ExtensionManager {
           // file handles yet despite waitForRendererExit in the main process.
           // Log and continue — the remove flag stays in state so it retries on
           // next startup.
+<<<<<<< HEAD
           log("warn", "failed to remove extension, will retry on next startup", {
             extId,
             error: getErrorMessageOrDefault(err),
           });
+=======
+          log(
+            "warn",
+            "failed to remove extension, will retry on next startup",
+            { extId, error: getErrorMessageOrDefault(err) },
+          );
+>>>>>>> v2.0.1
         }
       });
 
@@ -899,10 +907,18 @@ class ExtensionManager {
           // On Windows the previous renderer's file handles may not be
           // released yet. Subsequent relaunches will retry; a few failed
           // removes converging is preferable to silently looping forever.
+<<<<<<< HEAD
           log("warn", "failed to remove outdated extension, will retry on next startup", {
             name: ext,
             error: getErrorMessageOrDefault(err),
           });
+=======
+          log(
+            "warn",
+            "failed to remove outdated extension, will retry on next startup",
+            { name: ext, error: getErrorMessageOrDefault(err) },
+          );
+>>>>>>> v2.0.1
         }
         // Mark the extension state for removal so the next boot's
         // state-flagged-remove path (above) dispatches forgetExtension via
@@ -2842,7 +2858,24 @@ class ExtensionManager {
 
     const res = fs
       .readdirSync(extension.path)
+<<<<<<< HEAD
       .filter((name) => fs.statSync(path.join(extension.path, name)).isDirectory())
+=======
+      .filter((name) =>
+        fs.statSync(path.join(extension.path, name)).isDirectory(),
+      )
+      .filter((name) => {
+        // Skip transient directories left behind by the extension installer/updater:
+        // `*.installing` / `*.7z.installing` are in-progress installs, `*.bak-*` are
+        // pre-update backups. Loading them causes spurious "Cannot find module" /
+        // native-addon errors.
+        if (/\.installing$/i.test(name) || /\.bak-/i.test(name)) {
+          log("debug", "skipping transient extension directory", { name });
+          return false;
+        }
+        return true;
+      })
+>>>>>>> v2.0.1
       .reduce((prev: { [id: string]: IRegisteredExtension }, name: string) => {
         if (!getSafe(this.mExtensionState, [name, "enabled"], true)) {
           log("debug", "extension disabled", { name });

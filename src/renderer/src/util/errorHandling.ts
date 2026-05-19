@@ -1,8 +1,20 @@
 import * as path from "path";
 import { inspect } from "util";
 
+<<<<<<< HEAD
 import { type Span, context, ROOT_CONTEXT, SpanStatusCode, trace } from "@opentelemetry/api";
 import { unknownToError } from "@vortex/shared";
+=======
+import {
+  type Span,
+  context,
+  ROOT_CONTEXT,
+  SpanStatusCode,
+  trace,
+} from "@opentelemetry/api";
+import { isEnvironmentalError, unknownToError } from "@vortex/shared";
+import { isUserCanceled } from "@vortex/shared/errors";
+>>>>>>> v2.0.1
 import { recordErrorOnSpan } from "@vortex/shared/telemetry";
 import type PromiseBB from "bluebird";
 import type { BrowserWindow } from "electron";
@@ -485,6 +497,9 @@ export function withTrackedActivity<T>(
       const result = await fun(
         (key, value) => span.setAttribute(key, value),
         (error) => {
+          if (isEnvironmentalError(error) || isUserCanceled(error)) {
+            return;
+          }
           hasError = true;
           recordError(error);
         },
@@ -495,11 +510,16 @@ export function withTrackedActivity<T>(
       return result;
     } catch (unknownErr) {
       const err = unknownToError(unknownErr);
-      span.setStatus({
-        code: SpanStatusCode.ERROR,
-        message: err?.message,
-      });
-      recordError(err);
+      // Environmental errors (write-protected folders, disk full, etc.) and
+      // user cancellations leave the span status UNSET so
+      // RingBufferSpanProcessor doesn't flush the trace.
+      if (!isEnvironmentalError(err) && !isUserCanceled(err)) {
+        span.setStatus({
+          code: SpanStatusCode.ERROR,
+          message: err?.message,
+        });
+        recordError(err);
+      }
       throw err;
     } finally {
       span.end();
@@ -530,6 +550,9 @@ export function recordErrorSpan(
   error: Error,
   attributes?: Record<string, string | number | boolean>,
 ): void {
+  if (isEnvironmentalError(error) || isUserCanceled(error)) {
+    return;
+  }
   const activeSpan = trace.getSpan(context.active());
 
   if (activeSpan !== undefined) {

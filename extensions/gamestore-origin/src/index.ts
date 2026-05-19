@@ -84,7 +84,9 @@ class OriginLauncher implements types.IGameStore {
       .catch((err) => Promise.resolve(false));
   }
 
-  public findByAppId(appId: string | string[]): PromiseBB<types.IGameStoreEntry> {
+  public findByAppId(
+    appId: string | string[],
+  ): PromiseBB<types.IGameStoreEntry> {
     const matcher = Array.isArray(appId)
       ? (entry: types.IGameStoreEntry) => appId.includes(entry.appid)
       : (entry: types.IGameStoreEntry) => appId === entry.appid;

@@ -52,7 +52,15 @@ export const useTools = (onShowError: ShowErrorCallback, api: IExtensionApi): Us
     [gameStarter, tools],
   );
 
+<<<<<<< HEAD
   const { isToolValid } = useToolsValidation(allStarters, discoveryPath, deploymentCounter);
+=======
+  const { isToolValid } = useToolsValidation(
+    allStarters,
+    discoveryPath,
+    deploymentCounter,
+  );
+>>>>>>> v2.0.1
 
   const { exclusiveRunning, isToolRunning } = useToolsRunning();
 

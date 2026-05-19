@@ -16,7 +16,12 @@ const MAB_MODULE_FILE = "module.ini";
 
 // The common registry key path which can be used to
 //  find the installation folder using the game's steam ID.
+<<<<<<< HEAD
 const steamReg = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Steam App ";
+=======
+const steamReg =
+  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Steam App ";
+>>>>>>> v2.0.1
 
 // A map of file extensions mapped against their
 //  expected folder name. ()
@@ -85,7 +90,15 @@ function findGame(mabGame) {
   const { name, regPath } = mabGame;
 
   try {
+<<<<<<< HEAD
     const instPath = winapi.RegGetValue("HKEY_LOCAL_MACHINE", regPath, "InstallLocation");
+=======
+    const instPath = winapi.RegGetValue(
+      "HKEY_LOCAL_MACHINE",
+      regPath,
+      "InstallLocation",
+    );
+>>>>>>> v2.0.1
     if (!instPath) {
       throw new Error("empty registry key");
     }
@@ -98,11 +111,25 @@ function findGame(mabGame) {
 async function resolveGameVersion(discoveryPath, mnbGame) {
   const nativeModuleName = MAB_GAMES[mnbGame].nativeModuleName;
   const rgx = MAB_GAMES[mnbGame].versionRgx;
+<<<<<<< HEAD
   const nativeIniPath = path.join(discoveryPath, "Modules", nativeModuleName, "module.ini");
   try {
     const iniData = await fs.readFileAsync(nativeIniPath, { encoding: "utf8" });
     const match = iniData.match(rgx);
     const version = match !== null ? match[0].replace(/[^0-9.]/gm, "") : undefined;
+=======
+  const nativeIniPath = path.join(
+    discoveryPath,
+    "Modules",
+    nativeModuleName,
+    "module.ini",
+  );
+  try {
+    const iniData = await fs.readFileAsync(nativeIniPath, { encoding: "utf8" });
+    const match = iniData.match(rgx);
+    const version =
+      match !== null ? match[0].replace(/[^0-9.]/gm, "") : undefined;
+>>>>>>> v2.0.1
 
     return version !== undefined
       ? Promise.resolve(version)
@@ -139,13 +166,23 @@ function main(context) {
     });
   });
 
+<<<<<<< HEAD
   context.registerInstaller("mount-and-blade-mod", 25, testSupportedContent, installContent);
+=======
+  context.registerInstaller(
+    "mount-and-blade-mod",
+    25,
+    testSupportedContent,
+    installContent,
+  );
+>>>>>>> v2.0.1
 
   return true;
 }
 
 function installContent(files, destinationPath, gameId, progressDelegate) {
   let instructions = [];
+<<<<<<< HEAD
   if (files.find((file) => path.basename(file).toLowerCase() === MAB_MODULE_FILE) !== undefined) {
     const modName = path.parse(path.basename(destinationPath)).name;
     instructions = installModuleMod(files, modName);
@@ -153,6 +190,24 @@ function installContent(files, destinationPath, gameId, progressDelegate) {
     files.find((file) => path.extname(file).toLowerCase() in MOD_EXT_DESTINATION) !== undefined
   ) {
     instructions = installOverrideMod(files, MAB_GAMES[gameId].nativeModuleName);
+=======
+  if (
+    files.find(
+      (file) => path.basename(file).toLowerCase() === MAB_MODULE_FILE,
+    ) !== undefined
+  ) {
+    const modName = path.parse(path.basename(destinationPath)).name;
+    instructions = installModuleMod(files, modName);
+  } else if (
+    files.find(
+      (file) => path.extname(file).toLowerCase() in MOD_EXT_DESTINATION,
+    ) !== undefined
+  ) {
+    instructions = installOverrideMod(
+      files,
+      MAB_GAMES[gameId].nativeModuleName,
+    );
+>>>>>>> v2.0.1
   }
   return Promise.resolve({ instructions });
 }
@@ -161,8 +216,17 @@ function testSupportedContent(files, gameId) {
   // Make sure we have a module.ini configuration file, or known overridable files within the archive.
   const supported =
     gameId in MAB_GAMES &&
+<<<<<<< HEAD
     (files.find((file) => path.basename(file).toLowerCase() === MAB_MODULE_FILE) !== undefined ||
       files.find((file) => path.extname(file).toLowerCase() in MOD_EXT_DESTINATION) !== undefined);
+=======
+    (files.find(
+      (file) => path.basename(file).toLowerCase() === MAB_MODULE_FILE,
+    ) !== undefined ||
+      files.find(
+        (file) => path.extname(file).toLowerCase() in MOD_EXT_DESTINATION,
+      ) !== undefined);
+>>>>>>> v2.0.1
   return Promise.resolve({
     supported,
     requiredFiles: [],
@@ -174,11 +238,22 @@ function installOverrideMod(files, nativeModuleName) {
   //  an override mod and place recognised file extensions in their expected
   //  directory.
   const instructions = files
+<<<<<<< HEAD
     .filter((file) => MOD_EXT_DESTINATION[path.extname(file).toLowerCase()] !== undefined)
+=======
+    .filter(
+      (file) =>
+        MOD_EXT_DESTINATION[path.extname(file).toLowerCase()] !== undefined,
+    )
+>>>>>>> v2.0.1
     .map((file) => {
       const fileType = path.extname(file).toLowerCase();
       let extFolder = MOD_EXT_DESTINATION[fileType];
-      let finalDestination = path.join(nativeModuleName, extFolder, path.basename(file));
+      let finalDestination = path.join(
+        nativeModuleName,
+        extFolder,
+        path.basename(file),
+      );
 
       return {
         type: "copy",
@@ -203,14 +278,26 @@ function installModuleMod(files, moduleName) {
     //  this way we ensure we don't create huge pointless folder structures
     //  which the M&B game can't support.
     const finalDestination =
+<<<<<<< HEAD
       trimIndex !== 0 ? path.join(moduleName, file.substr(trimIndex)) : path.join(moduleName, file);
+=======
+      trimIndex !== 0
+        ? path.join(moduleName, file.substr(trimIndex))
+        : path.join(moduleName, file);
+>>>>>>> v2.0.1
 
     const instruction = {
       type: "copy",
       source: file,
       destination: finalDestination,
     };
+<<<<<<< HEAD
     return instruction.destination !== path.join(moduleName, "") ? instruction : undefined;
+=======
+    return instruction.destination !== path.join(moduleName, "")
+      ? instruction
+      : undefined;
+>>>>>>> v2.0.1
   });
 
   return instructions.filter((inst) => inst !== undefined);

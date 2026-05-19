@@ -1,6 +1,9 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
+<<<<<<< HEAD
 
+=======
+>>>>>>> v2.0.1
 import { CollectResult, PR_FINGERPRINT_RE, Status } from "./types";
 
 /**
@@ -11,7 +14,13 @@ import { CollectResult, PR_FINGERPRINT_RE, Status } from "./types";
 export const collectFromPR = (): CollectResult => {
   const pr = github.context.payload.pull_request;
   if (!pr) {
+<<<<<<< HEAD
     throw new Error("No pull_request payload available; mode=pr requires a pull_request event.");
+=======
+    throw new Error(
+      "No pull_request payload available; mode=pr requires a pull_request event.",
+    );
+>>>>>>> v2.0.1
   }
 
   const body: string = pr.body ?? "";

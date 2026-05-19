@@ -1,3 +1,17 @@
+<<<<<<< HEAD
+=======
+import type { TFunction } from "i18next";
+import type * as os from "os";
+
+import {
+  getErrorCode,
+  getErrorMessageOrDefault,
+  getErrorNativeCode,
+  unknownToError,
+} from "@vortex/shared";
+import PromiseBB from "bluebird";
+import JsonSocket from "json-socket";
+>>>>>>> v2.0.1
 import * as net from "net";
 import type * as os from "os";
 import * as path from "path";
@@ -228,7 +242,9 @@ class DeploymentMethod extends LinkingDeployment {
     return this.closeServer()
       .then(() => this.startElevated())
       .tapCatch((err) => {
-        log("info", "elevated process failed", { error: getErrorMessageOrDefault(err) });
+        log("info", "elevated process failed", {
+          error: getErrorMessageOrDefault(err),
+        });
         this.context.onComplete();
       })
       .then(() => super.finalize(gameId, dataPath, installationPath))
@@ -459,6 +475,7 @@ class DeploymentMethod extends LinkingDeployment {
 
     return new PromiseBB<void>((resolve, reject) => {
       let elevating = false;
+      const tStart = Date.now();
 
       if (this.mQuitTimer !== undefined) {
         log("debug", "reusing symlink process");
@@ -467,12 +484,17 @@ class DeploymentMethod extends LinkingDeployment {
         return resolve();
       }
       log("debug", "starting symlink process", ipcPath);
+      log("debug", "[elevation-trace] symlink elevation start", { ipcPath });
 
       this.mIPCServer = startIPCServer(
         ipcPath,
         (conn: JsonSocket, message: string, payload: any) => {
           if (message === "initialised") {
             const { pid } = payload;
+            log("debug", "[elevation-trace] initialised received", {
+              pid,
+              elapsedMs: Date.now() - tStart,
+            });
             log("debug", "ipc connected", { pid });
             this.mElevatedClient = conn;
             this.api.store.dispatch(clearUIBlocker("elevating"));
@@ -520,6 +542,14 @@ class DeploymentMethod extends LinkingDeployment {
           if (elevating) {
             // this is called if consent.exe disappeared but none of our "regular" code paths ran
             // which would have cancelled this timeout
+            log(
+              "warn",
+              "[elevation-trace] watchdog fired, no initialised IPC",
+              {
+                elapsedMs: Date.now() - tStart,
+                ipcPath,
+              },
+            );
             this.api.store.dispatch(clearUIBlocker("elevating"));
             this.endIPC("no init");
             /*

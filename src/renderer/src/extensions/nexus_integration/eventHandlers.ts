@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 import * as path from "path";
 
+=======
+>>>>>>> v2.0.1
 import type {
   EndorsedStatus,
   ICollection,
@@ -22,12 +25,18 @@ import type {
   IPreference,
 } from "@nexusmods/nexus-api";
 import type Nexus from "@nexusmods/nexus-api";
+
 import { NexusError, RateLimitError, TimeoutError } from "@nexusmods/nexus-api";
+<<<<<<< HEAD
 import { getErrorCode, getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
 import { AlreadyDownloaded, DownloadIsHTML } from "@vortex/shared/errors";
+=======
+import { getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
+>>>>>>> v2.0.1
 import Bluebird from "bluebird";
 import * as semver from "semver";
 
+<<<<<<< HEAD
 import { setDownloadModInfo } from "../../actions";
 import { log } from "../../logging";
 import type { IExtensionApi, StateChangeCallback } from "../../types/IExtensionContext";
@@ -55,13 +64,62 @@ import type { IModListItem } from "../news_dashlet/types";
 import { setUserInfo } from "./actions/persistent";
 import { NEXUS_BASE_URL, NEXUS_GAMES_URL } from "./constants";
 import { isLoggedIn } from "./selectors";
+=======
+import type {
+  IExtensionApi,
+  StateChangeCallback,
+} from "../../types/IExtensionContext";
+import type { IDownload, IMod, IModTable, IState } from "../../types/IState";
+import type { IGameStoredExt } from "../gamemode_management/types/IGameStored";
+import type { IModListItem } from "../news_dashlet/types";
+>>>>>>> v2.0.1
 import type { IValidateKeyDataV2 } from "./types/IValidateKeyData";
+import type { ITokenReply } from "./util/oauth";
+
+import { setDownloadModInfo } from "../../actions";
+import { log } from "../../logging";
 import {
+<<<<<<< HEAD
+=======
+  DataInvalid,
+  ProcessCanceled,
+  UserCanceled,
+} from "../../util/CustomErrors";
+import Debouncer from "../../util/Debouncer";
+import * as fs from "../../util/fs";
+import { calcDuration, showError } from "../../util/message";
+import { upload } from "../../util/network";
+import opn from "../../util/opn";
+import {
+  activeGameId,
+  currentGame,
+  downloadPathForGame,
+  gameById,
+  knownGames,
+} from "../../util/selectors";
+import { getSafe } from "../../util/storeHelper";
+import { batchDispatch, truthy } from "../../util/util";
+import { resolveCategoryName } from "../category_management";
+import {
+  AlreadyDownloaded,
+  DownloadIsHTML,
+} from "../download_management/DownloadManager";
+import { SITE_ID } from "../gamemode_management/constants";
+import { setUpdatingMods } from "../mod_management/actions/session";
+import { setUserInfo } from "./actions/persistent";
+import { NEXUS_BASE_URL, NEXUS_GAMES_URL } from "./constants";
+import { isLoggedIn } from "./selectors";
+import {
+>>>>>>> v2.0.1
   checkModVersionsImpl,
   endorseDirectImpl,
   endorseThing,
   ensureLoggedIn,
   graphErrorContext,
+<<<<<<< HEAD
+=======
+  handleGraphError,
+>>>>>>> v2.0.1
   nexusGamesProm,
   processErrorMessage,
   resolveGraphError,
@@ -71,7 +129,15 @@ import {
   updateToken,
 } from "./util";
 import { findLatestUpdate, retrieveModInfo } from "./util/checkModsVersion";
+<<<<<<< HEAD
 import { nexusGameId, toNXMId, convertGameIdReverse } from "./util/convertGameId";
+=======
+import {
+  nexusGameId,
+  toNXMId,
+  convertGameIdReverse,
+} from "./util/convertGameId";
+>>>>>>> v2.0.1
 import {
   FULL_COLLECTION_INFO,
   FULL_REVISION_INFO,
@@ -79,7 +145,10 @@ import {
   MOD_REQUIREMENTS_INFO,
   MY_COLLECTIONS_SEARCH_QUERY,
 } from "./util/graphQueries";
+<<<<<<< HEAD
 import type { ITokenReply } from "./util/oauth";
+=======
+>>>>>>> v2.0.1
 import submitFeedback from "./util/submitFeedback";
 import { makeModUID } from "./util/UIDs";
 
@@ -620,13 +689,12 @@ export function onGetMyCollections(
 
       return revisions;
     } catch (err) {
-      const code = getErrorCode(err);
-      if (!["NOT_FOUND", "UNAUTHORIZED"].includes(code)) {
-        api.showErrorNotification("Failed to get list of collections", err, {
-          allowReport: !["MODEL_NOT_FOUND"].includes(code),
-        });
-      }
-      return [];
+      return handleGraphError<IRevision[]>(api, err, {
+        title: "Failed to get list of collections",
+        fallback: [],
+        skipCodes: ["NOT_FOUND", "UNAUTHORIZED"],
+        noReportCodes: ["MODEL_NOT_FOUND"],
+      });
     }
   };
 }
@@ -666,12 +734,25 @@ export function onGetNexusCollection(
 export function onGetNexusCollections(
   api: IExtensionApi,
   nexus: Nexus,
+<<<<<<< HEAD
 ): (gameId: string) => Bluebird<ICollection[]> {
   return (gameId: string): Bluebird<ICollection[]> =>
     Bluebird.resolve(nexus.getCollectionListGraph(FULL_COLLECTION_INFO, gameId)).catch((err) => {
       api.showErrorNotification("Failed to get list of collections", err);
       return Bluebird.resolve(undefined);
     });
+=======
+): (gameId: string) => Bluebird<Partial<ICollection>[] | undefined> {
+  return (gameId: string) =>
+    Bluebird.resolve(
+      nexus.getCollectionListGraph(FULL_COLLECTION_INFO, gameId),
+    ).catch((err) =>
+      handleGraphError<Partial<ICollection>[] | undefined>(api, err, {
+        title: "Failed to get list of collections",
+        fallback: undefined,
+      }),
+    );
+>>>>>>> v2.0.1
 }
 
 /**
@@ -697,10 +778,12 @@ export function onResolveCollectionUrl(
   nexus: Nexus,
 ): (apiLink: string) => Bluebird<IDownloadURL[]> {
   return (apiLink: string): Bluebird<IDownloadURL[]> =>
-    Bluebird.resolve(nexus.getCollectionDownloadLink(apiLink)).catch((err) => {
-      api.showErrorNotification("Failed to get list of collections", err);
-      return Bluebird.resolve([]);
-    });
+    Bluebird.resolve(nexus.getCollectionDownloadLink(apiLink)).catch((err) =>
+      handleGraphError<IDownloadURL[]>(api, err, {
+        title: "Failed to get list of collections",
+        fallback: [],
+      }),
+    );
 }
 
 export function onGetNexusCollectionRevision(
@@ -726,6 +809,7 @@ export function onGetNexusCollectionRevision(
         collectionSlug,
         revisionNumber > 0 ? revisionNumber : undefined,
       ),
+<<<<<<< HEAD
     ).catch((err: NexusError & { collectionSlug?: string; revisionNumber?: number }) => {
       const message = getErrorMessageOrDefault(err);
       const isRevisionUnavailable = [
@@ -749,6 +833,35 @@ export function onGetNexusCollectionRevision(
       }
       return Bluebird.resolve(undefined);
     });
+=======
+    ).catch(
+      (
+        err: NexusError & { collectionSlug?: string; revisionNumber?: number },
+      ) => {
+        const message = getErrorMessageOrDefault(err);
+        const isRevisionUnavailable = [
+          "NOT_FOUND",
+          "COLLECTION_REVISION_DISCARDED",
+          "COLLECTION_UNDER_MODERATION",
+        ].includes(err.code);
+        const allowReport =
+          !isRevisionUnavailable &&
+          !message.includes("network disconnected") &&
+          !message.includes(
+            "Cannot return null for non-nullable field CollectionRevision.collection",
+          );
+        err.collectionSlug = collectionSlug;
+        err.revisionNumber = revisionNumber;
+        if (!isRevisionUnavailable) {
+          api.showErrorNotification("Failed to get nexus revision info", err, {
+            id: "failed-get-revision-info",
+            allowReport,
+          });
+        }
+        return Bluebird.resolve(undefined);
+      },
+    );
+>>>>>>> v2.0.1
   };
 }
 
@@ -829,12 +942,13 @@ export function onGetModFiles(
     const game = gameById(state, gameId);
     return Bluebird.resolve(nexus.getModFiles(modId, nexusGameId(game, gameId) || gameId))
       .then((result) => result.files)
-      .catch((err) => {
-        api.showErrorNotification("Failed to get list of mod files", err, {
-          allowReport: false,
-        });
-        return Bluebird.resolve([]);
-      });
+      .catch((err) =>
+        handleGraphError<IFileInfo[]>(api, err, {
+          title: "Failed to get list of mod files",
+          fallback: [],
+          doNotReport: true,
+        }),
+      );
   };
 }
 
@@ -848,12 +962,24 @@ export function onModFileContents(
     offset?: number,
     count?: number,
   ) => {
+<<<<<<< HEAD
     return Bluebird.resolve(nexus.modFileContents(query, filter, offset, count)).catch((err) => {
       api.showErrorNotification("Failed to get mod file contents", err, {
         allowReport: false,
       });
       return Bluebird.resolve({});
     });
+=======
+    return Bluebird.resolve(
+      nexus.modFileContents(query, filter, offset, count),
+    ).catch((err) =>
+      handleGraphError(api, err, {
+        title: "Failed to get mod file contents",
+        fallback: {},
+        doNotReport: true,
+      }),
+    );
+>>>>>>> v2.0.1
   };
 }
 
@@ -867,6 +993,7 @@ export function onGetModInfo(
   return (gameId: string, modId: number) => {
     const state = api.getState();
     const game = gameById(state, gameId);
+<<<<<<< HEAD
     return Bluebird.resolve(nexus.getModInfo(modId, nexusGameId(game, gameId) || gameId)).catch(
       (err) => {
         api.showErrorNotification("Failed to get mod info", err, {
@@ -874,6 +1001,16 @@ export function onGetModInfo(
         });
         return Bluebird.resolve({});
       },
+=======
+    return Bluebird.resolve(
+      nexus.getModInfo(modId, nexusGameId(game, gameId) || gameId),
+    ).catch((err) =>
+      handleGraphError(api, err, {
+        title: "Failed to get mod info",
+        fallback: {},
+        doNotReport: true,
+      }),
+>>>>>>> v2.0.1
     );
   };
 }
@@ -1010,12 +1147,13 @@ export function onGetPreferences(
   nexus: Nexus,
 ): (...args: any[]) => Promise<Partial<IPreference>> {
   return (query: IPreferenceQuery) => {
-    return Promise.resolve(nexus.getPreferences(query)).catch((err) => {
-      api.showErrorNotification("Failed to get preferences", err, {
-        allowReport: false,
-      });
-      return Promise.resolve({});
-    });
+    return Promise.resolve(nexus.getPreferences(query)).catch((err) =>
+      handleGraphError(api, err, {
+        title: "Failed to get preferences",
+        fallback: {},
+        doNotReport: true,
+      }),
+    );
   };
 }
 

@@ -1,12 +1,19 @@
 /* eslint-disable */
 import path from "path";
+<<<<<<< HEAD
 
 import { fs, selectors, types, util } from "vortex-api";
 
+=======
+import { fs, selectors, types, util } from "vortex-api";
+
+>>>>>>> v2.0.1
 import { GAME_ID, HALO1_MAPS_RELPATH, HALO_GAMES } from "./common";
 
 const MAP_NUMBER_CONSTRAINT = 28;
-export async function testCEMP(api: types.IExtensionApi): Promise<types.ITestResult> {
+export async function testCEMP(
+  api: types.IExtensionApi,
+): Promise<types.ITestResult> {
   const state = api.getState();
   const activeGameMode = selectors.activeGameId(state);
   if (activeGameMode !== GAME_ID) {

@@ -3,11 +3,17 @@ import { pathToFileURL } from "url";
 import { mdiPlay } from "@mdi/js";
 import React, { type FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { pathToFileURL } from "url";
+
+import type { IStarterInfo } from "../../../util/StarterInfo";
 
 import { useWindowContext } from "../../../contexts";
 import { Button } from "../../../ui/components/button/Button";
 import { joinClasses } from "../../../ui/utils/joinClasses";
+<<<<<<< HEAD
 import type { IStarterInfo } from "../../../util/StarterInfo";
+=======
+>>>>>>> v2.0.1
 import StarterInfo from "../../../util/StarterInfo";
 import { useSpineContext } from "../Spine/SpineContext";
 import { ToolButton } from "./ToolButton";
@@ -43,7 +49,15 @@ const PlayButton: FC<PlayButtonProps> = ({
     return undefined;
   }, [primaryStarter, isCollapsed]);
 
+<<<<<<< HEAD
   const label = !isCollapsed ? (isPrimaryRunning ? t("Running...") : t("Play")) : undefined;
+=======
+  const label = !isCollapsed
+    ? isPrimaryRunning
+      ? t("Running...")
+      : t("Play")
+    : undefined;
+>>>>>>> v2.0.1
 
   return (
     <div className="relative w-full">
@@ -60,7 +74,15 @@ const PlayButton: FC<PlayButtonProps> = ({
 
       {launcherIconSrc && (
         <div className="pointer-events-none absolute inset-0 z-2 flex items-center p-1">
+<<<<<<< HEAD
           <img alt="" className="size-7 rounded-xs object-cover" src={launcherIconSrc} />
+=======
+          <img
+            alt=""
+            className="size-7 rounded-xs object-cover"
+            src={launcherIconSrc}
+          />
+>>>>>>> v2.0.1
         </div>
       )}
     </div>

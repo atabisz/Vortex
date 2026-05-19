@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 
-import { computeErrorFingerprint, sanitizeFramePath } from "./errors";
+import {
+  computeErrorFingerprint,
+  isEnvironmentalError,
+  sanitizeFramePath,
+} from "./errors";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -132,7 +136,13 @@ describe("sanitizeFramePath", () => {
         sanitizeFramePath(
           `C:\\Users\\user\\AppData\\Local\\Larian Studios\\Baldur's Gate 3\\Mods\\foo.pak`,
         ),
+<<<<<<< HEAD
       ).toBe(`C:/Users/<USER>/AppData/Local/Larian Studios/Baldur's Gate 3/Mods/foo.pak`);
+=======
+      ).toBe(
+        `C:/Users/<USER>/AppData/Local/Larian Studios/Baldur's Gate 3/Mods/foo.pak`,
+      );
+>>>>>>> v2.0.1
     });
 
     it("redacts the username inside an ENOENT message body", () => {
@@ -193,7 +203,13 @@ describe("sanitizeFramePath", () => {
 
     it("redacts every occurrence in a single string", () => {
       const input = `C:\\Users\\user\\a.txt and C:\\Users\\user\\b.txt`;
+<<<<<<< HEAD
       expect(sanitizeFramePath(input)).toBe(`C:/Users/<USER>/a.txt and C:/Users/<USER>/b.txt`);
+=======
+      expect(sanitizeFramePath(input)).toBe(
+        `C:/Users/<USER>/a.txt and C:/Users/<USER>/b.txt`,
+      );
+>>>>>>> v2.0.1
     });
 
     it("is idempotent — running twice gives the same result", () => {
@@ -324,13 +340,25 @@ describe("computeErrorFingerprint", () => {
     it("ignores column differences within the same line", () => {
       const a = stack(`at f (src/foo.ts:42:10)`);
       const b = stack(`at f (src/foo.ts:42:99)`);
+<<<<<<< HEAD
       expect(computeErrorFingerprint(a, VERSION)).toBe(computeErrorFingerprint(b, VERSION));
+=======
+      expect(computeErrorFingerprint(a, VERSION)).toBe(
+        computeErrorFingerprint(b, VERSION),
+      );
+>>>>>>> v2.0.1
     });
 
     it("strips column from frames without parentheses (`at path:line:col`)", () => {
       const a = stack(`at app.asar/renderer.js:2:989340`);
       const b = stack(`at app.asar/renderer.js:2:1054550`);
+<<<<<<< HEAD
       expect(computeErrorFingerprint(a, VERSION)).toBe(computeErrorFingerprint(b, VERSION));
+=======
+      expect(computeErrorFingerprint(a, VERSION)).toBe(
+        computeErrorFingerprint(b, VERSION),
+      );
+>>>>>>> v2.0.1
     });
 
     it("hashes only the innermost N frames (calling context above is ignored)", () => {
@@ -342,15 +370,80 @@ describe("computeErrorFingerprint", () => {
         `at app.asar/renderer.js:2:989340`,
         `at Array.reduce (<anonymous>)`,
       ];
+<<<<<<< HEAD
       const a = stack(...top5, `at getCurrentActivator (app.asar/renderer.js:2:1661103)`);
       const b = stack(...top5, `at getSupportedActivators (app.asar/renderer.js:2:1660629)`);
       expect(computeErrorFingerprint(a, VERSION)).toBe(computeErrorFingerprint(b, VERSION));
+=======
+      const a = stack(
+        ...top5,
+        `at getCurrentActivator (app.asar/renderer.js:2:1661103)`,
+      );
+      const b = stack(
+        ...top5,
+        `at getSupportedActivators (app.asar/renderer.js:2:1660629)`,
+      );
+      expect(computeErrorFingerprint(a, VERSION)).toBe(
+        computeErrorFingerprint(b, VERSION),
+      );
+>>>>>>> v2.0.1
     });
 
     it("still differentiates when innermost frames differ", () => {
       const a = stack(`at f (src/foo.ts:1:2)`, `at g (src/bar.ts:3:4)`);
       const b = stack(`at h (src/baz.ts:1:2)`, `at g (src/bar.ts:3:4)`);
+<<<<<<< HEAD
       expect(computeErrorFingerprint(a, VERSION)).not.toBe(computeErrorFingerprint(b, VERSION));
     });
   });
+=======
+      expect(computeErrorFingerprint(a, VERSION)).not.toBe(
+        computeErrorFingerprint(b, VERSION),
+      );
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isEnvironmentalError
+// ---------------------------------------------------------------------------
+
+describe("isEnvironmentalError", () => {
+  const withCode = (code: string): Error =>
+    Object.assign(new Error(code), { code });
+
+  it.each(["EPERM", "EACCES", "ENOSPC", "EROFS"])(
+    "returns true for %s",
+    (code) => {
+      expect(isEnvironmentalError(withCode(code))).toBe(true);
+    },
+  );
+
+  it("returns false for unrelated error codes", () => {
+    expect(isEnvironmentalError(withCode("ENOENT"))).toBe(false);
+    expect(isEnvironmentalError(withCode("ETIMEDOUT"))).toBe(false);
+    expect(isEnvironmentalError(withCode("EBUSY"))).toBe(false);
+  });
+
+  it("returns false for plain Error without code", () => {
+    expect(isEnvironmentalError(new Error("boom"))).toBe(false);
+  });
+
+  it("returns true when allowReport is explicitly false", () => {
+    const err = Object.assign(new Error("boom"), { allowReport: false });
+    expect(isEnvironmentalError(err)).toBe(true);
+  });
+
+  it("ignores allowReport when not strictly false", () => {
+    const err = Object.assign(new Error("boom"), { allowReport: true });
+    expect(isEnvironmentalError(err)).toBe(false);
+  });
+
+  it("returns false for non-Error values", () => {
+    expect(isEnvironmentalError("EPERM")).toBe(false);
+    expect(isEnvironmentalError(undefined)).toBe(false);
+    expect(isEnvironmentalError(null)).toBe(false);
+    expect(isEnvironmentalError({ code: "EPERM" })).toBe(false);
+  });
+>>>>>>> v2.0.1
 });

@@ -46,6 +46,15 @@ export const useToolsData = (): UseToolsDataResult => {
   const deploymentCounter = useSelector(
     (state: IState) => state.persistent?.deployment?.deploymentCounter?.[gameId ?? ""] ?? 0,
   );
+  const pinnedToolsMap = useSelector(
+    (state: IState) =>
+      state.settings?.interface?.tools?.pinned?.[gameId ?? ""] ?? {},
+    shallowEqual,
+  );
+  const deploymentCounter = useSelector(
+    (state: IState) =>
+      state.persistent?.deployment?.deploymentCounter?.[gameId ?? ""] ?? 0,
+  );
 
   const gameStarter = useMemo((): StarterInfo | undefined => {
     if (!game || gameDiscovery?.path === undefined) {

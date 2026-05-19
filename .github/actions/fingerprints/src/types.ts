@@ -24,7 +24,12 @@ export const Status = {
 export type Status = (typeof Status)[keyof typeof Status];
 
 export const STATUSES: readonly Status[] = Object.values(Status);
+<<<<<<< HEAD
 export const isStatus = (s: string): s is Status => STATUSES.some((v) => v === s);
+=======
+export const isStatus = (s: string): s is Status =>
+  STATUSES.some((v) => v === s);
+>>>>>>> v2.0.1
 
 /**
  * Trigger source the action is being invoked for.
@@ -73,4 +78,9 @@ export const FINGERPRINT_RE = /^[a-f0-9]{8}$/i;
  * lines. The capture group is the raw fingerprint list — split it on
  * `[\s,]+` to get individual values.
  */
+<<<<<<< HEAD
 export const PR_FINGERPRINT_RE = /^Fixes fingerprints? ([a-f0-9]{8}(?:[\s,]+[a-f0-9]{8})*)\b/gim;
+=======
+export const PR_FINGERPRINT_RE =
+  /^Fixes fingerprints? ([a-f0-9]{8}(?:[\s,]+[a-f0-9]{8})*)\b/gim;
+>>>>>>> v2.0.1

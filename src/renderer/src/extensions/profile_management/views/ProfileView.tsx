@@ -123,7 +123,13 @@ class ProfileView extends ComponentEx<IProps, IViewState> {
             <>
               <div>
                 {t("Other Games")}{" "}
+<<<<<<< HEAD
                 <a onClick={this.toggleOther}>{showOther ? t("Hide") : t("Show")}</a>
+=======
+                <a onClick={this.toggleOther}>
+                  {showOther ? t("Hide") : t("Show")}
+                </a>
+>>>>>>> v2.0.1
               </div>
 
               <Collapse in={showOther}>
@@ -232,7 +238,13 @@ class ProfileView extends ComponentEx<IProps, IViewState> {
     );
 
     // In development, electron.exe needs the app directory as first argument
+<<<<<<< HEAD
     const target = isDevelopment ? exePath : path.join(path.dirname(exePath), "Vortex.exe");
+=======
+    const target = isDevelopment
+      ? exePath
+      : path.join(path.dirname(exePath), "Vortex.exe");
+>>>>>>> v2.0.1
 
     const args = isDevelopment
       ? `"${getVortexPath("package")}" --profile ${profileId}`

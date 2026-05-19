@@ -3,9 +3,12 @@ const semver = require("semver");
 const Promise = require("bluebird");
 const { util } = require("vortex-api");
 
+<<<<<<< HEAD
 const { app, remote } = require("electron");
 const uniApp = app || remote.app;
 
+=======
+>>>>>>> v2.0.1
 const { BAS_EXEC, GAME_ID, MOD_MANIFEST } = require("./common");
 const {
   getModName,

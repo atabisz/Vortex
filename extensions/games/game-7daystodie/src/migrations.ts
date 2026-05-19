@@ -1,9 +1,21 @@
 import path from "path";
+<<<<<<< HEAD
 
 import semver from "semver";
 import { actions, fs, selectors, types, util } from "vortex-api";
 
 import { GAME_ID, I18N_NAMESPACE, loadOrderFilePath, modsRelPath } from "./common";
+=======
+import semver from "semver";
+import { actions, fs, selectors, types, util } from "vortex-api";
+
+import {
+  GAME_ID,
+  I18N_NAMESPACE,
+  loadOrderFilePath,
+  modsRelPath,
+} from "./common";
+>>>>>>> v2.0.1
 import { serialize } from "./loadOrder";
 import { LoadOrder } from "./types";
 
@@ -90,6 +102,7 @@ export async function migrate100(context, oldVersion): Promise<void> {
   }
 
   const profiles = util.getSafe(state, ["persistent", "profiles"], {});
+<<<<<<< HEAD
   const loProfiles = Object.keys(profiles).filter((id) => profiles[id]?.gameId === GAME_ID);
   const loMap: { [profId: string]: LoadOrder } = loProfiles.reduce((accum, iter) => {
     const current = util.getSafe(state, ["persistent", "loadOrder", iter], []);
@@ -104,6 +117,32 @@ export async function migrate100(context, oldVersion): Promise<void> {
     accum[iter] = newLO;
     return accum;
   }, {});
+=======
+  const loProfiles = Object.keys(profiles).filter(
+    (id) => profiles[id]?.gameId === GAME_ID,
+  );
+  const loMap: { [profId: string]: LoadOrder } = loProfiles.reduce(
+    (accum, iter) => {
+      const current = util.getSafe(
+        state,
+        ["persistent", "loadOrder", iter],
+        [],
+      );
+      const newLO: LoadOrder = current.map((entry) => {
+        return {
+          enabled: true,
+          name:
+            mods[entry] !== undefined ? util.renderModName(mods[entry]) : entry,
+          id: entry,
+          modId: entry,
+        };
+      });
+      accum[iter] = newLO;
+      return accum;
+    },
+    {},
+  );
+>>>>>>> v2.0.1
 
   for (const profileId of Object.keys(loMap)) {
     await serialize(context, loMap[profileId], undefined, profileId);
@@ -113,8 +152,17 @@ export async function migrate100(context, oldVersion): Promise<void> {
   return context.api
     .awaitUI()
     .then(() => fs.ensureDirWritableAsync(modsPath))
+<<<<<<< HEAD
     .then(() => context.api.emitAndAwait("purge-mods-in-path", GAME_ID, "", modsPath))
     .then(() => context.api.store.dispatch(actions.setDeploymentNecessary(GAME_ID, true)));
+=======
+    .then(() =>
+      context.api.emitAndAwait("purge-mods-in-path", GAME_ID, "", modsPath),
+    )
+    .then(() =>
+      context.api.store.dispatch(actions.setDeploymentNecessary(GAME_ID, true)),
+    );
+>>>>>>> v2.0.1
 }
 
 export async function migrate1011(context, oldVersion): Promise<void> {
@@ -144,12 +192,30 @@ export async function migrate1011(context, oldVersion): Promise<void> {
   }
 
   const profiles = util.getSafe(state, ["persistent", "profiles"], {});
+<<<<<<< HEAD
   const loProfiles = Object.keys(profiles).filter((id) => profiles[id]?.gameId === GAME_ID);
   const loMap: { [profId: string]: LoadOrder } = loProfiles.reduce((accum, iter) => {
     const lo: LoadOrder = util.getSafe(state, ["persistent", "loadOrder", iter], []);
     accum[iter] = lo;
     return accum;
   }, {});
+=======
+  const loProfiles = Object.keys(profiles).filter(
+    (id) => profiles[id]?.gameId === GAME_ID,
+  );
+  const loMap: { [profId: string]: LoadOrder } = loProfiles.reduce(
+    (accum, iter) => {
+      const lo: LoadOrder = util.getSafe(
+        state,
+        ["persistent", "loadOrder", iter],
+        [],
+      );
+      accum[iter] = lo;
+      return accum;
+    },
+    {},
+  );
+>>>>>>> v2.0.1
 
   for (const profileId of Object.keys(loMap)) {
     try {
@@ -159,7 +225,9 @@ export async function migrate1011(context, oldVersion): Promise<void> {
         .removeAsync(path.join(discoveryPath, `${profileId}_loadOrder.json`))
         .catch((err) => null);
     } catch (err) {
-      return Promise.reject(new Error(`Failed to migrate load order for ${profileId}: ${err}`));
+      return Promise.reject(
+        new Error(`Failed to migrate load order for ${profileId}: ${err}`),
+      );
     }
   }
 
@@ -167,6 +235,15 @@ export async function migrate1011(context, oldVersion): Promise<void> {
   return context.api
     .awaitUI()
     .then(() => fs.ensureDirWritableAsync(modsPath))
+<<<<<<< HEAD
     .then(() => context.api.emitAndAwait("purge-mods-in-path", GAME_ID, "", modsPath))
     .then(() => context.api.store.dispatch(actions.setDeploymentNecessary(GAME_ID, true)));
+=======
+    .then(() =>
+      context.api.emitAndAwait("purge-mods-in-path", GAME_ID, "", modsPath),
+    )
+    .then(() =>
+      context.api.store.dispatch(actions.setDeploymentNecessary(GAME_ID, true)),
+    );
+>>>>>>> v2.0.1
 }

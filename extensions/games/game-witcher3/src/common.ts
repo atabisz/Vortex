@@ -1,6 +1,9 @@
 import crypto from "crypto";
 import path from "path";
+<<<<<<< HEAD
 
+=======
+>>>>>>> v2.0.1
 import { fs, util } from "vortex-api";
 export class MD5ComparisonError extends Error {
   private mPath;
@@ -42,7 +45,13 @@ export class ResourceInaccessibleError extends Error {
   get errorMessage() {
     return this.isOneDrive
       ? this.message + ": " + "probably by the OneDrive service."
+<<<<<<< HEAD
       : this.message + ": " + "close all applications that may be using this file.";
+=======
+      : this.message +
+          ": " +
+          "close all applications that may be using this file.";
+>>>>>>> v2.0.1
   }
 }
 
@@ -58,7 +67,15 @@ export class MergeDataViolationError extends Error {
   private mNotIncluded: string[];
   private mOptional: string[];
   private mCollectionName: string;
+<<<<<<< HEAD
   constructor(notIncluded: string[], optional: string[], collectionName: string) {
+=======
+  constructor(
+    notIncluded: string[],
+    optional: string[],
+    collectionName: string,
+  ) {
+>>>>>>> v2.0.1
     super(
       `Merged script data for ${collectionName} is referencing missing/undeployed/optional mods`,
     );
@@ -107,7 +124,15 @@ export function getHash(filePath, tries = 3) {
 }
 
 export function getLoadOrderFilePath() {
+<<<<<<< HEAD
   return path.join(util.getVortexPath("documents"), "The Witcher 3", LOAD_ORDER_FILENAME);
+=======
+  return path.join(
+    util.getVortexPath("documents"),
+    "The Witcher 3",
+    LOAD_ORDER_FILENAME,
+  );
+>>>>>>> v2.0.1
 }
 
 export function getPriorityTypeBranch() {
@@ -157,7 +182,14 @@ export const CONFIG_MATRIX_FILES = [
   "localization",
 ];
 
+<<<<<<< HEAD
 export const W3_TEMP_DATA_DIR = path.join(util.getVortexPath("temp"), "W3TempData");
+=======
+export const W3_TEMP_DATA_DIR = path.join(
+  util.getVortexPath("temp"),
+  "W3TempData",
+);
+>>>>>>> v2.0.1
 
 export const UNI_PATCH = "mod0000____CompilationTrigger";
 export const LOCKED_PREFIX = "mod0000_";
@@ -169,4 +201,9 @@ export const SCRIPT_MERGER_FILES = ["WitcherScriptMerger.exe"];
 
 export const NON_SORTABLE = ["witcher3menumoddocuments", "collection"];
 
+<<<<<<< HEAD
 export const ACTIVITY_ID_IMPORTING_LOADORDER = "activity-witcher3-importing-loadorder";
+=======
+export const ACTIVITY_ID_IMPORTING_LOADORDER =
+  "activity-witcher3-importing-loadorder";
+>>>>>>> v2.0.1

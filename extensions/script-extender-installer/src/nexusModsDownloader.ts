@@ -24,7 +24,13 @@ export async function downloadScriptExtender(api: types.IExtensionApi, gameSuppo
 
   try {
     // If yes, start installing.
-    const modId = await startDownload(api, gameSupport, gameId, versionBasic, gameStore);
+    const modId = await startDownload(
+      api,
+      gameSupport,
+      gameId,
+      versionBasic,
+      gameStore,
+    );
     // Force-deploy the xSE files
     if (modId) await api.emitAndAwait("deploy-single-mod", gameId, modId, true);
     // Refresh the tools dashlet

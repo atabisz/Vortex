@@ -30,7 +30,13 @@ class DarkSouls {
   }
 
   requiresLauncher(gamePath, store) {
+<<<<<<< HEAD
     return store === "steam" ? Promise.resolve({ launcher: "steam" }) : Promise.resolve(undefined);
+=======
+    return store === "steam"
+      ? Promise.resolve({ launcher: "steam" })
+      : Promise.resolve(undefined);
+>>>>>>> v2.0.1
   }
 
   executable() {
@@ -51,7 +57,14 @@ class DarkSouls {
               "Action required",
               { message: "Modding Dark Souls requires a tool called DSfix" },
               [
+<<<<<<< HEAD
                 { label: "Cancel", action: () => reject(new util.UserCanceled()) },
+=======
+                {
+                  label: "Cancel",
+                  action: () => reject(new util.UserCanceled()),
+                },
+>>>>>>> v2.0.1
                 {
                   label: "Go to DSfix page",
                   action: () => {

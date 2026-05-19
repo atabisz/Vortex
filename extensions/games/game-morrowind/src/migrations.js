@@ -29,7 +29,15 @@ async function migrate103(api, oldVersion) {
         modPath,
         (entries) => {
           for (let entry of entries) {
+<<<<<<< HEAD
             if ([".esp", ".esm"].includes(path.extname(entry.filePath.toLowerCase()))) {
+=======
+            if (
+              [".esp", ".esm"].includes(
+                path.extname(entry.filePath.toLowerCase()),
+              )
+            ) {
+>>>>>>> v2.0.1
               plugins.push(path.basename(entry.filePath));
             }
           }
@@ -38,6 +46,7 @@ async function migrate103(api, oldVersion) {
       );
     } catch {
       // don't know, don't care, just skip it
+<<<<<<< HEAD
       log("warn", "morrowind migrate103: mod directory missing or inaccessible, skipping", {
         modPath,
       });
@@ -45,6 +54,19 @@ async function migrate103(api, oldVersion) {
     }
     if (plugins.length > 0) {
       batched.push(actions.setModAttribute(MORROWIND_ID, mod.id, "plugins", plugins));
+=======
+      log(
+        "warn",
+        "morrowind migrate103: mod directory missing or inaccessible, skipping",
+        { modPath },
+      );
+      continue;
+    }
+    if (plugins.length > 0) {
+      batched.push(
+        actions.setModAttribute(MORROWIND_ID, mod.id, "plugins", plugins),
+      );
+>>>>>>> v2.0.1
     }
   }
 

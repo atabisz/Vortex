@@ -1,16 +1,33 @@
 import { generate as shortid } from "shortid";
 
+<<<<<<< HEAD
 import type { IExtensionApi, IInstallResult, IInstruction, InstructionType } from "../../types/api";
 import { UserCanceled } from "../../util/CustomErrors";
 import { getGame } from "../gamemode_management/util/getGame";
 import type { IChoices } from "../installer_fomod_shared/types/interface";
+=======
+import type {
+  IExtensionApi,
+  IInstallResult,
+  IInstruction,
+  InstructionType,
+} from "../../types/api";
+import type { IChoices } from "../installer_fomod_shared/types/interface";
+import type { IInstallationDetails } from "../mod_management/types/InstallFunc";
+
+import { UserCanceled } from "../../util/CustomErrors";
+import { getGame } from "../gamemode_management/util/getGame";
+>>>>>>> v2.0.1
 import {
   getPluginPath,
   getStopPatterns,
   uniPatterns,
 } from "../installer_fomod_shared/utils/gameSupport";
 import { getChoicesFromState } from "../installer_fomod_shared/utils/helpers";
+<<<<<<< HEAD
 import type { IInstallationDetails } from "../mod_management/types/InstallFunc";
+=======
+>>>>>>> v2.0.1
 import { VortexModInstaller } from "./utils/VortexModInstaller";
 
 export const install = async (
@@ -24,13 +41,25 @@ export const install = async (
 ) => {
   const instanceId = shortid();
 
+<<<<<<< HEAD
   const isFomodChoicesIn = (value: unknown): value is { type: string; options: IChoices } =>
+=======
+  const isFomodChoicesIn = (
+    value: unknown,
+  ): value is { type: string; options: IChoices } =>
+>>>>>>> v2.0.1
     typeof value === "object" &&
     value != null &&
     (value as { type?: unknown }).type === "fomod" &&
     Array.isArray((value as { options?: unknown }).options);
 
+<<<<<<< HEAD
   const fomodChoices: IChoices = isFomodChoicesIn(choicesIn) ? choicesIn.options : undefined;
+=======
+  const fomodChoices: IChoices = isFomodChoicesIn(choicesIn)
+    ? choicesIn.options
+    : undefined;
+>>>>>>> v2.0.1
 
   const invokeInstall = async (validate: boolean) => {
     // When override instructions file is present, use only the universal stop patterns and null pluginPath
@@ -52,7 +81,16 @@ export const install = async (
     // the dialog while still showing it for user modification.
     const preselect = !isUnattended && fomodChoices != null;
 
+<<<<<<< HEAD
     const modInstaller = await VortexModInstaller.create(api, instanceId, gameId, isUnattended);
+=======
+    const modInstaller = await VortexModInstaller.create(
+      api,
+      instanceId,
+      gameId,
+      isUnattended,
+    );
+>>>>>>> v2.0.1
 
     const result = await modInstaller.installAsync(
       files,

@@ -3,6 +3,7 @@ const path = require("path");
 const { actions, fs, FlexLayout, log, selectors, util } = require("vortex-api");
 const semver = require("semver");
 
+<<<<<<< HEAD
 const { app, remote } = require("electron");
 const uniApp = app || remote.app;
 
@@ -27,6 +28,29 @@ const {
   missingGameJsonError,
 } = require("./util");
 
+=======
+const {
+  BAS_EXEC,
+  GAME_ID,
+  I18N_NAMESPACE,
+  MOD_MANIFEST,
+  GameNotDiscoveredException,
+} = require("./common");
+const { testModInstaller, installMulleMod, installOfficialMod } = require("./installers");
+
+const { migrate010, migrate020, migrate0212 } = require("./migrations");
+
+const {
+  isOfficialModType,
+  streamingAssetsPath,
+  getModName,
+  getGameVersion,
+  getMinModVersion,
+  getDiscoveryPath,
+  missingGameJsonError,
+} = require("./util");
+
+>>>>>>> v2.0.1
 const React = require("react");
 const BS = require("react-bootstrap");
 
@@ -267,7 +291,13 @@ async function writeLOToFile(api, loadOrder) {
   const loData = {
     modNames,
   };
+<<<<<<< HEAD
   return fs.writeFileAsync(loFilePath, JSON.stringify(loData, undefined, 2), { encoding: "utf8" });
+=======
+  return fs.writeFileAsync(loFilePath, JSON.stringify(loData, undefined, 2), {
+    encoding: "utf8",
+  });
+>>>>>>> v2.0.1
 }
 
 async function preSort(context, items, direction, refreshType) {
@@ -413,7 +443,14 @@ function infoComponent(context, props) {
 }
 
 function resolveGameVersion(api, discoveryPath) {
+<<<<<<< HEAD
   if (process.env.NODE_ENV !== "development" && semver.satisfies(uniApp.getVersion(), "<1.4.0")) {
+=======
+  if (
+    process.env.NODE_ENV !== "development" &&
+    semver.satisfies(util.getApplication().version, "<1.4.0")
+  ) {
+>>>>>>> v2.0.1
     return Promise.reject(new util.ProcessCanceled("not supported in older Vortex versions"));
   }
   return getMinModVersion(discoveryPath, BAS_EXEC, true)

@@ -21,14 +21,44 @@ import type {
   IModFileQuery,
 } from "@nexusmods/nexus-api";
 import type Nexus from "@nexusmods/nexus-api";
+<<<<<<< HEAD
 import { GraphError, NexusError, RateLimitError, TimeoutError } from "@nexusmods/nexus-api";
 import { getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
 import { AlreadyDownloaded, DownloadIsHTML } from "@vortex/shared/errors";
 import BluebirdPromise from "bluebird";
+=======
+>>>>>>> v2.0.1
 import type { TFunction } from "i18next";
+import type * as Redux from "redux";
+
+import {
+  GraphError,
+  NexusError,
+  RateLimitError,
+  TimeoutError,
+} from "@nexusmods/nexus-api";
+import {
+  getErrorCode,
+  getErrorMessage,
+  getErrorMessageOrDefault,
+  unknownToError,
+} from "@vortex/shared";
+import BluebirdPromise from "bluebird";
 import jwt from "jsonwebtoken";
 import * as _ from "lodash";
+<<<<<<< HEAD
 import type * as Redux from "redux";
+=======
+import * as path from "path";
+import * as util from "util";
+
+import type { IExtensionApi, ThunkStore } from "../../types/IExtensionContext";
+import type { IMod, IState } from "../../types/IState";
+import type { RedownloadMode } from "../download_management/DownloadManager";
+import type { IJWTAccessToken } from "./types/IJWTAccessToken";
+import type { IValidateKeyDataV2 } from "./types/IValidateKeyData";
+import type { ITokenReply } from "./util/oauth";
+>>>>>>> v2.0.1
 
 import {
   addNotification,
@@ -39,8 +69,11 @@ import {
   setOAuthCredentials,
 } from "../../actions";
 import { log } from "../../logging";
+<<<<<<< HEAD
 import type { IExtensionApi, ThunkStore } from "../../types/IExtensionContext";
 import type { IMod, IState } from "../../types/IState";
+=======
+>>>>>>> v2.0.1
 import {
   DataInvalid,
   HTTPError,
@@ -59,7 +92,14 @@ import { getPreloadApi, getWindowId } from "../../util/preloadAccess";
 import { activeGameId } from "../../util/selectors";
 import { getSafe } from "../../util/storeHelper";
 import { batchDispatch, toPromise, truthy } from "../../util/util";
+<<<<<<< HEAD
 import type { RedownloadMode } from "../download_management/types/IDownload";
+=======
+import {
+  AlreadyDownloaded,
+  DownloadIsHTML,
+} from "../download_management/DownloadManager";
+>>>>>>> v2.0.1
 import { SITE_ID } from "../gamemode_management/constants";
 import { gameById, knownGames } from "../gamemode_management/selectors";
 import modName from "../mod_management/util/modName";
@@ -68,14 +108,28 @@ import { setLoginId, setOauthPending } from "./actions/session";
 import { OAUTH_CLIENT_ID, OAUTH_REDIRECT_URL, OAUTH_URL, getOAuthRedirectUrl } from "./constants";
 import NXMUrl from "./NXMUrl";
 import { isLoggedIn } from "./selectors";
+<<<<<<< HEAD
 import type { IJWTAccessToken } from "./types/IJWTAccessToken";
 import type { IValidateKeyDataV2 } from "./types/IValidateKeyData";
 import { IAccountStatus } from "./types/IValidateKeyData";
 import { checkModVersion, fetchRecentUpdates, ONE_DAY, ONE_MINUTE } from "./util/checkModsVersion";
 import { convertGameIdReverse, convertNXMIdReverse, nexusGameId } from "./util/convertGameId";
+=======
+import { IAccountStatus } from "./types/IValidateKeyData";
+import {
+  checkModVersion,
+  fetchRecentUpdates,
+  ONE_DAY,
+  ONE_MINUTE,
+} from "./util/checkModsVersion";
+import {
+  convertGameIdReverse,
+  convertNXMIdReverse,
+  nexusGameId,
+} from "./util/convertGameId";
+>>>>>>> v2.0.1
 import { endorseCollection, endorseMod } from "./util/endorseMod";
 import { FULL_REVISION_INFO, MOD_FILE_INFO } from "./util/graphQueries";
-import type { ITokenReply } from "./util/oauth";
 import OAuth from "./util/oauth";
 import { makeFileUID } from "./util/UIDs";
 
@@ -1069,12 +1123,74 @@ export function graphErrorContext(err: unknown): Record<string, unknown> {
   return ctx;
 }
 
+<<<<<<< HEAD
 export function resolveGraphError(t: TFunction, isLoggedIn: boolean, err: Error): string {
+=======
+export interface IHandleGraphErrorOptions<T> {
+  // Notification title shown to the user when the error isn't skipped.
+  title: string;
+  // Value returned when an error is handled, so callers can `return handleGraphError(...)`.
+  fallback: T;
+  // Some errors are expected and shouldn't notify the user at all.
+  doNotReport?: boolean;
+  // Codes that should be silently ignored (no notification, no report).
+  skipCodes?: readonly string[];
+  // Codes that should still notify but suppress the report button.
+  noReportCodes?: readonly string[];
+  // Default report behavior when no code-specific override applies. Defaults to true.
+  allowReport?: boolean;
+  // Notification id, e.g. to collapse repeated failures into a single toast.
+  notificationId?: string;
+}
+
+/**
+ * Shared catch-handler for endpoints that hit the Nexus GraphQL API.
+ * Pulls the error code and diagnostic context out via graphErrorContext,
+ * decides whether to surface a notification (and whether that notification
+ * permits a bug report), and returns the caller-supplied fallback so the
+ * chain recovers with a sensible default. Graph diagnostics are also logged
+ * so bug reports carry the failing call / query / path locations.
+ */
+export function handleGraphError<T>(
+  api: IExtensionApi,
+  err: unknown,
+  opts: IHandleGraphErrorOptions<T>,
+): T {
+  const ctx = graphErrorContext(err);
+  if (opts.doNotReport) {
+    log("warn", opts.title, { ...ctx, message: getErrorMessage(err) });
+    return opts.fallback;
+  }
+  const code = ctx.graphCode as string | undefined;
+  if (code !== undefined && (opts.skipCodes?.includes(code) ?? false)) {
+    return opts.fallback;
+  }
+  const noReport =
+    code !== undefined && (opts.noReportCodes?.includes(code) ?? false);
+  const allowReport = (opts.allowReport ?? true) && !noReport;
+  if (Object.keys(ctx).length > 0) {
+    log("warn", opts.title, ctx);
+  }
+  const notifyOpts: { allowReport: boolean; id?: string } = { allowReport };
+  if (opts.notificationId !== undefined) {
+    notifyOpts.id = opts.notificationId;
+  }
+  api.showErrorNotification(opts.title, unknownToError(err), notifyOpts);
+  return opts.fallback;
+}
+
+export function resolveGraphError(
+  t: TFunction,
+  isLoggedIn: boolean,
+  err: Error,
+): string {
+>>>>>>> v2.0.1
   if (err.message === "You must provide a version") {
     // is this still reported in this way?
     return t("You can't endorse a mod that has no version set.");
   }
 
+  const errCode = getErrorCode(err);
   const msg = {
     NOT_DOWNLOADED_MOD: "You have not downloaded this mod from Nexus Mods yet.",
     TOO_SOON_AFTER_DOWNLOAD:
@@ -1084,7 +1200,7 @@ export function resolveGraphError(t: TFunction, isLoggedIn: boolean, err: Error)
     UNAUTHORIZED: isLoggedIn
       ? "You cannot interact with this collection because you have been blocked by the curator."
       : "You have to be logged in to vote.",
-  }[err["code"]];
+  }[errCode];
 
   return msg;
 }
@@ -1879,7 +1995,10 @@ export function updateToken(
     ),
   )
     .then(() => getUserInfo(api, nexus)) // update userinfo as we've set some new nexus credentials, either by launch, login or token refresh
-    .then(() => true)
+    .then(() => {
+      api.events.emit("did-login", null);
+      return BluebirdPromise.resolve(true);
+    })
     .catch((err) => {
       api.showErrorNotification("Authentication failed, please log in again", err, {
         allowReport: false,

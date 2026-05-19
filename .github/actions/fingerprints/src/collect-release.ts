@@ -1,7 +1,16 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
+<<<<<<< HEAD
 
 import { CollectResult, FingerprintRow, PR_FINGERPRINT_RE, Status } from "./types";
+=======
+import {
+  CollectResult,
+  FingerprintRow,
+  PR_FINGERPRINT_RE,
+  Status,
+} from "./types";
+>>>>>>> v2.0.1
 
 type Octokit = ReturnType<typeof github.getOctokit>;
 
@@ -48,6 +57,7 @@ const collectFingerprintRowsSince = async (
   const rows: FingerprintRow[] = [];
   let mergedCount = 0;
 
+<<<<<<< HEAD
   for await (const { data } of octokit.paginate.iterator(octokit.rest.pulls.list, {
     owner: ctx.repo.owner,
     repo: ctx.repo.repo,
@@ -56,6 +66,19 @@ const collectFingerprintRowsSince = async (
     direction: "desc",
     per_page: 100,
   })) {
+=======
+  for await (const { data } of octokit.paginate.iterator(
+    octokit.rest.pulls.list,
+    {
+      owner: ctx.repo.owner,
+      repo: ctx.repo.repo,
+      state: "closed",
+      sort: "updated",
+      direction: "desc",
+      per_page: 100,
+    },
+  )) {
+>>>>>>> v2.0.1
     for (const pr of data) {
       if (new Date(pr.updated_at) < sinceDate) {
         return { rows, mergedCount };
@@ -99,7 +122,13 @@ const collectFingerprintRowsSince = async (
  * Walks merged PRs since the previous release, collects referenced fingerprints,
  * and marks them as released in the database.
  */
+<<<<<<< HEAD
 export const collectFromRelease = async (octokit: Octokit): Promise<CollectResult> => {
+=======
+export const collectFromRelease = async (
+  octokit: Octokit,
+): Promise<CollectResult> => {
+>>>>>>> v2.0.1
   const ctx = github.context;
   const version = ctx.ref.replace("refs/tags/", "");
 
@@ -120,7 +149,15 @@ export const collectFromRelease = async (octokit: Octokit): Promise<CollectResul
     return { rows: [], dbMode: "insert" };
   }
 
+<<<<<<< HEAD
   const previousCommitSha = await resolvePreviousTagCommitSha(octokit, ctx, previousTag);
+=======
+  const previousCommitSha = await resolvePreviousTagCommitSha(
+    octokit,
+    ctx,
+    previousTag,
+  );
+>>>>>>> v2.0.1
   const { data: previousCommit } = await octokit.rest.git.getCommit({
     owner: ctx.repo.owner,
     repo: ctx.repo.repo,
@@ -131,8 +168,21 @@ export const collectFromRelease = async (octokit: Octokit): Promise<CollectResul
   const sinceDate = new Date(since);
   core.info(`Processing PRs merged since ${previousTag} (${since})`);
 
+<<<<<<< HEAD
   const { rows, mergedCount } = await collectFingerprintRowsSince(octokit, ctx, sinceDate, version);
 
   core.info(`Found ${mergedCount} merged PR(s), ${rows.length} unique fingerprint(s).`);
+=======
+  const { rows, mergedCount } = await collectFingerprintRowsSince(
+    octokit,
+    ctx,
+    sinceDate,
+    version,
+  );
+
+  core.info(
+    `Found ${mergedCount} merged PR(s), ${rows.length} unique fingerprint(s).`,
+  );
+>>>>>>> v2.0.1
   return { rows, dbMode: "insert" };
 };

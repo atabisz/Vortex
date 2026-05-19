@@ -1,16 +1,36 @@
 import { actions, selectors, types, util } from "vortex-api";
+<<<<<<< HEAD
 
 import { GAME_ID } from "../statics";
 import { transformId } from "../util";
 import { IKCDCollectionsData } from "./types";
 
 export async function exportLoadOrder(state: types.IState, modIds: string[]): Promise<string[]> {
+=======
+import { GAME_ID } from "../statics";
+import { transformId } from "../util";
+
+import { IKCDCollectionsData } from "./types";
+
+export async function exportLoadOrder(
+  state: types.IState,
+  modIds: string[],
+): Promise<string[]> {
+>>>>>>> v2.0.1
   const profileId = selectors.lastActiveProfileForGame(state, GAME_ID);
   if (profileId === undefined) {
     return Promise.reject(new util.ProcessCanceled("Invalid profile id"));
   }
 
+<<<<<<< HEAD
   const loadOrder: string[] = util.getSafe(state, ["persistent", "loadOrder", profileId], []);
+=======
+  const loadOrder: string[] = util.getSafe(
+    state,
+    ["persistent", "loadOrder", profileId],
+    [],
+  );
+>>>>>>> v2.0.1
   if (!loadOrder) {
     return Promise.resolve(undefined);
   }
@@ -29,9 +49,13 @@ export async function importLoadOrder(
 
   const profileId = selectors.lastActiveProfileForGame(state, GAME_ID);
   if (profileId === undefined) {
-    return Promise.reject(new util.ProcessCanceled(`Invalid profile id ${profileId}`));
+    return Promise.reject(
+      new util.ProcessCanceled(`Invalid profile id ${profileId}`),
+    );
   }
 
-  api.store.dispatch(actions.setLoadOrder(profileId, collection.loadOrder as any));
+  api.store.dispatch(
+    actions.setLoadOrder(profileId, collection.loadOrder as any),
+  );
   return Promise.resolve(undefined);
 }

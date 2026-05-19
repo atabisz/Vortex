@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+import { BrowserWindow, Menu, Tray } from "electron";
+>>>>>>> v2.0.1
 import path from "node:path";
 
 import { BrowserWindow, Menu, Tray } from "electron";

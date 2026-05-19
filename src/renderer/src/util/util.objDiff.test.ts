@@ -1,7 +1,12 @@
+<<<<<<< HEAD:src/renderer/src/util/util.objDiff.test.ts
 import { describe, it, expect } from "vitest";
 
 import * as util from "./util";
 
+=======
+import * as util from "../util/util";
+
+>>>>>>> v2.0.1:src/renderer/src/__tests__/util.objDiff.edge-cases.test.js
 describe("objDiff edge cases that could cause TypeError", () => {
   describe("type safety for Object.keys calls", () => {
     it("handles null values that were causing the original TypeError", () => {
@@ -12,7 +17,13 @@ describe("objDiff edge cases that could cause TypeError", () => {
     });
 
     it("handles undefined values safely", () => {
+<<<<<<< HEAD:src/renderer/src/util/util.objDiff.test.ts
       expect(() => util.objDiff({ key: undefined }, { key: undefined })).not.toThrow();
+=======
+      expect(() =>
+        util.objDiff({ key: undefined }, { key: undefined }),
+      ).not.toThrow();
+>>>>>>> v2.0.1:src/renderer/src/__tests__/util.objDiff.edge-cases.test.js
       expect(() => util.objDiff(undefined, { key: "value" })).not.toThrow();
       expect(() => util.objDiff({ key: "value" }, undefined)).not.toThrow();
     });
@@ -131,9 +142,15 @@ describe("objDiff edge cases that could cause TypeError", () => {
 
   describe("Object.keys edge cases", () => {
     it("handles objects created with Object.create(null)", () => {
+<<<<<<< HEAD:src/renderer/src/util/util.objDiff.test.ts
       const obj1 = Object.create(null) as Record<string, string>;
       obj1.key = "value1";
       const obj2 = Object.create(null) as Record<string, string>;
+=======
+      const obj1 = Object.create(null);
+      obj1.key = "value1";
+      const obj2 = Object.create(null);
+>>>>>>> v2.0.1:src/renderer/src/__tests__/util.objDiff.edge-cases.test.js
       obj2.key = "value2";
 
       expect(() => util.objDiff(obj1, obj2)).not.toThrow();
@@ -145,8 +162,13 @@ describe("objDiff edge cases that could cause TypeError", () => {
     });
 
     it("handles objects with non-enumerable properties", () => {
+<<<<<<< HEAD:src/renderer/src/util/util.objDiff.test.ts
       const obj1: Record<string, string> = {};
       const obj2: Record<string, string> = {};
+=======
+      const obj1 = {};
+      const obj2 = {};
+>>>>>>> v2.0.1:src/renderer/src/__tests__/util.objDiff.edge-cases.test.js
       Object.defineProperty(obj1, "hidden", {
         value: "secret1",
         enumerable: false,
@@ -182,8 +204,13 @@ describe("objDiff edge cases that could cause TypeError", () => {
 
   describe("performance and memory edge cases", () => {
     it("handles large objects without stack overflow", () => {
+<<<<<<< HEAD:src/renderer/src/util/util.objDiff.test.ts
       const createLargeObject = (size: number): Record<string, string> => {
         const obj: Record<string, string> = {};
+=======
+      const createLargeObject = (size) => {
+        const obj = {};
+>>>>>>> v2.0.1:src/renderer/src/__tests__/util.objDiff.edge-cases.test.js
         for (let i = 0; i < size; i++) {
           obj[`key${i}`] = `value${i}`;
         }
@@ -203,8 +230,13 @@ describe("objDiff edge cases that could cause TypeError", () => {
     });
 
     it("handles objects with many levels of nesting", () => {
+<<<<<<< HEAD:src/renderer/src/util/util.objDiff.test.ts
       const createDeepObject = (depth: number): Record<string, unknown> => {
         let obj: Record<string, unknown> = { value: "deep" };
+=======
+      const createDeepObject = (depth) => {
+        let obj = { value: "deep" };
+>>>>>>> v2.0.1:src/renderer/src/__tests__/util.objDiff.edge-cases.test.js
         for (let i = 0; i < depth; i++) {
           obj = { [`level${i}`]: obj };
         }

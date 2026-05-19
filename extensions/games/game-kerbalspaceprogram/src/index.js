@@ -1,5 +1,8 @@
 const Promise = require("bluebird");
+<<<<<<< HEAD
 const { remote } = require("electron");
+=======
+>>>>>>> v2.0.1
 const path = require("path");
 const { fs, log, selectors, util } = require("vortex-api");
 

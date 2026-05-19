@@ -1,6 +1,7 @@
 {
   "$schema": "https://www.schemastore.org/tsconfig.json",
   "extends": "../tsconfig.extensions.json",
+<<<<<<< HEAD
   "include": [
     "src"
   ],
@@ -9,4 +10,7 @@
     "src/**/*.test.tsx",
     "__mocks__"
   ]
+=======
+  "include": ["src"]
+>>>>>>> v2.0.1
 }

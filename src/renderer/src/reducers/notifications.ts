@@ -37,7 +37,13 @@ export const notificationsReducer: IReducerSpec = {
       if (payload?.id == null) {
         return state;
       }
+<<<<<<< HEAD
       const idx = state.notifications.findIndex((noti) => noti.id === payload.id);
+=======
+      const idx = state.notifications.findIndex(
+        (noti) => noti.id === payload.id,
+      );
+>>>>>>> v2.0.1
       if (idx === -1) {
         return state;
       }

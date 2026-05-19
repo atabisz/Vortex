@@ -1,5 +1,6 @@
 /* eslint-disable */
 import * as path from "path";
+<<<<<<< HEAD
 
 import { LRUCache } from "lru-cache";
 import { fs, log, selectors, types, util } from "vortex-api";
@@ -8,6 +9,16 @@ import { GAME_ID } from "./common";
 import { listPackage } from "./divineWrapper";
 import { IPakInfo } from "./types";
 import { extractPakInfoImpl, logDebug } from "./util";
+=======
+import { fs, log, selectors, types, util } from "vortex-api";
+
+import { GAME_ID } from "./common";
+import { listPackage } from "./divineWrapper";
+import { IPakInfo } from "./types";
+import { extractPakInfoImpl, logDebug } from "./util";
+
+import { LRUCache } from "lru-cache";
+>>>>>>> v2.0.1
 
 export interface ICacheEntry {
   lastModified: number;
@@ -95,7 +106,15 @@ export default class PakInfoCache {
     const state = this.mApi.getState();
     const profileId = selectors.lastActiveProfileForGame(state, GAME_ID);
     const staging = selectors.installPathForGame(state, GAME_ID);
+<<<<<<< HEAD
     const cachePath = path.join(path.dirname(staging), "cache", profileId + ".json");
+=======
+    const cachePath = path.join(
+      path.dirname(staging),
+      "cache",
+      profileId + ".json",
+    );
+>>>>>>> v2.0.1
     try {
       await fs.ensureDirWritableAsync(path.dirname(cachePath));
       // Convert cache entries to array for serialization
@@ -111,7 +130,15 @@ export default class PakInfoCache {
     const state = api.getState();
     const profileId = selectors.lastActiveProfileForGame(state, GAME_ID);
     const staging = selectors.installPathForGame(state, GAME_ID);
+<<<<<<< HEAD
     const cachePath = path.join(path.dirname(staging), "cache", profileId + ".json");
+=======
+    const cachePath = path.join(
+      path.dirname(staging),
+      "cache",
+      profileId + ".json",
+    );
+>>>>>>> v2.0.1
     try {
       await fs.ensureDirWritableAsync(path.dirname(cachePath));
       const data = await fs.readFileAsync(cachePath, { encoding: "utf8" });
@@ -129,13 +156,22 @@ export default class PakInfoCache {
     }
   }
 
-  private isLOListed(api: types.IExtensionApi, pakPath: string, packageList: string[]): boolean {
+  private isLOListed(
+    api: types.IExtensionApi,
+    pakPath: string,
+    packageList: string[],
+  ): boolean {
     try {
       // look at the end of the first bit of data to see if it has a meta.lsx file
       // example 'Mods/Safe Edition/meta.lsx\t1759\t0'
       const containsMetaFile =
         packageList.find(
+<<<<<<< HEAD
           (line) => path.basename(line.split("\t")[0]).toLowerCase() === "meta.lsx",
+=======
+          (line) =>
+            path.basename(line.split("\t")[0]).toLowerCase() === "meta.lsx",
+>>>>>>> v2.0.1
         ) !== undefined
           ? true
           : false;

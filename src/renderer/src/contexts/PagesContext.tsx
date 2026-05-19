@@ -49,8 +49,17 @@ export const PagesProvider: FC<IPagesProviderProps> = ({ children }) => {
   const mainPage = useSelector(mainPageSelector);
   const activeProfileId = useSelector(activeProfileIdSelector);
   const activeGameId = useSelector(activeGameIdSelector);
+<<<<<<< HEAD
   const useModernLayout = useSelector((state: IState) => state.settings.window.useModernLayout);
   const profilesVisible = useSelector((state: IState) => state.settings.interface.profilesVisible);
+=======
+  const useModernLayout = useSelector(
+    (state: IState) => state.settings.window.useModernLayout,
+  );
+  const profilesVisible = useSelector(
+    (state: IState) => state.settings.interface.profilesVisible,
+  );
+>>>>>>> v2.0.1
 
   const sortedPages = useMemo(
     () =>
@@ -90,7 +99,18 @@ export const PagesProvider: FC<IPagesProviderProps> = ({ children }) => {
         dispatch(setOpenMainPage(firstVisible.id, false));
       }
     }
+<<<<<<< HEAD
   }, [mainPage, sortedPages, activeProfileId, activeGameId, profilesVisible, dispatch]);
+=======
+  }, [
+    mainPage,
+    sortedPages,
+    activeProfileId,
+    activeGameId,
+    profilesVisible,
+    dispatch,
+  ]);
+>>>>>>> v2.0.1
 
   const contextValue = useMemo(
     () => ({

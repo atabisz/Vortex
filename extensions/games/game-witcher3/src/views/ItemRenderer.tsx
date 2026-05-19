@@ -2,6 +2,7 @@ import * as React from "react";
 import { Checkbox, ListGroupItem } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
+<<<<<<< HEAD
 import {
   actions,
   Icon,
@@ -13,6 +14,19 @@ import {
   MainContext,
 } from "vortex-api";
 
+=======
+
+import {
+  actions,
+  Icon,
+  LoadOrderIndexInput,
+  tooltip,
+  selectors,
+  types,
+  util,
+  MainContext,
+} from "vortex-api";
+>>>>>>> v2.0.1
 import { I18N_NAMESPACE, GAME_ID } from "../common";
 import { IItemRendererProps } from "../types";
 
@@ -53,7 +67,13 @@ function renderValidationError(props: IProps): JSX.Element {
   const { invalidEntries, loEntry } = props.item;
   const invalidEntry =
     invalidEntries !== undefined
+<<<<<<< HEAD
       ? invalidEntries.find((inv) => inv.id.toLowerCase() === loEntry.id.toLowerCase())
+=======
+      ? invalidEntries.find(
+          (inv) => inv.id.toLowerCase() === loEntry.id.toLowerCase(),
+        )
+>>>>>>> v2.0.1
       : undefined;
   return invalidEntry !== undefined ? (
     <tooltip.Icon
@@ -77,7 +97,13 @@ function renderViewModIcon(props: IProps): JSX.Element {
     if (mod === undefined) {
       return;
     }
+<<<<<<< HEAD
     const batched = [actions.setAttributeFilter("mods", "name", util.renderModName(mod))];
+=======
+    const batched = [
+      actions.setAttributeFilter("mods", "name", util.renderModName(mod)),
+    ];
+>>>>>>> v2.0.1
     util.batchDispatch(context.api.store.dispatch, batched);
     context.api.events.emit("show-main-page", "Mods");
   }, [item, mods, context]);
@@ -103,10 +129,17 @@ function renderExternalBanner(item: types.ILoadOrderEntry): JSX.Element {
 
 function renderDraggable(props: IProps): JSX.Element {
   const { loadOrder, className, item, profile } = props;
-  const key = !!item?.loEntry?.name ? `${item.loEntry.name}` : `${item.loEntry.id}`;
+  const key = !!item?.loEntry?.name
+    ? `${item.loEntry.name}`
+    : `${item.loEntry.id}`;
   const context = React.useContext(MainContext);
   const dispatch = useDispatch();
+<<<<<<< HEAD
   const position = loadOrder.findIndex((entry) => entry.id === item.loEntry.id) + 1;
+=======
+  const position =
+    loadOrder.findIndex((entry) => entry.id === item.loEntry.id) + 1;
+>>>>>>> v2.0.1
 
   let classes = ["load-order-entry"];
   if (className !== undefined) {
@@ -156,13 +189,29 @@ function renderDraggable(props: IProps): JSX.Element {
         disabled={isLocked(item.loEntry)}
         onChange={onStatusChange}
       />
+<<<<<<< HEAD
+=======
+    ) : null;
+
+  const lock = () =>
+    isLocked(item.loEntry) ? (
+      <Icon className="locked-entry-logo" name="locked" />
+>>>>>>> v2.0.1
     ) : null;
 
   const lock = () =>
     isLocked(item.loEntry) ? <Icon className="locked-entry-logo" name="locked" /> : null;
 
   return (
+<<<<<<< HEAD
     <ListGroupItem key={key} className={classes.join(" ")} ref={props.item.setRef}>
+=======
+    <ListGroupItem
+      key={key}
+      className={classes.join(" ")}
+      ref={props.item.setRef}
+    >
+>>>>>>> v2.0.1
       <Icon className="drag-handle-icon" name="drag-handle" />
       <LoadOrderIndexInput
         className="load-order-index"

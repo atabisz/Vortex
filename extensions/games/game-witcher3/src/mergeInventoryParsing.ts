@@ -2,23 +2,51 @@ import path from "path";
 
 /* eslint-disable */
 import Bluebird from "bluebird";
+<<<<<<< HEAD
 import { fs, log, types, util } from "vortex-api";
 import { parseStringPromise } from "xml2js";
 
 import { GAME_ID, SCRIPT_MERGER_ID, MERGE_INV_MANIFEST } from "./common";
+=======
+import path from "path";
+import { parseStringPromise } from "xml2js";
+
+import { GAME_ID, SCRIPT_MERGER_ID, MERGE_INV_MANIFEST } from "./common";
+
+import { fs, log, types, util } from "vortex-api";
+>>>>>>> v2.0.1
 
 function getMergeInventory(api: types.IExtensionApi) {
   // Provided with a pattern, attempts to retrieve element values
   //  from any element keys that match the pattern inside the merge inventory file.
   const state = api.getState();
+<<<<<<< HEAD
   const discovery = util.getSafe(state, ["settings", "gameMode", "discovered", GAME_ID], undefined);
   const scriptMerger = util.getSafe(discovery, ["tools", SCRIPT_MERGER_ID], undefined);
+=======
+  const discovery = util.getSafe(
+    state,
+    ["settings", "gameMode", "discovered", GAME_ID],
+    undefined,
+  );
+  const scriptMerger = util.getSafe(
+    discovery,
+    ["tools", SCRIPT_MERGER_ID],
+    undefined,
+  );
+>>>>>>> v2.0.1
   if (scriptMerger === undefined || scriptMerger.path === undefined) {
     return Bluebird.resolve([]);
   }
 
   return fs
+<<<<<<< HEAD
     .readFileAsync(path.join(path.dirname(scriptMerger.path), MERGE_INV_MANIFEST))
+=======
+    .readFileAsync(
+      path.join(path.dirname(scriptMerger.path), MERGE_INV_MANIFEST),
+    )
+>>>>>>> v2.0.1
     .then(async (xmlData) => {
       try {
         const mergeData = await parseStringPromise(xmlData);
@@ -30,7 +58,15 @@ function getMergeInventory(api: types.IExtensionApi) {
     .catch((err) =>
       err.code === "ENOENT" // No merge file? - no problem.
         ? Promise.resolve(undefined)
+<<<<<<< HEAD
         : Promise.reject(new util.DataInvalid(`Failed to parse ${MERGE_INV_MANIFEST}: ${err}`)),
+=======
+        : Promise.reject(
+            new util.DataInvalid(
+              `Failed to parse ${MERGE_INV_MANIFEST}: ${err}`,
+            ),
+          ),
+>>>>>>> v2.0.1
     );
 }
 
@@ -83,12 +119,20 @@ export function getMergedModNames(api: types.IExtensionApi) {
       //  Rather than blocking the user from modding his game we're
       //  we simply return an empty array; but before we do that,
       //  we need to tell him we were unable to parse the merged inventory.
+<<<<<<< HEAD
       api.showErrorNotification("Invalid MergeInventory.xml file", err, { allowReport: false });
+=======
+      api.showErrorNotification("Invalid MergeInventory.xml file", err, {
+        allowReport: false,
+      });
+>>>>>>> v2.0.1
       return Promise.resolve([]);
     });
 }
 
-export function getNamesOfMergedMods(api: types.IExtensionApi): Bluebird<string[]> {
+export function getNamesOfMergedMods(
+  api: types.IExtensionApi,
+): Bluebird<string[]> {
   // This retrieves a unique list of mod names included in the merged mod
   return getMergeInventory(api).then(async (mergeInventory) => {
     if (mergeInventory === undefined) {
@@ -101,6 +145,7 @@ export function getNamesOfMergedMods(api: types.IExtensionApi): Bluebird<string[
       undefined,
     );
     const modsPath = path.join(discovery.path, "Mods");
+<<<<<<< HEAD
     const modNames = await mergeInventory.MergeInventory.Merge.reduce(async (accumP, iter) => {
       const accum = await accumP;
       const mergedMods = iter?.IncludedMod;
@@ -119,6 +164,29 @@ export function getNamesOfMergedMods(api: types.IExtensionApi): Bluebird<string[
       }
       return accum;
     }, []);
+=======
+    const modNames = await mergeInventory.MergeInventory.Merge.reduce(
+      async (accumP, iter) => {
+        const accum = await accumP;
+        const mergedMods = iter?.IncludedMod;
+        for (const modName of mergedMods) {
+          if (modName === undefined) {
+            return accum;
+          }
+          if (!accum.includes(modName?._)) {
+            try {
+              await fs.statAsync(path.join(modsPath, modName?._));
+              accum.push(modName?._);
+            } catch (err) {
+              log("debug", "merged mod is missing", modName?._);
+            }
+          }
+        }
+        return accum;
+      },
+      [],
+    );
+>>>>>>> v2.0.1
     return Promise.resolve(modNames);
   });
 }

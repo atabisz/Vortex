@@ -62,7 +62,13 @@ export const SpineProvider: FC = ({ children }: { children: ReactNode }) => {
   const { mainPages } = usePagesContext();
   const dispatch = useDispatch();
 
+<<<<<<< HEAD
   const profilesVisible = useSelector((state: IState) => state.settings.interface.profilesVisible);
+=======
+  const profilesVisible = useSelector(
+    (state: IState) => state.settings.interface.profilesVisible,
+  );
+>>>>>>> v2.0.1
   const lastActiveProfile = useSelector(lastActiveProfilesSelector);
   const activeProfileId = useSelector(activeProfileIdSelector);
   const activeGameId = useSelector(activeGameIdSelector);
@@ -76,7 +82,12 @@ export const SpineProvider: FC = ({ children }: { children: ReactNode }) => {
   // restart. Typed as `any` because this path lives in the gamebryo-plugin-
   // management extension and isn't in core IState.
   const pluginManagementEnabled = useSelector(
+<<<<<<< HEAD
     (state: IStateWithPlugins) => state.settings.plugins?.pluginManagementEnabled,
+=======
+    (state: IState) =>
+      (state as any).settings?.plugins?.pluginManagementEnabled,
+>>>>>>> v2.0.1
   );
 
   // Tracks the gameId that was active when the user navigated to home.
@@ -128,7 +139,17 @@ export const SpineProvider: FC = ({ children }: { children: ReactNode }) => {
           page.id !== "Downloads" &&
           isPageVisible(page),
       ),
+<<<<<<< HEAD
     [mainPages, isPageVisible, activeGameId, profilesVisible, pluginManagementEnabled],
+=======
+    [
+      mainPages,
+      isPageVisible,
+      activeGameId,
+      profilesVisible,
+      pluginManagementEnabled,
+    ],
+>>>>>>> v2.0.1
   );
 
   const gamePages: IMainPage[] = useMemo(
@@ -136,7 +157,17 @@ export const SpineProvider: FC = ({ children }: { children: ReactNode }) => {
       mainPages.filter(
         (page) => page.group === "per-game" && page.id !== "game-downloads" && isPageVisible(page),
       ),
+<<<<<<< HEAD
     [mainPages, isPageVisible, activeGameId, profilesVisible, pluginManagementEnabled],
+=======
+    [
+      mainPages,
+      isPageVisible,
+      activeGameId,
+      profilesVisible,
+      pluginManagementEnabled,
+    ],
+>>>>>>> v2.0.1
   );
 
   const mainPage = useSelector(mainPageSelector);
@@ -212,7 +243,12 @@ export const SpineProvider: FC = ({ children }: { children: ReactNode }) => {
     (gameId: string) => {
       const profileId = lastActiveProfile[gameId];
       const profileExists =
+<<<<<<< HEAD
         profileId !== undefined && profileByIdSelector(api.getState(), profileId) !== undefined;
+=======
+        profileId !== undefined &&
+        profileByIdSelector(api.getState(), profileId) !== undefined;
+>>>>>>> v2.0.1
 
       setIsDownloadsMode(false);
       setHomeForGameId(null);
@@ -279,7 +315,10 @@ export const SpineProvider: FC = ({ children }: { children: ReactNode }) => {
   // context so the page becomes visible
   useEffect(() => {
     const handler = (pageId: string) => {
-      if (gamePages.some((p) => p.id === pageId) && activeGameId !== undefined) {
+      if (
+        gamePages.some((p) => p.id === pageId) &&
+        activeGameId !== undefined
+      ) {
         setHomeForGameId(null);
         setIsDownloadsMode(false);
       }

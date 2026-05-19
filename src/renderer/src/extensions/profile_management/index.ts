@@ -470,7 +470,14 @@ function genOnProfileChange(
                 })
                 .then(() => {
                   log("info", "did deploy next active profile", current);
+<<<<<<< HEAD
                   const prof = profileById(api.store.getState() as IState, current);
+=======
+                  const prof = profileById(
+                    api.store.getState() as IState,
+                    current,
+                  );
+>>>>>>> v2.0.1
                   if (prof === undefined) {
                     return PromiseBB.reject(
                       new ProcessCanceled(
@@ -480,8 +487,16 @@ function genOnProfileChange(
                     );
                   }
 
+<<<<<<< HEAD
                   api.store.dispatch(setProgress("profile", "deploying", undefined, undefined));
                   const gameId = profile !== undefined ? profile.gameId : undefined;
+=======
+                  api.store.dispatch(
+                    setProgress("profile", "deploying", undefined, undefined),
+                  );
+                  const gameId =
+                    profile !== undefined ? profile.gameId : undefined;
+>>>>>>> v2.0.1
                   log("info", "switched to profile", { gameId, current });
                   confirmProfile(gameId, current);
                   return null;

@@ -18,7 +18,12 @@ const NATIVE_PC_FOLDER = "nativePC";
 //  of course only valid for steam installations.
 //  TODO: Find and test a regkey which does not depend
 //  on steam to cater for non-steam installations.
+<<<<<<< HEAD
 const steamReg = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Steam App 582010";
+=======
+const steamReg =
+  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Steam App 582010";
+>>>>>>> v2.0.1
 
 const MHW_EXEC = "MonsterHunterWorld.exe";
 
@@ -26,13 +31,27 @@ const I18N_NAMESPACE = "game-monster-hunter-world";
 
 function findGame() {
   try {
+<<<<<<< HEAD
     const instPath = winapi.RegGetValue("HKEY_LOCAL_MACHINE", steamReg, "InstallLocation");
+=======
+    const instPath = winapi.RegGetValue(
+      "HKEY_LOCAL_MACHINE",
+      steamReg,
+      "InstallLocation",
+    );
+>>>>>>> v2.0.1
     if (!instPath) {
       throw new Error("empty registry key");
     }
     return Promise.resolve(instPath.value);
   } catch (err) {
+<<<<<<< HEAD
     return util.steam.findByName("MONSTER HUNTER: WORLD").then((game) => game.gamePath);
+=======
+    return util.steam
+      .findByName("MONSTER HUNTER: WORLD")
+      .then((game) => game.gamePath);
+>>>>>>> v2.0.1
   }
 }
 
@@ -90,7 +109,13 @@ function prepareForModding(discovery, api) {
                   label: "Go to Stracker's Loader mod page",
                   action: (dismiss) => {
                     util
+<<<<<<< HEAD
                       .opn("https://www.nexusmods.com/monsterhunterworld/mods/1982")
+=======
+                      .opn(
+                        "https://www.nexusmods.com/monsterhunterworld/mods/1982",
+                      )
+>>>>>>> v2.0.1
                       .catch((err) => undefined);
                     dismiss();
                   },
@@ -109,14 +134,26 @@ function prepareForModding(discovery, api) {
 
   // Check whether Stracker's Loader is installed.
   return fs
+<<<<<<< HEAD
     .ensureDirWritableAsync(path.join(discovery.path, NATIVE_PC_FOLDER), () => Promise.resolve())
+=======
+    .ensureDirWritableAsync(path.join(discovery.path, NATIVE_PC_FOLDER), () =>
+      Promise.resolve(),
+    )
+>>>>>>> v2.0.1
     .then(() =>
       Promise.each(STRACKER_FILES, (file) => {
         const assemblyPath = path.join(discovery.path, file);
         return fs.statAsync(assemblyPath);
       })
         .then(() => Promise.resolve())
+<<<<<<< HEAD
         .catch((err) => (err.code === "ENOENT" ? raiseNotif() : Promise.reject(err))),
+=======
+        .catch((err) =>
+          err.code === "ENOENT" ? raiseNotif() : Promise.reject(err),
+        ),
+>>>>>>> v2.0.1
     );
 }
 
@@ -210,7 +247,12 @@ function main(context) {
       (instr) =>
         instr.type === "copy" &&
         path.extname(instr.source) === ".ini" &&
+<<<<<<< HEAD
         instr.source.toLowerCase().indexOf(NATIVE_PC_FOLDER.toLowerCase()) === -1,
+=======
+        instr.source.toLowerCase().indexOf(NATIVE_PC_FOLDER.toLowerCase()) ===
+          -1,
+>>>>>>> v2.0.1
     );
     return Promise.resolve(filtered.length > 0);
   };
@@ -222,8 +264,24 @@ function main(context) {
     getPath,
     testStracker,
   );
+<<<<<<< HEAD
   context.registerModType("mhwreshade", 25, (gameId) => gameId === GAME_ID, getPath, testReshade);
   context.registerInstaller("monster-hunter-mod", 25, isSupported, installContent);
+=======
+  context.registerModType(
+    "mhwreshade",
+    25,
+    (gameId) => gameId === GAME_ID,
+    getPath,
+    testReshade,
+  );
+  context.registerInstaller(
+    "monster-hunter-mod",
+    25,
+    isSupported,
+    installContent,
+  );
+>>>>>>> v2.0.1
   context.registerInstaller(
     "mhwreshadeinstaller",
     24,
@@ -241,7 +299,15 @@ function main(context) {
       return fs
         .statAsync(path.join(getDiscoveryPath(context.api), RESHADE_DIRNAME))
         .then(() => Promise.resolve({ instructions }))
+<<<<<<< HEAD
         .catch(() => missingReshade(context.api).then(() => Promise.resolve({ instructions })));
+=======
+        .catch(() =>
+          missingReshade(context.api).then(() =>
+            Promise.resolve({ instructions }),
+          ),
+        );
+>>>>>>> v2.0.1
     },
   );
 
@@ -257,13 +323,25 @@ function installContent(files, destinationPath, gameId, progressDelegate) {
   // Find the index of the natives folder + natives folder length + path.sep; going
   //  to remove everything preceding that point in the filepath.
   const idx =
+<<<<<<< HEAD
     modFile.toLowerCase().indexOf(NATIVE_PC_FOLDER.toLowerCase()) + NATIVE_PC_FOLDER.length + 1;
+=======
+    modFile.toLowerCase().indexOf(NATIVE_PC_FOLDER.toLowerCase()) +
+    NATIVE_PC_FOLDER.length +
+    1;
+>>>>>>> v2.0.1
 
   // Filter out unwanted files.
   const filtered = files.filter(
     (file) =>
       path.extname(file) !== "" &&
+<<<<<<< HEAD
       path.dirname(file.toLowerCase()).indexOf(NATIVE_PC_FOLDER.toLowerCase()) !== -1,
+=======
+      path
+        .dirname(file.toLowerCase())
+        .indexOf(NATIVE_PC_FOLDER.toLowerCase()) !== -1,
+>>>>>>> v2.0.1
   );
 
   const instructions = filtered.map((file) => {
@@ -283,7 +361,12 @@ function isReshadeMod(files, gameId) {
       file
         .split(path.sep)
         .map((element) => element.toLowerCase())
+<<<<<<< HEAD
         .indexOf(NATIVE_PC_FOLDER.toLowerCase()) === -1 && path.extname(file) === ".ini",
+=======
+        .indexOf(NATIVE_PC_FOLDER.toLowerCase()) === -1 &&
+      path.extname(file) === ".ini",
+>>>>>>> v2.0.1
   );
 
   const supported = gameId === GAME_ID && filtered.length > 0;
@@ -294,15 +377,28 @@ function isReshadeMod(files, gameId) {
 }
 
 function isSupported(files, gameId) {
+<<<<<<< HEAD
   const strackerFiles = STRACKER_FILES.filter((stracker) => files.includes(stracker));
+=======
+  const strackerFiles = STRACKER_FILES.filter((stracker) =>
+    files.includes(stracker),
+  );
+>>>>>>> v2.0.1
   if (strackerFiles.length > 0) {
     return Promise.resolve({ supported: false, requiredFiles: [] });
   }
   // Ensure that the archive structure has the nativePC Folder present.
   const supported =
     gameId === GAME_ID &&
+<<<<<<< HEAD
     files.find((file) => file.toLowerCase().indexOf(NATIVE_PC_FOLDER.toLowerCase()) !== -1) !==
       undefined;
+=======
+    files.find(
+      (file) =>
+        file.toLowerCase().indexOf(NATIVE_PC_FOLDER.toLowerCase()) !== -1,
+    ) !== undefined;
+>>>>>>> v2.0.1
   return Promise.resolve({
     supported,
     requiredFiles: [],

@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 import { pathToFileURL } from "url";
 
+=======
+>>>>>>> v2.0.1
 import { Menu } from "@headlessui/react";
 import {
   mdiArrowDown,
@@ -16,6 +19,10 @@ import {
 import React, { type FC } from "react";
 import { Image } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
+<<<<<<< HEAD
+=======
+import { pathToFileURL } from "url";
+>>>>>>> v2.0.1
 
 import { Button } from "@/ui/components/button/Button";
 import { Dropdown } from "@/ui/components/dropdown/Dropdown";
@@ -86,7 +93,15 @@ export const ToolRow: FC<ToolRowProps> = ({
         {iconSrc ? (
           <Image src={iconSrc} />
         ) : (
+<<<<<<< HEAD
           <Typography appearance="moderate" className="uppercase" typographyType="body-lg">
+=======
+          <Typography
+            appearance="moderate"
+            className="uppercase"
+            typographyType="body-lg"
+          >
+>>>>>>> v2.0.1
             {starterInfo.name?.charAt(0) || "T"}
           </Typography>
         )}
@@ -95,7 +110,15 @@ export const ToolRow: FC<ToolRowProps> = ({
       <Typography as="div" className="flex min-w-0 grow items-center gap-x-2">
         <span className="truncate">{starterInfo.name}</span>
 
+<<<<<<< HEAD
         {isRunning && <span className="shrink-0 text-neutral-subdued">{t("Running...")}</span>}
+=======
+        {isRunning && (
+          <span className="shrink-0 text-neutral-subdued">
+            {t("Running...")}
+          </span>
+        )}
+>>>>>>> v2.0.1
       </Typography>
 
       <div className="flex shrink-0 items-center gap-x-4">
@@ -152,7 +175,14 @@ export const ToolRow: FC<ToolRowProps> = ({
             />
 
             <DropdownItems>
+<<<<<<< HEAD
               <DropdownItem leftIconPath={mdiPencil} onClick={() => onEdit(starterInfo)}>
+=======
+              <DropdownItem
+                leftIconPath={mdiPencil}
+                onClick={() => onEdit(starterInfo)}
+              >
+>>>>>>> v2.0.1
                 {t("Edit")}
               </DropdownItem>
 
@@ -161,7 +191,13 @@ export const ToolRow: FC<ToolRowProps> = ({
                 leftIconPath={isPrimary ? mdiFlashOff : mdiFlash}
                 onClick={() => onSetPrimary(starterInfo)}
               >
+<<<<<<< HEAD
                 {isPrimary ? t("Remove default launcher") : t("Set as default launcher")}
+=======
+                {isPrimary
+                  ? t("Remove default launcher")
+                  : t("Set as default launcher")}
+>>>>>>> v2.0.1
               </DropdownItem>
 
               {!starter.isGame && (

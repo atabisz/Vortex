@@ -1106,7 +1106,10 @@ function init(context: IExtensionContext): boolean {
 
         const activeDls = selectors.activeDownloads(state);
         updateShutdown(activeDls);
-        setErrorContext("active_downloads", String(Object.keys(activeDls).length));
+        setErrorContext(
+          "active_downloads",
+          String(Object.keys(activeDls).length),
+        );
 
         PromiseBB.map(filtered, (dlId) => {
           const rawGameId = getDownloadGames(cur[dlId])[0];

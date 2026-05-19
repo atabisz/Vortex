@@ -28,12 +28,24 @@ function requiresLauncher(gamePath) {
 
 function resolveGameVersion(discoveryPath) {
   const versionPath = path.join(discoveryPath, "version.txt");
+<<<<<<< HEAD
   return fs.readFileAsync(versionPath, { encoding: "utf8" }).then((res) => Promise.resolve(res));
+=======
+  return fs
+    .readFileAsync(versionPath, { encoding: "utf8" })
+    .then((res) => Promise.resolve(res));
+>>>>>>> v2.0.1
 }
 
 async function getModName(aboutFilePath) {
   try {
+<<<<<<< HEAD
     const fileData = await fs.readFileAsync(aboutFilePath, { encoding: "utf8" });
+=======
+    const fileData = await fs.readFileAsync(aboutFilePath, {
+      encoding: "utf8",
+    });
+>>>>>>> v2.0.1
     const parsed = await parseStringPromise(fileData);
     return Promise.resolve(parsed.ModMetaData.packageId[0]);
   } catch (err) {
@@ -45,7 +57,13 @@ function testSupportedSteamMod(api, files, gameId, archivePath) {
   if (gameId !== GAME_ID) {
     return Promise.resolve({ supported: false, requiredFiles: [] });
   }
+<<<<<<< HEAD
   const aboutFiles = files.filter((file) => path.basename(file).toLowerCase() === ABOUT_XML_FILE);
+=======
+  const aboutFiles = files.filter(
+    (file) => path.basename(file).toLowerCase() === ABOUT_XML_FILE,
+  );
+>>>>>>> v2.0.1
   if (aboutFiles.length === 0) {
     // this installer doesn't handle bundles containing multiple such mods. Maybe we have
     // to treat those differently but I genuinely wouldn't know and have no way to test
@@ -68,8 +86,17 @@ function testSupportedSteamMod(api, files, gameId, archivePath) {
 }
 
 async function installSteamMod(files, destinationPath, gameId) {
+<<<<<<< HEAD
   const aboutFile = files.find((file) => path.basename(file).toLowerCase() === ABOUT_XML_FILE);
   const rootCandidate = files.find((file) => ROOT_FOLDER_FILES.includes(path.basename(file)));
+=======
+  const aboutFile = files.find(
+    (file) => path.basename(file).toLowerCase() === ABOUT_XML_FILE,
+  );
+  const rootCandidate = files.find((file) =>
+    ROOT_FOLDER_FILES.includes(path.basename(file)),
+  );
+>>>>>>> v2.0.1
   const rootFile = rootCandidate ?? aboutFile;
 
   const segments = rootFile.split(path.sep);
@@ -92,7 +119,14 @@ async function installSteamMod(files, destinationPath, gameId) {
   const instructions = filtered.map((file) => {
     const fileSegments = file.split(path.sep);
     if (fileSegments.length > 1 && fileSegments[0] === segments[0]) {
+<<<<<<< HEAD
       const destination = path.join(modName, fileSegments.slice(1).join(path.sep));
+=======
+      const destination = path.join(
+        modName,
+        fileSegments.slice(1).join(path.sep),
+      );
+>>>>>>> v2.0.1
       return {
         type: "copy",
         source: file,
@@ -132,7 +166,12 @@ function main(context) {
   context.registerInstaller(
     "rimworld-steam-mod",
     25,
+<<<<<<< HEAD
     (files, gameId, archivePath) => testSupportedSteamMod(context.api, files, gameId, archivePath),
+=======
+    (files, gameId, archivePath) =>
+      testSupportedSteamMod(context.api, files, gameId, archivePath),
+>>>>>>> v2.0.1
     installSteamMod,
   );
 

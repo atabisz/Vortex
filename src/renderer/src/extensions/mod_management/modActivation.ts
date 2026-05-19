@@ -12,7 +12,10 @@ import type { IMod } from "./types/IMod";
 import type BlacklistSet from "./util/BlacklistSet";
 import renderModName from "./util/modName";
 
-async function ensureWritable(api: IExtensionApi, modPath: string): Promise<void> {
+async function ensureWritable(
+  api: IExtensionApi,
+  modPath: string,
+): Promise<void> {
   await fs.ensureDirWritableAsync(modPath, () =>
     api
       .showDialog(

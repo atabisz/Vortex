@@ -1,3 +1,14 @@
+<<<<<<< HEAD
+=======
+import { DEFAULT_INSTRUCTIONS, NAMESPACE } from "../../constants";
+import InstallDriver from "../../util/InstallDriver";
+import { isGamebryoGame } from "../../util/gameSupport";
+
+import CollectionThumbnail from "../CollectionTile";
+
+import YouCuratedTag from "./YouCuratedThisTag";
+
+>>>>>>> v2.0.1
 import * as React from "react";
 import { Button, Media } from "react-bootstrap";
 import { withTranslation } from "react-i18next";
@@ -268,9 +279,21 @@ class InstallDialog extends ComponentEx<IProps, IInstallDialogState> {
             {t("Install mods during collection downloads")}
           </Toggle>
           {isGamebryoGame(profile.gameId) ? (
+<<<<<<< HEAD
             <Toggle checked={this.state.skipPluginRules} onToggle={this.toggleSkipPluginRules}>
               {t("Skip plugin rules")}
               <More id="install-skip-plugin-rules" name={t("Skip plugin rules")}>
+=======
+            <Toggle
+              checked={this.state.skipPluginRules}
+              onToggle={this.toggleSkipPluginRules}
+            >
+              {t("Skip plugin rules")}
+              <More
+                id="install-skip-plugin-rules"
+                name={t("Skip plugin rules")}
+              >
+>>>>>>> v2.0.1
                 {t(
                   "If enabled, custom LOOT plugin rules and groups included in this collection " +
                     "will not be applied. This can help prevent inherited plugin rules from " +
@@ -307,7 +330,16 @@ class InstallDialog extends ComponentEx<IProps, IInstallDialogState> {
     this.nextState.skipPluginRules = checked;
     const { driver, onSetModAttribute } = this.props;
     if (driver?.collection !== undefined) {
+<<<<<<< HEAD
       onSetModAttribute(driver.profile.gameId, driver.collection.id, "skipPluginRules", checked);
+=======
+      onSetModAttribute(
+        driver.profile.gameId,
+        driver.collection.id,
+        "skipPluginRules",
+        checked,
+      );
+>>>>>>> v2.0.1
     }
   };
 

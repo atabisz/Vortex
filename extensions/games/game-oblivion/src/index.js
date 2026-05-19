@@ -30,12 +30,20 @@ const gameStoreIds = {
   xbox: [{ id: MS_ID }],
   gog: [{ id: GOG_ID }],
   registry: [
+<<<<<<< HEAD
     { id: "HKEY_LOCAL_MACHINE:Software\\Wow6432Node\\Bethesda Softworks\\oblivion:Installed Path" },
+=======
+    {
+      id: "HKEY_LOCAL_MACHINE:Software\\Wow6432Node\\Bethesda Softworks\\oblivion:Installed Path",
+    },
+>>>>>>> v2.0.1
   ],
 };
 
 async function findGame() {
-  const storeGames = await util.GameStoreHelper.find(gameStoreIds).catch(() => []);
+  const storeGames = await util.GameStoreHelper.find(gameStoreIds).catch(
+    () => [],
+  );
 
   if (!storeGames.length) return;
 
@@ -54,7 +62,14 @@ async function findGame() {
       store: selectedGame.gameStoreId,
       folder: localeFoldersXbox["en"],
     });
+<<<<<<< HEAD
     selectedGame.gamePath = path.join(selectedGame.gamePath, localeFoldersXbox["en"]);
+=======
+    selectedGame.gamePath = path.join(
+      selectedGame.gamePath,
+      localeFoldersXbox["en"],
+    );
+>>>>>>> v2.0.1
   }
 
   return selectedGame;
@@ -123,7 +138,12 @@ function prepareForModding(api, discovery) {
   const gameName = util.getGame(GAME_ID)?.name || "This game";
 
   if (discovery.store && ["epic", "xbox"].includes(discovery.store)) {
+<<<<<<< HEAD
     const storeName = discovery.store === "epic" ? "Epic Games" : "Xbox Game Pass";
+=======
+    const storeName =
+      discovery.store === "epic" ? "Epic Games" : "Xbox Game Pass";
+>>>>>>> v2.0.1
     // If this is an Epic or Xbox game we've defaulted to English, so we should let the user know.
     api.sendNotification({
       id: `${GAME_ID}-locale-message`,
@@ -149,7 +169,12 @@ function prepareForModding(api, discovery) {
               [
                 {
                   label: "Close",
+<<<<<<< HEAD
                   action: () => api.suppressNotification(`${GAME_ID}-locale-message`),
+=======
+                  action: () =>
+                    api.suppressNotification(`${GAME_ID}-locale-message`),
+>>>>>>> v2.0.1
                 },
               ],
             );

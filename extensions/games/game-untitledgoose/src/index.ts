@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import path from "path";
 
 import Bluebird from "bluebird";
@@ -7,6 +8,16 @@ import { migrate020 } from "./migrations";
 import { EPIC_APP_ID, GAME_ID } from "./statics";
 import { toBlue } from "./util";
 
+=======
+import Bluebird from "bluebird";
+import path from "path";
+import { fs, log, types, util } from "vortex-api";
+
+import { migrate020 } from "./migrations";
+import { EPIC_APP_ID, GAME_ID } from "./statics";
+import { toBlue } from "./util";
+
+>>>>>>> v2.0.1
 const BIX_CONFIG = "BepInEx.cfg";
 function ensureBIXConfig(discovery: types.IDiscoveryResult): Bluebird<void> {
   const src = path.join(__dirname, BIX_CONFIG);
@@ -26,6 +37,7 @@ function ensureBIXConfig(discovery: types.IDiscoveryResult): Bluebird<void> {
 function requiresLauncher() {
   return util.epicGamesLauncher
     .isGameInstalled(EPIC_APP_ID)
+<<<<<<< HEAD
     .then((epic) => (epic ? { launcher: "epic", addInfo: EPIC_APP_ID } : undefined));
 }
 
@@ -34,6 +46,17 @@ function findGame() {
     return Promise.reject(new util.ProcessCanceled('Epic Games Launcher is not available on Linux'));
   }
   return util.epicGamesLauncher.findByAppId(EPIC_APP_ID).then((epicEntry) => epicEntry.gamePath);
+=======
+    .then((epic) =>
+      epic ? { launcher: "epic", addInfo: EPIC_APP_ID } : undefined,
+    );
+}
+
+function findGame() {
+  return util.epicGamesLauncher
+    .findByAppId(EPIC_APP_ID)
+    .then((epicEntry) => epicEntry.gamePath);
+>>>>>>> v2.0.1
 }
 
 function modPath() {

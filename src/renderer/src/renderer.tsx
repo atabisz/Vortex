@@ -62,7 +62,13 @@ import { getErrorCode, getErrorMessageOrDefault, unknownToError } from "@vortex/
 import type { IParameters } from "@vortex/shared/cli";
 import type { AppInitMetadata } from "@vortex/shared/ipc";
 import Bluebird from "bluebird";
+<<<<<<< HEAD
 import { ipcRenderer, webFrame } from "electron";
+=======
+import type crashDumpT from "crash-dump";
+import { ipcRenderer, webFrame } from "electron";
+import * as nativeErr from "native-errors";
+>>>>>>> v2.0.1
 import React from "react";
 
 import "./util/monkeyPatching";
@@ -110,6 +116,7 @@ import { _setChattrNotifier, setTFunction } from "./util/fs";
 import GlobalNotifications from "./util/GlobalNotifications";
 import getI18n, { changeLanguage, fallbackTFunc, type TFunction } from "./util/i18n";
 import { showError } from "./util/message";
+import { readStartupSettings } from "./util/startupSettings";
 import { getSafe } from "./util/storeHelper";
 import { bytesToString, getAllPropertyNames } from "./util/util";
 import { AppLayout } from "./views/AppLayout";
@@ -117,8 +124,21 @@ import LoadingScreen from "./views/LoadingScreen";
 
 log("debug", "renderer process started", { pid: process["pid"] });
 
+<<<<<<< HEAD
 // on windows, copy systemCode to nativeCode so downstream error handling
 // can read a consistent property name
+=======
+let deinitCrashDump: () => void;
+
+if (process.env.CRASH_REPORTING === "vortex") {
+  void window.api.app.getPath("temp").then((tempPath: string) => {
+    const crashDump: typeof crashDumpT = require("crash-dump").default;
+    deinitCrashDump = crashDump(path.join(tempPath, "dumps", `crash-renderer-${Date.now()}.dmp`));
+  });
+}
+
+// on windows, inject the native error code into "unknown" errors to help track those down
+>>>>>>> v2.0.1
 if (process.platform === "win32") {
   const oldPrep = Error.prepareStackTrace;
   Error.prepareStackTrace = (error, stack) => {
@@ -408,6 +428,7 @@ async function initGlobals(): Promise<void> {
   // Initialize application data asynchronously from main process cache
   // This replaces synchronous IPC calls that were in the preload script
   await ApplicationData.init();
+  readStartupSettings();
 }
 
 function applyAppMetadata(metadata: AppInitMetadata): void {

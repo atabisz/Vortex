@@ -19,10 +19,21 @@ function modPath() {
 
 function modifyConfigFile(gameRootPath) {
   const configFilePath = path.join(gameRootPath, CONFIG_FILE);
+<<<<<<< HEAD
   return fs.readFileAsync(configFilePath, { encoding: "utf-8" }).then((data) => {
     const modifiedData = data.replace(/^sound{[\s\S]*?}$/m, SOUND_CONFIG);
     return fs.writeFileAsync(configFilePath, modifiedData, { encoding: "utf8" });
   });
+=======
+  return fs
+    .readFileAsync(configFilePath, { encoding: "utf-8" })
+    .then((data) => {
+      const modifiedData = data.replace(/^sound{[\s\S]*?}$/m, SOUND_CONFIG);
+      return fs.writeFileAsync(configFilePath, modifiedData, {
+        encoding: "utf8",
+      });
+    });
+>>>>>>> v2.0.1
 }
 
 function prepareForModding(discovery) {

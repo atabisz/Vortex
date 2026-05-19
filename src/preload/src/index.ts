@@ -147,7 +147,12 @@ try {
       isFocused: (windowId: number) => betterIpcRenderer.invoke("window:isFocused", windowId),
       setAlwaysOnTop: (windowId: number, flag: boolean) =>
         betterIpcRenderer.invoke("window:setAlwaysOnTop", windowId, flag),
+<<<<<<< HEAD
       moveTop: (windowId: number) => betterIpcRenderer.invoke("window:moveTop", windowId),
+=======
+      moveTop: (windowId: number) =>
+        betterIpcRenderer.invoke("window:moveTop", windowId),
+>>>>>>> v2.0.1
       onClose: (callback) => {
         const listener = () => callback();
         ipcRenderer.on("window:event:close", listener);

@@ -14,7 +14,14 @@ interface IToastBoundaryState {
   failed: boolean;
 }
 
+<<<<<<< HEAD
 class ToastErrorBoundary extends Component<{ children: ReactNode }, IToastBoundaryState> {
+=======
+class ToastErrorBoundary extends Component<
+  { children: ReactNode },
+  IToastBoundaryState
+> {
+>>>>>>> v2.0.1
   public state: IToastBoundaryState = { failed: false };
 
   public static getDerivedStateFromError(): IToastBoundaryState {

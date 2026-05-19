@@ -1,7 +1,10 @@
 import path from "node:path";
 
+<<<<<<< HEAD
 import PromiseBB from "bluebird";
 
+=======
+>>>>>>> v2.0.1
 import { log } from "../logging";
 
 function isWindowsPath(target: string): boolean {

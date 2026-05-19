@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { spawn } from "child_process";
 import * as nodeFs from "fs";
 import path from "path";
@@ -5,6 +6,14 @@ import path from "path";
 import { IFileInfo } from "@nexusmods/nexus-api";
 import * as semver from "semver";
 import { actions, fs, log, types, selectors, util } from "vortex-api";
+=======
+import { IFileInfo } from "@nexusmods/nexus-api";
+import path from "path";
+import { actions, fs, log, types, selectors, util } from "vortex-api";
+import * as nodeFs from "fs";
+import * as semver from "semver";
+import { spawn } from "child_process";
+>>>>>>> v2.0.1
 
 // List of folders in the various languages on Xbox, for now we default to English but this could be enhanced to select a folder based on the Vortex locale.
 // It's possible that some mods don't work with the non-English variant.
@@ -25,13 +34,29 @@ const GOG_ID = "1454587428";
 const MS_ID = "BethesdaSoftworks.FalloutNewVegas";
 const EPIC_ID = "5daeb974a22a435988892319b3a4f476";
 
+<<<<<<< HEAD
 const PATCH_4GB_EXECUTABLES = ["FNVpatch.exe", "FalloutNVpatch.exe", "Patcher.exe"];
+=======
+const PATCH_4GB_EXECUTABLES = [
+  "FNVpatch.exe",
+  "FalloutNVpatch.exe",
+  "Patcher.exe",
+];
+>>>>>>> v2.0.1
 
 let selectedLanguage = undefined;
 let multipleLanguages = false;
 
 const gameStoreIds: { [gameStoreId: string]: types.IStoreQuery[] } = {
+<<<<<<< HEAD
   steam: [{ id: STEAMAPP_ID, prefer: 0 }, { id: STEAMAPP_ID2 }, { name: "Fallout: New Vegas.*" }],
+=======
+  steam: [
+    { id: STEAMAPP_ID, prefer: 0 },
+    { id: STEAMAPP_ID2 },
+    { name: "Fallout: New Vegas.*" },
+  ],
+>>>>>>> v2.0.1
   xbox: [{ id: MS_ID }],
   gog: [{ id: GOG_ID }],
   epic: [{ id: EPIC_ID }],
@@ -43,7 +68,9 @@ const gameStoreIds: { [gameStoreId: string]: types.IStoreQuery[] } = {
 };
 
 async function findGame() {
-  const storeGames = await util.GameStoreHelper.find(gameStoreIds).catch(() => []);
+  const storeGames = await util.GameStoreHelper.find(gameStoreIds).catch(
+    () => [],
+  );
 
   if (!storeGames.length) return;
 
@@ -61,6 +88,7 @@ async function findGame() {
       const folders: string[] = await fs
         .readdirAsync(selectedGame.gamePath)
         .filter((p) => !path.extname(p) && !p.startsWith("."));
+<<<<<<< HEAD
       const availableLocales = Object.keys(localeFoldersXbox).reduce((accum, cur) => {
         const localeFolderName = localeFoldersXbox[cur];
         if (folders.includes(localeFolderName)) accum.push(cur);
@@ -74,6 +102,28 @@ async function findGame() {
         selectedGame.gamePath = path.join(selectedGame.gamePath, folders[0]);
         // Get the last word of the folder name to show as a language
         selectedLanguage = folders[0].toUpperCase().replace("Fallout New Vegas", "").trim();
+=======
+      const availableLocales = Object.keys(localeFoldersXbox).reduce(
+        (accum, cur) => {
+          const localeFolderName = localeFoldersXbox[cur];
+          if (folders.includes(localeFolderName)) accum.push(cur);
+          return accum;
+        },
+        [],
+      );
+      if (!availableLocales.length) {
+        log(
+          "warn",
+          "Could not find any recognised locale folders for New Vegas",
+          { folders, path: selectedGame.gamePath },
+        );
+        selectedGame.gamePath = path.join(selectedGame.gamePath, folders[0]);
+        // Get the last word of the folder name to show as a language
+        selectedLanguage = folders[0]
+          .toUpperCase()
+          .replace("Fallout New Vegas", "")
+          .trim();
+>>>>>>> v2.0.1
       }
       // Only one language?
       else if (availableLocales.length === 1)
@@ -85,14 +135,27 @@ async function findGame() {
         // Get the user's chosen language
         // state.interface.language || 'en';
         // Multiple?
+<<<<<<< HEAD
         const selectedLocale = availableLocales.includes("en") ? "en" : availableLocales[0];
+=======
+        const selectedLocale = availableLocales.includes("en")
+          ? "en"
+          : availableLocales[0];
+>>>>>>> v2.0.1
         selectedLanguage = selectedLocale.toUpperCase();
         multipleLanguages = true;
         log("debug", `Defaulting to the ${selectedLocale} game version`, {
           store: selectedGame.gameStoreId,
           folder: localeFoldersXbox[selectedLocale],
         });
+<<<<<<< HEAD
         selectedGame.gamePath = path.join(selectedGame.gamePath, localeFoldersXbox[selectedLocale]);
+=======
+        selectedGame.gamePath = path.join(
+          selectedGame.gamePath,
+          localeFoldersXbox[selectedLocale],
+        );
+>>>>>>> v2.0.1
       }
     } catch (err) {
       log("warn", "Could not check for Fallout NV locale paths", err);
@@ -133,7 +196,12 @@ function prepareForModding(api, discovery) {
   const gameName = util.getGame(GAME_ID)?.name || "This game";
 
   if (discovery.store && ["epic", "xbox"].includes(discovery.store)) {
+<<<<<<< HEAD
     const storeName = discovery.store === "epic" ? "Epic Games" : "Xbox Game Pass";
+=======
+    const storeName =
+      discovery.store === "epic" ? "Epic Games" : "Xbox Game Pass";
+>>>>>>> v2.0.1
 
     // If this is an Epic or Xbox game we've defaulted to English, so we should let the user know.
     if (multipleLanguages)
@@ -161,7 +229,12 @@ function prepareForModding(api, discovery) {
                 [
                   {
                     label: "Close",
+<<<<<<< HEAD
                     action: () => api.suppressNotification(`${GAME_ID}-locale-message`),
+=======
+                    action: () =>
+                      api.suppressNotification(`${GAME_ID}-locale-message`),
+>>>>>>> v2.0.1
                   },
                 ],
               );
@@ -200,7 +273,8 @@ async function requiresLauncher(gamePath, store) {
   try {
     const game = await util.GameStoreHelper.findByAppId([MS_ID], "xbox");
     const normalizeFunc = await util.getNormalizeFunc(gamePath);
-    if (normalizeFunc(game.gamePath) === normalizeFunc(gamePath)) return xboxSettings;
+    if (normalizeFunc(game.gamePath) === normalizeFunc(gamePath))
+      return xboxSettings;
     else return undefined;
   } catch (err) {
     return undefined;
@@ -216,7 +290,11 @@ function testInstaller4GBPatch(api: types.IExtensionApi) {
   ): Promise<types.ISupportedResult> => {
     const state = api.getState();
     const gameMode = selectors.activeGameId(state);
-    if (gameMode !== GAME_ID || details?.hasXmlConfigXML || details?.hasCSScripts) {
+    if (
+      gameMode !== GAME_ID ||
+      details?.hasXmlConfigXML ||
+      details?.hasCSScripts
+    ) {
       return Promise.resolve({ supported: false, requiredFiles: [] });
     }
     const lowered = files.map((f) => f.toLowerCase());

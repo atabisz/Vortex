@@ -93,7 +93,9 @@ class UPlayLauncher implements types.IGameStore {
       );
   }
 
-  public findByAppId(appId: string | string[]): Bluebird<types.IGameStoreEntry> {
+  public findByAppId(
+    appId: string | string[],
+  ): Bluebird<types.IGameStoreEntry> {
     const matcher = Array.isArray(appId)
       ? (entry: types.IGameStoreEntry) => appId.includes(entry.appid)
       : (entry: types.IGameStoreEntry) => appId === entry.appid;
@@ -121,6 +123,7 @@ class UPlayLauncher implements types.IGameStore {
       ? Bluebird.resolve([])
       : new Bluebird<types.IGameStoreEntry[]>((resolve, reject) => {
           try {
+<<<<<<< HEAD
             winapi.WithRegOpen("HKEY_LOCAL_MACHINE", REG_UPLAY_INSTALLS, (hkey) => {
               let keys = [];
               try {
@@ -151,6 +154,47 @@ class UPlayLauncher implements types.IGameStore {
               });
               return resolve(gameEntries.filter((entry) => !!entry));
             });
+=======
+            winapi.WithRegOpen(
+              "HKEY_LOCAL_MACHINE",
+              REG_UPLAY_INSTALLS,
+              (hkey) => {
+                let keys = [];
+                try {
+                  keys = winapi.RegEnumKeys(hkey);
+                } catch (err) {
+                  // Can't open the hive tree... weird.
+                  log("error", "gamestore-uplay: registry query failed", hkey);
+                  return resolve([]);
+                }
+                const gameEntries: types.IGameStoreEntry[] = keys.map((key) => {
+                  try {
+                    const gameEntry: types.IGameStoreEntry = {
+                      appid: key.key,
+                      gamePath: winapi.RegGetValue(hkey, key.key, "InstallDir")
+                        .value as string,
+                      // Unfortunately the name of this game is stored elsewhere.
+                      name: winapi.RegGetValue(
+                        "HKEY_LOCAL_MACHINE",
+                        REG_UPLAY_NAME_LOCATION + key.key,
+                        "DisplayName",
+                      ).value as string,
+                      gameStoreId: STORE_ID,
+                    };
+                    return gameEntry;
+                  } catch (err) {
+                    log(
+                      "info",
+                      "gamestore-uplay: registry query failed",
+                      key.key,
+                    );
+                    return undefined;
+                  }
+                });
+                return resolve(gameEntries.filter((entry) => !!entry));
+              },
+            );
+>>>>>>> v2.0.1
           } catch (err) {
             return err.code === "ENOENT" ? resolve([]) : reject(err);
           }

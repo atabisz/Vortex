@@ -1,4 +1,5 @@
 import path from "path";
+<<<<<<< HEAD
 
 import * as React from "react";
 import { actions, log, selectors, types, util } from "vortex-api";
@@ -12,6 +13,28 @@ import { migrate103 } from "./migrations";
 import { IExtendedInterfaceProps } from "./types/types";
 import MorrowindCollectionsDataView from "./views/MorrowindCollectionsDataView";
 
+=======
+import { actions, log, selectors, types, util } from "vortex-api";
+import * as React from "react";
+
+const walk = require("turbowalk").default;
+
+import {
+  validate,
+  deserializeLoadOrder,
+  serializeLoadOrder,
+} from "./loadorder";
+import { MORROWIND_ID } from "./constants";
+
+import { IExtendedInterfaceProps } from "./types/types";
+
+import { genCollectionsData, parseCollectionsData } from "./collections";
+
+import MorrowindCollectionsDataView from "./views/MorrowindCollectionsDataView";
+
+import { migrate103 } from "./migrations";
+
+>>>>>>> v2.0.1
 const STEAMAPP_ID = "22320";
 const GOG_ID = "1435828767";
 const MS_ID = "BethesdaSoftworks.TESMorrowind-PC";
@@ -54,7 +77,9 @@ const tools = [
 ];
 
 async function findGame() {
-  const storeGames = await util.GameStoreHelper.find(gameStoreIds).catch(() => []);
+  const storeGames = await util.GameStoreHelper.find(gameStoreIds).catch(
+    () => [],
+  );
 
   if (!storeGames.length) return;
 
@@ -73,7 +98,14 @@ async function findGame() {
       store: selectedGame.gameStoreId,
       folder: localeFoldersXbox["en"],
     });
+<<<<<<< HEAD
     selectedGame.gamePath = path.join(selectedGame.gamePath, localeFoldersXbox["en"]);
+=======
+    selectedGame.gamePath = path.join(
+      selectedGame.gamePath,
+      localeFoldersXbox["en"],
+    );
+>>>>>>> v2.0.1
   }
   return selectedGame;
 }
@@ -96,13 +128,25 @@ function requiresLauncher(gamePath) {
 }
 */
 
+<<<<<<< HEAD
 function prepareForModding(api: types.IExtensionApi, discovery: types.IDiscoveryResult) {
+=======
+function prepareForModding(
+  api: types.IExtensionApi,
+  discovery: types.IDiscoveryResult,
+) {
+>>>>>>> v2.0.1
   const gameName = util.getGame(GAME_ID)?.name || "This game";
 
   // the game doesn't actually exist on the epic game store, this chunk is copy&pasted, doesn't hurt
   // keeping it identical
   if (discovery.store && ["epic", "xbox"].includes(discovery.store)) {
+<<<<<<< HEAD
     const storeName = discovery.store === "epic" ? "Epic Games" : "Xbox Game Pass";
+=======
+    const storeName =
+      discovery.store === "epic" ? "Epic Games" : "Xbox Game Pass";
+>>>>>>> v2.0.1
     // If this is an Epic or Xbox game we've defaulted to English, so we should let the user know.
     api.sendNotification({
       id: `${GAME_ID}-locale-message`,
@@ -128,7 +172,12 @@ function prepareForModding(api: types.IExtensionApi, discovery: types.IDiscovery
               [
                 {
                   label: "Close",
+<<<<<<< HEAD
                   action: () => api.suppressNotification(`${GAME_ID}-locale-message`),
+=======
+                  action: () =>
+                    api.suppressNotification(`${GAME_ID}-locale-message`),
+>>>>>>> v2.0.1
                 },
               ],
             );
@@ -140,7 +189,14 @@ function prepareForModding(api: types.IExtensionApi, discovery: types.IDiscovery
   return Promise.resolve();
 }
 
+<<<<<<< HEAD
 function CollectionDataWrap(api: types.IExtensionApi, props: IExtendedInterfaceProps): JSX.Element {
+=======
+function CollectionDataWrap(
+  api: types.IExtensionApi,
+  props: IExtendedInterfaceProps,
+): JSX.Element {
+>>>>>>> v2.0.1
   return React.createElement(MorrowindCollectionsDataView, { ...props, api });
 }
 
@@ -151,7 +207,13 @@ function main(context: types.IExtensionContext) {
     mergeMods: true,
     queryPath: util.toBlue(findGame),
     supportedTools: tools,
+<<<<<<< HEAD
     setup: util.toBlue((discovery) => prepareForModding(context.api, discovery)),
+=======
+    setup: util.toBlue((discovery) =>
+      prepareForModding(context.api, discovery),
+    ),
+>>>>>>> v2.0.1
     queryModPath: () => "Data Files",
     logo: "gameart.jpg",
     executable: () => "morrowind.exe",
@@ -169,12 +231,18 @@ function main(context: types.IExtensionContext) {
   context.registerLoadOrder({
     gameId: MORROWIND_ID,
     deserializeLoadOrder: () => deserializeLoadOrder(context.api),
-    serializeLoadOrder: (loadOrder) => serializeLoadOrder(context.api, loadOrder),
+    serializeLoadOrder: (loadOrder) =>
+      serializeLoadOrder(context.api, loadOrder),
     validate,
     noCollectionGeneration: true,
     toggleableEntries: true,
     usageInstructions:
+<<<<<<< HEAD
       "Drag your plugins as needed - the game will load " + "load them from top to bottom.",
+=======
+      "Drag your plugins as needed - the game will load " +
+      "load them from top to bottom.",
+>>>>>>> v2.0.1
   });
 
   context.optional.registerCollectionFeature(
@@ -190,6 +258,7 @@ function main(context: types.IExtensionContext) {
 
   context.registerMigration((old) => migrate103(context.api, old));
   context.once(() => {
+<<<<<<< HEAD
     context.api.events.on("did-install-mod", async (gameId, archiveId, modId) => {
       if (gameId !== MORROWIND_ID) {
         return;
@@ -226,6 +295,57 @@ function main(context: types.IExtensionContext) {
         );
       }
     });
+=======
+    context.api.events.on(
+      "did-install-mod",
+      async (gameId, archiveId, modId) => {
+        if (gameId !== MORROWIND_ID) {
+          return;
+        }
+
+        const state = context.api.getState();
+        const installPath = selectors.installPathForGame(state, MORROWIND_ID);
+        const mod = util.getSafe(
+          state,
+          ["persistent", "mods", MORROWIND_ID, modId],
+          undefined,
+        );
+        if (installPath === undefined || mod === undefined) {
+          return;
+        }
+        const modPath = path.join(installPath, mod.installationPath);
+        const plugins = [];
+        try {
+          await walk(
+            modPath,
+            (entries) => {
+              for (let entry of entries) {
+                if (
+                  [".esp", ".esm"].includes(
+                    path.extname(entry.filePath.toLowerCase()),
+                  )
+                ) {
+                  plugins.push(path.basename(entry.filePath));
+                }
+              }
+            },
+            { recurse: true, skipLinks: true, skipInaccessible: true },
+          );
+        } catch (err) {
+          context.api.showErrorNotification(
+            "Failed to read list of plugins",
+            err,
+            { allowReport: false },
+          );
+        }
+        if (plugins.length > 0) {
+          context.api.store.dispatch(
+            actions.setModAttribute(MORROWIND_ID, mod.id, "plugins", plugins),
+          );
+        }
+      },
+    );
+>>>>>>> v2.0.1
   });
 
   return true;

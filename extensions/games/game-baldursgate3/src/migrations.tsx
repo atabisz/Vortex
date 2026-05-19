@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import path from "path";
 
 import * as semver from "semver";
@@ -11,6 +12,24 @@ import { getActivePlayerProfile, logDebug, profilesPath } from "./util";
 export async function migrate(api: types.IExtensionApi): Promise<void> {
   const bg3ProfileId = await getActivePlayerProfile(api);
   const settingsPath: string = path.join(profilesPath(), bg3ProfileId, "modsettings.lsx");
+=======
+import * as semver from "semver";
+import { actions, fs, types, util } from "vortex-api";
+import { importModSettingsGame } from "./loadOrder";
+import path from "path";
+
+import { getActivePlayerProfile, logDebug, profilesPath } from "./util";
+import { setBG3ExtensionVersion } from "./actions";
+import { DEBUG } from "./common";
+
+export async function migrate(api: types.IExtensionApi): Promise<void> {
+  const bg3ProfileId = await getActivePlayerProfile(api);
+  const settingsPath: string = path.join(
+    profilesPath(),
+    bg3ProfileId,
+    "modsettings.lsx",
+  );
+>>>>>>> v2.0.1
   const backupPath = settingsPath + ".backup";
   const currentVersion = util.getSafe(
     api.getState(),
@@ -43,7 +62,14 @@ export async function migrate(api: types.IExtensionApi): Promise<void> {
   // back up made just in case
 }
 
+<<<<<<< HEAD
 export async function migrate15(api: types.IExtensionApi, oldVersion: string): Promise<void> {
+=======
+export async function migrate15(
+  api: types.IExtensionApi,
+  oldVersion: string,
+): Promise<void> {
+>>>>>>> v2.0.1
   const newVersion = "1.5.0";
 
   // if old version is newer, then skip
@@ -85,7 +111,13 @@ export async function migrate15(api: types.IExtensionApi, oldVersion: string): P
               {
                 label: "Close",
                 action: () => {
+<<<<<<< HEAD
                   batched.push(actions.suppressNotification("bg3-patch7-info", true));
+=======
+                  batched.push(
+                    actions.suppressNotification("bg3-patch7-info", true),
+                  );
+>>>>>>> v2.0.1
                   dismiss();
                 },
               },
@@ -98,7 +130,14 @@ export async function migrate15(api: types.IExtensionApi, oldVersion: string): P
   util.batchDispatch(api.store, batched);
 }
 
+<<<<<<< HEAD
 export async function migrate13(api: types.IExtensionApi, oldVersion: string): Promise<void> {
+=======
+export async function migrate13(
+  api: types.IExtensionApi,
+  oldVersion: string,
+): Promise<void> {
+>>>>>>> v2.0.1
   const newVersion = "1.4.0"; // FORCING MIGRATION
 
   // if old version is newer, then skip

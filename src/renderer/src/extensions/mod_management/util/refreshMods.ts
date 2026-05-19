@@ -40,7 +40,9 @@ function refreshMods(
             .then((stats) => (stats.isDirectory() ? modName : null))
             .catch(() => null),
         ),
-      ).then((results) => results.filter((name): name is string => name != null)),
+      ).then((results) =>
+        results.filter((name): name is string => name != null),
+      ),
     )
     .then((modNames: string[]) => {
       const filtered = modNames

@@ -101,7 +101,14 @@ class DeactivationButton extends ComponentEx<IProps, {}> {
         }
 
         const errCode = getErrorCode(err);
+<<<<<<< HEAD
         if (errCode == null && (err as { errno?: number }).errno !== undefined) {
+=======
+        if (
+          errCode == null &&
+          (err as { errno?: number }).errno !== undefined
+        ) {
+>>>>>>> v2.0.1
           // unresolved windows error code
           onShowError(
             "Failed to purge mods",
@@ -190,7 +197,9 @@ function mapDispatchToProps(dispatch: ThunkDispatch<any, null, Redux.Action>): I
       showError(dispatch, message, details, { allowReport }),
     onShowDialog: (type, title, content, dialogActions) =>
       // showDialog thunk returns Bluebird — see comment in notifications.ts
-      Promise.resolve(dispatch(showDialog(type, title, content, dialogActions))),
+      Promise.resolve(
+        dispatch(showDialog(type, title, content, dialogActions)),
+      ),
     onSetConfirmPurge: (enabled: boolean) => dispatch(setConfirmPurge(enabled)),
     onShowWarning: (message: string, dialogAction: INotificationAction, id: string) =>
       dispatch(

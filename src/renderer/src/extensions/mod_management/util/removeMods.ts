@@ -41,7 +41,13 @@ export function removeMods(api: IExtensionApi, gameId: string, modIds: string[])
   };
 
   return Promise.resolve(
+<<<<<<< HEAD
     toPromise((cb) => api.events.emit("remove-mods", gameId, modIds, cb, { progressCB })),
+=======
+    toPromise((cb) =>
+      api.events.emit("remove-mods", gameId, modIds, cb, { progressCB }),
+    ),
+>>>>>>> v2.0.1
   )
     .then(() => {
       api.events.emit("mods-enabled", modIds, false, gameId);

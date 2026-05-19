@@ -362,7 +362,17 @@ export async function doExportToAPI(
                       ? message
                       : details
                           .map((detail) =>
+<<<<<<< HEAD
                             renderGraphErrorDetail(api, gameId, modId, message, detail),
+=======
+                            renderGraphErrorDetail(
+                              api,
+                              gameId,
+                              modId,
+                              message,
+                              detail,
+                            ),
+>>>>>>> v2.0.1
                           )
                           .join("\n"),
                 },

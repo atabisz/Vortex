@@ -204,7 +204,13 @@ class XboxLauncher implements types.IGameStore {
           !!filterList
             ? names.filter(
                 (key) =>
+<<<<<<< HEAD
                   filterList.find((ign) => key.key.toLowerCase().startsWith(ign)) === undefined,
+=======
+                  filterList.find((ign) =>
+                    key.key.toLowerCase().startsWith(ign),
+                  ) === undefined,
+>>>>>>> v2.0.1
               )
             : names
         ).map((key) => key.key);
@@ -343,7 +349,13 @@ class XboxLauncher implements types.IGameStore {
               .RegEnumKeys(hkey)
               .filter(
                 (key) =>
+<<<<<<< HEAD
                   IGNORABLE.find((ign) => key.key.toLowerCase().startsWith(ign)) === undefined,
+=======
+                  IGNORABLE.find((ign) =>
+                    key.key.toLowerCase().startsWith(ign),
+                  ) === undefined,
+>>>>>>> v2.0.1
               )
               .map((key) => key.key);
 
@@ -361,12 +373,23 @@ class XboxLauncher implements types.IGameStore {
                 );
                 if (!!firstKeyName) {
                   const split = firstKeyName.split("!");
+<<<<<<< HEAD
                   executionName = split.length > 1 ? split[split.length - 1] : "App";
+=======
+                  executionName =
+                    split.length > 1 ? split[split.length - 1] : "App";
+>>>>>>> v2.0.1
                 } else {
                   executionName = "App";
                 }
 
+<<<<<<< HEAD
                 const publisherId: string = key.substr(key.lastIndexOf("_") + 1);
+=======
+                const publisherId: string = key.substr(
+                  key.lastIndexOf("_") + 1,
+                );
+>>>>>>> v2.0.1
                 const appid: string = key.substring(0, key.indexOf("_"));
 
                 let displayName: string;
@@ -377,7 +400,15 @@ class XboxLauncher implements types.IGameStore {
                     "DisplayName",
                   ).value as string;
                 } catch (err) {
+<<<<<<< HEAD
                   log("info", "gamestore-xbox: unable to query app display name", key);
+=======
+                  log(
+                    "info",
+                    "gamestore-xbox: unable to query app display name",
+                    key,
+                  );
+>>>>>>> v2.0.1
                   return PromiseBB.resolve(accum);
                 }
 
@@ -387,7 +418,12 @@ class XboxLauncher implements types.IGameStore {
 
                 let gamePath: string;
                 try {
+<<<<<<< HEAD
                   gamePath = winapi.RegGetValue(hkey, key, "PackageRootFolder").value as string;
+=======
+                  gamePath = winapi.RegGetValue(hkey, key, "PackageRootFolder")
+                    .value as string;
+>>>>>>> v2.0.1
                 } catch (err) {
                   gamePath = gameMap?.[appid];
                   if (gamePath === undefined) {
@@ -405,7 +441,12 @@ class XboxLauncher implements types.IGameStore {
                   publisherId,
                   packageId,
                   executionName,
+<<<<<<< HEAD
                   gamePath: mutableLocation !== undefined ? mutableLocation : gamePath,
+=======
+                  gamePath:
+                    mutableLocation !== undefined ? mutableLocation : gamePath,
+>>>>>>> v2.0.1
                   name,
                   gameStoreId: STORE_ID,
                 };
@@ -415,13 +456,27 @@ class XboxLauncher implements types.IGameStore {
                   return PromiseBB.resolve(accum);
                 }
 
+<<<<<<< HEAD
                 return PromiseBB.resolve(this.getAppManifestData(gameEntry.gamePath))
+=======
+                return PromiseBB.resolve(
+                  this.getAppManifestData(gameEntry.gamePath),
+                )
+>>>>>>> v2.0.1
                   .then((manifestData) => {
                     accum.push({ ...gameEntry, manifestData });
                     return accum;
                   })
                   .catch((err) => {
+<<<<<<< HEAD
                     log("error", "gamestore-xbox: unable to query the app game path", key);
+=======
+                    log(
+                      "error",
+                      "gamestore-xbox: unable to query the app game path",
+                      key,
+                    );
+>>>>>>> v2.0.1
                     return accum;
                   });
               },

@@ -1238,7 +1238,11 @@ function elevated(
         // aware of another case
         reject(new UserCanceled());
       } else {
-        reject(new Error(`OS error ${error.message} (${getErrorCode(err) ?? nativeCode})`));
+        reject(
+          new Error(
+            `OS error ${error.message} (${getErrorCode(err) ?? nativeCode})`,
+          ),
+        );
       }
     });
   }).finally(() => {

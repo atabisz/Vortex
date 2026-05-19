@@ -55,7 +55,20 @@ export interface IPersistor {
   setItem(key: PersistorKey, value: string): PromiseLike<void>;
   removeItem(key: PersistorKey): PromiseLike<void>;
   getAllKeys(): PromiseLike<PersistorKey[]>;
+<<<<<<< HEAD
   getAllKVs?(prefix?: string): PromiseLike<Array<{ key: PersistorKey; value: string }>>;
+=======
+  getAllKVs?(
+    prefix?: string,
+  ): PromiseLike<Array<{ key: PersistorKey; value: string }>>;
+  // Optional bulk variants. When present, callers should prefer them for
+  // diff-style writes - they collapse N round-trips and N LevelDB writes
+  // into a small number of multi-row statements.
+  bulkSetItem?(
+    items: ReadonlyArray<{ key: PersistorKey; value: string }>,
+  ): PromiseLike<void>;
+  bulkRemoveItem?(keys: ReadonlyArray<PersistorKey>): PromiseLike<void>;
+>>>>>>> v2.0.1
 }
 
 export interface IPosition {

@@ -141,7 +141,10 @@ export async function checkModRequirements(
 
     const useCachedOnly = params?.cachedOnly === true;
 
-    const enabledMods = getEnabledMods(api, gameId).filter(
+    const allEnabledMods = getEnabledMods(api, gameId);
+
+    // Mods whose requirements we check: user-installed Nexus mods only
+    const checkableMods = allEnabledMods.filter(
       (mod: IMod) =>
         mod.type !== "collection" &&
         !mod.attributes?.installedAsDependency &&
@@ -149,15 +152,27 @@ export async function checkModRequirements(
         mod.attributes?.source === "nexus",
     );
 
+<<<<<<< HEAD
     if (enabledMods.length === 0) {
       return createResult(startTime, "passed", HealthCheckSeverity.Info, "No Nexus mods installed");
+=======
+    if (checkableMods.length === 0) {
+      return createResult(
+        startTime,
+        "passed",
+        HealthCheckSeverity.Info,
+        "No Nexus mods installed",
+      );
+>>>>>>> v2.0.1
     }
 
-    // Build lookup structures for O(1) access
+    // Build lookup structures from ALL enabled mods so that mods installed
+    // as dependencies (e.g. via collections) are recognized as satisfying
+    // requirements.
     const installedModIds = new Set<number>();
     const modsByNexusId = new Map<number, IMod>();
 
-    for (const mod of enabledMods) {
+    for (const mod of allEnabledMods) {
       const nexusModId = mod.attributes?.modId;
       if (nexusModId) {
         installedModIds.add(nexusModId);
@@ -174,8 +189,8 @@ export async function checkModRequirements(
       errors: [],
     };
 
-    const modLimit = params?.limit ?? enabledMods.length;
-    const modsToCheck = enabledMods.slice(0, modLimit);
+    const modLimit = params?.limit ?? checkableMods.length;
+    const modsToCheck = checkableMods.slice(0, modLimit);
 
     // Build a map of requirements: first from cache, then fetch missing ones
     const requirementsMap: {
@@ -298,11 +313,31 @@ export async function checkModRequirements(
           if (req.externalRequirement) {
             getModEntry().missingMods.push({
               ...req,
+<<<<<<< HEAD
               modId: 0,
               gameId,
               uid: `external-${req.id}`,
               requiredBy,
               modUrl: req.url,
+=======
+              modId: requiredModId,
+              gameId: gameIdForStorage,
+              uid: makeModUID({
+                modId: req.modId,
+                fileId: "0",
+                gameId: gameIdForStorage,
+              }),
+              requiredBy: {
+                modId,
+                modName: getModName(),
+                // The nexus mods URL of the mod that requires this dependency
+                modUrl: `https://www.nexusmods.com/${requiringModNexusDomain}/mods/${modId}`,
+              },
+              // The URL of the required dependency mod
+              modUrl:
+                (req.url && req.url.trim()) ||
+                `https://www.nexusmods.com/${gameIdForStorage}/mods/${requiredModId}`,
+>>>>>>> v2.0.1
             });
             continue;
           }

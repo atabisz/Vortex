@@ -76,6 +76,7 @@ export const resolveBixPackage = (gameConf: IBepInExGameConfig): IBIXPackageReso
 export const addGameSupport = (gameConf: IBepInExGameConfig) => {
   const isIL2CPP = gameConf.unityBuild === "unityil2cpp";
 
+<<<<<<< HEAD
   if (isIL2CPP && gameConf.bepinexVersion != null && semver.lt(gameConf.bepinexVersion, "6.0.0")) {
     throw new Error("IL2CPP builds require BepInEx 6.0.0 or above");
   }
@@ -97,6 +98,35 @@ export const addGameSupport = (gameConf: IBepInExGameConfig) => {
     gameConf.bepinexCoercedVersion = util.semverCoerce(gameConf.bepinexVersion).version;
   }
 
+=======
+  if (
+    isIL2CPP &&
+    gameConf.bepinexVersion != null &&
+    semver.lt(gameConf.bepinexVersion, "6.0.0")
+  ) {
+    throw new Error("IL2CPP builds require BepInEx 6.0.0 or above");
+  }
+
+  // Pick a default version when the extension hasn't pinned one. IL2CPP needs
+  //  6.0.0+; otherwise we use DEFAULT_VERSION - but only when the extension
+  //  isn't delegating version selection to a customPackDownloader (pinning in
+  //  that case forces a reinstall on every deploy whenever the downloaded
+  //  pack's version differs from DEFAULT_VERSION).
+  if (gameConf.bepinexVersion == null) {
+    if (isIL2CPP) {
+      gameConf.bepinexVersion = "6.0.0";
+    } else if (gameConf.customPackDownloader === undefined) {
+      gameConf.bepinexVersion = DEFAULT_VERSION;
+    }
+  }
+
+  if (gameConf.bepinexVersion != null) {
+    gameConf.bepinexCoercedVersion = util.semverCoerce(
+      gameConf.bepinexVersion,
+    ).version;
+  }
+
+>>>>>>> v2.0.1
   GAME_SUPPORT[gameConf.gameId] = gameConf;
 };
 
@@ -174,11 +204,22 @@ const getLatestVersion = (arch: string): string => {
   return `${latestVersion}${arch}`;
 };
 
+<<<<<<< HEAD
 export const getDownload = (gameConf: IBepInExGameConfig): INexusDownloadInfoExt => {
   const arch = gameConf.architecture ?? "x64";
   const versionKey = `${gameConf.bepinexVersion}${arch}`;
   const download: INexusDownloadInfoExt =
     gameConf.bepinexVersion != null && Object.keys(AVAILABLE).includes(versionKey)
+=======
+export const getDownload = (
+  gameConf: IBepInExGameConfig,
+): INexusDownloadInfoExt => {
+  const arch = gameConf.architecture ?? "x64";
+  const versionKey = `${gameConf.bepinexVersion}${arch}`;
+  const download: INexusDownloadInfoExt =
+    gameConf.bepinexVersion != null &&
+    Object.keys(AVAILABLE).includes(versionKey)
+>>>>>>> v2.0.1
       ? AVAILABLE[versionKey]
       : AVAILABLE[getLatestVersion(arch)];
   return {

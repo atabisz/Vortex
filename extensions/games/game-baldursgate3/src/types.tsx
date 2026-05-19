@@ -57,9 +57,21 @@ export interface IXmlNode<AttributeT extends object> {
   $: AttributeT;
 }
 
+<<<<<<< HEAD
 export interface IAttribute extends IXmlNode<{ id: string; type: string; value: string }> {}
 
 export interface IModNode extends IXmlNode<{ id: "Module" | "ModuleShortDesc" }> {
+=======
+export interface IAttribute extends IXmlNode<{
+  id: string;
+  type: string;
+  value: string;
+}> {}
+
+export interface IModNode extends IXmlNode<{
+  id: "Module" | "ModuleShortDesc";
+}> {
+>>>>>>> v2.0.1
   attribute: IAttribute[];
 }
 
@@ -79,7 +91,16 @@ export interface IRegion extends IXmlNode<{ id: "ModuleSettings" | "Config" }> {
 export interface IModSettings {
   save: {
     header: IXmlNode<{ version: string }>;
+<<<<<<< HEAD
     version: IXmlNode<{ major: string; minor: string; revision: string; build: string }>;
+=======
+    version: IXmlNode<{
+      major: string;
+      minor: string;
+      revision: string;
+      build: string;
+    }>;
+>>>>>>> v2.0.1
     region: IRegion[];
   };
 }
@@ -99,7 +120,19 @@ export interface IDivineOptions {
   source: string;
   destination?: string;
   expression?: string;
+<<<<<<< HEAD
   loglevel?: "off" | "fatal" | "error" | "warn" | "info" | "debug" | "trace" | "all";
+=======
+  loglevel?:
+    | "off"
+    | "fatal"
+    | "error"
+    | "warn"
+    | "info"
+    | "debug"
+    | "trace"
+    | "all";
+>>>>>>> v2.0.1
 }
 
 export interface IDivineOutput {

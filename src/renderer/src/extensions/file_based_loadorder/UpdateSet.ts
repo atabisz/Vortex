@@ -155,7 +155,10 @@ export default class UpdateSet {
       // This is an external entry, we need to find it in the external entries.
       const extEntry = Object.entries(this.mExternalEntries).find((entry) => {
         const [eId, loEntries] = entry;
-        return Array.isArray(loEntries) && loEntries.some((l) => l.id === lookUpEntry.id);
+        return (
+          Array.isArray(loEntries) &&
+          loEntries.some((l) => l.id === lookUpEntry.id)
+        );
       });
       if (extEntry !== undefined) {
         return { entries: this.mExternalEntries[extEntry[0]] };
@@ -165,7 +168,13 @@ export default class UpdateSet {
         const [nId, loEntries] = entry;
         return (
           Array.isArray(loEntries) &&
+<<<<<<< HEAD
           loEntries.some((l) => l.modId === lookUpEntry.modId || l.id === lookUpEntry.id)
+=======
+          loEntries.some(
+            (l) => l.modId === lookUpEntry.modId || l.id === lookUpEntry.id,
+          )
+>>>>>>> v2.0.1
         );
       })?.[0];
       if (numericId === undefined) {

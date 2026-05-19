@@ -57,7 +57,13 @@ async function refreshPlugins(api) {
   }
   const pluginEntries = [];
   for (const fileName of fileEntries) {
+<<<<<<< HEAD
     if (![".esp", ".esm"].includes(path.extname(fileName.toLocaleLowerCase()))) {
+=======
+    if (
+      ![".esp", ".esm"].includes(path.extname(fileName.toLocaleLowerCase()))
+    ) {
+>>>>>>> v2.0.1
       continue;
     }
     let stats;
@@ -103,7 +109,13 @@ async function updatePluginTimestamps(dataPath, plugins) {
     const mtime = offset + oneDay * idx;
     return fs
       .utimesAsync(path.join(dataPath, fileName), mtime, mtime)
+<<<<<<< HEAD
       .catch((err) => (err.code === "ENOENT" ? Promise.resolve() : Promise.reject(err)));
+=======
+      .catch((err) =>
+        err.code === "ENOENT" ? Promise.resolve() : Promise.reject(err),
+      );
+>>>>>>> v2.0.1
   });
 }
 
@@ -116,7 +128,13 @@ async function serializeLoadOrder(api, order) {
 
   const iniFilePath = path.join(discovery.path, "Morrowind.ini");
   const dataDirectory = path.join(discovery.path, "Data Files");
+<<<<<<< HEAD
   const enabled = order.filter((loEntry) => loEntry.enabled === true).map((loEntry) => loEntry.id);
+=======
+  const enabled = order
+    .filter((loEntry) => loEntry.enabled === true)
+    .map((loEntry) => loEntry.id);
+>>>>>>> v2.0.1
   try {
     await updatePluginOrder(iniFilePath, enabled);
     await updatePluginTimestamps(

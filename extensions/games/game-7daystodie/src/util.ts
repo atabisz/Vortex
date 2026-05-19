@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import path from "path";
 
 import Bluebird from "bluebird";
@@ -6,6 +7,16 @@ import { actions, fs, selectors, types, util } from "vortex-api";
 import { Parser } from "xml2js";
 
 import { setUDF } from "./actions";
+=======
+import Bluebird from "bluebird";
+import path from "path";
+import turbowalk from "turbowalk";
+import { actions, fs, selectors, types, util } from "vortex-api";
+import { Parser } from "xml2js";
+
+import { setUDF } from "./actions";
+
+>>>>>>> v2.0.1
 import {
   DEFAULT_LAUNCHER_SETTINGS,
   GAME_ID,
@@ -19,7 +30,13 @@ const PARSER = new Parser({ explicitRoot: false });
 
 export async function purge(api: types.IExtensionApi): Promise<void> {
   return new Promise<void>((resolve, reject) =>
+<<<<<<< HEAD
     api.events.emit("purge-mods", false, (err) => (err ? reject(err) : resolve())),
+=======
+    api.events.emit("purge-mods", false, (err) =>
+      err ? reject(err) : resolve(),
+    ),
+>>>>>>> v2.0.1
   );
 }
 
@@ -71,7 +88,13 @@ export const selectUDF = async (context: types.IExtensionContext) => {
     [{ label: "Cancel" }, { label: "Select UDF" }],
   );
   if (res.action !== "Select UDF") {
+<<<<<<< HEAD
     return Promise.reject(new util.ProcessCanceled("Cannot proceed without UDF"));
+=======
+    return Promise.reject(
+      new util.ProcessCanceled("Cannot proceed without UDF"),
+    );
+>>>>>>> v2.0.1
   }
   await fs.ensureDirWritableAsync(path.dirname(launcherSettings));
   await ensureLOFile(context);
@@ -80,7 +103,13 @@ export const selectUDF = async (context: types.IExtensionContext) => {
     defaultPath: path.join(path.dirname(launcherSettings)),
   });
   if (!directory) {
+<<<<<<< HEAD
     return Promise.reject(new util.ProcessCanceled("Cannot proceed without UDF"));
+=======
+    return Promise.reject(
+      new util.ProcessCanceled("Cannot proceed without UDF"),
+    );
+>>>>>>> v2.0.1
   }
 
   const segments = directory.split(path.sep);
@@ -118,11 +147,16 @@ export function getModsPath(api: types.IExtensionApi): string {
 
 // We _should_ just export this from vortex-api, but I guess it's not wise to make it
 //  easy for users since we want to move away from bluebird in the future ?
-export function toBlue<T>(func: (...args: any[]) => Promise<T>): (...args: any[]) => Bluebird<T> {
+export function toBlue<T>(
+  func: (...args: any[]) => Promise<T>,
+): (...args: any[]) => Bluebird<T> {
   return (...args: any[]) => Bluebird.resolve(func(...args));
 }
 
-export function genProps(context: types.IExtensionContext, profileId?: string): IProps {
+export function genProps(
+  context: types.IExtensionContext,
+  profileId?: string,
+): IProps {
   const api = context.api;
   const state = api.getState();
   const profile: types.IProfile =
@@ -157,7 +191,13 @@ export async function ensureLOFile(
   }
 
   if (props === undefined) {
+<<<<<<< HEAD
     return Promise.reject(new util.ProcessCanceled("failed to generate game props"));
+=======
+    return Promise.reject(
+      new util.ProcessCanceled("failed to generate game props"),
+    );
+>>>>>>> v2.0.1
   }
 
   const targetPath = loadOrderFilePath(props.profile.id);
@@ -178,16 +218,36 @@ export function getPrefixOffset(api: types.IExtensionApi): number {
   const profileId = selectors.activeProfile(state)?.id;
   if (profileId === undefined) {
     // How ?
+<<<<<<< HEAD
     api.showErrorNotification("No active profile for 7dtd", undefined, { allowReport: false });
     return;
   }
 
   return util.getSafe(state, ["settings", "7daystodie", "prefixOffset", profileId], 0);
+=======
+    api.showErrorNotification("No active profile for 7dtd", undefined, {
+      allowReport: false,
+    });
+    return;
+  }
+
+  return util.getSafe(
+    state,
+    ["settings", "7daystodie", "prefixOffset", profileId],
+    0,
+  );
+>>>>>>> v2.0.1
 }
 
 export function reversePrefix(input: string): number {
   if (input.length !== 3 || input.match(/[A-Z][A-Z][A-Z]/g) === null) {
+<<<<<<< HEAD
     throw new util.DataInvalid("Invalid input, please provide a valid prefix (AAA-ZZZ)");
+=======
+    throw new util.DataInvalid(
+      "Invalid input, please provide a valid prefix (AAA-ZZZ)",
+    );
+>>>>>>> v2.0.1
   }
   const prefix = input.split("");
 
@@ -225,7 +285,13 @@ export async function getModName(modInfoPath): Promise<any> {
       ? Promise.resolve(modName)
       : Promise.reject(new util.DataInvalid("Unexpected modinfo.xml format"));
   } catch (err) {
+<<<<<<< HEAD
     return Promise.reject(new util.DataInvalid("Failed to parse ModInfo.xml file"));
+=======
+    return Promise.reject(
+      new util.DataInvalid("Failed to parse ModInfo.xml file"),
+    );
+>>>>>>> v2.0.1
   }
 }
 
@@ -235,19 +301,38 @@ export async function getModInfoFiles(basePath: string): Promise<string[]> {
     basePath,
     (files) => {
       const filtered = files.filter(
+<<<<<<< HEAD
         (entry) => !entry.isDirectory && path.basename(entry.filePath) === MOD_INFO,
+=======
+        (entry) =>
+          !entry.isDirectory && path.basename(entry.filePath) === MOD_INFO,
+>>>>>>> v2.0.1
       );
       filePaths = filePaths.concat(filtered.map((entry) => entry.filePath));
     },
     { recurse: true, skipLinks: true },
   )
     .catch((err) =>
+<<<<<<< HEAD
       ["ENOENT", "ENOTFOUND"].includes(err.code) ? Promise.resolve() : Promise.reject(err),
+=======
+      ["ENOENT", "ENOTFOUND"].includes(err.code)
+        ? Promise.resolve()
+        : Promise.reject(err),
+>>>>>>> v2.0.1
     )
     .then(() => Promise.resolve(filePaths));
 }
 
+<<<<<<< HEAD
 export interface IAttribute extends IXmlNode<{ id: string; type: string; value: string }> {}
+=======
+export interface IAttribute extends IXmlNode<{
+  id: string;
+  type: string;
+  value: string;
+}> {}
+>>>>>>> v2.0.1
 export interface IXmlNode<AttributeT extends object> {
   $: AttributeT;
 }

@@ -47,7 +47,13 @@ const makeOctokit = ({
   tagObjectSha = "sha-tag-target",
   commitDate = "2024-05-01T00:00:00Z",
 }: FakeOctokitOpts = {}) => {
+<<<<<<< HEAD
   const paginate = vi.fn().mockResolvedValue(tags) as ReturnType<typeof vi.fn> & {
+=======
+  const paginate = vi.fn().mockResolvedValue(tags) as ReturnType<
+    typeof vi.fn
+  > & {
+>>>>>>> v2.0.1
     iterator: ReturnType<typeof vi.fn>;
   };
   paginate.iterator = vi.fn().mockReturnValue({
@@ -90,7 +96,13 @@ describe("collectFromRelease", () => {
 
   it("throws when current tag is not in the tag list", async () => {
     const octokit = makeOctokit({ tags: [{ name: "v1.0.0" }] });
+<<<<<<< HEAD
     await expect(collectFromRelease(octokit as never)).rejects.toThrow(/not found/);
+=======
+    await expect(collectFromRelease(octokit as never)).rejects.toThrow(
+      /not found/,
+    );
+>>>>>>> v2.0.1
   });
 
   it("collects fingerprints from PRs merged after the previous tag", async () => {

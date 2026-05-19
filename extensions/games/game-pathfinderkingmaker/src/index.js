@@ -33,7 +33,13 @@ function main(context) {
   });
 
   function findGame() {
+<<<<<<< HEAD
     return util.steam.findByAppId(SteamId.toString()).then((game) => game.gamePath);
+=======
+    return util.steam
+      .findByAppId(SteamId.toString())
+      .then((game) => game.gamePath);
+>>>>>>> v2.0.1
   }
 
   function readRegistryKey(hive, key, name) {
@@ -53,14 +59,28 @@ function main(context) {
   }
 
   function findUnityModManager() {
+<<<<<<< HEAD
     return readRegistryKey("HKEY_CURRENT_USER", "Software\\UnityModManager", "Path").then((value) =>
       fs.statAsync(path.join(value, UMM_DLL)),
     );
+=======
+    return readRegistryKey(
+      "HKEY_CURRENT_USER",
+      "Software\\UnityModManager",
+      "Path",
+    ).then((value) => fs.statAsync(path.join(value, UMM_DLL)));
+>>>>>>> v2.0.1
   }
 
   function setup(discovery) {
     return fs
+<<<<<<< HEAD
       .ensureDirWritableAsync(path.join(discovery.path, "Mods"), () => Promise.resolve())
+=======
+      .ensureDirWritableAsync(path.join(discovery.path, "Mods"), () =>
+        Promise.resolve(),
+      )
+>>>>>>> v2.0.1
       .then(() =>
         findUnityModManager().catch((err) => {
           return new Promise((resolve, reject) => {
@@ -68,6 +88,7 @@ function main(context) {
               actions.showDialog(
                 "question",
                 "Action required",
+<<<<<<< HEAD
                 { message: "You must install Unity Mod Manager to use mods with " + Name + "." },
                 [
                   { label: "Cancel", action: () => reject(new util.UserCanceled()) },
@@ -75,6 +96,25 @@ function main(context) {
                     label: "Go to the Unity Mod Manager page",
                     action: () => {
                       util.opn("https://www.nexusmods.com/site/mods/21/").catch((err) => undefined);
+=======
+                {
+                  message:
+                    "You must install Unity Mod Manager to use mods with " +
+                    Name +
+                    ".",
+                },
+                [
+                  {
+                    label: "Cancel",
+                    action: () => reject(new util.UserCanceled()),
+                  },
+                  {
+                    label: "Go to the Unity Mod Manager page",
+                    action: () => {
+                      util
+                        .opn("https://www.nexusmods.com/site/mods/21/")
+                        .catch((err) => undefined);
+>>>>>>> v2.0.1
                       reject(new util.UserCanceled());
                     },
                   },

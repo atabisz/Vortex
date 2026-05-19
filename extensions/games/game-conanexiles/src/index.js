@@ -11,7 +11,13 @@ function toWordExp(input) {
 }
 
 function queryPath() {
+<<<<<<< HEAD
   return util.GameStoreHelper.findByAppId([STEAMAPP_ID.toString()]).then((game) => game.gamePath);
+=======
+  return util.GameStoreHelper.findByAppId([STEAMAPP_ID.toString()]).then(
+    (game) => game.gamePath,
+  );
+>>>>>>> v2.0.1
 }
 
 function modlistPath(gamePath) {
@@ -59,7 +65,12 @@ function main(context) {
     mergeMods: true,
     queryPath,
     queryModPath,
+<<<<<<< HEAD
     executable: () => path.join("ConanSandbox", "Binaries", "Win64", "ConanSandbox.exe"),
+=======
+    executable: () =>
+      path.join("ConanSandbox", "Binaries", "Win64", "ConanSandbox.exe"),
+>>>>>>> v2.0.1
     requiredFiles: ["ConanSandbox.exe"],
     setup,
     environment: {

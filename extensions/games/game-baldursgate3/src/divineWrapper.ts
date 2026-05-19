@@ -1,9 +1,18 @@
 /* eslint-disable */
 import * as path from "path";
+<<<<<<< HEAD
 
 import { log, selectors, types, util } from "vortex-api";
 
 import { GAME_ID } from "./common";
+=======
+import { log, selectors, types, util } from "vortex-api";
+
+import { GAME_ID } from "./common";
+import { DivineAction, IDivineOptions, IDivineOutput } from "./types";
+import { getLatestLSLibMod, logError } from "./util";
+
+>>>>>>> v2.0.1
 import {
   DEFAULT_TIMEOUT_MS,
   DivineAborted,
@@ -14,8 +23,11 @@ import {
   parsePackageListOutput,
   runDivineCore,
 } from "./divineCore";
+<<<<<<< HEAD
 import { DivineAction, IDivineOptions, IDivineOutput } from "./types";
 import { getLatestLSLibMod, logError } from "./util";
+=======
+>>>>>>> v2.0.1
 
 // Run 5 concurrent Divine processes. Retry on transient failures, but fail
 // fast for deterministic ones — retrying a missing exe, a missing .NET
@@ -48,7 +60,16 @@ function resolveExePath(api: types.IExtensionApi): string {
   if (lsLib === undefined) {
     throw new Error("LSLib/Divine tool is missing");
   }
+<<<<<<< HEAD
   return path.join(stagingFolder, lsLib.installationPath, "tools", "divine.exe");
+=======
+  return path.join(
+    stagingFolder,
+    lsLib.installationPath,
+    "tools",
+    "divine.exe",
+  );
+>>>>>>> v2.0.1
 }
 
 async function runDivine(
@@ -65,7 +86,16 @@ async function runDivine(
     concurrencyLimiter.do(async () => {
       try {
         const exePath = resolveExePath(api);
+<<<<<<< HEAD
         const result = await runDivineCore(exePath, action, divineOpts, runOpts);
+=======
+        const result = await runDivineCore(
+          exePath,
+          action,
+          divineOpts,
+          runOpts,
+        );
+>>>>>>> v2.0.1
         return resolve(result);
       } catch (err) {
         return reject(err);
@@ -87,10 +117,23 @@ export async function extractPak(
   });
 }
 
+<<<<<<< HEAD
 export async function listPackage(api: types.IExtensionApi, pakPath: string): Promise<string[]> {
   let res: IDivineOutput | undefined;
   try {
     res = await runDivine(api, "list-package", { source: pakPath, loglevel: "off" });
+=======
+export async function listPackage(
+  api: types.IExtensionApi,
+  pakPath: string,
+): Promise<string[]> {
+  let res: IDivineOutput | undefined;
+  try {
+    res = await runDivine(api, "list-package", {
+      source: pakPath,
+      loglevel: "off",
+    });
+>>>>>>> v2.0.1
   } catch (error) {
     if (error instanceof DivineAborted) {
       throw error;

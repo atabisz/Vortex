@@ -20,7 +20,12 @@ describe("computeStateDiff", () => {
 
     const ops = computeStateDiff(oldState, newState);
     const installTimeOp = ops.find(
+<<<<<<< HEAD
       (op) => op.path.join(".") === "mods.skyrim.testMod.attributes.installTime",
+=======
+      (op) =>
+        op.path.join(".") === "mods.skyrim.testMod.attributes.installTime",
+>>>>>>> v2.0.1
     );
     expect(installTimeOp).toBeDefined();
     expect(installTimeOp.type).toBe("set");
@@ -43,7 +48,12 @@ describe("computeStateDiff", () => {
 
     const ops = computeStateDiff(oldState, newState);
     const installTimeOp = ops.find(
+<<<<<<< HEAD
       (op) => op.path.join(".") === "mods.skyrim.testMod.attributes.installTime",
+=======
+      (op) =>
+        op.path.join(".") === "mods.skyrim.testMod.attributes.installTime",
+>>>>>>> v2.0.1
     );
     expect(installTimeOp).toBeDefined();
     expect(installTimeOp.type).toBe("remove");
@@ -104,17 +114,54 @@ describe("computeStateDiff", () => {
 
     const addOps = computeStateDiff(oldState, withInvalidDate);
     const setOp = addOps.find(
+<<<<<<< HEAD
       (op) => op.path.join(".") === "mods.skyrim.testMod.attributes.installTime",
+=======
+      (op) =>
+        op.path.join(".") === "mods.skyrim.testMod.attributes.installTime",
+>>>>>>> v2.0.1
     );
     expect(setOp).toBeDefined();
     expect(setOp.type).toBe("set");
 
     const removeOps = computeStateDiff(withInvalidDate, oldState);
     const removeOp = removeOps.find(
+<<<<<<< HEAD
       (op) => op.path.join(".") === "mods.skyrim.testMod.attributes.installTime",
+=======
+      (op) =>
+        op.path.join(".") === "mods.skyrim.testMod.attributes.installTime",
+>>>>>>> v2.0.1
     );
     expect(removeOp).toBeDefined();
     expect(removeOp.type).toBe("remove");
+  });
+
+  it("emits a remove at the container path when an object subtree is removed", () => {
+    // The persistence layer treats remove ops as subtree removals (key + any
+    // descendants). For that to clear a JSON blob stored at an intermediate
+    // path - which is what happens to non-plain objects in
+    // collectSetOperations - the diff must include a remove at that path,
+    // not just at deeper leaves.
+    const oldState = {
+      files: {
+        downloadId: {
+          failCause: new Error("network failed"),
+        },
+      },
+    };
+    const newState = { files: {} };
+
+    const ops = computeStateDiff(oldState, newState);
+    const removePaths = new Set(
+      ops.filter((op) => op.type === "remove").map((op) => op.path.join(".")),
+    );
+
+    // The container itself must be removed - this is what sweeps a blob
+    // stored at `files###downloadId` in the kv table.
+    expect(removePaths.has("files.downloadId")).toBe(true);
+    // And the non-plain-object child too, in case it was decomposed.
+    expect(removePaths.has("files.downloadId.failCause")).toBe(true);
   });
 
   it("generates set operation when Date replaces a string", () => {

@@ -1,10 +1,33 @@
 /* eslint-disable */
 import path from "path";
+<<<<<<< HEAD
 
 import * as React from "react";
 import { fs, types, FlexLayout, OptionsFilter, selectors, util } from "vortex-api";
 
 import { GAME_ID, HALO_GAMES, MS_APPID, STEAM_ID, MODTYPE_PLUG_AND_PLAY } from "./common";
+=======
+import {
+  fs,
+  types,
+  FlexLayout,
+  OptionsFilter,
+  selectors,
+  util,
+} from "vortex-api";
+
+import * as React from "react";
+
+import {
+  GAME_ID,
+  HALO_GAMES,
+  MS_APPID,
+  STEAM_ID,
+  MODTYPE_PLUG_AND_PLAY,
+} from "./common";
+import { LauncherConfig } from "./types";
+import { testPlugAndPlayModType } from "./modTypes";
+>>>>>>> v2.0.1
 import {
   installPlugAndPlay,
   testModConfigInstaller,
@@ -13,9 +36,13 @@ import {
   install,
   testInstaller,
 } from "./installers";
+<<<<<<< HEAD
 import { testPlugAndPlayModType } from "./modTypes";
 import { testCEMP } from "./tests";
 import { LauncherConfig } from "./types";
+=======
+import { testCEMP } from "./tests";
+>>>>>>> v2.0.1
 import { applyToManifest } from "./util";
 
 // Master chef collection
@@ -40,7 +67,12 @@ class MasterChiefCollectionGame implements types.IGame {
     this.shortName = "Halo: MCC";
     this.logo = "gameart.jpg";
     this.api = context.api;
+<<<<<<< HEAD
     ((this.getGameVersion = resolveGameVersion), (this.requiredFiles = [this.executable()]));
+=======
+    ((this.getGameVersion = resolveGameVersion),
+      (this.requiredFiles = [this.executable()]));
+>>>>>>> v2.0.1
     this.supportedTools = [
       {
         id: "haloassemblytool",
@@ -73,13 +105,26 @@ class MasterChiefCollectionGame implements types.IGame {
   }
 
   public queryPath() {
+<<<<<<< HEAD
     return util.GameStoreHelper.findByAppId([STEAM_ID, MS_APPID]).then((game) => game.gamePath);
+=======
+    return util.GameStoreHelper.findByAppId([STEAM_ID, MS_APPID]).then(
+      (game) => game.gamePath,
+    );
+>>>>>>> v2.0.1
   }
 
   public requiresLauncher = util.toBlue((gamePath: string, store: string) =>
     this.checkLauncher(gamePath, store),
   );
+<<<<<<< HEAD
   public async checkLauncher(gamePath: string, store: string): LauncherConfig | undefined {
+=======
+  public async checkLauncher(
+    gamePath: string,
+    store: string,
+  ): LauncherConfig | undefined {
+>>>>>>> v2.0.1
     if (store === "xbox") {
       return Promise.resolve({
         launcher: "xbox",
@@ -177,7 +222,16 @@ module.exports = {
       installModConfig as any,
     );
 
+<<<<<<< HEAD
     context.registerInstaller("masterchiefinstaller", 25, testInstaller as any, install as any);
+=======
+    context.registerInstaller(
+      "masterchiefinstaller",
+      25,
+      testInstaller as any,
+      install as any,
+    );
+>>>>>>> v2.0.1
 
     context.registerTest(
       "mcc-ce-mp-test",
@@ -196,7 +250,14 @@ module.exports = {
           return React.createElement(
             "div",
             { className: "halo-img-div", key: `${entry.internalId}-${idx}` },
+<<<<<<< HEAD
             React.createElement("img", { className: "halogameimg", src: `file://${entry.img}` }),
+=======
+            React.createElement("img", {
+              className: "halogameimg",
+              src: `file://${entry.img}`,
+            }),
+>>>>>>> v2.0.1
             React.createElement("span", {}, entry.name),
           );
         };
@@ -221,7 +282,14 @@ module.exports = {
         [].concat(
           [{ value: OptionsFilter.EMPTY, label: "<None>" }],
           Object.keys(HALO_GAMES).map((key) => {
+<<<<<<< HEAD
             return { value: HALO_GAMES[key].internalId, label: HALO_GAMES[key].name };
+=======
+            return {
+              value: HALO_GAMES[key].internalId,
+              label: HALO_GAMES[key].name,
+            };
+>>>>>>> v2.0.1
           }),
         ),
         true,
@@ -239,19 +307,38 @@ module.exports = {
         if (haloEntries.length > 1) {
           return "Multiple";
         } else {
+<<<<<<< HEAD
           return !!haloEntries && haloEntries.length > 0 ? haloEntries[0].name : "None";
+=======
+          return !!haloEntries && haloEntries.length > 0
+            ? haloEntries[0].name
+            : "None";
+>>>>>>> v2.0.1
         }
       },
       isDefaultVisible: true,
       //sortFunc: (lhs, rhs) => getCollator(locale).compare(lhs, rhs),
       condition: () => {
+<<<<<<< HEAD
         const activeGameId = selectors.activeGameId(context.api.store.getState());
+=======
+        const activeGameId = selectors.activeGameId(
+          context.api.store.getState(),
+        );
+>>>>>>> v2.0.1
         return activeGameId === GAME_ID;
       },
     });
 
     context.once(() => {
+<<<<<<< HEAD
       context.api.setStylesheet("masterchiefstyle", path.join(__dirname, "masterchief.scss"));
+=======
+      context.api.setStylesheet(
+        "masterchiefstyle",
+        path.join(__dirname, "masterchief.scss"),
+      );
+>>>>>>> v2.0.1
       context.api.onAsync("did-deploy", async (profileId: string) =>
         applyToManifest(context.api, true),
       );

@@ -23,8 +23,14 @@ function findGame() {
 }
 
 function prepareForModding(discovery) {
+<<<<<<< HEAD
   return fs.ensureDirWritableAsync(path.join(discovery.path, "HatInTimeGame/Mods"), () =>
     Promise.resolve(),
+=======
+  return fs.ensureDirWritableAsync(
+    path.join(discovery.path, "HatInTimeGame/Mods"),
+    () => Promise.resolve(),
+>>>>>>> v2.0.1
   );
 }
 
@@ -34,7 +40,12 @@ function installContent(files, destinationPath, gameId, progressDelegate) {
   const modFile = files.find((file) => path.basename(file) === MOD_INFO);
   const idx = modFile.indexOf(path.basename(modFile));
   const rootPath = path.dirname(modFile);
+<<<<<<< HEAD
   const modName = rootPath !== "" ? rootPath : path.basename(destinationPath, ".installing");
+=======
+  const modName =
+    rootPath !== "" ? rootPath : path.basename(destinationPath, ".installing");
+>>>>>>> v2.0.1
 
   // Remove directories and anything that isn't in the rootPath.
   const filtered = files.filter(
@@ -83,7 +94,16 @@ function main(context) {
     },
   });
 
+<<<<<<< HEAD
   context.registerInstaller("ahatintime-mod", 25, testSupportedContent, installContent);
+=======
+  context.registerInstaller(
+    "ahatintime-mod",
+    25,
+    testSupportedContent,
+    installContent,
+  );
+>>>>>>> v2.0.1
 
   return true;
 }

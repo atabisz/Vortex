@@ -70,7 +70,13 @@ async function onCheckModVersion(
   }
   const forceUpdate = (dwnl?: INexusDownloadInfo) =>
     ensureBepInExPack(api, gameId, true)
+<<<<<<< HEAD
       .catch((err) => api.showErrorNotification("Failed to update BepInEx", err))
+=======
+      .catch((err) =>
+        api.showErrorNotification("Failed to update BepInEx", err),
+      )
+>>>>>>> v2.0.1
       .finally(() => {
         if (dwnl === undefined) {
           return Promise.resolve();
@@ -418,7 +424,14 @@ function init(context: types.IExtensionContext) {
           }),
         )
         .catch((err) =>
+<<<<<<< HEAD
           context.api.showErrorNotification("Failed to download/install BepInEx", err),
+=======
+          context.api.showErrorNotification(
+            "Failed to download/install BepInEx",
+            err,
+          ),
+>>>>>>> v2.0.1
         )
         .finally(() => {
           const state = context.api.getState();
@@ -451,7 +464,14 @@ function init(context: types.IExtensionContext) {
         return;
       }
       return ensureBepInExPack(context.api, profile.gameId).catch((err) =>
+<<<<<<< HEAD
         context.api.showErrorNotification("Failed to download/install BepInEx", err),
+=======
+        context.api.showErrorNotification(
+          "Failed to download/install BepInEx",
+          err,
+        ),
+>>>>>>> v2.0.1
       );
     });
 

@@ -21,7 +21,12 @@ export const recordErrorOnSpan = (
   attributes?: Record<string, string | number | boolean>,
 ): void => {
   const sanitizedMessage = sanitizeFramePath(error.message);
+<<<<<<< HEAD
   const sanitizedStack = error.stack !== undefined ? sanitizeFramePath(error.stack) : undefined;
+=======
+  const sanitizedStack =
+    error.stack !== undefined ? sanitizeFramePath(error.stack) : undefined;
+>>>>>>> v2.0.1
   const sanitized = new Error(sanitizedMessage);
   sanitized.name = error.name;
   sanitized.stack = sanitizedStack;

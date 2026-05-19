@@ -23,7 +23,12 @@ class GoPremiumDashlet extends ComponentEx<WithTranslation, {}> {
           Get fast downloads with <span className="text-highlight">premium</span>
         </div>
         <div className="dashlet-premium-body">
+<<<<<<< HEAD
           <span className="text-highlight">Upgrade to unlock</span> uncapped download speeds,
+=======
+          <span className="text-highlight">Upgrade to unlock</span> uncapped
+          download speeds,
+>>>>>>> v2.0.1
           <span className="text-highlight"> auto-install collections</span> and{" "}
           <span className="text-highlight">no ads</span>.
         </div>

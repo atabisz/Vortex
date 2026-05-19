@@ -1,5 +1,8 @@
 /* eslint-disable */
+<<<<<<< HEAD
 const { app, remote } = require("electron");
+=======
+>>>>>>> v2.0.1
 const Big = require("big.js");
 const Promise = require("bluebird");
 const { parseStringPromise } = require("xml2js");
@@ -9,7 +12,10 @@ const winapi = require("winapi-bindings");
 
 const semver = require("semver");
 
+<<<<<<< HEAD
 const APPUNI = app || remote.app;
+=======
+>>>>>>> v2.0.1
 const GAME_ID = "x4foundations";
 const I18N_NAMESPACE = `game-${GAME_ID}`;
 const STEAM_ID = 392160;
@@ -227,8 +233,13 @@ function steamUserId32Bit() {
 
 function getDocumentsModPath() {
   return _STEAM_ENTRY !== undefined
+<<<<<<< HEAD
     ? path.join(APPUNI.getPath("documents"), "Egosoft", "X4", steamUserId32Bit(), "extensions")
     : path.join(APPUNI.getPath("documents"), "Egosoft", "X4", "extensions");
+=======
+    ? path.join(util.getVortexPath("documents"), "Egosoft", "X4", steamUserId32Bit(), "extensions")
+    : path.join(util.getVortexPath("documents"), "Egosoft", "X4", "extensions");
+>>>>>>> v2.0.1
 }
 
 function migrate101(api, oldVersion) {
@@ -250,7 +261,13 @@ function migrate101(api, oldVersion) {
       return api.sendNotification({
         id: "x4-reinstall",
         type: "warning",
+<<<<<<< HEAD
         message: api.translate("Mods for X4 need to be reinstalled", { ns: I18N_NAMESPACE }),
+=======
+        message: api.translate("Mods for X4 need to be reinstalled", {
+          ns: I18N_NAMESPACE,
+        }),
+>>>>>>> v2.0.1
         noDismiss: true,
         actions: [
           {

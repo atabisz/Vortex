@@ -5,9 +5,18 @@ import { setupFakeGame, cleanupFakeGame, GAME_CONFIGS } from "../fixtures/game-s
  * Covers test cases: #8.1A, #8.8A
  */
 import { test, expect } from "../fixtures/vortex-app";
+<<<<<<< HEAD
 import { manageGame, type ManagedGame } from "../helpers/games";
 import { navigateToGames } from "../helpers/navigation";
 import { NavBar } from "../selectors/navbar";
+=======
+import {
+  setupFakeGame,
+  cleanupFakeGame,
+  GAME_CONFIGS,
+} from "../fixtures/game-setup/fake-game";
+import { navigateToGames } from "../helpers/navigation";
+>>>>>>> v2.0.1
 
 test.describe("Game Management", () => {
   test("can list available games", async ({ vortexWindow }) => {

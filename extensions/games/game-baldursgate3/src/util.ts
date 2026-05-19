@@ -1,12 +1,18 @@
 /* eslint-disable */
 import * as path from "path";
+<<<<<<< HEAD
 
+=======
+>>>>>>> v2.0.1
 import * as semver from "semver";
 import { generate as shortid } from "shortid";
 import walk from "turbowalk";
 import { actions, fs, types, selectors, log, util } from "vortex-api";
 import { Builder, parseStringPromise } from "xml2js";
+<<<<<<< HEAD
 
+=======
+>>>>>>> v2.0.1
 import {
   DEBUG,
   MOD_TYPE_LSLIB,
@@ -34,7 +40,15 @@ export function getGameDataPath(api) {
 }
 
 export function documentsPath() {
+<<<<<<< HEAD
   return path.join(util.getVortexPath("localAppData"), "Larian Studios", "Baldur's Gate 3");
+=======
+  return path.join(
+    util.getVortexPath("localAppData"),
+    "Larian Studios",
+    "Baldur's Gate 3",
+  );
+>>>>>>> v2.0.1
 }
 
 export function modsPath() {
@@ -73,7 +87,9 @@ export async function getOwnGameVersion(state: types.IState): Promise<string> {
   return await util.getGame(GAME_ID).getInstalledVersion(discovery);
 }
 
-export async function getActivePlayerProfile(api: types.IExtensionApi): Promise<string> {
+export async function getActivePlayerProfile(
+  api: types.IExtensionApi,
+): Promise<string> {
   return gameSupportsProfile(await getOwnGameVersion(api.getState()))
     ? api.store.getState().settings.baldursgate3?.playerProfile || "global"
     : "Public";
@@ -121,7 +137,14 @@ export function forceRefresh(api: types.IExtensionApi) {
   api.store.dispatch(action);
 }
 
+<<<<<<< HEAD
 export function findNode<T extends IXmlNode<{ id: string }>, U>(nodes: T[], id: string): T {
+=======
+export function findNode<T extends IXmlNode<{ id: string }>, U>(
+  nodes: T[],
+  id: string,
+): T {
+>>>>>>> v2.0.1
   return nodes?.find((iter) => iter.$.id === id) ?? undefined;
 }
 
@@ -141,33 +164,67 @@ export function getLatestInstalledLSLibVer(api: types.IExtensionApi) {
         ["persistent", "downloads", "files", arcId],
         undefined,
       );
+<<<<<<< HEAD
       const storedVer = util.getSafe(mods[id], ["attributes", "version"], "0.0.0");
+=======
+      const storedVer = util.getSafe(
+        mods[id],
+        ["attributes", "version"],
+        "0.0.0",
+      );
+>>>>>>> v2.0.1
 
       try {
         if (semver.gt(storedVer, prev)) {
           prev = storedVer;
         }
       } catch (err) {
+<<<<<<< HEAD
         log("warn", "invalid version stored for lslib mod", { id, version: storedVer });
+=======
+        log("warn", "invalid version stored for lslib mod", {
+          id,
+          version: storedVer,
+        });
+>>>>>>> v2.0.1
       }
 
       if (dl !== undefined) {
         // The LSLib developer doesn't always update the version on the executable
         //  itself - we're going to try to extract it from the archive which tends
         //  to use the correct version.
+<<<<<<< HEAD
         const fileName = path.basename(dl.localPath, path.extname(dl.localPath));
+=======
+        const fileName = path.basename(
+          dl.localPath,
+          path.extname(dl.localPath),
+        );
+>>>>>>> v2.0.1
         const idx = fileName.indexOf("-v");
         try {
           const ver = semver.coerce(fileName.slice(idx + 2)).version;
           if (semver.valid(ver) && ver !== storedVer) {
+<<<<<<< HEAD
             api.store.dispatch(actions.setModAttribute(GAME_ID, id, "version", ver));
+=======
+            api.store.dispatch(
+              actions.setModAttribute(GAME_ID, id, "version", ver),
+            );
+>>>>>>> v2.0.1
             prev = ver;
           }
         } catch (err) {
           // We failed to get the version... Oh well.. Set a bogus version since
           //  we clearly have lslib installed - the update functionality should take
           //  care of the rest (when the user clicks the check for updates button)
+<<<<<<< HEAD
           api.store.dispatch(actions.setModAttribute(GAME_ID, id, "version", "1.0.0"));
+=======
+          api.store.dispatch(
+            actions.setModAttribute(GAME_ID, id, "version", "1.0.0"),
+          );
+>>>>>>> v2.0.1
           prev = "1.0.0";
         }
       }
@@ -180,7 +237,13 @@ let _FORMAT: LOFormat = null;
 const PATCH_8 = "4.67.58";
 const PATCH_7 = "4.58.49";
 const PATCH_6 = "4.50.22";
+<<<<<<< HEAD
 export async function getDefaultModSettingsFormat(api: types.IExtensionApi): Promise<LOFormat> {
+=======
+export async function getDefaultModSettingsFormat(
+  api: types.IExtensionApi,
+): Promise<LOFormat> {
+>>>>>>> v2.0.1
   if (_FORMAT !== null) {
     return _FORMAT;
   }
@@ -205,7 +268,9 @@ export async function getDefaultModSettingsFormat(api: types.IExtensionApi): Pro
   return _FORMAT;
 }
 
-export async function getDefaultModSettings(api: types.IExtensionApi): Promise<string> {
+export async function getDefaultModSettings(
+  api: types.IExtensionApi,
+): Promise<string> {
   if (_FORMAT === null) {
     _FORMAT = await getDefaultModSettingsFormat(api);
   }
@@ -231,7 +296,13 @@ export async function convertToV8(someXml: string): Promise<string> {
   const modsNode = moduleSettingsChildren.find((n: any) => n.$.id === "Mods");
   if (modsNode) {
     var gustavEntry = modsNode.children[0].node.find((n: any) =>
+<<<<<<< HEAD
       n.attribute.some((attr: any) => attr.$.id === "Name" && attr.$.value === "GustavDev"),
+=======
+      n.attribute.some(
+        (attr: any) => attr.$.id === "Name" && attr.$.value === "GustavDev",
+      ),
+>>>>>>> v2.0.1
     );
     if (gustavEntry) {
       // This is the old Gustav Entry - we need to update it to the new one
@@ -240,7 +311,17 @@ export async function convertToV8(someXml: string): Promise<string> {
         { $: { id: "MD5", type: "LSString", value: "" } },
         { $: { id: "Name", type: "LSString", value: "GustavX" } },
         { $: { id: "PublishHandle", type: "uint64", value: "0" } },
+<<<<<<< HEAD
         { $: { id: "UUID", type: "guid", value: "cb555efe-2d9e-131f-8195-a89329d218ea" } },
+=======
+        {
+          $: {
+            id: "UUID",
+            type: "guid",
+            value: "cb555efe-2d9e-131f-8195-a89329d218ea",
+          },
+        },
+>>>>>>> v2.0.1
         { $: { id: "Version64", type: "int64", value: "36028797018963968" } },
       ];
     }
@@ -260,7 +341,13 @@ export async function convertV6toV7(v6Xml: string): Promise<string> {
   v6Json.save.version[0].$.build = "3";
 
   const moduleSettingsChildren = v6Json.save.region[0].node[0].children[0].node;
+<<<<<<< HEAD
   const modOrderIndex = moduleSettingsChildren.findIndex((n: any) => n.$.id === "ModOrder");
+=======
+  const modOrderIndex = moduleSettingsChildren.findIndex(
+    (n: any) => n.$.id === "ModOrder",
+  );
+>>>>>>> v2.0.1
   if (modOrderIndex !== -1) {
     // Remove the 'ModOrder' node if it exists
     moduleSettingsChildren.splice(modOrderIndex, 1);
@@ -309,6 +396,7 @@ export function getLatestLSLibMod(api: types.IExtensionApi) {
     log("warn", "LSLib is not installed");
     return undefined;
   }
+<<<<<<< HEAD
   const lsLib: types.IMod = Object.keys(mods).reduce((prev: types.IMod, id: string) => {
     if (mods[id].type === MOD_TYPE_LSLIB) {
       const latestVer = util.getSafe(prev, ["attributes", "version"], "0.0.0");
@@ -319,10 +407,36 @@ export function getLatestLSLibMod(api: types.IExtensionApi) {
         }
       } catch (err) {
         log("warn", "invalid mod version", { modId: id, version: currentVer });
+=======
+  const lsLib: types.IMod = Object.keys(mods).reduce(
+    (prev: types.IMod, id: string) => {
+      if (mods[id].type === MOD_TYPE_LSLIB) {
+        const latestVer = util.getSafe(
+          prev,
+          ["attributes", "version"],
+          "0.0.0",
+        );
+        const currentVer = util.getSafe(
+          mods[id],
+          ["attributes", "version"],
+          "0.0.0",
+        );
+        try {
+          if (semver.gt(currentVer, latestVer)) {
+            prev = mods[id];
+          }
+        } catch (err) {
+          log("warn", "invalid mod version", {
+            modId: id,
+            version: currentVer,
+          });
+        }
+>>>>>>> v2.0.1
       }
-    }
-    return prev;
-  }, undefined);
+      return prev;
+    },
+    undefined,
+  );
 
   if (lsLib === undefined) {
     log("warn", "LSLib is not installed");
@@ -375,7 +489,13 @@ export async function extractMeta(
     // but we'll just use it from wherever
     let metaLSXPath: string = path.join(metaPath, "meta.lsx");
     await walk(metaPath, (entries) => {
+<<<<<<< HEAD
       const temp = entries.find((e) => path.basename(e.filePath).toLowerCase() === "meta.lsx");
+=======
+      const temp = entries.find(
+        (e) => path.basename(e.filePath).toLowerCase() === "meta.lsx",
+      );
+>>>>>>> v2.0.1
       if (temp !== undefined) {
         metaLSXPath = temp.filePath;
       }
@@ -392,7 +512,12 @@ export async function extractMeta(
       // an error message specifying column and row indicate a problem parsing the xml file
       api.sendNotification({
         type: "warning",
+<<<<<<< HEAD
         message: 'The meta.lsx file in "{{modName}}" is invalid, please report this to the author',
+=======
+        message:
+          'The meta.lsx file in "{{modName}}" is invalid, please report this to the author',
+>>>>>>> v2.0.1
         actions: [
           {
             title: "More",
@@ -443,7 +568,13 @@ export async function writeModSettings(
   } catch (err) {
     storedLO = [];
     const allowReport = ["ENOENT", "EPERM"].includes(err.code);
+<<<<<<< HEAD
     api.showErrorNotification("Failed to write mod settings", err, { allowReport });
+=======
+    api.showErrorNotification("Failed to write mod settings", err, {
+      allowReport,
+    });
+>>>>>>> v2.0.1
     return;
   }
 }
@@ -453,7 +584,9 @@ export async function parseLSXFile(lsxPath: string): Promise<IModSettings> {
   return parseStringPromise(dat);
 }
 
-export async function readModSettings(api: types.IExtensionApi): Promise<IModSettings> {
+export async function readModSettings(
+  api: types.IExtensionApi,
+): Promise<IModSettings> {
   const bg3profile: string = await getActivePlayerProfile(api);
   const playerProfiles = getPlayerProfiles();
   if (playerProfiles.length === 0) {
@@ -478,7 +611,13 @@ export async function readStoredLO(api: types.IExtensionApi) {
   const modsRoot = findNode(configRoot?.children?.[0]?.node, "Mods");
   const modOrderNodes = modOrderRoot?.children?.[0]?.node ?? [];
   const modNodes = modsRoot?.children?.[0]?.node ?? [];
+<<<<<<< HEAD
   const modOrder = modOrderNodes.map((node) => findNode(node.attribute, "UUID").$?.value);
+=======
+  const modOrder = modOrderNodes.map(
+    (node) => findNode(node.attribute, "UUID").$?.value,
+  );
+>>>>>>> v2.0.1
 
   // return util.setSafe(state, ['settingsWritten', profile], { time, count });
   const state = api.store.getState();
@@ -489,7 +628,12 @@ export async function readStoredLO(api: types.IExtensionApi) {
   );
   const bg3profile: string = state.settings.baldursgate3?.playerProfile;
   if (enabled.length > 0 && modNodes.length === 1) {
+<<<<<<< HEAD
     const lastWrite = state.settings.baldursgate3?.settingsWritten?.[bg3profile];
+=======
+    const lastWrite =
+      state.settings.baldursgate3?.settingsWritten?.[bg3profile];
+>>>>>>> v2.0.1
     if (lastWrite !== undefined && lastWrite.count > 1) {
       api.showDialog(
         "info",
@@ -513,6 +657,11 @@ export async function readStoredLO(api: types.IExtensionApi) {
     // sort by the index of each mod in the modOrder list
     .sort(
       (lhs, rhs) =>
+<<<<<<< HEAD
         modOrder.findIndex((i) => i === lhs.data) - modOrder.findIndex((i) => i === rhs.data),
+=======
+        modOrder.findIndex((i) => i === lhs.data) -
+        modOrder.findIndex((i) => i === rhs.data),
+>>>>>>> v2.0.1
     );
 }

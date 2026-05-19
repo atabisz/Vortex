@@ -55,6 +55,7 @@ information.
 
 ## Further Reading
 
+<<<<<<< HEAD
 - [Debugging]
 - [Docker Dev Containers]
 
@@ -79,3 +80,9 @@ information.
 [WebStorm]: https://www.jetbrains.com/webstorm/
 [Windows setup]: ./docs/install-instructions/windows.md
 [Windows packaging]: ./docs/packaging/windows.md
+=======
+- [Debugging](./docs/DEBUGGING-GUIDE.md)
+- [Flatpak](./docs/flatpak-maintenance.md)
+- [Docker Dev Containers](./docker)
+- [Nix](./flake.nix)
+>>>>>>> v2.0.1

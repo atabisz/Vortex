@@ -1,7 +1,11 @@
 import * as path from "path";
 import * as util from "util";
 
-import { getErrorCode, getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
+import {
+  getErrorCode,
+  getErrorMessageOrDefault,
+  unknownToError,
+} from "@vortex/shared";
 import PromiseBB from "bluebird";
 import type { TFunction } from "i18next";
 import turbowalk from "turbowalk";
@@ -13,8 +17,11 @@ import { log } from "../../logging";
 import type { IExtensionApi, IExtensionContext } from "../../types/IExtensionContext";
 import type { IGame } from "../../types/IGame";
 import type { IState } from "../../types/IState";
+<<<<<<< HEAD
 import * as fs from "../../util/fs";
 import { installPathForGame } from "../../util/selectors";
+=======
+>>>>>>> v2.0.1
 import type { IDiscoveryResult } from "../gamemode_management/types/IDiscoveryResult";
 import { getGame } from "../gamemode_management/util/getGame";
 import LinkingDeployment from "../mod_management/LinkingDeployment";

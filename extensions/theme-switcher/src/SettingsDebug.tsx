@@ -444,9 +444,18 @@ function mapStateToProps(state: any): IConnectedProps {
 
 function mapDispatchToProps(dispatch: ThunkDispatch<any, any, Redux.Action>): IActionProps {
   return {
+<<<<<<< HEAD
     onShowError: (title: string, details: any) => util.showError(dispatch, title, details),
     onShowDialog: (type, title, content, dialogActions) =>
       Promise.resolve(dispatch(actions.showDialog(type, title, content, dialogActions))),
+=======
+    onShowError: (title: string, details: any) =>
+      util.showError(dispatch, title, details),
+    onShowDialog: (type, title, content, dialogActions) =>
+      Promise.resolve(
+        dispatch(actions.showDialog(type, title, content, dialogActions)),
+      ),
+>>>>>>> v2.0.1
     onShowInfo: (message: string) =>
       dispatch(
         actions.addNotification({

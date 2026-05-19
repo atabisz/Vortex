@@ -1,21 +1,36 @@
 import * as path from "path";
+<<<<<<< HEAD
 
 import { types } from "vortex-api";
 
+=======
+import { types } from "vortex-api";
+
+>>>>>>> v2.0.1
 import { LSLIB_FILES, ORIGINAL_FILES } from "./common";
 import { logDebug } from "./util";
 
 export async function isLSLib(files: types.IInstruction[]) {
   const origFile = files.find(
     (iter) =>
+<<<<<<< HEAD
       iter.type === "copy" && LSLIB_FILES.has(path.basename(iter.destination).toLowerCase()),
   );
   return origFile !== undefined ? Promise.resolve(true) : Promise.resolve(false);
+=======
+      iter.type === "copy" &&
+      LSLIB_FILES.has(path.basename(iter.destination).toLowerCase()),
+  );
+  return origFile !== undefined
+    ? Promise.resolve(true)
+    : Promise.resolve(false);
+>>>>>>> v2.0.1
 }
 
 export async function isBG3SE(files: types.IInstruction[]) {
   const origFile = files.find(
     (iter) =>
+<<<<<<< HEAD
       iter.type === "copy" && path.basename(iter.destination).toLowerCase() === "dwrite.dll",
   );
   return origFile !== undefined ? Promise.resolve(true) : Promise.resolve(false);
@@ -37,6 +52,38 @@ export async function isLoose(instructions: types.IInstruction[]): Promise<boole
         instr.source.indexOf("Public" + path.sep) !== -1,
     ) !== undefined;
 
+=======
+      iter.type === "copy" &&
+      path.basename(iter.destination).toLowerCase() === "dwrite.dll",
+  );
+  return origFile !== undefined
+    ? Promise.resolve(true)
+    : Promise.resolve(false);
+}
+
+export async function isLoose(
+  instructions: types.IInstruction[],
+): Promise<boolean> {
+  // only interested in copy instructions
+  const copyInstructions = instructions.filter(
+    (instr) => instr.type === "copy",
+  );
+
+  // do we have a data folder?
+  const hasDataFolder: boolean =
+    copyInstructions.find(
+      (instr) => instr.source.indexOf("Data" + path.sep) !== -1,
+    ) !== undefined;
+
+  // do we have a public or generated folder?
+  const hasGenOrPublicFolder: boolean =
+    copyInstructions.find(
+      (instr) =>
+        instr.source.indexOf("Generated" + path.sep) !== -1 ||
+        instr.source.indexOf("Public" + path.sep) !== -1,
+    ) !== undefined;
+
+>>>>>>> v2.0.1
   logDebug("isLoose", {
     instructions: instructions,
     hasDataFolder: hasDataFolder || hasGenOrPublicFolder,
@@ -50,11 +97,23 @@ export async function isReplacer(
   files: types.IInstruction[],
 ): Promise<boolean> {
   const origFile = files.find(
+<<<<<<< HEAD
     (iter) => iter.type === "copy" && ORIGINAL_FILES.has(iter.destination.toLowerCase()),
   );
 
   const paks = files.filter(
     (iter) => iter.type === "copy" && path.extname(iter.destination).toLowerCase() === ".pak",
+=======
+    (iter) =>
+      iter.type === "copy" &&
+      ORIGINAL_FILES.has(iter.destination.toLowerCase()),
+  );
+
+  const paks = files.filter(
+    (iter) =>
+      iter.type === "copy" &&
+      path.extname(iter.destination).toLowerCase() === ".pak",
+>>>>>>> v2.0.1
   );
 
   logDebug("isReplacer", { origFile: origFile, paks: paks });

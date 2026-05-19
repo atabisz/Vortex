@@ -5,6 +5,12 @@
  * UI/notifications are handled by the renderer - this just manages the update mechanics.
  */
 
+<<<<<<< HEAD
+=======
+import type { UpdateStatus } from "@vortex/shared/ipc";
+import type { CancellationToken, UpdateInfo } from "electron-updater";
+
+>>>>>>> v2.0.1
 import { getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
 import type { UpdateStatus } from "@vortex/shared/ipc";
 import { app, dialog } from "electron";

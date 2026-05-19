@@ -69,7 +69,13 @@ function copyGameSettings(
                 }),
               )
               .catch({ code: "ENOENT" }, (err) =>
+<<<<<<< HEAD
                 gameSetting.optional ? PromiseBB.resolve() : PromiseBB.reject(err),
+=======
+                gameSetting.optional
+                  ? PromiseBB.resolve()
+                  : PromiseBB.reject(err),
+>>>>>>> v2.0.1
               )
           : PromiseBB.resolve(),
       );
@@ -133,7 +139,16 @@ function updateLocalGameSettings(
       .then(() =>
         (oldProfile as any).pendingRemove === true
           ? PromiseBB.resolve()
+<<<<<<< HEAD
           : copyGameSettings(myGames, profilePath(oldProfile), gameSettings, "GloPro"),
+=======
+          : copyGameSettings(
+              myGames,
+              profilePath(oldProfile),
+              gameSettings,
+              "GloPro",
+            ),
+>>>>>>> v2.0.1
       )
       // restore backup
       .then(() => copyGameSettings(backupPath(oldProfile), myGames, gameSettings, "BacGlo"));
@@ -244,11 +259,19 @@ function bakeSettings(api: types.IExtensionApi, profile: types.IProfile): Promis
   return PromiseBB.resolve(
     util
       .sortMods(profile.gameId, mods, api)
+<<<<<<< HEAD
       .then((sortedMods) => api.emitAndAwait("bake-settings", profile.gameId, sortedMods, profile)),
+=======
+      .then((sortedMods) =>
+        api.emitAndAwait("bake-settings", profile.gameId, sortedMods, profile),
+      ),
+>>>>>>> v2.0.1
   );
 }
 
-function testGlobalFiles(api: types.IExtensionApi): PromiseBB<types.ITestResult> {
+function testGlobalFiles(
+  api: types.IExtensionApi,
+): PromiseBB<types.ITestResult> {
   const gameMode = selectors.activeGameId(api.getState());
   if (!gameSupported(gameMode)) {
     return PromiseBB.resolve(undefined);

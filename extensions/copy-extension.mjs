@@ -11,7 +11,18 @@ function copyExtension(extension) {
   const outputDir = path.basename(extension);
 
   const sourceDir = path.join(EXTENSIONS_DIR, extension, "dist");
+<<<<<<< HEAD
   const destDir = path.join(BASE_DIR, "src", "main", TARGET, "bundledPlugins", outputDir);
+=======
+  const destDir = path.join(
+    BASE_DIR,
+    "src",
+    "main",
+    target,
+    "bundledPlugins",
+    outputDir,
+  );
+>>>>>>> v2.0.1
 
   if (!fs.existsSync(sourceDir)) {
     console.error(`Error: Source directory does not exist: ${sourceDir}`);
@@ -36,7 +47,12 @@ function copyExtension(extension) {
 const extensionArg = process.argv[2];
 
 let extension;
+<<<<<<< HEAD
 if (extensionArg) {
+=======
+if (extensionArg && extensionArg !== "out" && extensionArg !== "dist") {
+  // Explicit extension name passed
+>>>>>>> v2.0.1
   extension = extensionArg;
 } else {
   // Infer from CWD — expect CWD to be inside the extension folder
@@ -55,6 +71,15 @@ if (extensionArg) {
   extension = rel.split(path.sep).slice(0, 2).join(path.sep);
 }
 
+<<<<<<< HEAD
+=======
+if (!target || (target !== "out" && target !== "dist")) {
+  console.error("Error: target is required (out or dist)");
+  console.error("Usage: node copy-extension.mjs [extension] <target>");
+  process.exit(1);
+}
+
+>>>>>>> v2.0.1
 const extDir = path.join(EXTENSIONS_DIR, extension);
 if (!fs.existsSync(extDir)) {
   console.error(`Error: Extension directory does not exist: ${extDir}`);

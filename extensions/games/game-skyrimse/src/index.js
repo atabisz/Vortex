@@ -46,8 +46,16 @@ const tools = [
   {
     id: "bodyslide",
     name: "BodySlide",
+<<<<<<< HEAD
     executable: () => path.join("Data", "CalienteTools", "BodySlide", "BodySlide x64.exe"),
     requiredFiles: [path.join("Data", "CalienteTools", "BodySlide", "BodySlide x64.exe")],
+=======
+    executable: () =>
+      path.join("Data", "CalienteTools", "BodySlide", "BodySlide x64.exe"),
+    requiredFiles: [
+      path.join("Data", "CalienteTools", "BodySlide", "BodySlide x64.exe"),
+    ],
+>>>>>>> v2.0.1
     relative: true,
     logo: "auto",
   },
@@ -120,7 +128,13 @@ async function getGameVersion(api, gamePath, exePath) {
   } catch (err) {
     const fullPath = path.join(gamePath, exePath);
     const fileVersion = getFileVersion(fullPath);
+<<<<<<< HEAD
     return fileVersion !== "1.0.0.0" ? fileVersion : getFileVersionLocalized(fullPath);
+=======
+    return fileVersion !== "1.0.0.0"
+      ? fileVersion
+      : getFileVersionLocalized(fullPath);
+>>>>>>> v2.0.1
   }
 }
 
@@ -132,7 +146,13 @@ function main(context) {
     mergeMods: true,
     queryArgs: {
       // prefer steam because it was released first and users may have pre-1.6.12 installs with store not saved in state
+<<<<<<< HEAD
       steam: [{ name: "The Elder Scrolls V: Skyrim Special Edition", prefer: 0 }],
+=======
+      steam: [
+        { name: "The Elder Scrolls V: Skyrim Special Edition", prefer: 0 },
+      ],
+>>>>>>> v2.0.1
       xbox: [{ id: MS_ID }],
       gog: [{ id: GOG_ID }],
       epic: [{ id: EPIC_ID }],
@@ -148,7 +168,8 @@ function main(context) {
     executable: () => "SkyrimSE.exe",
     requiredFiles: ["SkyrimSE.exe"],
     requiresLauncher,
-    getGameVersion: (gamePath, exePath) => getGameVersion(context.api, gamePath, exePath),
+    getGameVersion: (gamePath, exePath) =>
+      getGameVersion(context.api, gamePath, exePath),
     environment: {
       SteamAPPId: STEAM_ID,
       GogAPPId: GOG_ID,

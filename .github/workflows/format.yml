@@ -51,7 +51,11 @@ jobs:
               '   ```shell',
               '   pnpm run prepare',
               '   ```',
+<<<<<<< HEAD
               '   This auto-formats staged files on every commit. (You will never see this error again)',
+=======
+              '   This auto-formats staged files on every commit.',
+>>>>>>> v2.0.1
               '',
               '2. **Format all files manually**:',
               '   ```shell',

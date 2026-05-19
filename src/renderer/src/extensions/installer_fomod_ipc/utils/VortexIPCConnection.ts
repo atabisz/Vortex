@@ -1,6 +1,13 @@
+<<<<<<< HEAD
 import path from "path";
 
 import type { ConnectionStrategy, TimeoutOptions } from "@nexusmods/fomod-installer-ipc";
+=======
+import type {
+  ConnectionStrategy,
+  TimeoutOptions,
+} from "@nexusmods/fomod-installer-ipc";
+>>>>>>> v2.0.1
 import { BaseIPCConnection } from "@nexusmods/fomod-installer-ipc";
 
 import type { IExtensionApi } from "../../../types/api";

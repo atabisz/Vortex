@@ -23,7 +23,12 @@ import getVortexPath from "../../../util/getVortexPath";
  * space, but HTML `title=` tooltips render whitespace literally, producing a
  * visible gap. Normalize for display.
  */
+<<<<<<< HEAD
 export const formatGameDisplayName = (name: string): string => name.replace(/\s+/g, " ").trim();
+=======
+export const formatGameDisplayName = (name: string): string =>
+  name.replace(/\s+/g, " ").trim();
+>>>>>>> v2.0.1
 
 // ---------------------------------------------------------------------------
 // Image cache — persisted to disk, keyed by game ID
