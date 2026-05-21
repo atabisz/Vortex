@@ -84,7 +84,7 @@
 - [x] **Phase 25: Restore dropped scaffolding** — bring back `packages/paths`, `paths-node`, `gamebryo-ba2-support`, chunking; deliberately drop Jest scaffolding (completed 2026-05-15)
 - [x] **Phase 26: Mod-management hot zone** (complete 2026-05-15) — resolve 8 files in `mod_management/` with playbook re-grep checkpoint per file
 - [x] **Phase 27: Gamebryo + per-game extensions** (complete 2026-05-21) — resolve gamebryo plugin/savegame, collections, bepinex, BG3/Morrowind/Witcher 3
-- [ ] **Phase 28: Renderer + main spine** — resolve renderer infra, main/preload/shared, nexus_integration, scripts, fingerprints (pick-theirs)
+- [x] **Phase 28: Renderer + main spine** — resolve renderer infra, main/preload/shared, nexus_integration, scripts, fingerprints (pick-theirs)
 - [ ] **Phase 29: Build verification** — typecheck, build, tests, AppImage + .deb produced, Linux smoke test passes
 - [ ] **Phase 30: Land + tag** — Windows CI green, FF-merge PR #4, tag `v2.0.0-linux-rebased`, cherry-pick to `linux-port`, close PR #4
 
@@ -194,18 +194,18 @@
 6. Playbook §10 honoured: gamebryo `dist/` cross-compiled native binaries are handled by CI native-rebuild — no stray conflict-marker .so/.node files committed on this branch
    **Plans**: 12 plans
 
-- [ ] 28-00-PLAN.md — Relocate scripts/grep-checkpoint.sh to .planning/milestones/v8.0/scripts/ + extend with §2 §4 (negative) §8 §9 gates (single atomic commit per D-28-04 + D-28-06)
-- [ ] 28-01-PLAN.md — Resolve @vortex/shared bucket (3 files: errors.ts, errors.test.ts, telemetry/spans.ts) + per-bucket typecheck
-- [ ] 28-02-PLAN.md — Resolve @vortex/preload bucket (1 file: index.ts) + per-bucket typecheck
-- [ ] 28-03-PLAN.md — Resolve @vortex/main bucket (7 files; Application.ts last) + per-bucket typecheck
-- [ ] 28-04-PLAN.md — Resolve renderer non-extension leaves (9 files: util/\* → reducers → hooks → contexts → controls → ui)
-- [ ] 28-05-PLAN.md — Resolve renderer extensions (14 files; nexus_integration leaf-first within: UIDs → util → eventHandlers → FreeUserDLDialog → selectors.test → index)
-- [ ] 28-06-PLAN.md — Resolve renderer views (10 files; pages/Tools/index.tsx last per re-export idiom)
-- [ ] 28-07-PLAN.md — Resolve ExtensionManager.ts (last in renderer per D-28-01) + @vortex/renderer per-bucket typecheck
-- [ ] 28-08-PLAN.md — Resolve scripts/\* (2 files: download-duckdb-extensions.{ts,test.ts})
-- [ ] 28-09-PLAN.md — Fingerprints squash commit (11 files taken upstream wholesale per success criterion #1)
-- [ ] 28-10-PLAN.md — Doc borderlines (5 files: CHANGELOG, docs/cherry-pick-workflow.md, docs/error-reporting/critical-errors.md, etc/Dependency Report.md, etc/vortex.api.md) — per-file by default, batch commit per D-28-06 discretion
-- [ ] 28-11-PLAN.md — Done-gate (8 D-28-05 items: zero conflict markers, full grep-checkpoint.sh, 4 per-bucket typechecks, full pnpm typecheck, ~54 commit count, fingerprints squash verify, no half-resolved files, force-with-lease push to fork/sync/upstream-v2.0.0) — NO new resolution commits
+- [x] 28-00-PLAN.md — Relocate scripts/grep-checkpoint.sh to .planning/milestones/v8.0/scripts/ + extend with §2 §4 (negative) §8 §9 gates (single atomic commit per D-28-04 + D-28-06)
+- [x] 28-01-PLAN.md — Resolve @vortex/shared bucket (3 files: errors.ts, errors.test.ts, telemetry/spans.ts) + per-bucket typecheck
+- [x] 28-02-PLAN.md — Resolve @vortex/preload bucket (1 file: index.ts) + per-bucket typecheck
+- [x] 28-03-PLAN.md — Resolve @vortex/main bucket (7 files; Application.ts last) + per-bucket typecheck
+- [x] 28-04-PLAN.md — Resolve renderer non-extension leaves (9 files: util/\* → reducers → hooks → contexts → controls → ui)
+- [x] 28-05-PLAN.md — Resolve renderer extensions (14 files; nexus_integration leaf-first within: UIDs → util → eventHandlers → FreeUserDLDialog → selectors.test → index)
+- [x] 28-06-PLAN.md — Resolve renderer views (10 files; pages/Tools/index.tsx last per re-export idiom)
+- [x] 28-07-PLAN.md — Resolve ExtensionManager.ts (last in renderer per D-28-01) + @vortex/renderer per-bucket typecheck
+- [x] 28-08-PLAN.md — Resolve scripts/\* (2 files: download-duckdb-extensions.{ts,test.ts})
+- [x] 28-09-PLAN.md — Fingerprints squash commit (11 files taken upstream wholesale per success criterion #1)
+- [x] 28-10-PLAN.md — Doc borderlines (5 files: CHANGELOG, docs/cherry-pick-workflow.md, docs/error-reporting/critical-errors.md, etc/Dependency Report.md, etc/vortex.api.md) — per-file by default, batch commit per D-28-06 discretion
+- [x] 28-11-PLAN.md — Done-gate (8 D-28-05 items: zero conflict markers, full grep-checkpoint.sh, 4 per-bucket typechecks, full pnpm typecheck, ~54 commit count, fingerprints squash verify, no half-resolved files, force-with-lease push to fork/sync/upstream-v2.0.0) — NO new resolution commits
 
 ### Phase 29: Build verification
 
