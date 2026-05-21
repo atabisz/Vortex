@@ -128,3 +128,39 @@ All 8 gamebryo bundles present:
 - Working tree clean
 
 ---
+
+## Plan 29-04 — SYNC-31
+
+**HEAD at run:** `a6972705b` (post 29-03 commit)
+
+### SYNC-31 — `pnpm test` (Vitest)
+
+**Command:** `pnpm test` (from package.json: `pnpm vitest run --coverage`)
+**Exit code:** 0
+**Wall-clock:** 8.51s tests + 14.59s import = ~24s
+**Result:** **PASS**
+
+```
+Test Files  48 passed | 1 skipped (49)
+     Tests  1206 passed | 26 skipped (1232)
+  Start at  08:58:52
+  Duration  8.51s
+```
+
+Zero failed tests. The 1 skipped file + 26 skipped individual tests are pre-existing (validation tests for Linux paths skipped on platforms without those bindings, etc.).
+
+### Renderer-no-Jest divergence acknowledged
+
+SYNC-31 explicitly acknowledges this divergence: `src/renderer/jest.config.mjs` was deliberately NOT restored under SYNC-15 in Phase 25 (fork is Vitest-only by deliberate v3.0/v4.0 decision; documented in playbook). All renderer tests that exist run under Vitest; upstream Jest scaffolding remains absent.
+
+### Notes
+
+- `pnpm test` did not regenerate `api.d.ts` this run (no api-extractor in the test path). Working tree clean post-run.
+- R1 lockfile-drift contingency from CONTEXT did not trigger — no `pnpm install` re-run was needed to make `pnpm test` succeed.
+
+### Post-conditions for Plan 29-05
+
+- All build + test verification green; the only remaining script-based check is lint:ci.
+- Working tree clean
+
+---
