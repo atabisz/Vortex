@@ -41,3 +41,42 @@ The 7 ae-missing-release-tag warnings in `src/shared/src/types/errors.ts` are no
 - `pnpm typecheck` green — safe to run `pnpm build` in Plan 29-02
 
 ---
+
+## Plan 29-02 — SYNC-29
+
+**HEAD at run:** `0ce522e35` (post 29-01 commit)
+
+### SYNC-29 — `pnpm build`
+
+**Command:** `pnpm build` (from package.json: `pnpm run typecheck && pnpm --filter "@vortex/*" --filter "@nexusmods/*" --filter "./packages/**" --filter "!@vortex/e2e" --filter "!vortex-api" -r run build`)
+**Exit code:** 0
+**Wall-clock:** ~4 min
+**Result:** **PASS**
+
+All 9 workspace build targets completed cleanly:
+
+| Workspace                         | Status |
+| --------------------------------- | ------ |
+| `packages/exe-version`            | Done   |
+| `src/shared`                      | Done   |
+| `packages/adaptor-api`            | Done   |
+| `packages/adaptors/cyberpunk2077` | Done   |
+| `packages/adaptors/ping-test`     | Done   |
+| `src/preload`                     | Done   |
+| `packages/adaptors/fs-test`       | Done   |
+| `src/renderer`                    | Done   |
+| `src/main`                        | Done   |
+
+Renderer webpack final line: `webpack 5.105.4 compiled successfully in 19149 ms`. Main bundle compiled cleanly.
+
+### Notes
+
+- 2 `ae-missing-release-tag` api-extractor warnings on `MixpanelEvents.d.ts` (CollectionsDownloadFailedEvent, CollectionsInstallationFailedEvent) — non-fatal advisories, present on master, not blockers under SYNC-32 baseline philosophy.
+- `packages/vortex-api/lib/api.d.ts` regenerated again (api-extractor side-effect of build chain). Same recurring drift as 29-01 — discarded with `git checkout HEAD -- ...`.
+
+### Post-conditions for Plan 29-03
+
+- `src/preload/build/`, `src/renderer/build/`, `src/main/build/` populated with the bundled main + renderer + preload artefacts that `pnpm build:extensions` consumes
+- Working tree clean
+
+---
