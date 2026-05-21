@@ -4,14 +4,14 @@ milestone: v8.0
 milestone_name: Upstream v2.0.0 Sync
 status: executing
 stopped_at: Phase 27 plan 03 complete (modtype-bepinex resolved; 9/25 Phase 27 conflict files done)
-last_updated: "2026-05-21T03:00:00.000Z"
+last_updated: "2026-05-21T02:23:57.822Z"
 last_activity: 2026-05-21
 progress:
     total_phases: 8
     completed_phases: 2
     total_plans: 27
     completed_plans: 23
-    percent: 26
+    percent: 25
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 ## Current Position
 
 Phase: 27 (gamebryo-per-game-extensions) — EXECUTING
-Plan: 6 of 9 (27-00, 27-01, 27-02, 27-03 complete; up next: 27-04 collections)
+Plan: 7 of 9 (27-00, 27-01, 27-02, 27-03 complete; up next: 27-04 collections)
 Status: Ready to execute
 Last activity: 2026-05-21
 
-Progress: [████████░░] 81%
+Progress: [█████████░] 85%
 
 ## Performance Metrics
 
@@ -94,6 +94,7 @@ _Updated after each plan completion_
 | Phase 27-gamebryo-per-game-extensions P01 | 2min | 2 tasks | 2 files |
 | Phase 27-gamebryo-per-game-extensions P02 | 8min | 4 tasks | 4 files |
 | Phase 27-gamebryo-per-game-extensions P03 | 5min | 3 tasks | 3 files |
+| Phase 27-gamebryo-per-game-extensions P04 | 5 | 6 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -200,6 +201,9 @@ Recent decisions affecting current work:
 - [Phase 27-gamebryo-per-game-extensions]: D-27-04 footnote — when resolving conflicts in any file that imports `Promise from "bluebird"`, do NOT add `: Promise<T>` return-type annotations to async functions. Either omit the annotation (TS infers global Promise from `async`) or use a separate type alias. Future plans 27-03..27-07 should pre-check this.
 - [Phase 27-gamebryo-per-game-extensions]: Plan 27-03 — all 3 modtype-bepinex files resolved fork-side (HEAD on every region). 17 conflict regions across the extension; 16 were cosmetic single-line vs wrapped formatting. One merge-driver duplicate-import artefact in `bepInExDownloader.ts` region 1 — v2.0.0 side re-imported `IBepInExGameConfig, INexusDownloadInfo` from `./types` despite the post-conflict body already containing the same import on the next line. HEAD was the only non-duplicate resolution. Bluebird-Promise trap not encountered (none of the 3 files import `Promise from "bluebird"`). Linux platform-conditional `process.platform === "win32" ? "win_" : "linux_"` in common.ts:54-58 lives outside any conflict region — survived the merge untouched.
 - [Phase 27-gamebryo-per-game-extensions]: D-27-04 syntax footnote — `pnpm typecheck -F <pkg>` recurses into the full workspace dependency graph; use `pnpm --filter <pkg> typecheck` for single-workspace-scoped runs. Confirmed working for `modtype-bepinex` in plan 27-03; same form used in plan 27-02 for `gamebryo-plugin-management`.
+- [Phase ?]: Plan 27-04 collections — kept HEAD on all 13 conflict regions across 6 files (9 cosmetic, 2 fork-side toggle gates, 4 merge-driver artefacts)
+- [Phase ?]: Plan 27-04 collections — fork-side toggle gates preserved: excludePluginRules and skipPluginRules wrapped in isGamebryoGame() ternaries; HEAD wins UX correctness
+- [Phase ?]: Plan 27-04 collections — bluebird-Promise trap pre-checked clean: collections/src/index.ts imports Bluebird as named identifier, not Promise alias; no annotations touched
 
 ### Research Context (v7.0)
 
@@ -243,6 +247,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-21T03:00:00.000Z
+Last session: 2026-05-21T02:23:50.165Z
 Stopped at: Phase 27 plan 03 complete (modtype-bepinex resolved; 9/25 Phase 27 conflict files done)
 Resume file: None

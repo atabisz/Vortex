@@ -173,7 +173,7 @@
 - [x] 27-01-PLAN.md — Resolve gamebryo-savegame-management (2 files, leaf-first)
 - [x] 27-02-PLAN.md — Resolve gamebryo-plugin-management (4 files, leaf-first) — completed 2026-05-21 (commits a4a9fc0cf, 619845991, 9ca7c1164, 394d12242)
 - [x] 27-03-PLAN.md — Resolve modtype-bepinex (3 files, leaf-first)
-- [ ] 27-04-PLAN.md — Resolve collections (6 files, leaf-first; depends on 27-02)
+- [x] 27-04-PLAN.md — Resolve collections (6 files, leaf-first; depends on 27-02)
 - [ ] 27-05-PLAN.md — Resolve game-baldursgate3 (7 files, leaf-first; preserves 4 divine error classes)
 - [ ] 27-06-PLAN.md — Resolve game-morrowind (1 file; preserves migrate103 warning)
 - [ ] 27-07-PLAN.md — Resolve game-witcher3 (2 files, leaf-first)
@@ -274,7 +274,7 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 | 24. Config bucket                                         | v8.0      | 8/8            | Complete    | 2026-05-15 |
 | 25. Restore dropped scaffolding                           | v8.0      | 4/4            | Complete    | 2026-05-15 |
 | 26. Mod-management hot zone                               | v8.0      | 10/10          | Complete    | 2026-05-15 |
-| 27. Gamebryo + per-game extensions                        | v8.0      | 4/9            | In Progress |            |
+| 27. Gamebryo + per-game extensions                        | v8.0      | 5/9            | In Progress |            |
 | 28. Renderer + main spine                                 | v8.0      | 0/0            | Not started | -          |
 | 29. Build verification                                    | v8.0      | 0/0            | Not started | -          |
 | 30. Land + tag                                            | v8.0      | 0/0            | Not started | -          |
