@@ -85,7 +85,40 @@ None of the 13 errors prevent the main window from rendering or interaction. Sky
 
 ## SYNC-33 part B — AppImage CI build
 
-_To be filled by Plan 29-07._
+**Trigger:** push of annotated SSH-signed tag `v2.0.0-linux-rebased-rc1` → `bd2468119` on `v8.0/config-bucket` (the post 29-06 head).
+**Tag SHA:** `622dacba608c063b4eab1495828f92a5e5dfb9f1`
+**Tag message:** "RC tag for Phase 29 SYNC-33 part B — triggers release-linux.yml CI build (deleted post Phase 30 per D-29-04 cleanup)."
+**Workflow:** `release-linux.yml` (Release Linux (AppImage + deb))
+**Run:** [26259632336](https://github.com/atabisz/Vortex/actions/runs/26259632336) — `build-linux` job ID `77290035790`
+**Wall-clock:** 10m58s
+**Result:** **PASS** (✓ success)
+
+### Release published
+
+**URL:** https://github.com/atabisz/Vortex/releases/tag/v2.0.0-linux-rebased-rc1
+**Title:** "Linux Beta v2.0.0-linux-rebased-rc1"
+**Published:** 2026-05-21T23:53:10Z
+**Author:** github-actions[bot]
+**Assets:** `latest-linux.yml`, `vortex-setup.AppImage`, `vortex_amd64.deb`
+
+### Artefacts (downloaded to `~/Downloads/vortex-rc1/`)
+
+| Asset                   |                    Size | SHA256                                                             |
+| ----------------------- | ----------------------: | ------------------------------------------------------------------ |
+| `vortex-setup.AppImage` | 258 691 029 B (247 MiB) | `b598530cebaffd5398b45b26ae0bc343eb072cec0eff1477947020fb3138ea00` |
+| `vortex_amd64.deb`      | 157 978 446 B (151 MiB) | `32906ee7bab960128e59e27324018efe0d9a95249eace5be904693265dca0805` |
+
+`latest-linux.yml` reports internal version `1.16.202605212344` (auto-stamped by electron-builder from the timestamp at publish), with matching SHA512 sums from the build host. Both files downloaded cleanly via `gh release download`.
+
+### Notes
+
+- `release-linux.yml` triggered correctly off the `v*` tag push. The pre-existing `master` `workflow_run` trigger (last fired 2026-05-11) was untouched.
+- The 1 annotation on the run is the GitHub-Actions runner notice that `actions/checkout@v4`, `actions/setup-node@v4`, and `softprops/action-gh-release@v2` use Node 20 (forced to Node 24 on the runner) — informational, not a build failure. Forward-port note for Phase 30: bumping these to v5 is candidate housekeeping outside Phase 29 scope.
+- Tag is intentionally an RC; per D-29-04 cleanup it gets deleted in Phase 30 once `v2.0.0-linux-rebased` lands.
+
+### Verdict
+
+**SYNC-33 part B: PASS** — RC tag pushed, `release-linux.yml` ran green in 10m58s, both AppImage and .deb artefacts published with SHA256s captured. Local boot of these artefacts is Plan 29-08.
 
 ---
 
