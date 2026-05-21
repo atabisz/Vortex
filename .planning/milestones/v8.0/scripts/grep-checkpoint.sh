@@ -7,6 +7,10 @@
 # (mod_management hot zone, 7 gates). Phase 27 (gamebryo + per-game extensions)
 # extends in place with 5 new durable gates per
 # .planning/phases/27-gamebryo-per-game-extensions/27-CONTEXT.md D-27-02 + D-27-03.
+# Phase 28 (renderer + main spine) extends with 4 more durable gates per
+# .planning/phases/28-renderer-main-spine/28-CONTEXT.md D-28-02 + D-28-03 and
+# relocates the script from .planning/phases/26-mod-management-hot-zone/scripts/
+# to .planning/milestones/v8.0/scripts/ per D-28-04 (history preserved via git mv).
 # Future sync milestones (v8.1, v9.0) reuse the script verbatim.
 #
 # Phase 26 gates (original 7, unchanged in body — re-numbered tail only):
@@ -22,6 +26,52 @@
 #         (VORTEX-LINUX-MERGE-PLAYBOOK.md §7d, line 132+)
 #   140a57217 — resolvePathCase(dataPath, …) in LinkingDeployment.ts (≥3 hits)
 #         (VORTEX-LINUX-MERGE-PLAYBOOK.md externalChanges entry, line 309/360)
+#
+# Phase 28 gates (4 new, durable, run after every commit per D-28-02 + D-28-03):
+#   §2  — winapi-bindings allowlisted in renderer webpack externals on Linux
+#         (VORTEX-LINUX-MERGE-PLAYBOOK.md §2; CONTEXT D-28-02). Positive ≥2:
+#         alias map line + linux-only externals push. Both must survive.
+#   §4  — testPathTransfer in transferPath.ts has NO Windows-only reject guard
+#         (VORTEX-LINUX-MERGE-PLAYBOOK.md §4; CONTEXT D-28-02). NEGATIVE gate
+#         (count must be 0). First negative gate in the milestone.
+#   §8  — StarterInfo.ts retains Proton helpers + hide-instead-of-quit on the
+#         Proton spawn path (VORTEX-LINUX-MERGE-PLAYBOOK.md §8; CONTEXT D-28-02).
+#         Two sub-checks, both must pass:
+#         8a — Proton helpers (isPathPrefix|shouldRunWithProton|runToolWithProton)
+#              count ≥3 in StarterInfo.ts.
+#         8b — protonSpawned closure exists AND hideWindow is called inside
+#              StarterInfo.ts (the close-case hide-instead-of-quit shape lives
+#              inside `protonSpawned`, not inside `onSpawned`).
+#   §9  — Steam.ts resolveSteamPaths() calls findAllLinuxSteamPaths and reads
+#         libraryfolders.vdf (VORTEX-LINUX-MERGE-PLAYBOOK.md §9; CONTEXT D-28-02).
+#         File lives at src/renderer/src/util/Steam.ts on this fork (not
+#         src/main/src/util/Steam.ts as CONTEXT D-28-02 cited — that path
+#         doesn't exist; the playbook §9 grep example uses the renderer path
+#         correctly). Auto-fix per Rule 1.
+#         Two sub-checks, both must pass:
+#         9a — findAllLinuxSteamPaths reference ≥1.
+#         9b — libraryfolders.vdf reference ≥1.
+#
+# D-28-02 sub-notes (gate-shape corrections vs CONTEXT spec — Rule 1 auto-fixes):
+#   - §2 spec proposed chained `git grep | grep -E 'nodeExternals|allowlist|allowList'`
+#     with threshold ≥1. On this fork, the load-bearing Linux fix is the
+#     `process.platform === "linux" ? ["winapi-bindings"] : []` ternary inside
+#     the externals push at webpack.config.cjs:91, NOT a single line that pairs
+#     `winapi-bindings` with `allowlist`. The original chained grep returns 0
+#     because no single line carries both tokens. Switched to a plain
+#     `git grep 'winapi-bindings' <file> | wc -l` count gate with threshold ≥2:
+#     alias map line (:46) + linux-only externals push (:91). Locks both
+#     invariants at once.
+#   - §8b spec proposed `git grep -n 'onSpawned' <file> | grep -E 'hide|minimize'`
+#     with threshold ≥1. On this fork, hide-on-spawn lives inside the
+#     `protonSpawned` closure (StarterInfo.ts:270) calling `hideWindow()`
+#     (line 271) — NOT inside `onSpawned` (line 174, which only dispatches
+#     Redux + handles Flatpak emulation). Switched the regex to look for
+#     `protonSpawned` reference (≥1) AND `hideWindow` reference inside the file
+#     (≥1).
+#   - §9 spec listed the file as `src/main/src/util/Steam.ts`. That path doesn't
+#     exist on this fork — the file is `src/renderer/src/util/Steam.ts` (the
+#     playbook §9 grep example uses the renderer path correctly). Auto-fixed.
 #
 # Phase 27 gates (5 new, durable, run after every commit per D-27-02 + D-27-03):
 #   §1  — extension build guards (named-script form, no inline node -e platform
@@ -41,8 +91,12 @@
 #         warning string survives in extensions/games/game-morrowind/src/migrations.js
 #         (CONTEXT D-27-02; base commit f15bbabb8 anchor)
 #
-# Conflict-marker gate (renumbered to 12) — broadened path list to cover the
-# Phase 27 directories alongside the Phase 26 mod_management dir.
+# Conflict-marker gate (renumbered to 16) — broadened path list to cover the
+# Phase 27 directories alongside the Phase 26 mod_management dir. Phase 28's
+# resolution scope (renderer/main/preload/shared/nexus/scripts/fingerprints) is
+# NOT in the gate's path list — Phase 28 plans 28-01..28-10 invoke this script
+# with --skip-conflict-check after each commit, and plan 28-11 runs a separate
+# broader git grep for done-gate item #1 per CONTEXT D-28-05.
 #
 # D-26-03a (file/method distinction): the playbook's "externalChanges" entry names
 # the externalChanges() METHOD inside LinkingDeployment.ts — NOT a separate file.
@@ -74,13 +128,13 @@
 # remains the load-bearing protection.
 #
 # Usage:
-#   bash .planning/phases/26-mod-management-hot-zone/scripts/grep-checkpoint.sh
-#   bash .planning/phases/26-mod-management-hot-zone/scripts/grep-checkpoint.sh --skip-conflict-check
+#   bash .planning/milestones/v8.0/scripts/grep-checkpoint.sh
+#   bash .planning/milestones/v8.0/scripts/grep-checkpoint.sh --skip-conflict-check
 #
 # Exit code: number of failed gates (0 = clean). NO `set -e` — every gate runs
 # even if earlier ones fail, so the executor sees the full picture.
-# `--skip-conflict-check` skips ONLY the conflict-marker gate (gate 12); all
-# other 11 gates always run.
+# `--skip-conflict-check` skips ONLY the conflict-marker gate (gate 16); all
+# other 15 gates always run.
 
 set -u
 
@@ -113,6 +167,10 @@ MOD_MGMT_DIR="src/renderer/src/extensions/mod_management/"
 AUTOSORT="extensions/gamebryo-plugin-management/src/autosort.ts"
 DIVINE_CORE="extensions/games/game-baldursgate3/src/divineCore.ts"
 MORROWIND_MIGRATIONS="extensions/games/game-morrowind/src/migrations.js"
+WEBPACK_RENDERER="src/renderer/webpack.config.cjs"
+TRANSFER_PATH="src/renderer/src/util/transferPath.ts"
+STARTER_INFO="src/renderer/src/util/StarterInfo.ts"
+STEAM_TS="src/renderer/src/util/Steam.ts"
 
 # Phase 27 conflict-marker path list — broadened from MOD_MGMT_DIR alone. Order
 # matters only cosmetically; git grep folds duplicates.
@@ -285,25 +343,90 @@ else
   fail "$gate11_label" "expected ≥1 hit, found ${gate11_hits}"
 fi
 
-# Gate 12 (was 7): no conflict markers across the Phase 26 mod_management dir
+# Gate 12: §2 winapi-bindings allowlisted in renderer webpack externals on Linux
+# (CONTEXT D-28-02; success criterion #2). Threshold ≥2: alias map line + the
+# linux-only externals push. Both must survive any upstream-side webpack edit.
+gate12_label="§2 winapi-bindings retained in renderer webpack (alias + linux-only externals push, ≥2 hits)"
+gate12_hits=$(git grep -nE 'winapi-bindings' "$WEBPACK_RENDERER" 2>/dev/null | wc -l)
+if [ "$gate12_hits" -ge 2 ]; then
+  pass "$gate12_label"
+else
+  fail "$gate12_label" "§2 regression — winapi-bindings missing from $WEBPACK_RENDERER (expected ≥2 hits, found ${gate12_hits})"
+fi
+
+# Gate 13: §4 transferPath.ts NEGATIVE — Windows-only reject must NOT exist
+# (CONTEXT D-28-02; success criterion #3). First negative gate in the milestone.
+# Threshold: count must equal 0.
+gate13_label="§4 testPathTransfer in transferPath.ts has NO Windows-only reject (NEGATIVE gate, count==0)"
+gate13_hits=$(git grep -nE "platform !== ['\"]win32['\"]\\) reject\\(UnsupportedOperatingSystem" "$TRANSFER_PATH" 2>/dev/null | wc -l)
+if [ "$gate13_hits" -eq 0 ]; then
+  pass "$gate13_label"
+else
+  fail "$gate13_label" "§4 regression detected — Windows-only reject re-introduced in $TRANSFER_PATH (found ${gate13_hits} hit(s), expected 0)"
+fi
+
+# Gate 14: §8 StarterInfo.ts Proton helpers + hide-instead-of-quit on Proton path
+# (CONTEXT D-28-02; success criterion #4). Two sub-checks, both must pass; emit
+# two messages on partial failure (per CONTEXT specifics).
+#   14a — Proton helpers (isPathPrefix|shouldRunWithProton|runToolWithProton)
+#         count ≥3 in StarterInfo.ts.
+#   14b — protonSpawned closure exists AND hideWindow is referenced inside the
+#         file. Per D-28-02 sub-note: hide-on-spawn lives inside protonSpawned
+#         (line 270, calling hideWindow at line 271 on the close case), NOT
+#         inside onSpawned. Looking for both `protonSpawned` (≥1) and
+#         `hideWindow` (≥1) locks the protonSpawned closure shape.
+gate14_label="§8 StarterInfo.ts Proton helpers (≥3) + protonSpawned/hideWindow hide-instead-of-quit (≥1 each)"
+gate14_helpers=$(git grep -nE '\b(isPathPrefix|shouldRunWithProton|runToolWithProton)\b' "$STARTER_INFO" 2>/dev/null | wc -l)
+gate14_protonSpawned=$(git grep -n 'protonSpawned' "$STARTER_INFO" 2>/dev/null | wc -l)
+gate14_hideWindow=$(git grep -n 'hideWindow' "$STARTER_INFO" 2>/dev/null | wc -l)
+if [ "$gate14_helpers" -ge 3 ] && [ "$gate14_protonSpawned" -ge 1 ] && [ "$gate14_hideWindow" -ge 1 ]; then
+  pass "$gate14_label"
+else
+  reason=""
+  [ "$gate14_helpers" -lt 3 ] && reason="${reason}§8 regression — Proton helpers missing or fewer than 3 references in $STARTER_INFO (found ${gate14_helpers}); "
+  [ "$gate14_protonSpawned" -lt 1 ] && reason="${reason}§8 regression — protonSpawned closure missing in $STARTER_INFO (upstream may have collapsed Proton spawn path); "
+  [ "$gate14_hideWindow" -lt 1 ] && reason="${reason}§8 regression — hideWindow no longer referenced in $STARTER_INFO (upstream may have reverted close-case to quit()); "
+  fail "$gate14_label" "${reason%; }"
+fi
+
+# Gate 15: §9 Steam.ts findAllLinuxSteamPaths + libraryfolders.vdf
+# (CONTEXT D-28-02; success criterion #5). Two sub-checks, both must pass.
+# File path is src/renderer/src/util/Steam.ts on this fork (CONTEXT D-28-02
+# typo'd src/main/src/util/Steam.ts — auto-fixed per Rule 1).
+#   15a — findAllLinuxSteamPaths reference ≥1.
+#   15b — libraryfolders.vdf reference ≥1.
+gate15_label="§9 Steam.ts retains findAllLinuxSteamPaths (≥1) + libraryfolders.vdf (≥1)"
+gate15a_hits=$(git grep -n 'findAllLinuxSteamPaths' "$STEAM_TS" 2>/dev/null | wc -l)
+gate15b_hits=$(git grep -nE 'libraryfolders\.vdf' "$STEAM_TS" 2>/dev/null | wc -l)
+if [ "$gate15a_hits" -ge 1 ] && [ "$gate15b_hits" -ge 1 ]; then
+  pass "$gate15_label"
+else
+  reason=""
+  [ "$gate15a_hits" -lt 1 ] && reason="${reason}§9 regression — findAllLinuxSteamPaths() not called in $STEAM_TS; "
+  [ "$gate15b_hits" -lt 1 ] && reason="${reason}§9 regression — libraryfolders.vdf parsing missing from $STEAM_TS; "
+  fail "$gate15_label" "${reason%; }"
+fi
+
+# Gate 16 (was 12): no conflict markers across the Phase 26 mod_management dir
 # AND the seven Phase 27 extension directories. `--skip-conflict-check` gates
-# ONLY this gate; the other 11 always run.
-gate12_label="no conflict markers in mod_management/ + 7 Phase 27 extension dirs"
+# ONLY this gate; the other 15 always run. Phase 28's broader resolution scope
+# is gated separately by plan 28-11's done-gate (CONTEXT D-28-05 #1).
+gate16_label="no conflict markers in mod_management/ + 7 Phase 27 extension dirs"
 if [ "$skip_conflict_check" -eq 1 ]; then
-  printf 'SKIP: %s (--skip-conflict-check)\n' "$gate12_label"
+  printf 'SKIP: %s (--skip-conflict-check)\n' "$gate16_label"
 else
   marker_files=$(git grep -l '^<<<<<<< ' "${CONFLICT_PATHS[@]}" 2>/dev/null || true)
   if [ -z "$marker_files" ]; then
-    pass "$gate12_label"
+    pass "$gate16_label"
   else
     file_count=$(printf '%s\n' "$marker_files" | wc -l)
-    fail "$gate12_label" "${file_count} file(s) still contain '<<<<<<< ' — $(printf '%s' "$marker_files" | tr '\n' ' ')"
+    fail "$gate16_label" "${file_count} file(s) still contain '<<<<<<< ' — $(printf '%s' "$marker_files" | tr '\n' ' ')"
   fi
 fi
 
 printf '\n'
 if [ "$failures" -eq 0 ]; then
-  printf 'CHECKPOINT PASSED — %d gate(s) clean\n' "$(( skip_conflict_check == 1 ? 11 : 12 ))"
+  printf 'CHECKPOINT PASSED — %d gate(s) clean\n' "$(( skip_conflict_check == 1 ? 15 : 16 ))"
 else
   printf 'CHECKPOINT FAILED — %d gate(s) failed\n' "$failures"
 fi
