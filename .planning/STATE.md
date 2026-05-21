@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Upstream v2.0.0 Sync
 status: executing
-stopped_at: Phase 27 plan 03 complete (modtype-bepinex resolved; 9/25 Phase 27 conflict files done)
-last_updated: "2026-05-21T02:23:57.822Z"
+stopped_at: Phase 27 plan 05 complete (game-baldursgate3 resolved; 22/25 Phase 27 conflict files done)
+last_updated: "2026-05-21T03:30:00.000Z"
 last_activity: 2026-05-21
 progress:
     total_phases: 8
     completed_phases: 2
     total_plans: 27
-    completed_plans: 23
-    percent: 25
+    completed_plans: 25
+    percent: 27
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 ## Current Position
 
 Phase: 27 (gamebryo-per-game-extensions) — EXECUTING
-Plan: 7 of 9 (27-00, 27-01, 27-02, 27-03 complete; up next: 27-04 collections)
+Plan: 9 of 9 (27-00..27-05 complete; up next: 27-06 game-morrowind)
 Status: Ready to execute
 Last activity: 2026-05-21
 
-Progress: [█████████░] 85%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -95,6 +95,7 @@ _Updated after each plan completion_
 | Phase 27-gamebryo-per-game-extensions P02 | 8min | 4 tasks | 4 files |
 | Phase 27-gamebryo-per-game-extensions P03 | 5min | 3 tasks | 3 files |
 | Phase 27-gamebryo-per-game-extensions P04 | 5 | 6 tasks | 6 files |
+| Phase 27-gamebryo-per-game-extensions P05 | 5min | 7 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -204,6 +205,9 @@ Recent decisions affecting current work:
 - [Phase ?]: Plan 27-04 collections — kept HEAD on all 13 conflict regions across 6 files (9 cosmetic, 2 fork-side toggle gates, 4 merge-driver artefacts)
 - [Phase ?]: Plan 27-04 collections — fork-side toggle gates preserved: excludePluginRules and skipPluginRules wrapped in isGamebryoGame() ternaries; HEAD wins UX correctness
 - [Phase ?]: Plan 27-04 collections — bluebird-Promise trap pre-checked clean: collections/src/index.ts imports Bluebird as named identifier, not Promise alias; no annotations touched
+- [Phase 27-gamebryo-per-game-extensions]: Plan 27-05 game-baldursgate3 — kept HEAD on all 41 conflict regions across 7 files (35 cosmetic single/double-quote, 4 merge-driver artefacts, 2 fork-side substantive preservations). All 4 divine error classes preserved (gate 10 count = 4 throughout). Bluebird-Promise trap pre-checked clean (none of the 7 files import Promise from bluebird).
+- [Phase 27-gamebryo-per-game-extensions]: Plan 27-05 — fork-side substantive preservations: divineWrapper.ts ConcurrencyLimiter retry filter fails fast on 4 deterministic error classes (vs upstream's 1) per inline comment; loadOrder.ts pak-loop catch handler uses `return await cache.getCacheEntry(...)` so try/catch sees rejections (without the await catch is dead code) plus stable notification id `bg3-divine-missing` so parallel pak failures collapse into one notification.
+- [Phase 27-gamebryo-per-game-extensions]: D-27-04 BG3 deviation — game-baldursgate3 has no per-extension tsconfig.json AND no `typecheck` script. Bare `pnpm exec tsc --noEmit <files>` surfaces 40+ pre-existing TS2305 errors from vortex-api workspace shim resolution (unrelated to resolution work). Routed to plan-permitted alternative: `pnpm run build` (rolldown bundler — refuses syntax/resolution errors at bundle time). Build succeeded after seventh commit. Build-as-typecheck has acknowledged trade-off (catches syntax + resolution but not all TS errors); acceptable for plans where every conflict region is cosmetic-quote / artefact-import / non-type-relevant string change.
 
 ### Research Context (v7.0)
 
@@ -247,6 +251,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-21T02:23:50.165Z
-Stopped at: Phase 27 plan 03 complete (modtype-bepinex resolved; 9/25 Phase 27 conflict files done)
+Last session: 2026-05-21T03:30:00.000Z
+Stopped at: Phase 27 plan 05 complete (game-baldursgate3 resolved; 22/25 Phase 27 conflict files done)
 Resume file: None
