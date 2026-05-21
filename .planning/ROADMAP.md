@@ -169,7 +169,7 @@
 5. Each touched extension passes its own `pnpm -F <ext> typecheck`
    **Plans**: 9 plans
 
-- [ ] 27-00-PLAN.md — Extend scripts/grep-checkpoint.sh with §1 + §3 + §10 + BG3 + Morrowind gates (commit 0)
+- [x] 27-00-PLAN.md — Extend scripts/grep-checkpoint.sh with §1 + §3 + §10 + BG3 + Morrowind gates (commit 0) — completed 2026-05-21 (commit 63f90752a)
 - [ ] 27-01-PLAN.md — Resolve gamebryo-savegame-management (2 files, leaf-first)
 - [ ] 27-02-PLAN.md — Resolve gamebryo-plugin-management (4 files, leaf-first)
 - [ ] 27-03-PLAN.md — Resolve modtype-bepinex (3 files, leaf-first)

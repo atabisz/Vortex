@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Upstream v2.0.0 Sync
-status: ready_to_plan
-stopped_at: Phase 27 context gathered
-last_updated: "2026-05-15T11:01:27.040Z"
-last_activity: 2026-05-15
+status: executing
+stopped_at: Phase 27 plan 00 complete (grep-checkpoint extended)
+last_updated: "2026-05-21T01:50:00.000Z"
+last_activity: 2026-05-21 -- Phase 27 plan 00 complete (grep-checkpoint extended with §1+§3+§10+BG3+Morrowind gates)
 progress:
     total_phases: 8
     completed_phases: 2
-    total_plans: 18
-    completed_plans: 18
-    percent: 100
+    total_plans: 27
+    completed_plans: 19
+    percent: 26
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** v8.0 Upstream v2.0.0 Sync — Phase 27 (Gamebryo + per-game extensions) ready to plan.
+**Current focus:** Phase 27 — gamebryo-per-game-extensions
 
 ## Current Position
 
-Phase: 27
-Plan: Not started
-Status: ready_to_plan
-Last activity: 2026-05-15
+Phase: 27 (gamebryo-per-game-extensions) — EXECUTING
+Plan: 2 of 9 (27-00 complete; up next: 27-01 gamebryo-savegame-management)
+Status: Executing Phase 27
+Last activity: 2026-05-21 -- Phase 27 plan 00 complete (grep-checkpoint extended; commit 63f90752a)
 
 Progress: [████░░░░░░] 43% (3/7 v8.0 phases complete; 22/22 plans across phases 24–26)
 
@@ -90,6 +90,7 @@ _Updated after each plan completion_
 | Phase 23-help-links P01 | 3min | 2 tasks | 5 files |
 | Phase 23 P02 | 2min | 1 tasks | 1 files |
 | Phase 23-help-links P02 | 5min | 2 tasks | 1 files |
+| Phase 27-gamebryo-per-game-extensions P00 | 4min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -186,6 +187,9 @@ Recent decisions affecting current work:
 - [Phase 26-mod-management-hot-zone]: D-26-03a — playbook entry "externalChanges" names a method on `LinkingDeployment.ts:513`, NOT a separate file; `util/externalChanges.ts` is unrelated UI code with ordinary conflicts. Confusion documented to prevent recurrence in v8.1+ syncs.
 - [Phase 26-mod-management-hot-zone]: Renderer-wide typecheck deferred per Rule 3 — `pnpm -F @vortex/renderer typecheck` reports zero errors from `mod_management/`; remaining errors are all in Phase 27/28 territory (`useToolsPage.ts`, `ExtensionManager.ts`, `nexus_integration/*`, etc.)
 - [Phase 26-mod-management-hot-zone]: `scripts/grep-checkpoint.sh` is durable — 7 gates encoding playbook §6, §7a–d, 140a57217, plus no-conflict-marker assertion. Reusable for future v8.1/v9.0 syncs.
+- [Phase 27-gamebryo-per-game-extensions]: Extended `scripts/grep-checkpoint.sh` in place (Phase 26 path, per CONTEXT D-27-03 reuse pattern) with 5 new gates — §1 extension build guards, §3 LOOT call-site casing in autosort.ts, §10 cross-compiled native binaries, BG3 4-class divine error preservation, Morrowind migrate103 warning preservation. 12 gates total. Conflict-marker gate broadened to 8 paths (mod_management/ + 7 Phase 27 extension dirs).
+- [Phase 27-gamebryo-per-game-extensions]: D-27-03 sub-note — gate 8 threshold ≥3 not ≥4. Live `autosort.ts` has 3 distinct `path.basename(pluginList[…])` expressions feeding 4 LOOT call sites because `lootKey` local at line 546 is reused at lines 549 (getPluginMetadataAsync) and 553 (getPluginAsync). Plan task spec miscounted basename expressions vs LOOT call sites; fixed via Rule 1.
+- [Phase 27-gamebryo-per-game-extensions]: D-27-03 sub-note — `git grep -cE <pattern> <single-file>` prints `path:N` (not bare count); use `git grep -nE | wc -l` for arithmetic-friendly counts.
 
 ### Research Context (v7.0)
 
@@ -229,6 +233,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-15T11:01:27.028Z
-Stopped at: Phase 27 context gathered
-Resume file: .planning/phases/27-gamebryo-per-game-extensions/27-CONTEXT.md
+Last session: 2026-05-21T01:50:00.000Z
+Stopped at: Phase 27 plan 00 complete (grep-checkpoint extended)
+Resume file: .planning/phases/27-gamebryo-per-game-extensions/27-01-PLAN.md
