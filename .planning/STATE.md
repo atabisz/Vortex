@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Upstream v2.0.0 Sync
 status: executing
-stopped_at: Phase 27 plan 06 complete (game-morrowind resolved; 23/25 Phase 27 conflict files done)
-last_updated: "2026-05-21T04:00:00.000Z"
+stopped_at: Phase 27 plan 07 complete (game-witcher3 resolved; 25/25 Phase 27 conflict files done — file work complete; only done-gate remains)
+last_updated: "2026-05-21T05:00:00.000Z"
 last_activity: 2026-05-21
 progress:
     total_phases: 8
     completed_phases: 2
     total_plans: 27
-    completed_plans: 26
-    percent: 27
+    completed_plans: 27
+    percent: 28
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 ## Current Position
 
 Phase: 27 (gamebryo-per-game-extensions) — EXECUTING
-Plan: 9 of 9 (27-00..27-06 complete; up next: 27-07 game-witcher3)
+Plan: 9 of 9 (27-00..27-07 complete; 25/25 conflict files resolved; up next: 27-08 done-gate + force-with-lease push)
 Status: Ready to execute
 Last activity: 2026-05-21
 
-Progress: [█████████░] 96%
+Progress: [██████████] 100% (file work)
 
 ## Performance Metrics
 
@@ -97,6 +97,7 @@ _Updated after each plan completion_
 | Phase 27-gamebryo-per-game-extensions P04 | 5 | 6 tasks | 6 files |
 | Phase 27-gamebryo-per-game-extensions P05 | 5min | 7 tasks | 7 files |
 | Phase 27-gamebryo-per-game-extensions P06 | 2min | 1 tasks | 1 files |
+| Phase 27-gamebryo-per-game-extensions P07 | 4min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -212,6 +213,8 @@ Recent decisions affecting current work:
 - [Phase 27-gamebryo-per-game-extensions]: Plan 27-06 game-morrowind — kept HEAD on both conflict regions in migrations.js (cosmetic single/double-quote in `require` block + cosmetic arg-wrapping in `walk()` call + catch block). Gate 11 (Morrowind migrate103 warning preservation, count ≥1) clean before AND after — count = 1 throughout. Single-file extension cleared in one atomic commit (`75e4eff59`). 23/25 Phase 27 files done (92%).
 - [Phase 27-gamebryo-per-game-extensions]: D-27-04 morrowind deviation — game-morrowind has no `typecheck` script and the file is `.js` (CommonJS). Plan offered `pnpm -F game-morrowind build` (rolldown) or `pnpm exec tsc --noEmit --allowJs --checkJs=false`. Routed to a third equivalent: `node --check <file>` — same syntax-gate signal, lighter weight. Acknowledged trade-off (syntax only, not type errors), acceptable because every conflict region was cosmetic and the file is plain `.js` with no type annotations. Future `.js` per-extension typecheck routes can use `node --check` as the lightest equivalent.
 - [Phase 27-gamebryo-per-game-extensions]: D-27-04 footnote — bluebird-Promise trap is a no-op for `.js` CommonJS files. The trap targets ES-imported `Promise from "bluebird"` shadow; `migrations.js` uses `require()` and global `Promise.resolve()` only. Recorded for completeness in case a future plan migrates the file to TS.
+- [Phase 27-gamebryo-per-game-extensions]: Plan 27-07 game-witcher3 — kept HEAD on all 3 conflict regions across 2 files (2 in installers.ts, 1 in index.ts). All cosmetic — single/double-quote + oxfmt arg-wrapping (one-per-line with trailing comma at print-width=80 vs upstream pre-oxfmt inlined shape). 25/25 Phase 27 files done (100%). Bluebird-Promise trap pre-checked clean — `index.ts` imports `Bluebird` as a named identifier (not `Promise from "bluebird"`); `installers.ts` does not import bluebird at all. No annotations touched.
+- [Phase 27-gamebryo-per-game-extensions]: D-27-04 witcher3 deviation — game-witcher3 has no per-extension `tsconfig.json` (bare `pnpm exec tsc --noEmit -p extensions/games/game-witcher3` returns TS5057) AND no `typecheck` script in package.json. Routed to plan-permitted alternative `pnpm run build` (rolldown bundler — refuses syntax/resolution errors at bundle time). Same routing as BG3 plan 27-05; same trade-off (catches syntax + resolution but not all TS errors), acceptable for plans where every conflict region is cosmetic.
 
 ### Research Context (v7.0)
 
@@ -255,6 +258,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-21T04:00:00.000Z
-Stopped at: Phase 27 plan 06 complete (game-morrowind resolved; 23/25 Phase 27 conflict files done)
+Last session: 2026-05-21T05:00:00.000Z
+Stopped at: Phase 27 plan 07 complete (game-witcher3 resolved; 25/25 Phase 27 conflict files done — file work complete; only done-gate remains)
 Resume file: None
