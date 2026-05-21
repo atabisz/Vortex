@@ -17,7 +17,6 @@ import { ComplexActionCreator1 } from 'redux-act';
 import { ComplexActionCreator2 } from 'redux-act';
 import { ComplexActionCreator3 } from 'redux-act';
 import { ComplexActionCreator4 } from 'redux-act';
-import { ComplexActionCreator5 } from 'redux-act';
 import { ComplexActionCreator6 } from 'redux-act';
 import { constants } from 'fs';
 import { createReadStream } from 'original-fs';
@@ -93,7 +92,7 @@ import { symlinkSync } from 'original-fs';
 import type { TFunction as TFunction_2 } from 'i18next';
 import type { ThunkDispatch } from 'redux-thunk';
 import type { TOptions } from 'i18next';
-import { watch } from 'original-fs';
+import { watch as watch_2 } from 'original-fs';
 import type { WithTranslation } from 'react-i18next';
 import { writeFileSync } from 'original-fs';
 import { WriteStream } from 'fs';
@@ -417,6 +416,9 @@ const apiKey: (state: IState) => string;
 
 // @public (undocumented)
 const appendFileAsync: (file: string, data: any, options?: fs_2.WriteFileOptions) => Promise_2<void>;
+
+// @internal
+function applyChattrCasefold(dirPath: string): Promise<void>;
 
 // @public
 class Archive {
@@ -875,14 +877,11 @@ const downloadPath: (state: IState) => string;
 // @public (undocumented)
 function downloadPathForGame(state: IState, gameId?: string): string;
 
-// Warning: (ae-forgotten-export) The symbol "IChunk" needs to be exported by the entry point api.d.ts
-//
 // @public
-const downloadProgress: ComplexActionCreator5<string, number, number, IChunk[], string[], {
+const downloadProgress: ComplexActionCreator4<string, number, number, string[], {
 id: string;
 received: number;
 total: number;
-chunks: IChunk[];
 urls: string[];
 }, {}>;
 
@@ -987,7 +986,7 @@ export const ErrorBoundary: any;
 function extractExeIcon(exePath: string, destPath: string): Promise<void>;
 
 // @public (undocumented)
-function fileMD5(filePath: string): Promise<string>;
+function fileMD5(input: string | Buffer, progress?: (bytesProcessed: number, totalBytes: number) => void): Promise<string>;
 
 // @public
 const finalizingDownload: ComplexActionCreator1<string, {
@@ -1092,6 +1091,11 @@ export class FormTextItem extends React_2.Component<IFormItemProps, {}> {
 
 declare namespace fs {
     export {
+        _setChattr,
+        _setChattrNotifier,
+        _resetChattrState,
+        applyChattrCasefold,
+        watch,
         setTFunction,
         genFSWrapperAsync,
         isDirectoryAsync,
@@ -1130,7 +1134,6 @@ declare namespace fs {
         readFileSync,
         statSync,
         symlinkSync,
-        watch,
         writeFileSync,
         writeSync,
         ILinkFileOptions,
@@ -2015,7 +2018,6 @@ interface IDiscoveryState {
 
 // @public
 interface IDownload {
-    chunks?: IChunk[];
     // Warning: (ae-forgotten-export) The symbol "IDownloadFailCause" needs to be exported by the entry point api.d.ts
     failCause?: IDownloadFailCause;
     fileMD5?: string;
@@ -2235,6 +2237,11 @@ interface IExtensionContext {
     registerDashlet: RegisterDashlet;
     registerDeploymentMethod: (method: IDeploymentMethod) => void;
     registerDialog: RegisterDialog;
+    registerDownloadProtocol: (scheme: string, handler: (inputUrl: string) => PromiseLike<{
+        urls: string[];
+        updatedUrl?: string;
+        meta: unknown;
+    }>) => void;
     registerFooter: RegisterFooter;
     registerGame: (game: IGame) => void;
     registerGameInfoProvider: (id: string, priority: number, expireMS: number, keys: string[], query: GameInfoQuery) => void;
@@ -3218,7 +3225,7 @@ interface IRegisteredExtension {
 // @public (undocumented)
 interface IRegisterProtocol {
     // (undocumented)
-    (protocol: string, def: boolean, callback: (url: string, install: boolean) => void): any;
+    (protocol: string, def: boolean, callback: (url: string, install: boolean) => void): Promise<boolean>;
 }
 
 // @public (undocumented)
@@ -3697,6 +3704,10 @@ interface IState {
 
 // @public (undocumented)
 interface IStateDownloads {
+    // (undocumented)
+    checkpoints: {
+        [id: string]: DownloadCheckpoint<string>;
+    };
     // (undocumented)
     files: {
         [id: string]: IDownload;
@@ -4368,7 +4379,7 @@ const nexusIdsFromDownloadId: ((state: IState, downloadId: string) => {
     modId: string;
     numericGameId: number;
     collectionSlug: string;
-    collectionId: any;
+    collectionId: string;
     revisionId: string;
 }) & OutputSelectorFields<(args_0: {
 [id: string]: IDownload;
@@ -4378,7 +4389,7 @@ fileId: string;
 modId: string;
 numericGameId: number;
 collectionSlug: string;
-collectionId: any;
+collectionId: string;
 revisionId: string;
 }, {
 clearCache: () => void;
@@ -4484,10 +4495,9 @@ export class OverlayTrigger extends React_2.Component<IProps_7, {
 function pad(value: number, padding: string, width: number): string;
 
 // @public
-const pauseDownload: ComplexActionCreator3<string, boolean, IChunk[], {
+const pauseDownload: ComplexActionCreator2<string, boolean, {
 id: string;
 paused: boolean;
-chunks: IChunk[];
 }, {}>;
 
 // @public (undocumented)
@@ -4747,6 +4757,9 @@ function renderModReference(ref?: IModReference, mod?: IMod, options?: IRenderOp
 // @public (undocumented)
 function request(method: Method, reqURL: string, headers: any, cb: (res: IncomingMessage) => void): ClientRequest;
 
+// @internal
+function _resetChattrState(): void;
+
 // @public (undocumented)
 const resetSuppression: ComplexActionCreator1<unknown, any, {}>;
 
@@ -4755,6 +4768,9 @@ function resolveCategoryName(category: string | number, state: IState): string;
 
 // @public
 function resolveCategoryPath(category: string | number, state: IState): string;
+
+// @public
+function resolvePathCase(rootDir: string, relPath: string, dirCache?: Map<string, string[]>): Promise<string>;
 
 // @public
 type Revertability = "yes" | "never" | "invalid";
@@ -4946,6 +4962,16 @@ const setCategoryOrder: reduxAct.ComplexActionCreator2<string, string[], {
     gameId: string;
     categoryIds: string[];
 }, {}>;
+
+// Warning: (ae-forgotten-export) The symbol "ExecFileFn" needs to be exported by the entry point api.d.ts
+//
+// @internal
+function _setChattr(fn: ExecFileFn): void;
+
+// Warning: (ae-forgotten-export) The symbol "NotifierFn" needs to be exported by the entry point api.d.ts
+//
+// @internal
+function _setChattrNotifier(fn: NotifierFn | undefined): void;
 
 // @public (undocumented)
 const setCleanupOnDeploy: reduxAct.ComplexActionCreator1<boolean, boolean, {}>;
@@ -6125,6 +6151,7 @@ declare namespace util {
         ProcessCanceled,
         ReduxProp,
         readExtensibleDir,
+        resolvePathCase,
         relativeTime,
         removeMods,
         modName as renderModName,
@@ -6232,6 +6259,9 @@ export class VisibilityProxy extends React_2.PureComponent<any, {}> {
 // @public
 function walk(target: string, callback: (iterPath: string, stats: fs.Stats) => PromiseLike<any>, options?: IWalkOptions): Promise<void>;
 
+// @public (undocumented)
+function watch(filename: string, ...args: any[]): ReturnType<typeof watch_2>;
+
 // Warning: (ae-forgotten-export) The symbol "IWebviewProps" needs to be exported by the entry point api.d.ts
 // Warning: (ae-forgotten-export) The symbol "IWebView" needs to be exported by the entry point api.d.ts
 //
@@ -6301,10 +6331,11 @@ export class ZoomableImage extends React_2.Component<IZoomableImageProps, {
 //
 // lib/extensions/mod_management/selectors.d.ts:59:5 - (ae-forgotten-export) The symbol "INeedToDeployMap" needs to be exported by the entry point api.d.ts
 // lib/types/IDialog.d.ts:84:9 - (ae-forgotten-export) The symbol "IBBCodeContext" needs to be exported by the entry point api.d.ts
-// lib/types/IState.d.ts:356:9 - (ae-forgotten-export) The symbol "IHistoryState" needs to be exported by the entry point api.d.ts
-// lib/types/IState.d.ts:358:9 - (ae-forgotten-export) The symbol "IHealthCheckSessionState" needs to be exported by the entry point api.d.ts
-// lib/types/IState.d.ts:390:9 - (ae-forgotten-export) The symbol "IHistoryPersistent" needs to be exported by the entry point api.d.ts
-// lib/types/IState.d.ts:391:9 - (ae-forgotten-export) The symbol "IHealthCheckPersistentState" needs to be exported by the entry point api.d.ts
+// lib/types/IState.d.ts:161:9 - (ae-forgotten-export) The symbol "DownloadCheckpoint" needs to be exported by the entry point api.d.ts
+// lib/types/IState.d.ts:360:9 - (ae-forgotten-export) The symbol "IHistoryState" needs to be exported by the entry point api.d.ts
+// lib/types/IState.d.ts:362:9 - (ae-forgotten-export) The symbol "IHealthCheckSessionState" needs to be exported by the entry point api.d.ts
+// lib/types/IState.d.ts:394:9 - (ae-forgotten-export) The symbol "IHistoryPersistent" needs to be exported by the entry point api.d.ts
+// lib/types/IState.d.ts:395:9 - (ae-forgotten-export) The symbol "IHealthCheckPersistentState" needs to be exported by the entry point api.d.ts
 // lib/views/MainPage.d.ts:12:5 - (ae-forgotten-export) The symbol "MainPageBody" needs to be exported by the entry point api.d.ts
 // lib/views/MainPage.d.ts:13:5 - (ae-forgotten-export) The symbol "MainPageHeader" needs to be exported by the entry point api.d.ts
 
