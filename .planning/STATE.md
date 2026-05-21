@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Upstream v2.0.0 Sync
 status: executing
-stopped_at: Phase 27 plan 02 complete (plugin-mgmt resolved)
-last_updated: "2026-05-21T02:30:00.000Z"
-last_activity: 2026-05-21 -- Phase 27 plan 02 complete (gamebryo-plugin-management 4/4 files resolved; 6/25 Phase 27 conflict files done)
+stopped_at: Phase 27 plan 03 complete (modtype-bepinex resolved; 9/25 Phase 27 conflict files done)
+last_updated: "2026-05-21T03:00:00.000Z"
+last_activity: 2026-05-21
 progress:
     total_phases: 8
     completed_phases: 2
     total_plans: 27
-    completed_plans: 21
-    percent: 28
+    completed_plans: 23
+    percent: 26
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 ## Current Position
 
 Phase: 27 (gamebryo-per-game-extensions) — EXECUTING
-Plan: 4 of 9 (27-00, 27-01, 27-02 complete; up next: 27-03 modtype-bepinex)
-Status: Executing Phase 27
-Last activity: 2026-05-21 -- Phase 27 plan 02 complete (plugin-mgmt 4/4 files; commits a4a9fc0cf, 619845991, 9ca7c1164, 394d12242)
+Plan: 6 of 9 (27-00, 27-01, 27-02, 27-03 complete; up next: 27-04 collections)
+Status: Ready to execute
+Last activity: 2026-05-21
 
-Progress: [████░░░░░░] 43% (3/7 v8.0 phases complete; 22/22 plans across phases 24–26)
+Progress: [████████░░] 81%
 
 ## Performance Metrics
 
@@ -93,6 +93,7 @@ _Updated after each plan completion_
 | Phase 27-gamebryo-per-game-extensions P00 | 4min | 1 tasks | 1 files |
 | Phase 27-gamebryo-per-game-extensions P01 | 2min | 2 tasks | 2 files |
 | Phase 27-gamebryo-per-game-extensions P02 | 8min | 4 tasks | 4 files |
+| Phase 27-gamebryo-per-game-extensions P03 | 5min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -197,6 +198,8 @@ Recent decisions affecting current work:
 - [Phase 27-gamebryo-per-game-extensions]: oxfmt pre-commit hook reformats adjacent code on every conflict-resolution commit (collapses multi-line signatures to single-line per print-width=80). Behaviour preserved; commits still touch exactly one file. Future plans 27-02..27-07 should expect the same.
 - [Phase 27-gamebryo-per-game-extensions]: Plan 27-02 — all 4 plugin-mgmt files resolved fork-side (HEAD on every region). Dominant divergence is the async-ESPFile.open chain (Phase 03 native-addon redesign of esptk bindings). Caught one self-inflicted typecheck regression: upstream's `: Promise<void>` annotation on `swapUserlistForProfile` triggered TS1064 because `index.ts` does `import Promise from "bluebird"` at line 6 — bluebird-Promise shadows global Promise and is not the global `Promise<T>` TS requires for async return-type validation. Reverted to no-annotation form (TS infers global Promise from `async`). Two merge-driver duplications caught in index.ts (testBlueprintMasters and onStateChange persistent-profiles handler) — same pattern as Phase 26 LinkingDeployment.ts genUpdateModDeployment artefact.
 - [Phase 27-gamebryo-per-game-extensions]: D-27-04 footnote — when resolving conflicts in any file that imports `Promise from "bluebird"`, do NOT add `: Promise<T>` return-type annotations to async functions. Either omit the annotation (TS infers global Promise from `async`) or use a separate type alias. Future plans 27-03..27-07 should pre-check this.
+- [Phase 27-gamebryo-per-game-extensions]: Plan 27-03 — all 3 modtype-bepinex files resolved fork-side (HEAD on every region). 17 conflict regions across the extension; 16 were cosmetic single-line vs wrapped formatting. One merge-driver duplicate-import artefact in `bepInExDownloader.ts` region 1 — v2.0.0 side re-imported `IBepInExGameConfig, INexusDownloadInfo` from `./types` despite the post-conflict body already containing the same import on the next line. HEAD was the only non-duplicate resolution. Bluebird-Promise trap not encountered (none of the 3 files import `Promise from "bluebird"`). Linux platform-conditional `process.platform === "win32" ? "win_" : "linux_"` in common.ts:54-58 lives outside any conflict region — survived the merge untouched.
+- [Phase 27-gamebryo-per-game-extensions]: D-27-04 syntax footnote — `pnpm typecheck -F <pkg>` recurses into the full workspace dependency graph; use `pnpm --filter <pkg> typecheck` for single-workspace-scoped runs. Confirmed working for `modtype-bepinex` in plan 27-03; same form used in plan 27-02 for `gamebryo-plugin-management`.
 
 ### Research Context (v7.0)
 
@@ -240,6 +243,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-21T02:30:00.000Z
-Stopped at: Phase 27 plan 02 complete (plugin-mgmt resolved; 6/25 Phase 27 conflict files done)
-Resume file: .planning/phases/27-gamebryo-per-game-extensions/27-03-PLAN.md
+Last session: 2026-05-21T03:00:00.000Z
+Stopped at: Phase 27 plan 03 complete (modtype-bepinex resolved; 9/25 Phase 27 conflict files done)
+Resume file: None
