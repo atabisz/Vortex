@@ -80,3 +80,51 @@ Renderer webpack final line: `webpack 5.105.4 compiled successfully in 19149 ms`
 - Working tree clean
 
 ---
+
+## Plan 29-03 — SYNC-30 + SYNC-21
+
+**HEAD at run:** `73c4bc483` (post 29-02 commit)
+
+### SYNC-30 — `pnpm build:extensions`
+
+**Command:** `pnpm build:extensions` (from package.json: `pnpm run api && pnpm --filter "./extensions/**" run build`)
+**Exit code:** 0
+**Wall-clock:** ~6 min
+**Result:** **PASS**
+
+133 `build: Done` markers across the api + extensions chain; zero `ELIFECYCLE` / `Failed$` / `Exit status [1-9]` lines.
+
+### SYNC-21 — `bundledPlugins/` count
+
+**Command:** `ls src/main/build/bundledPlugins/ | wc -l`
+**Result:** **132** entries — **PASS** (CONTEXT threshold: ≥130, expected ~132).
+
+### Linux-relevant extensions confirmed
+
+All 8 gamebryo bundles present:
+
+| Extension                       | In `bundledPlugins/` |
+| ------------------------------- | -------------------- |
+| `gamebryo-archive-check`        | ✓                    |
+| `gamebryo-archive-invalidation` | ✓                    |
+| `gamebryo-archive-support`      | ✓                    |
+| `gamebryo-bsa-support`          | ✓                    |
+| `gamebryo-plugin-indexlock`     | ✓                    |
+| `gamebryo-plugin-management`    | ✓                    |
+| `gamebryo-savegame-management`  | ✓                    |
+| `gamebryo-test-settings`        | ✓                    |
+
+`gamebryo-ba2-support` (restored under SYNC-13 in Phase 25) is part of the chain via `_build` named-script Linux guard pattern. `nexus_integration` is bundled into the renderer extensions chain, not into `bundledPlugins/`, by design.
+
+### Notes
+
+- `packages/vortex-api/lib/api.d.ts` regenerated again (build:extensions runs `pnpm api` first, which re-runs api-extractor). Discarded for the third time this phase — recurring drift, outside-scope.
+- Webpack module-not-found warnings for optional native deps (e.g. `vortexmt` on platforms where it's missing) are non-fatal — extensions handle missing natives at runtime.
+
+### Post-conditions for Plan 29-04
+
+- `src/main/build/bundledPlugins/` populated with 132 entries
+- All build chain artefacts in place — `pnpm test` (Vitest) can resolve all imports
+- Working tree clean
+
+---
