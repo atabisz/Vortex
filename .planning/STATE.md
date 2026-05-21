@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Upstream v2.0.0 Sync
 status: executing
-stopped_at: Phase 27 plan 00 complete (grep-checkpoint extended)
-last_updated: "2026-05-21T01:50:00.000Z"
-last_activity: 2026-05-21 -- Phase 27 plan 00 complete (grep-checkpoint extended with §1+§3+§10+BG3+Morrowind gates)
+stopped_at: Phase 27 plan 01 complete (savegame-mgmt resolved)
+last_updated: "2026-05-21T01:55:11.000Z"
+last_activity: 2026-05-21 -- Phase 27 plan 01 complete (gamebryo-savegame-management 2/2 files resolved; 2/25 Phase 27 conflict files done)
 progress:
     total_phases: 8
     completed_phases: 2
     total_plans: 27
-    completed_plans: 19
-    percent: 26
+    completed_plans: 20
+    percent: 27
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 ## Current Position
 
 Phase: 27 (gamebryo-per-game-extensions) — EXECUTING
-Plan: 2 of 9 (27-00 complete; up next: 27-01 gamebryo-savegame-management)
+Plan: 3 of 9 (27-00, 27-01 complete; up next: 27-02 gamebryo-plugin-management)
 Status: Executing Phase 27
-Last activity: 2026-05-21 -- Phase 27 plan 00 complete (grep-checkpoint extended; commit 63f90752a)
+Last activity: 2026-05-21 -- Phase 27 plan 01 complete (savegame-mgmt 2/2 files; commits 0caa66fa4, 68a1b97e0)
 
 Progress: [████░░░░░░] 43% (3/7 v8.0 phases complete; 22/22 plans across phases 24–26)
 
@@ -91,6 +91,7 @@ _Updated after each plan completion_
 | Phase 23 P02 | 2min | 1 tasks | 1 files |
 | Phase 23-help-links P02 | 5min | 2 tasks | 1 files |
 | Phase 27-gamebryo-per-game-extensions P00 | 4min | 1 tasks | 1 files |
+| Phase 27-gamebryo-per-game-extensions P01 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -190,6 +191,9 @@ Recent decisions affecting current work:
 - [Phase 27-gamebryo-per-game-extensions]: Extended `scripts/grep-checkpoint.sh` in place (Phase 26 path, per CONTEXT D-27-03 reuse pattern) with 5 new gates — §1 extension build guards, §3 LOOT call-site casing in autosort.ts, §10 cross-compiled native binaries, BG3 4-class divine error preservation, Morrowind migrate103 warning preservation. 12 gates total. Conflict-marker gate broadened to 8 paths (mod_management/ + 7 Phase 27 extension dirs).
 - [Phase 27-gamebryo-per-game-extensions]: D-27-03 sub-note — gate 8 threshold ≥3 not ≥4. Live `autosort.ts` has 3 distinct `path.basename(pluginList[…])` expressions feeding 4 LOOT call sites because `lootKey` local at line 546 is reused at lines 549 (getPluginMetadataAsync) and 553 (getPluginAsync). Plan task spec miscounted basename expressions vs LOOT call sites; fixed via Rule 1.
 - [Phase 27-gamebryo-per-game-extensions]: D-27-03 sub-note — `git grep -cE <pattern> <single-file>` prints `path:N` (not bare count); use `git grep -nE | wc -l` for arithmetic-friendly counts.
+- [Phase 27-gamebryo-per-game-extensions]: D-27-04 confirmed — per-extension typecheck filter is the bare package name (`pnpm --filter gamebryo-savegame-management typecheck`), NOT `@vortex/<ext>`. Extensions in this monorepo do not carry the `@vortex/` scope; verified via each extension's `package.json` `name` field.
+- [Phase 27-gamebryo-per-game-extensions]: Plan 27-01 — both savegame-mgmt conflict regions resolved fork-side. `actions/session.ts` was a cosmetic single-line vs wrapped arrow-body difference (HEAD wins, matches surrounding action-creator style). `index.ts` upstream side carried a stale `},)` artefact from a prior call shape — would have been syntactically invalid in the current `.then((result) => { ... })` opener; HEAD was the only valid resolution.
+- [Phase 27-gamebryo-per-game-extensions]: oxfmt pre-commit hook reformats adjacent code on every conflict-resolution commit (collapses multi-line signatures to single-line per print-width=80). Behaviour preserved; commits still touch exactly one file. Future plans 27-02..27-07 should expect the same.
 
 ### Research Context (v7.0)
 
@@ -233,6 +237,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-21T01:50:00.000Z
-Stopped at: Phase 27 plan 00 complete (grep-checkpoint extended)
-Resume file: .planning/phases/27-gamebryo-per-game-extensions/27-01-PLAN.md
+Last session: 2026-05-21T01:55:11.000Z
+Stopped at: Phase 27 plan 01 complete (savegame-mgmt resolved; 2/25 Phase 27 conflict files done)
+Resume file: .planning/phases/27-gamebryo-per-game-extensions/27-02-PLAN.md

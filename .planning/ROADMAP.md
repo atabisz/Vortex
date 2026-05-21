@@ -170,7 +170,7 @@
    **Plans**: 9 plans
 
 - [x] 27-00-PLAN.md — Extend scripts/grep-checkpoint.sh with §1 + §3 + §10 + BG3 + Morrowind gates (commit 0) — completed 2026-05-21 (commit 63f90752a)
-- [ ] 27-01-PLAN.md — Resolve gamebryo-savegame-management (2 files, leaf-first)
+- [x] 27-01-PLAN.md — Resolve gamebryo-savegame-management (2 files, leaf-first)
 - [ ] 27-02-PLAN.md — Resolve gamebryo-plugin-management (4 files, leaf-first)
 - [ ] 27-03-PLAN.md — Resolve modtype-bepinex (3 files, leaf-first)
 - [ ] 27-04-PLAN.md — Resolve collections (6 files, leaf-first; depends on 27-02)
@@ -274,7 +274,7 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 | 24. Config bucket                                         | v8.0      | 8/8            | Complete    | 2026-05-15 |
 | 25. Restore dropped scaffolding                           | v8.0      | 4/4            | Complete    | 2026-05-15 |
 | 26. Mod-management hot zone                               | v8.0      | 10/10          | Complete    | 2026-05-15 |
-| 27. Gamebryo + per-game extensions                        | v8.0      | 0/0            | Not started | -          |
+| 27. Gamebryo + per-game extensions                        | v8.0      | 2/9            | In Progress |            |
 | 28. Renderer + main spine                                 | v8.0      | 0/0            | Not started | -          |
 | 29. Build verification                                    | v8.0      | 0/0            | Not started | -          |
 | 30. Land + tag                                            | v8.0      | 0/0            | Not started | -          |
