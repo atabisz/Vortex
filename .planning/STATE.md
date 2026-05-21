@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Upstream v2.0.0 Sync
 status: executing
-stopped_at: Phase 27 plan 05 complete (game-baldursgate3 resolved; 22/25 Phase 27 conflict files done)
-last_updated: "2026-05-21T03:30:00.000Z"
+stopped_at: Phase 27 plan 06 complete (game-morrowind resolved; 23/25 Phase 27 conflict files done)
+last_updated: "2026-05-21T04:00:00.000Z"
 last_activity: 2026-05-21
 progress:
     total_phases: 8
     completed_phases: 2
     total_plans: 27
-    completed_plans: 25
+    completed_plans: 26
     percent: 27
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 ## Current Position
 
 Phase: 27 (gamebryo-per-game-extensions) — EXECUTING
-Plan: 9 of 9 (27-00..27-05 complete; up next: 27-06 game-morrowind)
+Plan: 9 of 9 (27-00..27-06 complete; up next: 27-07 game-witcher3)
 Status: Ready to execute
 Last activity: 2026-05-21
 
-Progress: [█████████░] 93%
+Progress: [█████████░] 96%
 
 ## Performance Metrics
 
@@ -96,6 +96,7 @@ _Updated after each plan completion_
 | Phase 27-gamebryo-per-game-extensions P03 | 5min | 3 tasks | 3 files |
 | Phase 27-gamebryo-per-game-extensions P04 | 5 | 6 tasks | 6 files |
 | Phase 27-gamebryo-per-game-extensions P05 | 5min | 7 tasks | 7 files |
+| Phase 27-gamebryo-per-game-extensions P06 | 2min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -208,6 +209,9 @@ Recent decisions affecting current work:
 - [Phase 27-gamebryo-per-game-extensions]: Plan 27-05 game-baldursgate3 — kept HEAD on all 41 conflict regions across 7 files (35 cosmetic single/double-quote, 4 merge-driver artefacts, 2 fork-side substantive preservations). All 4 divine error classes preserved (gate 10 count = 4 throughout). Bluebird-Promise trap pre-checked clean (none of the 7 files import Promise from bluebird).
 - [Phase 27-gamebryo-per-game-extensions]: Plan 27-05 — fork-side substantive preservations: divineWrapper.ts ConcurrencyLimiter retry filter fails fast on 4 deterministic error classes (vs upstream's 1) per inline comment; loadOrder.ts pak-loop catch handler uses `return await cache.getCacheEntry(...)` so try/catch sees rejections (without the await catch is dead code) plus stable notification id `bg3-divine-missing` so parallel pak failures collapse into one notification.
 - [Phase 27-gamebryo-per-game-extensions]: D-27-04 BG3 deviation — game-baldursgate3 has no per-extension tsconfig.json AND no `typecheck` script. Bare `pnpm exec tsc --noEmit <files>` surfaces 40+ pre-existing TS2305 errors from vortex-api workspace shim resolution (unrelated to resolution work). Routed to plan-permitted alternative: `pnpm run build` (rolldown bundler — refuses syntax/resolution errors at bundle time). Build succeeded after seventh commit. Build-as-typecheck has acknowledged trade-off (catches syntax + resolution but not all TS errors); acceptable for plans where every conflict region is cosmetic-quote / artefact-import / non-type-relevant string change.
+- [Phase 27-gamebryo-per-game-extensions]: Plan 27-06 game-morrowind — kept HEAD on both conflict regions in migrations.js (cosmetic single/double-quote in `require` block + cosmetic arg-wrapping in `walk()` call + catch block). Gate 11 (Morrowind migrate103 warning preservation, count ≥1) clean before AND after — count = 1 throughout. Single-file extension cleared in one atomic commit (`75e4eff59`). 23/25 Phase 27 files done (92%).
+- [Phase 27-gamebryo-per-game-extensions]: D-27-04 morrowind deviation — game-morrowind has no `typecheck` script and the file is `.js` (CommonJS). Plan offered `pnpm -F game-morrowind build` (rolldown) or `pnpm exec tsc --noEmit --allowJs --checkJs=false`. Routed to a third equivalent: `node --check <file>` — same syntax-gate signal, lighter weight. Acknowledged trade-off (syntax only, not type errors), acceptable because every conflict region was cosmetic and the file is plain `.js` with no type annotations. Future `.js` per-extension typecheck routes can use `node --check` as the lightest equivalent.
+- [Phase 27-gamebryo-per-game-extensions]: D-27-04 footnote — bluebird-Promise trap is a no-op for `.js` CommonJS files. The trap targets ES-imported `Promise from "bluebird"` shadow; `migrations.js` uses `require()` and global `Promise.resolve()` only. Recorded for completeness in case a future plan migrates the file to TS.
 
 ### Research Context (v7.0)
 
@@ -251,6 +255,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-21T03:30:00.000Z
-Stopped at: Phase 27 plan 05 complete (game-baldursgate3 resolved; 22/25 Phase 27 conflict files done)
+Last session: 2026-05-21T04:00:00.000Z
+Stopped at: Phase 27 plan 06 complete (game-morrowind resolved; 23/25 Phase 27 conflict files done)
 Resume file: None

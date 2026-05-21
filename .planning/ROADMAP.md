@@ -175,7 +175,7 @@
 - [x] 27-03-PLAN.md — Resolve modtype-bepinex (3 files, leaf-first)
 - [x] 27-04-PLAN.md — Resolve collections (6 files, leaf-first; depends on 27-02)
 - [x] 27-05-PLAN.md — Resolve game-baldursgate3 (7 files, leaf-first; preserves 4 divine error classes) — completed 2026-05-21 (commits ef52d47f2, d0f60cf3b, de2a83f88, 2c744a559, 9406b7a25, 5610e02f5, 876b9a6b2)
-- [ ] 27-06-PLAN.md — Resolve game-morrowind (1 file; preserves migrate103 warning)
+- [x] 27-06-PLAN.md — Resolve game-morrowind (1 file; preserves migrate103 warning) — completed 2026-05-21 (commit 75e4eff59)
 - [ ] 27-07-PLAN.md — Resolve game-witcher3 (2 files, leaf-first)
 - [ ] 27-08-PLAN.md — D-27-05 done-gate (6 checks) + force-with-lease push
 
