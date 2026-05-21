@@ -164,3 +164,50 @@ SYNC-31 explicitly acknowledges this divergence: `src/renderer/jest.config.mjs` 
 - Working tree clean
 
 ---
+
+## Plan 29-05 — SYNC-32
+
+**HEAD at run:** `17c56ad15` (post 29-04 commit)
+
+### SYNC-32 — `pnpm lint:ci` diff vs master
+
+**Command:** `pnpm lint:ci` (delegates to `pnpm run lint:quiet` → `pnpm -r run lint:quiet`)
+**Exit code:** 0
+**Wall-clock:** 34.8s
+**Result:** **PASS**
+
+All five lint:quiet runs Done with zero errors and zero warnings:
+
+| Workspace              | Status | Errors | Warnings |
+| ---------------------- | ------ | -----: | -------: |
+| `packages/adaptor-api` | Done   |      0 |        0 |
+| `src/shared`           | Done   |      0 |        0 |
+| `src/preload`          | Done   |      0 |        0 |
+| `src/renderer`         | Done   |      0 |        0 |
+| `src/main`             | Done   |      0 |        0 |
+| (other 139 workspaces) | Done   |      0 |        0 |
+| **Total**              |        |  **0** |    **0** |
+
+### Delta vs master baseline
+
+| Workspace      | Master errors | v8.0 errors |       Δ |
+| -------------- | ------------: | ----------: | ------: |
+| **`src/main`** |            10 |           0 | **−10** |
+| **Total**      |            10 |           0 | **−10** |
+
+The −10 delta is **not** a fix — it reflects that `src/main/src/downloading/downloader.test.ts` (where master's 10 errors live) doesn't exist on `v8.0/config-bucket`. Master is +20 commits ahead along a different lineage that includes Phase 25 SYNC-14's `restore(downloading): chunking + download_management spine + bsdiff-node test from upstream 8b5a9f675` (`9a17907b6`). When v8.0 lands and gets merged forward in Phase 30 (PR #4), that restore work will come back along with the 10 pre-existing errors.
+
+Per D-29-05: PASS iff `v8.0 errors ≤ master baseline errors` AND `lint:ci` exit 0. Both conditions met → **PASS**.
+
+### Notes
+
+- `pnpm lint:ci` did not regenerate `api.d.ts` this run (no api-extractor in the lint path). Working tree clean post-run.
+- Full log + per-workspace delta table captured in `29-LINT-BASELINE.md`.
+
+### Post-conditions for Plan 29-06
+
+- All five script-based verifications (typecheck/build/build:extensions/test/lint:ci) green on v8.0/config-bucket.
+- Working tree clean.
+- Next: SYNC-33 part A — `pnpm run start` from source.
+
+---
