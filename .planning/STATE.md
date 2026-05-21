@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Upstream v2.0.0 Sync
 status: executing
-stopped_at: Phase 27 plan 01 complete (savegame-mgmt resolved)
-last_updated: "2026-05-21T01:55:11.000Z"
-last_activity: 2026-05-21 -- Phase 27 plan 01 complete (gamebryo-savegame-management 2/2 files resolved; 2/25 Phase 27 conflict files done)
+stopped_at: Phase 27 plan 02 complete (plugin-mgmt resolved)
+last_updated: "2026-05-21T02:30:00.000Z"
+last_activity: 2026-05-21 -- Phase 27 plan 02 complete (gamebryo-plugin-management 4/4 files resolved; 6/25 Phase 27 conflict files done)
 progress:
     total_phases: 8
     completed_phases: 2
     total_plans: 27
-    completed_plans: 20
-    percent: 27
+    completed_plans: 21
+    percent: 28
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 ## Current Position
 
 Phase: 27 (gamebryo-per-game-extensions) — EXECUTING
-Plan: 3 of 9 (27-00, 27-01 complete; up next: 27-02 gamebryo-plugin-management)
+Plan: 4 of 9 (27-00, 27-01, 27-02 complete; up next: 27-03 modtype-bepinex)
 Status: Executing Phase 27
-Last activity: 2026-05-21 -- Phase 27 plan 01 complete (savegame-mgmt 2/2 files; commits 0caa66fa4, 68a1b97e0)
+Last activity: 2026-05-21 -- Phase 27 plan 02 complete (plugin-mgmt 4/4 files; commits a4a9fc0cf, 619845991, 9ca7c1164, 394d12242)
 
 Progress: [████░░░░░░] 43% (3/7 v8.0 phases complete; 22/22 plans across phases 24–26)
 
@@ -92,6 +92,7 @@ _Updated after each plan completion_
 | Phase 23-help-links P02 | 5min | 2 tasks | 1 files |
 | Phase 27-gamebryo-per-game-extensions P00 | 4min | 1 tasks | 1 files |
 | Phase 27-gamebryo-per-game-extensions P01 | 2min | 2 tasks | 2 files |
+| Phase 27-gamebryo-per-game-extensions P02 | 8min | 4 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -194,6 +195,8 @@ Recent decisions affecting current work:
 - [Phase 27-gamebryo-per-game-extensions]: D-27-04 confirmed — per-extension typecheck filter is the bare package name (`pnpm --filter gamebryo-savegame-management typecheck`), NOT `@vortex/<ext>`. Extensions in this monorepo do not carry the `@vortex/` scope; verified via each extension's `package.json` `name` field.
 - [Phase 27-gamebryo-per-game-extensions]: Plan 27-01 — both savegame-mgmt conflict regions resolved fork-side. `actions/session.ts` was a cosmetic single-line vs wrapped arrow-body difference (HEAD wins, matches surrounding action-creator style). `index.ts` upstream side carried a stale `},)` artefact from a prior call shape — would have been syntactically invalid in the current `.then((result) => { ... })` opener; HEAD was the only valid resolution.
 - [Phase 27-gamebryo-per-game-extensions]: oxfmt pre-commit hook reformats adjacent code on every conflict-resolution commit (collapses multi-line signatures to single-line per print-width=80). Behaviour preserved; commits still touch exactly one file. Future plans 27-02..27-07 should expect the same.
+- [Phase 27-gamebryo-per-game-extensions]: Plan 27-02 — all 4 plugin-mgmt files resolved fork-side (HEAD on every region). Dominant divergence is the async-ESPFile.open chain (Phase 03 native-addon redesign of esptk bindings). Caught one self-inflicted typecheck regression: upstream's `: Promise<void>` annotation on `swapUserlistForProfile` triggered TS1064 because `index.ts` does `import Promise from "bluebird"` at line 6 — bluebird-Promise shadows global Promise and is not the global `Promise<T>` TS requires for async return-type validation. Reverted to no-annotation form (TS infers global Promise from `async`). Two merge-driver duplications caught in index.ts (testBlueprintMasters and onStateChange persistent-profiles handler) — same pattern as Phase 26 LinkingDeployment.ts genUpdateModDeployment artefact.
+- [Phase 27-gamebryo-per-game-extensions]: D-27-04 footnote — when resolving conflicts in any file that imports `Promise from "bluebird"`, do NOT add `: Promise<T>` return-type annotations to async functions. Either omit the annotation (TS infers global Promise from `async`) or use a separate type alias. Future plans 27-03..27-07 should pre-check this.
 
 ### Research Context (v7.0)
 
@@ -237,6 +240,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-21T01:55:11.000Z
-Stopped at: Phase 27 plan 01 complete (savegame-mgmt resolved; 2/25 Phase 27 conflict files done)
-Resume file: .planning/phases/27-gamebryo-per-game-extensions/27-02-PLAN.md
+Last session: 2026-05-21T02:30:00.000Z
+Stopped at: Phase 27 plan 02 complete (plugin-mgmt resolved; 6/25 Phase 27 conflict files done)
+Resume file: .planning/phases/27-gamebryo-per-game-extensions/27-03-PLAN.md
