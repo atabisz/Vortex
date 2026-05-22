@@ -25,10 +25,7 @@ The Vortex project includes multiple types of projects maintained as separate re
 ### **Gamebryo Extension C++ Projects**
 
 - **bsatk** - BSA (Bethesda Softworks Archive) toolkit
-<<<<<<< HEAD
-=======
 - **esptk** - ESP (Elder Scrolls Plugin) toolkit
->>>>>>> v2.0.1
 - **loot** - LOOT (Load Order Optimization Tool) bindings
 - **gamebryo-savegame** - Gamebryo savegame management library
 
@@ -189,15 +186,10 @@ node scripts/manage-node-modules.js workflow "Vortex integration updates" nexus
 | winapi-bindings   | npm package | Git clone | Nexus-Mods repository  |
 | xxhash-addon      | npm package | Git clone | Third-party repository |
 | bsatk             | npm package | Git clone | Nexus-Mods repository  |
-<<<<<<< HEAD
-| loot              | npm package | Git clone | Nexus-Mods repository  |
-| gamebryo-savegame | npm package | Git clone | Nexus-Mods repository  |
-=======
 | esptk             | npm package | Git clone | Nexus-Mods repository  |
 | loot              | npm package | Git clone | Nexus-Mods repository  |
 | gamebryo-savegame | npm package | Git clone | Nexus-Mods repository  |
 | bsdiff-node       | npm package | Git clone | Nexus-Mods repository  |
->>>>>>> v2.0.1
 | fomod-installer   | npm package | Git clone | Nexus-Mods repository  |
 | dotnetprobe       | N/A         | N/A       | Already local project  |
 
@@ -405,15 +397,10 @@ yarn modules:workflow "Update Visual Studio integration"
 | winapi-bindings   | C++      | Nexus-Mods/node-winapi-bindings    | master |
 | xxhash-addon      | C++      | jdarpinian/xxhash-addon            | master |
 | bsatk             | C++      | Nexus-Mods/node-bsatk              | master |
-<<<<<<< HEAD
-| loot              | C++      | Nexus-Mods/node-loot               | master |
-| gamebryo-savegame | C++      | Nexus-Mods/node-gamebryo-savegames | master |
-=======
 | esptk             | C++      | Nexus-Mods/node-esptk              | master |
 | loot              | C++      | Nexus-Mods/node-loot               | master |
 | gamebryo-savegame | C++      | Nexus-Mods/node-gamebryo-savegames | master |
 | bsdiff-node       | C++      | Nexus-Mods/bsdiff-node             | master |
->>>>>>> v2.0.1
 
 ### Visual Studio Integration
 
