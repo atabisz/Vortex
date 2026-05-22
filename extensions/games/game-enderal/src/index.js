@@ -13,13 +13,7 @@ function findGame() {
     }
     return Promise.resolve(instPath.value);
   } catch (err) {
-<<<<<<< HEAD
     return util.steam.findByName("Enderal: Forgotten Stories").then((game) => game.gamePath);
-=======
-    return util.steam
-      .findByName("Enderal: Forgotten Stories")
-      .then((game) => game.gamePath);
->>>>>>> v2.0.1
   }
 }
 
