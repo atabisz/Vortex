@@ -287,25 +287,9 @@ class ConflictEditor extends ComponentEx<IProps, IComponentState> {
     const currentRules = this.state.rules;
     const baselineRules = this.mBaselineRules;
     this.nextState.rules = (props.modIds || []).reduce(
-<<<<<<< HEAD
       (prev: { [modId: string]: { [refId: string]: IRuleSpec } }, modId: string) => {
         const persisted = getRuleSpec(modId, props.mods, props.conflicts?.[modId]);
         if (currentRules[modId] !== undefined && baselineRules[modId] !== undefined) {
-=======
-      (
-        prev: { [modId: string]: { [refId: string]: IRuleSpec } },
-        modId: string,
-      ) => {
-        const persisted = getRuleSpec(
-          modId,
-          props.mods,
-          props.conflicts?.[modId],
-        );
-        if (
-          currentRules[modId] !== undefined &&
-          baselineRules[modId] !== undefined
-        ) {
->>>>>>> v2.0.1
           // preserve local edits: if the user changed a rule from its baseline,
           // keep the user's version
           const merged: { [refId: string]: IRuleSpec } = {};
@@ -315,12 +299,7 @@ class ConflictEditor extends ComponentEx<IProps, IComponentState> {
             const wasEdited =
               local !== undefined &&
               baseline !== undefined &&
-<<<<<<< HEAD
               (local.type !== baseline.type || local.version !== baseline.version);
-=======
-              (local.type !== baseline.type ||
-                local.version !== baseline.version);
->>>>>>> v2.0.1
             merged[refId] = wasEdited ? local : persisted[refId];
           }
           prev[modId] = merged;
@@ -422,12 +401,7 @@ class ConflictEditor extends ComponentEx<IProps, IComponentState> {
                 (conflicts[modId] || []).forEach((conflict) => {
                   const existingRule = modRules.find(
                     (rule) =>
-<<<<<<< HEAD
                       ["before", "after", "conflicts"].indexOf(rule.type) !== -1 &&
-=======
-                      ["before", "after", "conflicts"].indexOf(rule.type) !==
-                        -1 &&
->>>>>>> v2.0.1
                       util.testModReference(conflict.otherMod, rule.reference),
                   );
 
@@ -451,25 +425,13 @@ class ConflictEditor extends ComponentEx<IProps, IComponentState> {
                             type: conflict.suggestion,
                             version:
                               existingRule !== undefined
-<<<<<<< HEAD
                                 ? importVersion(existingRule.reference.versionMatch)
-=======
-                                ? importVersion(
-                                    existingRule.reference.versionMatch,
-                                  )
->>>>>>> v2.0.1
                                 : "any",
                           }
                         : existingRule !== undefined
                           ? {
                               type: existingRule.type as any,
-<<<<<<< HEAD
                               version: importVersion(existingRule.reference.versionMatch),
-=======
-                              version: importVersion(
-                                existingRule.reference.versionMatch,
-                              ),
->>>>>>> v2.0.1
                             }
                           : { type: undefined, version: "any" };
                   }
@@ -682,12 +644,7 @@ class ConflictEditor extends ComponentEx<IProps, IComponentState> {
           }
           return (
             (!!filterValue && matchesFilter) ||
-<<<<<<< HEAD
             (hideResolved && this.isUnresolved(mods, modId, refId, rules, hideResolved))
-=======
-            (hideResolved &&
-              this.isUnresolved(mods, modId, refId, rules, hideResolved))
->>>>>>> v2.0.1
           );
         })
       : Object.keys(rules[modId]);
@@ -860,12 +817,7 @@ class ConflictEditor extends ComponentEx<IProps, IComponentState> {
             disabled={reverseRule !== undefined}
           >
             <option value="any">{t("Any version")}</option>
-<<<<<<< HEAD
             {conflict.otherMod.version && semver.valid(conflict.otherMod.version) ? (
-=======
-            {conflict.otherMod.version &&
-            semver.valid(conflict.otherMod.version) ? (
->>>>>>> v2.0.1
               <option value="compatible">{t("Compatible version")}</option>
             ) : null}
             {conflict.otherMod.version ? (
