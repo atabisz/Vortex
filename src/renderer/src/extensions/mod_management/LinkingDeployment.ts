@@ -209,7 +209,6 @@ abstract class LinkingActivator implements IDeploymentMethod {
       mapWithConcurrency(
         removed,
         (key) =>
-<<<<<<< HEAD
           this.removeDeployedFile(installationPath, dataPath, key, true).catch((err: unknown) => {
             log("warn", "failed to remove deployed file", {
               link: context.newDeployment[key].relPath,
@@ -218,24 +217,12 @@ abstract class LinkingActivator implements IDeploymentMethod {
             errorCodes.add(getErrorCode(err) ?? "UNKNOWN");
             ++errorCount;
           }),
-=======
-          this.removeDeployedFile(installationPath, dataPath, key, true).catch(
-            (err: unknown) => {
-              log("warn", "failed to remove deployed file", {
-                link: context.newDeployment[key].relPath,
-                error: getErrorMessageOrDefault(err),
-              });
-              ++errorCount;
-            },
-          ),
->>>>>>> v2.0.1
         50,
       )
         .then(() =>
           mapWithConcurrency(
             sourceChanged,
             (key: string, idx: number) =>
-<<<<<<< HEAD
               this.removeDeployedFile(installationPath, dataPath, key, false).catch(
                 (err: unknown) => {
                   log("warn", "failed to remove deployed file", {
@@ -247,21 +234,6 @@ abstract class LinkingActivator implements IDeploymentMethod {
                   sourceChanged.splice(idx, 1);
                 },
               ),
-=======
-              this.removeDeployedFile(
-                installationPath,
-                dataPath,
-                key,
-                false,
-              ).catch((err: unknown) => {
-                log("warn", "failed to remove deployed file", {
-                  link: context.newDeployment[key].relPath,
-                  error: getErrorMessageOrDefault(err),
-                });
-                ++errorCount;
-                sourceChanged.splice(idx, 1);
-              }),
->>>>>>> v2.0.1
             50,
           ),
         )
@@ -269,7 +241,6 @@ abstract class LinkingActivator implements IDeploymentMethod {
           mapWithConcurrency(
             contentChanged,
             (key: string, idx: number) =>
-<<<<<<< HEAD
               this.removeDeployedFile(installationPath, dataPath, key, false).catch(
                 (err: unknown) => {
                   log("warn", "failed to remove deployed file", {
@@ -281,21 +252,6 @@ abstract class LinkingActivator implements IDeploymentMethod {
                   contentChanged.splice(idx, 1);
                 },
               ),
-=======
-              this.removeDeployedFile(
-                installationPath,
-                dataPath,
-                key,
-                false,
-              ).catch((err: unknown) => {
-                log("warn", "failed to remove deployed file", {
-                  link: context.newDeployment[key].relPath,
-                  error: getErrorMessageOrDefault(err),
-                });
-                ++errorCount;
-                contentChanged.splice(idx, 1);
-              }),
->>>>>>> v2.0.1
             50,
           ),
         )
@@ -368,7 +324,6 @@ abstract class LinkingActivator implements IDeploymentMethod {
           const gameRequiresCleanup =
             game.requiresCleanup === undefined ? game.mergeMods !== true : game.requiresCleanup;
           if (removed.length > 0 && (gameRequiresCleanup || cleanupOnDeploy)) {
-<<<<<<< HEAD
             this.postLinkPurge(dataPath, false, false, directoryCleaning).catch((err) => {
               if (err instanceof UserCanceled) {
                 return null;
@@ -377,18 +332,6 @@ abstract class LinkingActivator implements IDeploymentMethod {
                 message: dataPath,
               });
             });
-=======
-            this.postLinkPurge(dataPath, false, false, directoryCleaning).catch(
-              (err) => {
-                if (err instanceof UserCanceled) {
-                  return null;
-                }
-                this.mApi.showErrorNotification("Failed to clean up", err, {
-                  message: dataPath,
-                });
-              },
-            );
->>>>>>> v2.0.1
           }
 
           this.mContext = undefined;
@@ -443,23 +386,10 @@ abstract class LinkingActivator implements IDeploymentMethod {
               entries
                 .filter((x) => !x.isDirectory)
                 .forEach((entry) => {
-<<<<<<< HEAD
                   const relPath: string = path.relative(sourcePath, entry.filePath);
                   const relPathWithSource = path.join(sourceName, relPath);
                   const relPathWithSourceNorm = this.mNormalize(relPathWithSource);
                   const relPathNorm = this.mNormalize(path.join(deployPath, relPath));
-=======
-                  const relPath: string = path.relative(
-                    sourcePath,
-                    entry.filePath,
-                  );
-                  const relPathWithSource = path.join(sourceName, relPath);
-                  const relPathWithSourceNorm =
-                    this.mNormalize(relPathWithSource);
-                  const relPathNorm = this.mNormalize(
-                    path.join(deployPath, relPath),
-                  );
->>>>>>> v2.0.1
                   if (!blackList.has(relPathWithSourceNorm)) {
                     // mods are activated in order of ascending priority so
                     // overwriting is fine here
@@ -536,13 +466,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
       fs
         .statAsync(dataPath)
         .then(() => this.purgeLinks(installPath, dataPath, onProgress))
-<<<<<<< HEAD
         .then(() => this.postLinkPurge(dataPath, false, true, directoryCleaning))
-=======
-        .then(() =>
-          this.postLinkPurge(dataPath, false, true, directoryCleaning),
-        )
->>>>>>> v2.0.1
         .then(() => undefined)
         .catch((err: unknown) => {
           if (getErrorCode(err) === "ENOENT") {
@@ -967,12 +891,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
           // then check files. if there are any, this isn't empty. plus we
           // restore backups here
           const files = allEntries.filter(
-<<<<<<< HEAD
             (entry) => !entry.isDirectory && !LinkingActivator.isTagName(entry.filePath),
-=======
-            (entry) =>
-              !entry.isDirectory && !LinkingActivator.isTagName(entry.filePath),
->>>>>>> v2.0.1
           );
           if (files.length > 0) {
             empty = false;
@@ -980,13 +899,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
               try {
                 await Promise.all(
                   files
-<<<<<<< HEAD
                     .filter((entry) => path.extname(entry.filePath) === BACKUP_TAG)
-=======
-                    .filter(
-                      (entry) => path.extname(entry.filePath) === BACKUP_TAG,
-                    )
->>>>>>> v2.0.1
                     .map((entry) => this.restoreBackup(entry.filePath)),
                 );
               } catch (err) {
