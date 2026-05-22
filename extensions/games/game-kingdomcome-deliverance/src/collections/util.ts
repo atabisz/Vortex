@@ -12,13 +12,7 @@ export function isModInCollection(collectionMod: types.IMod, mod: types.IMod) {
   }
 
   return (
-<<<<<<< HEAD
     collectionMod.rules.find((rule) => util.testModReference(mod, rule.reference)) !== undefined
-=======
-    collectionMod.rules.find((rule) =>
-      util.testModReference(mod, rule.reference),
-    ) !== undefined
->>>>>>> v2.0.1
   );
 }
 
