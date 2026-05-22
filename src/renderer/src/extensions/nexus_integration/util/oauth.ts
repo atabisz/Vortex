@@ -139,13 +139,7 @@ class OAuth {
         // State token not found — the callback arrived after the login flow was
         // already completed or abandoned (e.g. the user clicked login twice).
         // Silently ignore, matching the behavior of the local HTTP server path.
-<<<<<<< HEAD
         log("debug", "ignoring OAuth callback with unknown state token", { state });
-=======
-        log("debug", "ignoring OAuth callback with unknown state token", {
-          state,
-        });
->>>>>>> v2.0.1
         return;
       }
       try {
@@ -314,14 +308,7 @@ class OAuth {
       client_id: this.mServerSettings.clientId,
       redirect_uri: this.mServerSettings.getRedirectUrl
         ? this.mServerSettings.getRedirectUrl(this.mLastServerPort)
-<<<<<<< HEAD
         : this.mServerSettings.redirectUrl.replace("PORT", this.mLastServerPort.toString()),
-=======
-        : this.mServerSettings.redirectUrl.replace(
-            "PORT",
-            this.mLastServerPort.toString(),
-          ),
->>>>>>> v2.0.1
       state,
       code_challenge: OAuth.sanitizeBase64(challenge),
     };
@@ -334,14 +321,7 @@ class OAuth {
       client_id: this.mServerSettings.clientId,
       redirect_uri: this.mServerSettings.getRedirectUrl
         ? this.mServerSettings.getRedirectUrl(this.mLastServerPort)
-<<<<<<< HEAD
         : this.mServerSettings.redirectUrl.replace("PORT", this.mLastServerPort.toString()),
-=======
-        : this.mServerSettings.redirectUrl.replace(
-            "PORT",
-            this.mLastServerPort.toString(),
-          ),
->>>>>>> v2.0.1
       code,
       code_verifier: this.mVerifier,
     };
