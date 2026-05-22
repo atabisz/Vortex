@@ -254,7 +254,6 @@ export class ArchiveBrokenError extends Error {
   }
 }
 
-<<<<<<< HEAD
 export class AlreadyDownloaded extends Error {
   private mFileName: string;
   private mId: string | undefined;
@@ -290,12 +289,12 @@ export class DownloadIsHTML extends Error {
   public get url(): string {
     return this.mUrl;
   }
-=======
+}
+
 /**
  * Returns true if the error represents a user cancellation (e.g. the user
  * clicked Cancel on a dialog).
  */
 export function isUserCanceled(err: unknown): boolean {
   return err instanceof UserCanceled;
->>>>>>> v2.0.1
 }
