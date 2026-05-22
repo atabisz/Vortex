@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v8.1
 milestone_name: Upstream v2.0.1 Sync
 status: executing
-stopped_at: Phase 34 Wave F complete
-last_updated: "2026-05-23T20:30:45.000Z"
-last_activity: 2026-05-23 -- Phase 34 Wave F complete (18 atomic SSH-signed resolve commits 8f7847831→a204f28bd + 1 Rule-1 carryover-cleanup fix 6708d571a + SUMMARY 0b2e76c3a on v8.1/config-bucket; F1 Header+Menu+Spine+Layout (10) + F2 Tools page (5) + F3 heaviest controls/Table.tsx + ExtensionManager.ts + renderer.tsx (3); D-34-17 branch (a) HEAD-empty (no pnpm-workspace.yaml edit); bluebird-trap audit clean for ExtensionManager.ts (PromiseBB) + renderer.tsx (Bluebird); Linux-guard surfaces preserved in SpineContext.tsx typed selector + toolStarters.ts process.platform guard + ExtensionManager.ts loader path; markers in src/renderer/ 0; repo-wide markers 24 (Wave G surface); harness 13/13 GREEN skip-mode; UNFILTERED renderer typecheck 9 errors all in download_management/ — DEFERRED to Wave G per split-the-fix Option 1)
+stopped_at: Phase 34 Wave G complete
+last_updated: "2026-05-23T22:35:00.000Z"
+last_activity: 2026-05-23 -- Phase 34 Wave G complete (35 atomic SSH-signed commits e32e79de3→ed7780661 + SUMMARY 53187ec2c on v8.1/config-bucket; G1 docs/etc 6 (CHANGELOG/CLAUDE/CONTRIBUTE/README/etc/Dependency Report.md + etc/vortex.api.md) + G2 install prep (no commits, fingerprints separate pnpm install) + G3 fingerprints 10 (9 srcs §7 smaller-diff + dist/index.js regen via canonical pnpm build, ncc 0.38.4) + G4 packages/e2e 11+1 (Rule-1 typecheck fix 1e8d0c756 — vortex-app.ts arrow→string TS2584 + game-management.spec.ts !-assertion TS18048) + G5 misc 7 (download_management.test.js HEAD-paths + flatpak/maintenance.md fork-wins + native-node-module-management.md upstream-wins esptk+bsdiff-node + flatpak/generated-sources.json fork-wins-empty + duckdb scripts §7 + addicons HTML §7); 0 conflict markers in Wave G scope; fingerprints + e2e typechecks 0 errors each; harness 12/12 GREEN skip-mode; vitest duckdb 6/6 + dist node --check + json validate all green; Wave H (download_management) unblocked)
 progress:
     total_phases: 8
     completed_phases: 2
     total_plans: 26
-    completed_plans: 32
-    percent: 27
+    completed_plans: 33
+    percent: 28
 ---
 
 # Project State
