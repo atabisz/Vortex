@@ -75,9 +75,7 @@ export async function getOwnGameVersion(state: types.IState): Promise<string> {
   return await util.getGame(GAME_ID).getInstalledVersion(discovery);
 }
 
-export async function getActivePlayerProfile(
-  api: types.IExtensionApi,
-): Promise<string> {
+export async function getActivePlayerProfile(api: types.IExtensionApi): Promise<string> {
   return gameSupportsProfile(await getOwnGameVersion(api.getState()))
     ? api.store.getState().settings.baldursgate3?.playerProfile || "global"
     : "Public";
@@ -228,9 +226,7 @@ export async function getDefaultModSettingsFormat(
   return _FORMAT;
 }
 
-export async function getDefaultModSettings(
-  api: types.IExtensionApi,
-): Promise<string> {
+export async function getDefaultModSettings(api: types.IExtensionApi): Promise<string> {
   if (_FORMAT === null) {
     _FORMAT = await getDefaultModSettingsFormat(api);
   }
@@ -368,10 +364,9 @@ export function getLatestLSLibMod(api: types.IExtensionApi) {
           });
         }
       }
-      return prev;
-    },
-    undefined,
-  );
+    }
+    return prev;
+  }, undefined);
 
   if (lsLib === undefined) {
     log("warn", "LSLib is not installed");
@@ -507,9 +502,7 @@ export async function parseLSXFile(lsxPath: string): Promise<IModSettings> {
   return parseStringPromise(dat);
 }
 
-export async function readModSettings(
-  api: types.IExtensionApi,
-): Promise<IModSettings> {
+export async function readModSettings(api: types.IExtensionApi): Promise<IModSettings> {
   const bg3profile: string = await getActivePlayerProfile(api);
   const playerProfiles = getPlayerProfiles();
   if (playerProfiles.length === 0) {

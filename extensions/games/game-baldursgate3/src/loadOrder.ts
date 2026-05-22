@@ -185,9 +185,7 @@ export async function deserialize(
   }
 }
 
-export async function importFromBG3MM(
-  context: types.IExtensionContext,
-): Promise<void> {
+export async function importFromBG3MM(context: types.IExtensionContext): Promise<void> {
   const api = context.api;
   const options: IOpenOptions = {
     title: api.translate(
@@ -718,9 +716,7 @@ export async function deepRefresh(
   logDebug("deepRefresh", loadOrder);
 }
 
-async function readModSettings(
-  api: types.IExtensionApi,
-): Promise<IModSettings> {
+async function readModSettings(api: types.IExtensionApi): Promise<IModSettings> {
   const bg3ProfileId = await getActivePlayerProfile(api);
   const settingsPath: string = path.join(
     profilesPath(),
@@ -942,10 +938,9 @@ function getLatestLSLibMod(api: types.IExtensionApi) {
           });
         }
       }
-      return prev;
-    },
-    undefined,
-  );
+    }
+    return prev;
+  }, undefined);
 
   if (lsLib === undefined) {
     log("warn", "LSLib is not installed");
@@ -955,10 +950,7 @@ function getLatestLSLibMod(api: types.IExtensionApi) {
   return lsLib;
 }
 
-export function genProps(
-  context: types.IExtensionContext,
-  profileId?: string,
-): IProps {
+export function genProps(context: types.IExtensionContext, profileId?: string): IProps {
   const api = context.api;
   const state = api.getState();
   const profile: types.IProfile =
