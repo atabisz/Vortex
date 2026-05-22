@@ -24,14 +24,7 @@ export type RequiringMod = Omit<Pick<IModRequiring, "modId" | "modName">, "modId
 /**
  * A required mod that is missing
  */
-<<<<<<< HEAD
 export interface IModRequirementExt extends Omit<IModRequirement, "modId" | "gameId"> {
-=======
-export interface IModRequirementExt extends Omit<
-  IModRequirement,
-  "modId" | "gameId"
-> {
->>>>>>> v2.0.1
   /** Unique DB identifier */
   uid: string;
   /** The mod that requires this mod */
