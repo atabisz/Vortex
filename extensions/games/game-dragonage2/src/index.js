@@ -1,16 +1,10 @@
-<<<<<<< HEAD
 const { app, remote } = require("electron");
-=======
->>>>>>> v2.0.1
 const path = require("path");
 const { fs, util } = require("vortex-api");
 const winapi = require("winapi-bindings");
 
-<<<<<<< HEAD
 const appUni = app || remote.app;
 
-=======
->>>>>>> v2.0.1
 const STEAM_IDS = ["15543", "1238040"];
 function regget(key, val) {
   try {
@@ -40,11 +34,7 @@ function findGame() {
 
 function queryModPath() {
   return path.join(
-<<<<<<< HEAD
     appUni.getPath("documents"),
-=======
-    util.getVortexPath("documents"),
->>>>>>> v2.0.1
     "BioWare",
     "Dragon Age 2",
     "packages",
