@@ -4,10 +4,7 @@ import { Trans, withTranslation, WithTranslation } from "react-i18next";
 import { connect } from "react-redux";
 import * as TreeT from "react-sortable-tree";
 import {} from "react-sortable-tree-theme-file-explorer";
-<<<<<<< HEAD
 import { Action } from "redux-act";
-=======
->>>>>>> v2.0.1
 import {
   actions,
   ComponentEx,
@@ -232,12 +229,7 @@ class OverrideEditor extends ComponentEx<IProps, IComponentState> {
               </div>
               <div>
                 {t(
-<<<<<<< HEAD
                   "This lists only the files in the selected mod that aren't exclusive " + "to it.",
-=======
-                  "This lists only the files in the selected mod that aren't exclusive " +
-                    "to it.",
->>>>>>> v2.0.1
                 )}
               </div>
             </Usage>
