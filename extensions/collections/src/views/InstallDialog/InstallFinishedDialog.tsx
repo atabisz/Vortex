@@ -177,15 +177,7 @@ function InstallFinishedDialog(props: IInstallFinishedDialogProps) {
             }}
           >
             <Spinner />
-<<<<<<< HEAD
             <p>{t("Finalizing installation - deploying mods and applying collection rules...")}</p>
-=======
-            <p>
-              {t(
-                "Finalizing installation - deploying mods and applying collection rules...",
-              )}
-            </p>
->>>>>>> v2.0.1
           </div>
         ) : null}
       </Modal.Body>
