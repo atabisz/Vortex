@@ -29,12 +29,7 @@ function testUserContent(instructions) {
   return Promise.resolve(
     instructions.find(
       (instruction) =>
-<<<<<<< HEAD
         instruction.type === "copy" && path.basename(instruction.destination) === "cook.hash",
-=======
-        instruction.type === "copy" &&
-        path.basename(instruction.destination) === "cook.hash",
->>>>>>> v2.0.1
     ) !== undefined,
   );
 }
