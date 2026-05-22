@@ -3,10 +3,7 @@ import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { BasicTracerProvider } from "@opentelemetry/sdk-trace-base";
 
 import { createVortexResource } from "./resources";
-import {
-  RingBufferSpanProcessor,
-  type RingBufferOptions,
-} from "./RingBufferSpanProcessor";
+import { RingBufferSpanProcessor, type RingBufferOptions } from "./RingBufferSpanProcessor";
 import { isTelemetryEnabled, setProcessor } from "./state";
 
 export const COLLECTOR_URL =
@@ -18,9 +15,7 @@ export const OTLP_HEADERS: Record<string, string> = {};
  * Create and register the main-process TracerProvider.
  * Call once early in main process startup.
  */
-export const createMainTelemetryProvider = (
-  options?: RingBufferOptions,
-): void => {
+export const createMainTelemetryProvider = (options?: RingBufferOptions): void => {
   const resource = createVortexResource("main");
 
   const exporter = new OTLPTraceExporter({
