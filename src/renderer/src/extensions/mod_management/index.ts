@@ -348,10 +348,7 @@ async function deployAllModTypes(
   }
 }
 
-async function validateDeploymentTarget(
-  api: IExtensionApi,
-  undiscovered: string[],
-) {
+async function validateDeploymentTarget(api: IExtensionApi, undiscovered: string[]) {
   if (undiscovered.length === 0) {
     return;
   }
@@ -508,12 +505,7 @@ async function doMergeMods(
       stagingPath,
       modPaths[typeId],
       sortedModList.filter(
-<<<<<<< HEAD
         (mod) => (mod.type || "") === typeId && mod.installationPath !== undefined,
-=======
-        (mod) =>
-          (mod.type || "") === typeId && mod.installationPath !== undefined,
->>>>>>> v2.0.1
       ),
       lastDeployment[typeId],
       fileMergers.filter((merger) => merger.modType === typeId),
@@ -535,12 +527,7 @@ async function doMergeMods(
         };
       }
       result[mergeInfluences[outPath].modType].mergeInfluences[outPath] = [
-<<<<<<< HEAD
         ...(result[mergeInfluences[outPath].modType].mergeInfluences[outPath] ?? []),
-=======
-        ...(result[mergeInfluences[outPath].modType].mergeInfluences[outPath] ??
-          []),
->>>>>>> v2.0.1
         ...mergeInfluences[outPath].sources,
       ];
     });
@@ -648,8 +635,7 @@ function genUpdateModDeployment(installManager: InstallManager) {
       api.store.dispatch(updateNotification(notification.id, percent, text));
     };
     const state: IState = api.store.getState();
-    let profile: IProfile =
-      state.persistent.profiles?.[profileId] ?? activeProfile(state);
+    let profile: IProfile = state.persistent.profiles?.[profileId] ?? activeProfile(state);
 
     if (Object.keys(getSafe(state, ["session", "base", "toolsRunning"], {})).length > 0) {
       api.sendNotification({
@@ -764,14 +750,7 @@ function genUpdateModDeployment(installManager: InstallManager) {
               // Wait for active mod installations to complete before deploying
               // so we don't deploy half-installed mods.
               if (installManager.getActiveInstallationCount() > 0) {
-<<<<<<< HEAD
                 log("debug", "waiting for active installations before deploying");
-=======
-                log(
-                  "debug",
-                  "waiting for active installations before deploying",
-                );
->>>>>>> v2.0.1
                 await installManager.waitForIdle();
               }
 
@@ -783,12 +762,7 @@ function genUpdateModDeployment(installManager: InstallManager) {
 
               let mergeResult: { [modType: string]: IMergeResultByType };
               const lastDeployment: { [typeId: string]: IDeployedFile[] } = {};
-<<<<<<< HEAD
               const mods: Record<string, IMod> = state.persistent.mods?.[profile?.gameId] ?? {};
-=======
-              const mods: Record<string, IMod> =
-                state.persistent.mods?.[profile?.gameId] ?? {};
->>>>>>> v2.0.1
               notification.message = t("Deploying mods");
               api.sendNotification(notification);
               api.store.dispatch(startActivity("mods", "deployment"));
@@ -808,26 +782,12 @@ function genUpdateModDeployment(installManager: InstallManager) {
               }
 
               progress(t("Running pre-deployment events"), 2);
-<<<<<<< HEAD
               await api.emitAndAwait("will-deploy", profile.id, lastDeployment, deployOptions);
-=======
-              await api.emitAndAwait(
-                "will-deploy",
-                profile.id,
-                lastDeployment,
-                deployOptions,
-              );
->>>>>>> v2.0.1
 
               // need to update the profile so that if a will-deploy handler disables a mod, that
               // actually has an affect on this deployment
               const updatedState = api.getState();
-<<<<<<< HEAD
               const updatedProfile = updatedState.persistent.profiles[profile.id];
-=======
-              const updatedProfile =
-                updatedState.persistent.profiles[profile.id];
->>>>>>> v2.0.1
               if (updatedProfile !== undefined) {
                 profile = updatedProfile;
               } else {
@@ -913,17 +873,9 @@ function genUpdateModDeployment(installManager: InstallManager) {
                 message: err.message,
               });
             } else if (err instanceof TemporaryError) {
-<<<<<<< HEAD
               api.showErrorNotification("Failed to deploy mods, please try again", err.message, {
                 allowReport: false,
               });
-=======
-              api.showErrorNotification(
-                "Failed to deploy mods, please try again",
-                err.message,
-                { allowReport: false },
-              );
->>>>>>> v2.0.1
             } else if (err instanceof CycleError) {
               api.sendNotification({
                 id: "mod-cycle-warning",
@@ -959,14 +911,7 @@ function genUpdateModDeployment(installManager: InstallManager) {
                     err.message;
                 }
                 api.showErrorNotification("Failed to deploy mods", err, {
-<<<<<<< HEAD
                   allowReport: err["code"] !== "EPERM" && !isFSErr && err["allowReport"] !== false,
-=======
-                  allowReport:
-                    err["code"] !== "EPERM" &&
-                    !isFSErr &&
-                    err["allowReport"] !== false,
->>>>>>> v2.0.1
                 });
               }
             }
@@ -1152,12 +1097,7 @@ function genValidActivatorCheck(api: IExtensionApi) {
                       gameId,
                       reason: JSON.stringify(reason),
                     });
-<<<<<<< HEAD
                     message = "<Missing description, please report this and include a log file>";
-=======
-                    message =
-                      "<Missing description, please report this and include a log file>";
->>>>>>> v2.0.1
                   }
                   return {
                     activator: reason.activator,
@@ -1324,18 +1264,10 @@ function onDeploySingleMod(api: IExtensionApi) {
               new BlacklistSet(mod.fileOverrides ?? [], game, normalize),
             );
           } else {
-            await activator.deactivate(
-              modPath,
-              subdir(mod),
-              mod.installationPath,
-            );
+            await activator.deactivate(modPath, subdir(mod), mod.installationPath);
           }
         }
-        const newActivation = await activator.finalize(
-          gameId,
-          dataPath,
-          stagingPath,
-        );
+        const newActivation = await activator.finalize(gameId, dataPath, stagingPath);
         await doSaveActivation(
           api,
           gameId,
@@ -1529,7 +1461,6 @@ function once(api: IExtensionApi) {
 
   api.onAsync("deploy-single-mod", onDeploySingleMod(api));
 
-<<<<<<< HEAD
   api.onAsync("purge-mods-in-path", (gameId: string, modType: string, modPath: string) => {
     return purgeModsInPath(api, gameId, modType, modPath).catch((err) => {
       if (err instanceof UserCanceled) {
@@ -1552,33 +1483,6 @@ function once(api: IExtensionApi) {
       api.showErrorNotification("Failed to purge mods", err);
     });
   });
-=======
-  api.onAsync(
-    "purge-mods-in-path",
-    (gameId: string, modType: string, modPath: string) => {
-      return purgeModsInPath(api, gameId, modType, modPath).catch((err) => {
-        if (err instanceof UserCanceled) {
-          return Promise.resolve();
-        }
-        if (err instanceof NoDeployment) {
-          api.showErrorNotification(
-            "Failed to purge mods",
-            "No deployment method currently available",
-            { allowReport: false },
-          );
-          return;
-        }
-        if (err instanceof ProcessCanceled) {
-          api.showErrorNotification("Failed to purge mods", err, {
-            allowReport: false,
-          });
-          return;
-        }
-        api.showErrorNotification("Failed to purge mods", err);
-      });
-    },
-  );
->>>>>>> v2.0.1
 
   api.events.on("purge-mods", (allowFallback: boolean, callback: (err: Error) => void) => {
     purgeMods(api)
@@ -1619,25 +1523,9 @@ function once(api: IExtensionApi) {
       Promise.all(
         modIds.map((modId) =>
           installManager
-<<<<<<< HEAD
             .installDependencies(api, profile, gameId, modId, silent === true, false)
             .catch((err) => {
               if (err instanceof ProcessCanceled || err instanceof UserCanceled) {
-=======
-            .installDependencies(
-              api,
-              profile,
-              gameId,
-              modId,
-              silent === true,
-              false,
-            )
-            .catch((err) => {
-              if (
-                err instanceof ProcessCanceled ||
-                err instanceof UserCanceled
-              ) {
->>>>>>> v2.0.1
                 return null;
               }
               throw err;
@@ -1661,7 +1549,6 @@ function once(api: IExtensionApi) {
 
         Promise.all(
           modIds.map((modId) =>
-<<<<<<< HEAD
             installManager.installRecommendations(api, profile, gameId, modId).catch((err) => {
               if (err instanceof ProcessCanceled) {
                 return null;
@@ -1670,20 +1557,6 @@ function once(api: IExtensionApi) {
             }),
           ),
         ).catch((err) => api.showErrorNotification("Failed to install recommendations", err));
-=======
-            installManager
-              .installRecommendations(api, profile, gameId, modId)
-              .catch((err) => {
-                if (err instanceof ProcessCanceled) {
-                  return null;
-                }
-                throw err;
-              }),
-          ),
-        ).catch((err) =>
-          api.showErrorNotification("Failed to install recommendations", err),
-        );
->>>>>>> v2.0.1
       } catch (err) {
         api.showErrorNotification("Failed to install recommendations", err);
       }
@@ -1783,26 +1656,8 @@ function once(api: IExtensionApi) {
 
   api.events.on(
     "remove-mod",
-<<<<<<< HEAD
     (gameId: string, modId: string, cb?: (error: Error) => void, options?: IRemoveModOptions) =>
       onRemoveMod(api, getAllActivators(), installManager, gameId, modId, cb, options),
-=======
-    (
-      gameId: string,
-      modId: string,
-      cb?: (error: Error) => void,
-      options?: IRemoveModOptions,
-    ) =>
-      onRemoveMod(
-        api,
-        getAllActivators(),
-        installManager,
-        gameId,
-        modId,
-        cb,
-        options,
-      ),
->>>>>>> v2.0.1
   );
 
   api.events.on(
@@ -1813,19 +1668,7 @@ function once(api: IExtensionApi) {
       cb?: (error: Error) => void,
       options?: IRemoveModOptions,
     ) => {
-<<<<<<< HEAD
       onRemoveMods(api, getAllActivators(), installManager, gameId, modIds, cb, options);
-=======
-      onRemoveMods(
-        api,
-        getAllActivators(),
-        installManager,
-        gameId,
-        modIds,
-        cb,
-        options,
-      );
->>>>>>> v2.0.1
     },
   );
 
@@ -2183,12 +2026,7 @@ function init(context: IExtensionContext): boolean {
                   id: "useFolderContents",
                   value: true,
                   text:
-<<<<<<< HEAD
                     "Use the folder's contents as the mod " + "(folder name becomes the mod name)",
-=======
-                    "Use the folder's contents as the mod " +
-                    "(folder name becomes the mod name)",
->>>>>>> v2.0.1
                 },
               ],
             }
@@ -2201,12 +2039,7 @@ function init(context: IExtensionContext): boolean {
       return;
     }
 
-<<<<<<< HEAD
     const flatten = singleFolderPath !== undefined && result.input.useFolderContents === true;
-=======
-    const flatten =
-      singleFolderPath !== undefined && result.input.useFolderContents === true;
->>>>>>> v2.0.1
 
     const baseName = flatten
       ? path.basename(singleFolderPath)
@@ -2215,12 +2048,7 @@ function init(context: IExtensionContext): boolean {
         : undefined;
 
     const modName = baseName ?? "New Mod";
-<<<<<<< HEAD
     const modId = baseName !== undefined ? deriveModInstallName(baseName, {}) : shortid();
-=======
-    const modId =
-      baseName !== undefined ? deriveModInstallName(baseName, {}) : shortid();
->>>>>>> v2.0.1
 
     const mod: IMod = {
       id: modId,
@@ -2245,25 +2073,11 @@ function init(context: IExtensionContext): boolean {
         if (flatten && singleFolderPath !== undefined) {
           const children = await fs.readdirAsync(singleFolderPath);
           for (const child of children) {
-<<<<<<< HEAD
             await fs.copyAsync(path.join(singleFolderPath, child), path.join(modPath, child));
           }
         } else {
           for (const filePath of filePaths) {
             await fs.copyAsync(filePath, path.join(modPath, path.basename(filePath)));
-=======
-            await fs.copyAsync(
-              path.join(singleFolderPath, child),
-              path.join(modPath, child),
-            );
-          }
-        } else {
-          for (const filePath of filePaths) {
-            await fs.copyAsync(
-              filePath,
-              path.join(modPath, path.basename(filePath)),
-            );
->>>>>>> v2.0.1
           }
         }
       } catch (copyErr) {
