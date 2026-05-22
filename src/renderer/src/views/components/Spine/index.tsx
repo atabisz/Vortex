@@ -14,8 +14,7 @@ import { useSpineContext } from "./SpineContext";
 import { formatGameDisplayName, getGameImageUrls } from "./utils";
 
 export const Spine: FC = () => {
-  const { selection, selectHome, selectGame, selectGlobalPage } =
-    useSpineContext();
+  const { selection, selectHome, selectGame, selectGlobalPage } = useSpineContext();
 
   const [canScrollUp, setCanScrollUp] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -85,13 +84,7 @@ export const Spine: FC = () => {
               return (
                 <GameButton
                   cacheKey={cacheKey}
-<<<<<<< HEAD
                   isActive={selection.type === "game" && selection.gameId === game.id}
-=======
-                  isActive={
-                    selection.type === "game" && selection.gameId === game.id
-                  }
->>>>>>> v2.0.1
                   key={game.id}
                   preferred={preferred}
                   sources={sources}
