@@ -5,17 +5,10 @@ export const setPrimaryTool = createAction(
   (gameId: string, toolId: string) => ({ gameId, toolId }),
 );
 
-<<<<<<< HEAD
 export const setToolOrder = createAction("SET_TOOLS_ORDER", (gameId: string, tools: string[]) => ({
   gameId,
   tools,
 }));
-=======
-export const setToolOrder = createAction(
-  "SET_TOOLS_ORDER",
-  (gameId: string, tools: string[]) => ({ gameId, tools }),
-);
->>>>>>> v2.0.1
 
 export const setToolValid = createAction(
   "SET_TOOL_IS_VALID",
