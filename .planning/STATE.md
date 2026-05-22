@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Upstream v2.0.0 Sync
 status: executing
-stopped_at: Phase 29 complete; ready for Phase 30 land + tag
-last_updated: "2026-05-22T10:10:00Z"
-last_activity: 2026-05-22
+stopped_at: Phase 29 complete; ready for Phase 30 plan
+last_updated: "2026-05-22T00:54:01.669Z"
+last_activity: 2026-05-22 -- Phase 30 planning complete
 progress:
     total_phases: 8
     completed_phases: 6
-    total_plans: 59
+    total_plans: 68
     completed_plans: 59
-    percent: 75
+    percent: 87
 ---
 
 # Project State
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 
 Phase: 29 (build-verification) — COMPLETE 2026-05-22
 Plan: 11 of 11 (29-00..29-10 complete; SYNC-01/21/28/29/30/31/32/33/34 all PASS; SYNC-33 part C + SYNC-34 four-screenshot walkthrough deferred to Phase 30 against canonical tag)
-Status: Phase 29 complete; ready for Phase 30 land + tag
-Last activity: 2026-05-22
+Status: Ready to execute
+Last activity: 2026-05-22 -- Phase 30 planning complete
 
 Progress: [██████████] 100% (Phase 29 complete)
 
