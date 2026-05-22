@@ -2,22 +2,14 @@ import { IRevision } from "@nexusmods/nexus-api";
 import * as nexus from "@nexusmods/nexus-api";
 import * as React from "react";
 import { Button, Checkbox, FormGroup } from "react-bootstrap";
-<<<<<<< HEAD
 import { useTranslation } from "react-i18next";
-=======
-import { MainContext, types, Modal, selectors, util } from "vortex-api";
-import { NAMESPACE } from "../../constants";
->>>>>>> v2.0.1
 import { useDispatch, useSelector } from "react-redux";
 import { MainContext, types, Modal, selectors, util } from "vortex-api";
 
-<<<<<<< HEAD
 import { updateSuccessRate } from "../../actions/persistent";
 import { healthDownvoteDialog } from "../../actions/session";
 import { NAMESPACE } from "../../constants";
 
-=======
->>>>>>> v2.0.1
 export interface IHealthDownvoteDialogProps {}
 
 function HealthDownvoteDialog(props: IHealthDownvoteDialogProps) {
