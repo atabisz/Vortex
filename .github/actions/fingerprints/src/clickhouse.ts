@@ -1,21 +1,11 @@
 import * as core from "@actions/core";
 import { ClickHouseClient, createClient } from "@clickhouse/client";
-<<<<<<< HEAD
 
-=======
->>>>>>> v2.0.1
 import { DbMode, FINGERPRINT_RE, FingerprintRow } from "./types";
 
 const TABLE = "vortex.resolved_fingerprints";
 
-<<<<<<< HEAD
 const insertRows = async (client: ClickHouseClient, rows: FingerprintRow[]): Promise<void> => {
-=======
-const insertRows = async (
-  client: ClickHouseClient,
-  rows: FingerprintRow[],
-): Promise<void> => {
->>>>>>> v2.0.1
   const updatedAt = new Date().toISOString().replace("T", " ").substring(0, 19);
   const values = rows.map((r) => ({
     fingerprint: r.fingerprint,
@@ -33,14 +23,7 @@ const insertRows = async (
   });
 };
 
-<<<<<<< HEAD
 const deleteRows = async (client: ClickHouseClient, rows: FingerprintRow[]): Promise<void> => {
-=======
-const deleteRows = async (
-  client: ClickHouseClient,
-  rows: FingerprintRow[],
-): Promise<void> => {
->>>>>>> v2.0.1
   const fingerprints = [...new Set(rows.map((r) => r.fingerprint))];
 
   // Lightweight DELETE (ClickHouse 23.3+). Fingerprints are bound as
@@ -58,14 +41,7 @@ const deleteRows = async (
  * 23.3+). Re-validates each fingerprint as defense-in-depth before issuing
  * the query.
  */
-<<<<<<< HEAD
 export const applyToClickHouse = async (dbMode: DbMode, rows: FingerprintRow[]): Promise<void> => {
-=======
-export const applyToClickHouse = async (
-  dbMode: DbMode,
-  rows: FingerprintRow[],
-): Promise<void> => {
->>>>>>> v2.0.1
   for (const r of rows) {
     if (!r.fingerprint || !FINGERPRINT_RE.test(r.fingerprint)) {
       throw new Error(`Invalid or missing fingerprint: ${JSON.stringify(r)}`);
