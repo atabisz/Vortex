@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Upstream v2.0.0 Sync
-status: executing
-stopped_at: Phase 29 complete; ready for Phase 30 plan
-last_updated: "2026-05-22T00:54:01.669Z"
-last_activity: 2026-05-22 -- Phase 30 planning complete
+status: complete
+stopped_at: Phase 30 complete; v8.0 milestone done
+last_updated: "2026-05-22T07:30:00.000Z"
+last_activity: 2026-05-22 -- Phase 30 complete; v8.0 milestone closed
 progress:
     total_phases: 8
-    completed_phases: 6
+    completed_phases: 7
     total_plans: 68
-    completed_plans: 59
-    percent: 87
+    completed_plans: 68
+    percent: 100
 ---
 
 # Project State
@@ -21,18 +21,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** Phase 30 — land + tag, FF-merge PR #4, cherry-pick to linux-port, RC cleanup (next)
+**Current focus:** v8.0 (Upstream v2.0.0 Sync) milestone CLOSED — next work moves to v8.1+ backlog.
 
 ## Current Position
 
-Phase: 29 (build-verification) — COMPLETE 2026-05-22
-Plan: 11 of 11 (29-00..29-10 complete; SYNC-01/21/28/29/30/31/32/33/34 all PASS; SYNC-33 part C + SYNC-34 four-screenshot walkthrough deferred to Phase 30 against canonical tag)
-Status: Ready to execute
-Last activity: 2026-05-22 -- Phase 30 planning complete
+Phase: 30 (land-tag) — COMPLETE 2026-05-22
+Plan: 9 of 9 (30-00..30-08 complete; SYNC-35/36/37/38/39 PASS; SYNC-33-C + SYNC-34 carry-forwards from Phase 29 DEFERRED to v8.1 per playbook §DEFERRED pattern)
+Status: v8.0 milestone CLOSED
+Last activity: 2026-05-22 -- Phase 30 complete; v8.0 milestone closed
 
-Progress: [██████████] 100% (Phase 29 complete)
+Progress: [██████████] 100% (Phase 30 complete; v8.0 milestone closed)
 
-RC tag `v2.0.0-linux-rebased-rc1` published (run [26259632336](https://github.com/atabisz/Vortex/actions/runs/26259632336)) — AppImage + .deb artefacts pinned in `29-SMOKE-EVIDENCE.md`. Done-gate at `7103a8003` on `fork/sync/upstream-v2.0.0`. Working tree clean.
+Canonical tag `v2.0.0-linux-rebased` SSH-signed at `f570149ea` (annotated tag object `634a5cc1a`). AppImage + .deb published with deterministic SHA256s via release-linux.yml run [26270905415](https://github.com/atabisz/Vortex/actions/runs/26270905415). PR #4 fast-forward merged onto master (FF parents-count = 1, bare FF SHA `cf9a8a599`). linux-port at `6a28945d1` (75 cherry-picks landed; 91 dropped as superseded). VORTEX-LINUX-MERGE-PLAYBOOK.md milestone post-mortem captured in single signed commit `2474c3d0d`. Working tree clean.
+
+**v8.1 backlog seed:** SYNC-39 linux-port catch-up (6 baseline-drift typecheck errors), SYNC-33-C local-boot + SYNC-34 4-screenshot walkthrough against canonical artefacts, AppImage update channel, GH-Actions step bumps, `@vortex/api` regen-as-chore, ROADMAP Phase 28 progress-table row drift at line 301.
 
 ## Performance Metrics
 
@@ -263,6 +265,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-22T10:10:00Z
-Stopped at: Phase 29 complete; ready for Phase 30 plan
+Last session: 2026-05-22T07:30:00Z
+Stopped at: Phase 30 complete; v8.0 milestone done
 Resume file: None
