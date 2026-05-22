@@ -12,13 +12,7 @@ function testSupported(files, gameId) {
     return Promise.resolve({ supported: false });
   }
 
-<<<<<<< HEAD
   const contentPath = files.find((file) => path.basename(file) === "content.xml");
-=======
-  const contentPath = files.find(
-    (file) => path.basename(file) === "content.xml",
-  );
->>>>>>> v2.0.1
   return Promise.resolve({
     supported: contentPath !== undefined,
     requiredFiles: [contentPath],
@@ -26,37 +20,19 @@ function testSupported(files, gameId) {
 }
 
 function install(files, destinationPath, gameId, progressDelegate) {
-<<<<<<< HEAD
   const contentPath = files.find((file) => path.basename(file) === "content.xml");
-=======
-  const contentPath = files.find(
-    (file) => path.basename(file) === "content.xml",
-  );
->>>>>>> v2.0.1
   const basePath = path.dirname(contentPath);
 
   let outputPath = basePath;
 
   return fs
-<<<<<<< HEAD
     .readFileAsync(path.join(destinationPath, contentPath), { encoding: "utf8" })
-=======
-    .readFileAsync(path.join(destinationPath, contentPath), {
-      encoding: "utf8",
-    })
->>>>>>> v2.0.1
     .then(async (data) => {
       let parsed;
       try {
         parsed = await parseStringPromise(data);
       } catch (err) {
-<<<<<<< HEAD
         return Promise.reject(new util.DataInvalid("content.xml invalid: " + err.message));
-=======
-        return Promise.reject(
-          new util.DataInvalid("content.xml invalid: " + err.message),
-        );
->>>>>>> v2.0.1
       }
       const attrInstructions = [];
 
@@ -70,13 +46,7 @@ function install(files, destinationPath, gameId, progressDelegate) {
 
       outputPath = getAttr("id");
       if (outputPath === undefined) {
-<<<<<<< HEAD
         return Promise.reject(new util.DataInvalid("invalid or unsupported content.xml"));
-=======
-        return Promise.reject(
-          new util.DataInvalid("invalid or unsupported content.xml"),
-        );
->>>>>>> v2.0.1
       }
       attrInstructions.push({
         type: "attribute",
@@ -108,25 +78,11 @@ function install(files, destinationPath, gameId, progressDelegate) {
     .then((attrInstructions) => {
       let instructions = attrInstructions.concat(
         files
-<<<<<<< HEAD
           .filter((file) => file.startsWith(basePath + path.sep) && !file.endsWith(path.sep))
           .map((file) => ({
             type: "copy",
             source: file,
             destination: path.join(outputPath, file.substring(basePath.length + 1)),
-=======
-          .filter(
-            (file) =>
-              file.startsWith(basePath + path.sep) && !file.endsWith(path.sep),
-          )
-          .map((file) => ({
-            type: "copy",
-            source: file,
-            destination: path.join(
-              outputPath,
-              file.substring(basePath.length + 1),
-            ),
->>>>>>> v2.0.1
           })),
       );
       return { instructions };
