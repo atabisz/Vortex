@@ -4,13 +4,13 @@ milestone: v8.1
 milestone_name: Upstream v2.0.1 Sync
 status: executing
 stopped_at: Phase 34 context gathered
-last_updated: "2026-05-22T18:35:42.364Z"
-last_activity: 2026-05-23 -- Phase 34 Wave 0 complete (harness extended to 13 gates, gate-13 single-host getIPCPath added, gate-14 marker scope broadened)
+last_updated: "2026-05-22T18:43:35.231Z"
+last_activity: 2026-05-23 -- Phase 34 Wave A complete (5 atomic SSH-signed resolve commits + 1 SUMMARY commit on v8.1/config-bucket; types/errors.ts, types/state.ts, errors.ts, telemetry/spans.ts, errors.test.ts; AlreadyDownloaded + DownloadIsHTML preserved; isUserCanceled merged in; bulk persistor methods adopted; harness 13/13 GREEN in skip-mode)
 progress:
     total_phases: 8
     completed_phases: 2
     total_plans: 26
-    completed_plans: 27
+    completed_plans: 28
     percent: 25
 ---
 
@@ -88,6 +88,7 @@ _Updated after each plan completion_
 | Phase 23-help-links P01 | 3min | 2 tasks | 5 files |
 | Phase 23 P02 | 2min | 1 tasks | 1 files |
 | Phase 23-help-links P02 | 5min | 2 tasks | 1 files |
+| Phase 34 P02 | 10 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -222,9 +223,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-22T17:18:07.302Z
+Last session: 2026-05-22T18:43:35.219Z
 Stopped at: Phase 34 context gathered
-Resume file: .planning/phases/34-renderer-main-spine-v2-0-1/34-CONTEXT.md
+Resume file: None
 
 ### Phase 33 close-out summary
 
