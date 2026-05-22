@@ -1,8 +1,5 @@
 const Promise = require("bluebird");
-<<<<<<< HEAD
 const { remote } = require("electron");
-=======
->>>>>>> v2.0.1
 const path = require("path");
 const { fs, log, util } = require("vortex-api");
 
@@ -12,13 +9,8 @@ function findGame() {
 
 function modPath() {
   return process.platform === "win32"
-<<<<<<< HEAD
     ? path.join(remote.app.getPath("appData"), "Factorio", "mods")
     : path.join(remote.app.getPath("home"), ".factorio", "mods");
-=======
-    ? path.join(util.getVortexPath("appData"), "Factorio", "mods")
-    : path.join(util.getVortexPath("home"), ".factorio", "mods");
->>>>>>> v2.0.1
 }
 
 function gameExecutable() {
