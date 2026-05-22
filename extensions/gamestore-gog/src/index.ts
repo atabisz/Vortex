@@ -171,31 +171,14 @@ class GoGLauncher implements types.IGameStore {
                 .map((key) => {
                   try {
                     const gameEntry: types.IGameStoreEntry = {
-<<<<<<< HEAD
                       appid: winapi.RegGetValue(hkey, key.key, "gameID").value as string,
                       gamePath: winapi.RegGetValue(hkey, key.key, "path").value as string,
                       name: winapi.RegGetValue(hkey, key.key, "startMenu").value as string,
-=======
-                      appid: winapi.RegGetValue(hkey, key.key, "gameID")
-                        .value as string,
-                      gamePath: winapi.RegGetValue(hkey, key.key, "path")
-                        .value as string,
-                      name: winapi.RegGetValue(hkey, key.key, "startMenu")
-                        .value as string,
->>>>>>> v2.0.1
                       gameStoreId: STORE_ID,
                     };
                     return gameEntry;
                   } catch (err) {
-<<<<<<< HEAD
                     log("error", "gamestore-gog: failed to create game entry", err);
-=======
-                    log(
-                      "error",
-                      "gamestore-gog: failed to create game entry",
-                      err,
-                    );
->>>>>>> v2.0.1
                     // Don't stop, keep going.
                     return undefined;
                   }
