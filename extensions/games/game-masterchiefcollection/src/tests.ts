@@ -1,13 +1,8 @@
 /* eslint-disable */
 import path from "path";
-<<<<<<< HEAD
 
 import { fs, selectors, types, util } from "vortex-api";
 
-=======
-import { fs, selectors, types, util } from "vortex-api";
-
->>>>>>> v2.0.1
 import { GAME_ID, HALO1_MAPS_RELPATH, HALO_GAMES } from "./common";
 
 const MAP_NUMBER_CONSTRAINT = 28;
