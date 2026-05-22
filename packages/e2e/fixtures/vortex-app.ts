@@ -10,13 +10,6 @@ import {
   type ElectronApplication,
   type Page,
 } from "@playwright/test";
-<<<<<<< HEAD
-=======
-import path from "node:path";
-import fs from "node:fs";
-import os from "node:os";
-import { createRequire } from "node:module";
->>>>>>> v2.0.1
 
 /** Package root (packages/e2e/) — used for resolving node_modules. */
 const PACKAGE_ROOT = path.resolve(import.meta.dirname, "..");
@@ -52,11 +45,7 @@ function buildElectronEnv(userDataDir: string): Record<string, string> {
   const appDataDir = path.join(userDataDir, "appData");
   const userDataSubDir = path.join(userDataDir, "userData");
   // Pre-create the app name subdirectory that Vortex expects for startup.json.
-<<<<<<< HEAD
   // The app name comes from src/main/package.json ('@vortex/main').
-=======
-  // The app name comes from src/main/package.json ("@vortex/main").
->>>>>>> v2.0.1
   const appNameDir = path.join(appDataDir, "@vortex", "main");
   fs.mkdirSync(appNameDir, { recursive: true });
   fs.mkdirSync(userDataSubDir, { recursive: true });
@@ -74,9 +63,7 @@ function buildElectronEnv(userDataDir: string): Record<string, string> {
 /**
  * Wait for the main window (index.html) to appear, skipping the splash screen.
  */
-async function waitForMainWindow(
-  vortexApp: ElectronApplication,
-): Promise<Page> {
+async function waitForMainWindow(vortexApp: ElectronApplication): Promise<Page> {
   const isMainWindow = (win: Page): boolean => {
     try {
       return win.url().includes("index.html");
@@ -115,11 +102,7 @@ async function waitForMainWindow(
       reject(
         new Error(
           `Vortex process exited unexpectedly with code ${code} before the main window appeared. ` +
-<<<<<<< HEAD
             `Check the app logs for 'App threw an error during load' or similar startup errors.`,
-=======
-            `Check the app logs for "App threw an error during load" or similar startup errors.`,
->>>>>>> v2.0.1
         ),
       );
     };
@@ -145,13 +128,7 @@ async function waitForMainWindow(
       if (lastWindow) {
         resolve(lastWindow);
       } else {
-<<<<<<< HEAD
         reject(new Error("Timed out waiting for the Vortex main window to appear."));
-=======
-        reject(
-          new Error("Timed out waiting for the Vortex main window to appear."),
-        );
->>>>>>> v2.0.1
       }
     }, 120_000);
   });
@@ -227,16 +204,9 @@ export const test = base.extend<VortexTestFixtures, VortexWorkerFixtures>({
 
       // Wait for the app to actually render — domcontentloaded fires before
       // React renders anything. On CI with multiple workers this can be slow.
-<<<<<<< HEAD
       await mainWindow.waitForFunction(() => (document.body?.innerText?.length ?? 0) > 0, {
         timeout: 60_000,
       });
-=======
-      await mainWindow.waitForFunction(
-        "(document.body?.innerText?.length ?? 0) > 0",
-        { timeout: 60_000 },
-      );
->>>>>>> v2.0.1
 
       await use(mainWindow);
     },
