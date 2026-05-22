@@ -308,13 +308,7 @@ class PluginPersistor implements types.IPersistor {
     // itself and strips any that appear in plugins.txt / loadorder.txt on launch.
     const sorted: string[] = Object.keys(this.mKnownPlugins)
       .filter((pluginId) => !this.mBlueprintPluginIds.has(pluginId))
-<<<<<<< HEAD
       .sort((lhs: string, rhs: string) => this.loadOrder(lhs) - this.loadOrder(rhs))
-=======
-      .sort(
-        (lhs: string, rhs: string) => this.loadOrder(lhs) - this.loadOrder(rhs),
-      )
->>>>>>> v2.0.1
       .filter((pluginId) => pluginId !== undefined)
       .map((pluginId) => this.mKnownPlugins[pluginId]);
 
