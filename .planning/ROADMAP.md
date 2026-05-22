@@ -94,61 +94,84 @@
 
 ## Active Milestone — v8.1 Upstream v2.0.1 Sync
 
-**Goal:** Fold upstream v2.0.1 (PR #5) into the fork on top of `v2.0.0-linux-rebased`. Every Linux fix preserved. `pnpm run build` and `pnpm run test` pass on master with the merged tree. Closing artifact is FF-merge of `sync/upstream-v2.0.1` tagged `v2.0.1-linux-rebased`.
+**Milestone goal:** Fold upstream v2.0.1 (PR #5) into the fork on top of `v2.0.0-linux-rebased`. Every Linux fix preserved. `pnpm run build` and `pnpm run test` pass on master with the merged tree. Closing artifact is FF-merge of `sync/upstream-v2.0.1` tagged `v2.0.1-linux-rebased`.
 
 **Branch:** `v8.1/config-bucket` (Phase 31 work; pushed to fork). Subsequent phases stack on top of this branch until the rebase + FF-merge in Phase 36.
 
-| #   | Phase                          | Goal                                                                                                                                                                                               | Requirements       | Status                 |
-| --- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------------- |
-| 31  | Config bucket                  | Workspace + lockfile + root configs parse; `pnpm install --frozen-lockfile` exits 0                                                                                                                | SYNC-31a           | ✅ complete 2026-05-22 |
-| 32  | Mod-management hot zone        | Resolve `InstallManager.ts`, `LinkingDeployment.ts`, `DownloadManager.ts`, `externalChanges.ts`, `mod_management/`, `stagingDirectory.ts`, `views/ModList.tsx` with playbook §6/§7 sites preserved | SYNC-32a           | pending                |
-| 33  | Gamebryo + per-game extensions | Resolve gamebryo-{plugin,savegame}-mgmt, collections, modtype-bepinex, BG3, Morrowind, Witcher 3 with playbook §1/§3/§10 preserved; re-add catalog entries pnpm dropped                            | SYNC-33a, SYNC-33b | pending                |
-| 34  | Renderer + main spine          | Resolve ExtensionManager, controls/Table, Application, cli, errorReporting, autoupdater, TrayIcon, store, preload, shared, nexus_integration; document Jest `__mocks__/` decision                  | SYNC-34a, SYNC-34b | pending                |
-| 35  | Build verification             | typecheck/lint/test/build all green; reconcile orphan `electron-builder.config.json`                                                                                                               | SYNC-35a–e         | pending                |
-| 36  | Land + tag + cherry-pick       | Rebase + FF-merge PR #5; tag `v2.0.1-linux-rebased` SSH-signed; cherry-pick Linux-only commits to `linux-port`; release-linux.yml produces AppImage + deb                                          | SYNC-36a–d         | pending                |
-| 37  | Carry-forward UAT              | Document carry-forward of SYNC-33-C, SYNC-34, SYNC-39 from v8.0; update `VORTEX-LINUX-MERGE-PLAYBOOK.md` with new entries discovered                                                               | SYNC-37a, SYNC-37b | pending                |
+### Phase 31: Config bucket (v2.0.1)
 
-### Success criteria (per phase)
-
-**Phase 31** ✅
+**Goal:** Workspace + lockfile + root configs parse; `pnpm install --frozen-lockfile` exits 0.
+**Requirements:** SYNC-31a
+**Status:** ✅ Complete 2026-05-22 (8/8 plans; pushed to fork as `v8.1/config-bucket`, 13 commits ahead of `fork/master`)
+**Success criteria:**
 
 1. `pnpm-workspace.yaml` parses; `@electron/rebuild`, `leveldown`, `levelup` retained per D-31-07/09
 2. `pnpm-lock.yaml` regenerated; `pnpm install --frozen-lockfile` exits 0
 3. `package.json`, `vitest.config.ts`, `prepare-dist-package.mjs` resolved keep-HEAD
-4. Branch `v8.1/config-bucket` pushed to fork (13 commits ahead of `fork/master`)
+4. Branch `v8.1/config-bucket` pushed to fork
 
-**Phase 32**
+### Phase 32: Mod-management hot zone (v2.0.1)
+
+**Goal:** Resolve `InstallManager.ts`, `LinkingDeployment.ts`, `DownloadManager.ts`, `externalChanges.ts`, `mod_management/{index,eventHandlers}.ts`, `stagingDirectory.ts`, `util/deploy.ts`, `views/ModList.tsx` with playbook §6/§7/externalChanges sites preserved.
+**Requirements:** SYNC-32a
+**Canonical refs:** VORTEX-LINUX-MERGE-PLAYBOOK.md, .planning/milestones/v8.0-phases/26-mod-management-hot-zone (v8.0 precedent)
+**Success criteria:**
 
 1. Every playbook §6/§7/externalChanges call site present and correctly placed in resolved files
 2. `pnpm typecheck` clean for `@vortex/renderer` and `@vortex/main`
 3. Atomic commit per resolved file with decision-anchored stance
 
-**Phase 33**
+### Phase 33: Gamebryo + per-game extensions (v2.0.1)
+
+**Goal:** Resolve gamebryo-{plugin,savegame}-mgmt, collections, modtype-bepinex, BG3, Morrowind, Witcher 3 with playbook §1 (guards), §3 (LOOT casing), §10 (native binaries) preserved; re-add catalog entries pnpm dropped in Phase 31.
+**Requirements:** SYNC-33a, SYNC-33b
+**Canonical refs:** VORTEX-LINUX-MERGE-PLAYBOOK.md, .planning/milestones/v8.0-phases/27-gamebryo-and-per-game-extensions
+**Success criteria:**
 
 1. Every playbook §1 (guards), §3 (LOOT casing), §10 (native binaries) site preserved
 2. Each extension passes its own typecheck and build
 3. Catalog entries (`esptk`, `exe-version`, `gamebryo-savegame`, `native-errors`) re-added when consumers restored
 
-**Phase 34**
+### Phase 34: Renderer + main spine (v2.0.1)
+
+**Goal:** Resolve ExtensionManager, controls/Table, Application, cli, errorReporting, autoupdater, TrayIcon, store/{DuckDBSingleton,LevelPersist}, preload/index, shared/{errors,errors.test,telemetry/spans}, nexus_integration; document Jest `__mocks__/` decision (R2 carry-forward from 31-01).
+**Requirements:** SYNC-34a, SYNC-34b
+**Canonical refs:** VORTEX-LINUX-MERGE-PLAYBOOK.md, .planning/milestones/v8.0-phases/28-renderer-main-spine
+**Success criteria:**
 
 1. Process-boot path resolved (Application, cli, errorReporting, autoupdater) with Linux platform guards intact
 2. Jest `__mocks__/` decision documented (drop or restore)
 3. `pnpm typecheck` clean across all workspaces
 
-**Phase 35**
+### Phase 35: Build verification (v2.0.1)
+
+**Goal:** typecheck/lint/test/build all green; reconcile orphan `electron-builder.config.json` (R3 carry-forward from 31-01).
+**Requirements:** SYNC-35a, SYNC-35b, SYNC-35c, SYNC-35d, SYNC-35e
+**Canonical refs:** .planning/milestones/v8.0-phases/29-build-verification
+**Success criteria:**
 
 1. `pnpm run typecheck`, `pnpm run lint`, `pnpm run test`, `pnpm run build` all exit 0
 2. Lint baseline-parity with `fork/master` (no new errors)
 3. Orphan `electron-builder.config.json` removed or reconciled
 
-**Phase 36**
+### Phase 36: Land + tag + cherry-pick (v2.0.1)
+
+**Goal:** Rebase + FF-merge PR #5; tag `v2.0.1-linux-rebased` SSH-signed; cherry-pick Linux-only commits to `linux-port`; release-linux.yml produces AppImage + deb.
+**Requirements:** SYNC-36a, SYNC-36b, SYNC-36c, SYNC-36d
+**Canonical refs:** .planning/milestones/v8.0-phases/30-land-tag (v8.0 D-30-01/02/03 playbook)
+**Success criteria:**
 
 1. `gh pr merge 5 --merge=fast-forward` succeeds
 2. SSH-signed `v2.0.1-linux-rebased` tag pushed to origin + fork
 3. `release-linux.yml` produces AppImage + .deb with SHA256 manifest
 4. `linux-port` branch updated with cherry-picked Linux commits
 
-**Phase 37**
+### Phase 37: Carry-forward UAT (v2.0.1)
+
+**Goal:** Document carry-forward of SYNC-33-C, SYNC-34, SYNC-39 from v8.0; update `VORTEX-LINUX-MERGE-PLAYBOOK.md` with new entries discovered during v8.1 conflict resolution.
+**Requirements:** SYNC-37a, SYNC-37b
+**Canonical refs:** VORTEX-LINUX-MERGE-PLAYBOOK.md
+**Success criteria:**
 
 1. v8.0 carry-forward items (SYNC-33-C, SYNC-34, SYNC-39) closed or moved to Phase 999.1 backlog
 2. Playbook updated with new conflict-resolution patterns from v8.1
