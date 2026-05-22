@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v8.0
-milestone_name: Upstream v2.0.0 Sync
-status: Awaiting next milestone
-stopped_at: Phase 30 complete; v8.0 milestone done
-last_updated: "2026-05-22T07:46:16.097Z"
-last_activity: 2026-05-22 — Milestone v8.0 completed and archived
+milestone: v8.1
+milestone_name: Upstream v2.0.1 Sync
+status: planning
+last_updated: "2026-05-22T08:23:29.550Z"
+last_activity: 2026-05-22
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 63
-  completed_plans: 63
-  percent: 100
+    total_phases: 0
+    completed_phases: 0
+    total_plans: 0
+    completed_plans: 0
+    percent: 0
 ---
 
 # Project State
@@ -25,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 
 ## Current Position
 
-Phase: Milestone v8.0 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-05-22 — Milestone v8.0 completed and archived
+Status: Defining requirements
+Last activity: 2026-05-22 — Milestone v8.1 started
 
 ## Performance Metrics
 
@@ -261,28 +260,28 @@ None.
 
 Items acknowledged and deferred at v8.0 milestone close on 2026-05-22 — all predate the v8.0 sync work scope:
 
-| Category | Item | Status |
-|----------|------|--------|
-| debug | knowledge-base | unknown |
-| debug | skyrim-crash-after-mod-install-uninstall | awaiting_human_verify |
-| quick_task | 260401-m5m-fix-blank-game-version-in-mismatch-dialo | missing |
-| quick_task | 260401-mvp-normalize-backslashes-in-fomod-copy-sour | missing |
-| quick_task | 260401-oz3-case-folding-path-resolver-in-linkingdep | missing |
-| quick_task | 260401-scf-fix-fomod-case-sensitivity-error-in-inst | missing |
-| quick_task | 260402-1b1-implement-wine-era-deployment-manifest-d | missing |
-| quick_task | 260402-iko-fix-hardlink-undeploy-orphan-when-manife | missing |
-| quick_task | 260407-grv-fix-nxm-download-bug-cli-ts-argv-slice-a | missing |
-| quick_task | 260407-icu-remove-the-linux-disabled-guard-from-the | missing |
-| quick_task | 260407-iv0-patch-firefox-profiles-with-nxm-expose-p | missing |
-| quick_task | 260407-jmi-fix-hardlink-deployment-purge-not-removi | missing |
-| quick_task | 260408-haq-set-deb-package-version-to-major-minor-f | missing |
-| quick_task | 260408-lx7-fix-windows-only-guard-in-extension-buil | missing |
-| quick_task | 260408-ms8-update-planning-docs-with-current-state- | missing |
-| quick_task | 260408-mvp-speed-up-gh-actions-builds-rust-cache-wo | missing |
-| quick_task | 260408-pjc-implement-three-ci-speed-improvements-tr | missing |
-| quick_task | 260409-mes-add-vortex-fs-back-to-src-main-package-j | missing |
-| quick_task | 260415-h43-fix-d1-plugins-tab-dev-vs-deb-ld-library | missing |
-| quick_task | 260417-kth-fix-unused-idiscoverystate-import-in-nog | missing |
+| Category   | Item                                                | Status                |
+| ---------- | --------------------------------------------------- | --------------------- |
+| debug      | knowledge-base                                      | unknown               |
+| debug      | skyrim-crash-after-mod-install-uninstall            | awaiting_human_verify |
+| quick_task | 260401-m5m-fix-blank-game-version-in-mismatch-dialo | missing               |
+| quick_task | 260401-mvp-normalize-backslashes-in-fomod-copy-sour | missing               |
+| quick_task | 260401-oz3-case-folding-path-resolver-in-linkingdep | missing               |
+| quick_task | 260401-scf-fix-fomod-case-sensitivity-error-in-inst | missing               |
+| quick_task | 260402-1b1-implement-wine-era-deployment-manifest-d | missing               |
+| quick_task | 260402-iko-fix-hardlink-undeploy-orphan-when-manife | missing               |
+| quick_task | 260407-grv-fix-nxm-download-bug-cli-ts-argv-slice-a | missing               |
+| quick_task | 260407-icu-remove-the-linux-disabled-guard-from-the | missing               |
+| quick_task | 260407-iv0-patch-firefox-profiles-with-nxm-expose-p | missing               |
+| quick_task | 260407-jmi-fix-hardlink-deployment-purge-not-removi | missing               |
+| quick_task | 260408-haq-set-deb-package-version-to-major-minor-f | missing               |
+| quick_task | 260408-lx7-fix-windows-only-guard-in-extension-buil | missing               |
+| quick_task | 260408-ms8-update-planning-docs-with-current-state- | missing               |
+| quick_task | 260408-mvp-speed-up-gh-actions-builds-rust-cache-wo | missing               |
+| quick_task | 260408-pjc-implement-three-ci-speed-improvements-tr | missing               |
+| quick_task | 260409-mes-add-vortex-fs-back-to-src-main-package-j | missing               |
+| quick_task | 260415-h43-fix-d1-plugins-tab-dev-vs-deb-ld-library | missing               |
+| quick_task | 260417-kth-fix-unused-idiscoverystate-import-in-nog | missing               |
 
 These are inherited from earlier milestones (v4.0 / v5.0 backlog) and are not blockers for v8.0. The two debug sessions are independent from the v8.0 sync surface; the 18 quick-task slugs are orphan directory entries flagged by the audit as `missing` (their corresponding fixes were committed but the slug folders weren't reconciled). Sweep these as part of cleanup or v8.1 housekeeping.
 
