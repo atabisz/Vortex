@@ -214,10 +214,10 @@ function queryPurgeWineEra(
         {
           text: t(
             "A previous Wine or Proton-based Vortex deployment was found for this game. " +
-            "Mods deployed through Wine/Proton must be purged before the native Linux " +
-            "version of Vortex can manage this game. " +
-            "The purge will remove deployed mod files from the game directory using the " +
-            "existing manifest. Unmodified files will be removed; changed files will be kept.",
+              "Mods deployed through Wine/Proton must be purged before the native Linux " +
+              "version of Vortex can manage this game. " +
+              "The purge will remove deployed mod files from the game directory using the " +
+              "existing manifest. Unmodified files will be removed; changed files will be kept.",
           ),
         },
         [{ label: "Cancel" }, { label: "Purge" }],
@@ -229,14 +229,12 @@ function queryPurgeWineEra(
         ...file,
         relPath: file.relPath.replace(/\\/g, "/"),
       }));
-      return purgeDeployedFiles(basePath, normalizedFiles).catch(
-        (err: unknown) => {
-          api.showErrorNotification("Purging failed", err, {
-            allowReport: false,
-          });
-          return Promise.reject(new UserCanceled());
-        },
-      );
+      return purgeDeployedFiles(basePath, normalizedFiles).catch((err: unknown) => {
+        api.showErrorNotification("Purging failed", err, {
+          allowReport: false,
+        });
+        return Promise.reject(new UserCanceled());
+      });
     } else {
       return Promise.reject(new UserCanceled());
     }
@@ -270,18 +268,17 @@ function getManifestImpl(
         // This handles Wine/Proton-era deployments where the primary JSON was
         // never written to the game directory but the msgpack backup exists in
         // the staging folder.
-        return readManifestFileBinary(backup2Path)
-          .catch((inner: unknown) => {
-            if (getErrorCode(inner) === "ENOENT") {
-              return readManifestFile(backupPath).catch((backupErr: unknown) => {
-                if (getErrorCode(backupErr) === "ENOENT") {
-                  return emptyManifest(instanceId);
-                }
-                throw backupErr;
-              });
-            }
-            throw inner;
-          });
+        return readManifestFileBinary(backup2Path).catch((inner: unknown) => {
+          if (getErrorCode(inner) === "ENOENT") {
+            return readManifestFile(backupPath).catch((backupErr: unknown) => {
+              if (getErrorCode(backupErr) === "ENOENT") {
+                return emptyManifest(instanceId);
+              }
+              throw backupErr;
+            });
+          }
+          throw inner;
+        });
       }
       if (code === "EPERM") {
         errObj.message =

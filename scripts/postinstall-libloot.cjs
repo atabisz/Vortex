@@ -22,8 +22,8 @@ const path = require("path");
 
 // Platform guard — this script is Linux-only
 if (process.platform !== "linux") {
-  console.log("postinstall-libloot: skipping (not Linux)");
-  process.exit(0);
+    console.log("postinstall-libloot: skipping (not Linux)");
+    process.exit(0);
 }
 
 // Ensure cargo is in PATH — rustup installs to ~/.cargo/bin which isn't
@@ -31,7 +31,7 @@ if (process.platform !== "linux") {
 // install step; local dev uses rustup's shell init which isn't sourced here).
 const cargoBin = path.join(os.homedir(), ".cargo", "bin");
 if (fs.existsSync(cargoBin) && !(process.env.PATH || "").includes(cargoBin)) {
-  process.env.PATH = `${cargoBin}:${process.env.PATH || ""}`;
+    process.env.PATH = `${cargoBin}:${process.env.PATH || ""}`;
 }
 
 const LIBLOOT_VERSION = "0.29.1";
@@ -47,89 +47,78 @@ const LIBLOOT_VERSION = "0.29.1";
 // and the .so is .gitignored so it may be absent after a fresh checkout.
 // ---------------------------------------------------------------------------
 (function buildWstringStub() {
-  const stubSrc = path.resolve(
-    __dirname,
-    "..",
-    "extensions",
-    "gamebryo-plugin-management",
-    "src",
-    "wstring_stub.cpp",
-  );
-  const stubOut = path.resolve(
-    __dirname,
-    "..",
-    "extensions",
-    "gamebryo-plugin-management",
-    "src",
-    "libloot_wstring_stub.so",
-  );
-
-  if (!fs.existsSync(stubSrc)) {
-    console.warn(
-      "postinstall-libloot: wstring_stub.cpp not found, skipping stub build",
+    const stubSrc = path.resolve(
+        __dirname,
+        "..",
+        "extensions",
+        "gamebryo-plugin-management",
+        "src",
+        "wstring_stub.cpp",
     );
-    return;
-  }
+    const stubOut = path.resolve(
+        __dirname,
+        "..",
+        "extensions",
+        "gamebryo-plugin-management",
+        "src",
+        "libloot_wstring_stub.so",
+    );
 
-  // Find node-addon-api include dir (napi.h).
-  // pnpm stores packages in node_modules/.pnpm/node-addon-api@X.Y.Z/node_modules/node-addon-api/
-  // so we can't use require.resolve — scan the .pnpm store directly.
-  const projectRoot = path.resolve(__dirname, "..");
-  const pnpmStore = path.join(projectRoot, "node_modules", ".pnpm");
-  let napiIncludeDir;
-  try {
-    const entries = fs.readdirSync(pnpmStore);
-    const napiEntry = entries.find((e) => e.startsWith("node-addon-api@"));
-    if (napiEntry) {
-      const candidate = path.join(
-        pnpmStore,
-        napiEntry,
-        "node_modules",
-        "node-addon-api",
-      );
-      if (fs.existsSync(path.join(candidate, "napi.h"))) {
-        napiIncludeDir = candidate;
-      }
+    if (!fs.existsSync(stubSrc)) {
+        console.warn("postinstall-libloot: wstring_stub.cpp not found, skipping stub build");
+        return;
     }
-  } catch {
-    // pnpm store not found or unreadable
-  }
-  if (!napiIncludeDir) {
-    console.warn(
-      "postinstall-libloot: node-addon-api not found, skipping stub build",
-    );
-    return;
-  }
 
-  // Find Node.js C headers (node_api.h).
-  const nodeHeaderCandidates = [
-    path.join(path.dirname(process.execPath), "..", "include", "node"),
-    path.join(path.dirname(process.execPath), "include", "node"),
-    "/usr/include/node",
-    "/usr/local/include/node",
-  ];
-  const nodeIncludeDir = nodeHeaderCandidates.find((d) =>
-    fs.existsSync(path.join(d, "node_api.h")),
-  );
-  if (!nodeIncludeDir) {
-    console.warn(
-      "postinstall-libloot: Node.js headers not found, skipping stub build",
-    );
-    return;
-  }
+    // Find node-addon-api include dir (napi.h).
+    // pnpm stores packages in node_modules/.pnpm/node-addon-api@X.Y.Z/node_modules/node-addon-api/
+    // so we can't use require.resolve — scan the .pnpm store directly.
+    const projectRoot = path.resolve(__dirname, "..");
+    const pnpmStore = path.join(projectRoot, "node_modules", ".pnpm");
+    let napiIncludeDir;
+    try {
+        const entries = fs.readdirSync(pnpmStore);
+        const napiEntry = entries.find((e) => e.startsWith("node-addon-api@"));
+        if (napiEntry) {
+            const candidate = path.join(pnpmStore, napiEntry, "node_modules", "node-addon-api");
+            if (fs.existsSync(path.join(candidate, "napi.h"))) {
+                napiIncludeDir = candidate;
+            }
+        }
+    } catch {
+        // pnpm store not found or unreadable
+    }
+    if (!napiIncludeDir) {
+        console.warn("postinstall-libloot: node-addon-api not found, skipping stub build");
+        return;
+    }
 
-  try {
-    execSync(
-      `g++ -std=c++17 -shared -fPIC -o "${stubOut}" "${stubSrc}" -I"${napiIncludeDir}" -I"${nodeIncludeDir}"`,
-      { stdio: "inherit" },
+    // Find Node.js C headers (node_api.h).
+    const nodeHeaderCandidates = [
+        path.join(path.dirname(process.execPath), "..", "include", "node"),
+        path.join(path.dirname(process.execPath), "include", "node"),
+        "/usr/include/node",
+        "/usr/local/include/node",
+    ];
+    const nodeIncludeDir = nodeHeaderCandidates.find((d) =>
+        fs.existsSync(path.join(d, "node_api.h")),
     );
-    console.log(`postinstall-libloot: libloot_wstring_stub.so compiled`);
-  } catch (err) {
-    console.warn(
-      "postinstall-libloot: wstring stub compile failed (loot will not work on Linux):",
-      err.message || err,
-    );
-  }
+    if (!nodeIncludeDir) {
+        console.warn("postinstall-libloot: Node.js headers not found, skipping stub build");
+        return;
+    }
+
+    try {
+        execSync(
+            `g++ -std=c++17 -shared -fPIC -o "${stubOut}" "${stubSrc}" -I"${napiIncludeDir}" -I"${nodeIncludeDir}"`,
+            { stdio: "inherit" },
+        );
+        console.log(`postinstall-libloot: libloot_wstring_stub.so compiled`);
+    } catch (err) {
+        console.warn(
+            "postinstall-libloot: wstring stub compile failed (loot will not work on Linux):",
+            err.message || err,
+        );
+    }
 })();
 
 // ---------------------------------------------------------------------------
@@ -144,21 +133,19 @@ const LIBLOOT_VERSION = "0.29.1";
 // root node_modules. We must search workspace subdirectories explicitly.
 let lootApiDir;
 try {
-  const projectRoot = path.resolve(__dirname, "..");
-  const searchPaths = [
-    // Primary: gamebryo-plugin-management is the workspace package that depends on loot
-    path.join(projectRoot, "extensions", "gamebryo-plugin-management", "node_modules"),
-    // Fallback: root node_modules (in case hoisting is enabled in future)
-    path.join(projectRoot, "node_modules"),
-  ];
-  const lootPkgPath = require.resolve("loot/package.json", { paths: searchPaths });
-  lootApiDir = path.join(path.dirname(lootPkgPath), "loot_api");
+    const projectRoot = path.resolve(__dirname, "..");
+    const searchPaths = [
+        // Primary: gamebryo-plugin-management is the workspace package that depends on loot
+        path.join(projectRoot, "extensions", "gamebryo-plugin-management", "node_modules"),
+        // Fallback: root node_modules (in case hoisting is enabled in future)
+        path.join(projectRoot, "node_modules"),
+    ];
+    const lootPkgPath = require.resolve("loot/package.json", { paths: searchPaths });
+    lootApiDir = path.join(path.dirname(lootPkgPath), "loot_api");
 } catch (e) {
-  // loot is an optional dependency; if it is not installed, skip gracefully.
-  console.log(
-    "postinstall-libloot: loot package not found, skipping (optional dependency)",
-  );
-  process.exit(0);
+    // loot is an optional dependency; if it is not installed, skip gracefully.
+    console.log("postinstall-libloot: loot package not found, skipping (optional dependency)");
+    process.exit(0);
 }
 
 // If libloot.so.0 already exists (e.g. re-running postinstall), skip the build.
@@ -166,104 +153,98 @@ try {
 const soDestVersioned = path.join(lootApiDir, "libloot.so.0");
 const soDestPath = path.join(lootApiDir, "liblibloot.so");
 if (fs.existsSync(soDestVersioned)) {
-  console.log("postinstall-libloot: libloot.so.0 already present, skipping build");
-  process.exit(0);
+    console.log("postinstall-libloot: libloot.so.0 already present, skipping build");
+    process.exit(0);
 }
 
-console.log(
-  `postinstall-libloot: building libloot ${LIBLOOT_VERSION} from source...`,
-);
+console.log(`postinstall-libloot: building libloot ${LIBLOOT_VERSION} from source...`);
 
 const tmpDir = path.join(os.tmpdir(), "libloot-build");
 
 try {
-  // Clean any stale build directory
-  if (fs.existsSync(tmpDir)) {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  }
+    // Clean any stale build directory
+    if (fs.existsSync(tmpDir)) {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
 
-  // Clone libloot at the exact pinned tag
-  execSync(
-    `git clone --depth=1 --branch ${LIBLOOT_VERSION} https://github.com/loot/libloot.git ${tmpDir}`,
-    { stdio: "inherit" },
-  );
-
-  const buildDir = path.join(tmpDir, "cpp", "build");
-
-  // Configure the CMake build
-  // -DLIBLOOT_BUILD_TESTS=OFF  skips Catch2 fetch and test compilation
-  // -DLIBLOOT_INSTALL_DOCS=OFF skips doxygen doc generation
-  execSync(
-    [
-      "cmake",
-      "-DCMAKE_BUILD_TYPE=Release",
-      "-DLIBLOOT_BUILD_TESTS=OFF",
-      "-DLIBLOOT_INSTALL_DOCS=OFF",
-      `-B ${buildDir}`,
-      `-S ${path.join(tmpDir, "cpp")}`,
-    ].join(" "),
-    { stdio: "inherit" },
-  );
-
-  // Build the shared library (parallel to use all available cores)
-  execSync(`cmake --build ${buildDir} --parallel`, { stdio: "inherit" });
-
-  // With Unix Makefiles + Release build type, cmake places the output directly
-  // at <buildDir>/libloot.so (no Release/ subdirectory on Linux).
-  //
-  // cmake naming: The cmake target sets PREFIX="" to suppress the auto "lib"
-  // prefix (the name "libloot" already starts with "lib"). cmake produces:
-  //   libloot.so           → symlink to libloot.so.0 (unversioned)
-  //   libloot.so.0         → actual shared library (versioned, SONAME)
-  //   libloot.so.0.29.1    → the real binary
-  //
-  // The SONAME embedded in libloot.so.0 is "libloot.so.0".
-  //
-  // We need two files in loot_api/:
-  //   libloot.so.0   — the actual .so; the dynamic linker searches for this
-  //                    SONAME at runtime via RUNPATH=$ORIGIN/../loot_api
-  //   liblibloot.so  — symlink to libloot.so.0; the linker uses this at
-  //                    build time when binding.gyp specifies -llibloot
-  //                    (on Linux, -l<name> searches for lib<name>.so)
-  const soVersionedSrc = path.join(buildDir, "libloot.so.0");
-  const soUnversionedSrc = path.join(buildDir, "libloot.so");
-
-  // Prefer the versioned .so (actual binary); fall back to the unversioned one
-  const soSrcPath = fs.existsSync(soVersionedSrc)
-    ? soVersionedSrc
-    : soUnversionedSrc;
-
-  if (!fs.existsSync(soSrcPath)) {
-    throw new Error(
-      `Expected libloot.so.0 or libloot.so at ${buildDir} after build, but neither found. ` +
-        `Check cmake output above for errors.`,
+    // Clone libloot at the exact pinned tag
+    execSync(
+        `git clone --depth=1 --branch ${LIBLOOT_VERSION} https://github.com/loot/libloot.git ${tmpDir}`,
+        { stdio: "inherit" },
     );
-  }
 
-  // Copy the versioned .so (libloot.so.0) — this is what the dynamic linker
-  // searches for at runtime when it resolves the SONAME.
-  const soVersionedDest = path.join(lootApiDir, "libloot.so.0");
-  fs.copyFileSync(soSrcPath, soVersionedDest);
-  console.log(`postinstall-libloot: libloot.so.0 installed to ${soVersionedDest}`);
+    const buildDir = path.join(tmpDir, "cpp", "build");
 
-  // Create liblibloot.so as a symlink → libloot.so.0. The linker looks for
-  // liblibloot.so when given -llibloot (prepends "lib", appends ".so").
-  if (fs.existsSync(soDestPath)) {
-    fs.unlinkSync(soDestPath);
-  }
-  fs.symlinkSync("libloot.so.0", soDestPath);
-  console.log(`postinstall-libloot: liblibloot.so symlink created → libloot.so.0`);
+    // Configure the CMake build
+    // -DLIBLOOT_BUILD_TESTS=OFF  skips Catch2 fetch and test compilation
+    // -DLIBLOOT_INSTALL_DOCS=OFF skips doxygen doc generation
+    execSync(
+        [
+            "cmake",
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DLIBLOOT_BUILD_TESTS=OFF",
+            "-DLIBLOOT_INSTALL_DOCS=OFF",
+            `-B ${buildDir}`,
+            `-S ${path.join(tmpDir, "cpp")}`,
+        ].join(" "),
+        { stdio: "inherit" },
+    );
+
+    // Build the shared library (parallel to use all available cores)
+    execSync(`cmake --build ${buildDir} --parallel`, { stdio: "inherit" });
+
+    // With Unix Makefiles + Release build type, cmake places the output directly
+    // at <buildDir>/libloot.so (no Release/ subdirectory on Linux).
+    //
+    // cmake naming: The cmake target sets PREFIX="" to suppress the auto "lib"
+    // prefix (the name "libloot" already starts with "lib"). cmake produces:
+    //   libloot.so           → symlink to libloot.so.0 (unversioned)
+    //   libloot.so.0         → actual shared library (versioned, SONAME)
+    //   libloot.so.0.29.1    → the real binary
+    //
+    // The SONAME embedded in libloot.so.0 is "libloot.so.0".
+    //
+    // We need two files in loot_api/:
+    //   libloot.so.0   — the actual .so; the dynamic linker searches for this
+    //                    SONAME at runtime via RUNPATH=$ORIGIN/../loot_api
+    //   liblibloot.so  — symlink to libloot.so.0; the linker uses this at
+    //                    build time when binding.gyp specifies -llibloot
+    //                    (on Linux, -l<name> searches for lib<name>.so)
+    const soVersionedSrc = path.join(buildDir, "libloot.so.0");
+    const soUnversionedSrc = path.join(buildDir, "libloot.so");
+
+    // Prefer the versioned .so (actual binary); fall back to the unversioned one
+    const soSrcPath = fs.existsSync(soVersionedSrc) ? soVersionedSrc : soUnversionedSrc;
+
+    if (!fs.existsSync(soSrcPath)) {
+        throw new Error(
+            `Expected libloot.so.0 or libloot.so at ${buildDir} after build, but neither found. ` +
+                `Check cmake output above for errors.`,
+        );
+    }
+
+    // Copy the versioned .so (libloot.so.0) — this is what the dynamic linker
+    // searches for at runtime when it resolves the SONAME.
+    const soVersionedDest = path.join(lootApiDir, "libloot.so.0");
+    fs.copyFileSync(soSrcPath, soVersionedDest);
+    console.log(`postinstall-libloot: libloot.so.0 installed to ${soVersionedDest}`);
+
+    // Create liblibloot.so as a symlink → libloot.so.0. The linker looks for
+    // liblibloot.so when given -llibloot (prepends "lib", appends ".so").
+    if (fs.existsSync(soDestPath)) {
+        fs.unlinkSync(soDestPath);
+    }
+    fs.symlinkSync("libloot.so.0", soDestPath);
+    console.log(`postinstall-libloot: liblibloot.so symlink created → libloot.so.0`);
 } catch (err) {
-  console.error("postinstall-libloot: build failed:", err.message || err);
-  console.warn(
-    "WARNING: libloot.so build failed — loot addon will not be available on Linux",
-  );
-  process.exit(0);
+    console.error("postinstall-libloot: build failed:", err.message || err);
+    console.warn("WARNING: libloot.so build failed — loot addon will not be available on Linux");
+    process.exit(0);
 } finally {
-  // Clean up the temporary build directory regardless of success or failure
-  try {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  } catch (_) {
-    // best-effort cleanup
-  }
+    // Clean up the temporary build directory regardless of success or failure
+    try {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+    } catch (_) {
+        // best-effort cleanup
+    }
 }

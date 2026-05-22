@@ -2,7 +2,6 @@ import {} from "module";
 // tslint:disable-next-line:no-var-requires
 const Module = require("module");
 import * as reduxAct from "redux-act";
-import * as winapiShim from "./winapi-shim";
 
 import * as api from "../api";
 import * as reactSelect from "../controls/ReactSelectWrap";
@@ -10,6 +9,7 @@ import ExtensionManager from "../ExtensionManager";
 import type { IRegisteredExtension } from "../types/extensions";
 import type { LogLevel } from "./log";
 import { webpackRequireHack } from "./webpack-hacks";
+import * as winapiShim from "./winapi-shim";
 
 const identity = (input) => input;
 

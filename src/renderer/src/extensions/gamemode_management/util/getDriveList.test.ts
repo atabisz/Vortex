@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import getDriveList, {
-  _resetDrivelistLoader,
-  _setDrivelistLoader,
-} from "./getDriveList";
+import getDriveList, { _resetDrivelistLoader, _setDrivelistLoader } from "./getDriveList";
 
 const mockApi: any = {
   showErrorNotification: vi.fn(),
@@ -13,10 +10,7 @@ describe("getDriveList platform fallbacks", () => {
   let originalPlatform: PropertyDescriptor;
 
   beforeEach(() => {
-    originalPlatform = Object.getOwnPropertyDescriptor(
-      process,
-      "platform",
-    )!;
+    originalPlatform = Object.getOwnPropertyDescriptor(process, "platform")!;
     vi.clearAllMocks();
   });
 
@@ -37,9 +31,7 @@ describe("getDriveList platform fallbacks", () => {
 
   it("returns ['/'] on linux when drivelist.list() rejects", async () => {
     setPlatform("linux");
-    _setDrivelistLoader(
-      () => vi.fn().mockRejectedValue(new Error("disk error")) as any,
-    );
+    _setDrivelistLoader(() => vi.fn().mockRejectedValue(new Error("disk error")) as any);
 
     const result = await getDriveList(mockApi);
     expect(result).toEqual(["/"]);
@@ -48,9 +40,7 @@ describe("getDriveList platform fallbacks", () => {
 
   it("returns ['C:'] on win32 when drivelist.list() rejects", async () => {
     setPlatform("win32");
-    _setDrivelistLoader(
-      () => vi.fn().mockRejectedValue(new Error("disk error")) as any,
-    );
+    _setDrivelistLoader(() => vi.fn().mockRejectedValue(new Error("disk error")) as any);
 
     const result = await getDriveList(mockApi);
     expect(result).toEqual(["C:"]);
@@ -59,9 +49,7 @@ describe("getDriveList platform fallbacks", () => {
 
   it("does not call api.showErrorNotification on linux for .catch() path", async () => {
     setPlatform("linux");
-    _setDrivelistLoader(
-      () => vi.fn().mockRejectedValue(new Error("disk error")) as any,
-    );
+    _setDrivelistLoader(() => vi.fn().mockRejectedValue(new Error("disk error")) as any);
 
     await getDriveList(mockApi);
     expect(mockApi.showErrorNotification).not.toHaveBeenCalled();
@@ -69,9 +57,7 @@ describe("getDriveList platform fallbacks", () => {
 
   it("calls api.showErrorNotification on win32 for .catch() path", async () => {
     setPlatform("win32");
-    _setDrivelistLoader(
-      () => vi.fn().mockRejectedValue(new Error("disk error")) as any,
-    );
+    _setDrivelistLoader(() => vi.fn().mockRejectedValue(new Error("disk error")) as any);
 
     await getDriveList(mockApi);
     expect(mockApi.showErrorNotification).toHaveBeenCalledTimes(1);

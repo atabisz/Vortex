@@ -9,29 +9,33 @@ _Fallout series modding improvements and collection installation fixes_
 This alpha release focuses on improving the Fallout modding experience and fixing collection installation issues.
 
 **🎮 Fallout New Vegas Modding Overhaul**
+
 - Improved NVSE installation with SMAPI-style assisted download
 - Automatic 4GB Patcher support for better game stability
 - Integrated sanity checks for common configuration issues (as part of [Senjay](https://next.nexusmods.com/profile/Senjay)'s [Fallout New Vegas Sanity Checks](https://www.nexusmods.com/site/mods/945)
- extension)
+  extension)
 - Archive invalidation now applies automatically (as part of [Senjay](https://next.nexusmods.com/profile/Senjay)'s [Fallout New Vegas Sanity Checks](https://www.nexusmods.com/site/mods/945) extension)
 
 **📚 Collection Installation**
+
 - Multiple fixes for mod attributes not applying correctly during collection install (types, categories, renames, presets)
 - Fallout 4 Anniversary collection optional mods now install correctly
 - "Do this for all remaining installs" button now works when reinstalling
 
 **🛡️ Stability & Performance**
+
 - Faster snapshot creation during Fallout 4 deployment
 - Download chunk retry reliability improvements
 - FOMOD installer crash fix
 
 **🔧 Quality of Life**
+
 - Removed unnecessary "Loose Files May Not Get Loaded" notification for Skyrim SE
 - Collection browsing now uses collectionsV2 API with adult content preferences support
 
 ### Known Issues
 
-When installing [Gopher's New Vegas Remaster](https://www.nexusmods.com/games/newvegas/collections/hss8nv) (and possibly others we haven't found yet), if the collection is installed and then the mods are removed (but downloads kept), the collection stalls when trying to resume. This can be fixed by pausing and resuming the collection install.  
+When installing [Gopher's New Vegas Remaster](https://www.nexusmods.com/games/newvegas/collections/hss8nv) (and possibly others we haven't found yet), if the collection is installed and then the mods are removed (but downloads kept), the collection stalls when trying to resume. This can be fixed by pausing and resuming the collection install.
 
 ### Full Changelog
 

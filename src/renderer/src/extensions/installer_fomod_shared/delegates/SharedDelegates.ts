@@ -3,8 +3,8 @@ import type { IState } from "../../../types/IState";
 import { getApplication } from "../../../util/application";
 import { discoveryByGame } from "../../gamemode_management/selectors";
 import { getGame } from "../../gamemode_management/util/getGame";
-import { hasLoadOrder, hasSessionPlugins } from "../utils/guards";
 import type { IPluginState } from "../types/interface";
+import { hasLoadOrder, hasSessionPlugins } from "../utils/guards";
 
 /**
  * Core delegates for FOMOD installer IPC communication

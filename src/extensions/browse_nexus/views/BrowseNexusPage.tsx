@@ -1,26 +1,19 @@
+import { mdiChevronLeft, mdiChevronRight, mdiOpenInNew, mdiRefresh } from "@mdi/js";
 import {
   ICollection,
   ICollectionSearchOptions,
   CollectionSortField,
   SortDirection,
 } from "@nexusmods/nexus-api";
-
-import {
-  mdiChevronLeft,
-  mdiChevronRight,
-  mdiOpenInNew,
-  mdiRefresh,
-} from "@mdi/js";
 import numeral from "numeral";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 
-import type { IExtensionApi } from "../../../types/IExtensionContext";
-import type { IState } from "../../../types/IState";
-
 import MainPage from "../../../renderer/views/MainPage";
 import Tailwind from "../../../tailwind";
+import type { IExtensionApi } from "../../../types/IExtensionContext";
+import type { IState } from "../../../types/IState";
 import { UserCanceled } from "../../../util/api";
 import opn from "../../../util/opn";
 import { activeGameId, isCollectionModPresent } from "../../../util/selectors";
@@ -61,10 +54,7 @@ async function adultContentDialog(
           { replace: { collectionName: collection.name } },
         ),
       },
-      [
-        { label: api.translate("Cancel") },
-        { label: api.translate("Open site preferences") },
-      ],
+      [{ label: api.translate("Cancel") }, { label: api.translate("Open site preferences") }],
     );
     return result.action === "Cancel" ? false : true;
   } catch (err) {
@@ -86,8 +76,7 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
   );
   const [collections, setCollections] = React.useState<ICollection[]>([]);
   const [totalCount, setTotalCount] = React.useState<number>(0);
-  const [allCollectionsTotal, setAllCollectionsTotal] =
-    React.useState<number>(0);
+  const [allCollectionsTotal, setAllCollectionsTotal] = React.useState<number>(0);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<Error | null>(null);
   const [sortBy, setSortBy] = React.useState<ISortOption>(SORT_OPTIONS[1]); // Default to "Most Endorsed"
@@ -97,8 +86,7 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
   const [pageInput, setPageInput] = React.useState<string>("1");
   const [selectedTab, setSelectedTab] = React.useState<string>("collections");
   const [refreshTrigger, setRefreshTrigger] = React.useState<number>(0);
-  const [searchValidationError, setSearchValidationError] =
-    React.useState<string>("");
+  const [searchValidationError, setSearchValidationError] = React.useState<string>("");
   const itemsPerPage = 20;
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
@@ -131,8 +119,7 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
   };
 
   const handleAddCollection = (collection: ICollection) => {
-    const revisionNumber =
-      collection.latestPublishedRevision?.revisionNumber || "latest";
+    const revisionNumber = collection.latestPublishedRevision?.revisionNumber || "latest";
     // Use the game domain name from the collection data (already converted)
     const nxmUrl = `nxm://${collection.game.domainName}/collections/${collection.slug}/revisions/${revisionNumber}`;
 
@@ -142,10 +129,7 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
       new CollectionsDownloadClickedEvent(collection.slug, collection.game.id),
     );
 
-    if (
-      adultContentFilter === false &&
-      collection.latestPublishedRevision?.adultContent
-    ) {
+    if (adultContentFilter === false && collection.latestPublishedRevision?.adultContent) {
       adultContentDialog(api, collection, false).then((proceed) => {
         if (proceed) {
           handleViewNexusAdultPreferences();
@@ -214,13 +198,8 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
       })
       .catch((err: Error) => {
         // Provide user-friendly error message for wildcard search requirement
-        if (
-          err.message &&
-          err.message.includes("Wildcard value must have 2 or more characters")
-        ) {
-          const friendlyError = new Error(
-            t("collection:browse.searchTooShort"),
-          );
+        if (err.message && err.message.includes("Wildcard value must have 2 or more characters")) {
+          const friendlyError = new Error(t("collection:browse.searchTooShort"));
           setError(friendlyError);
           // Also clear the invalid search so user can try again
           setActiveSearch("");
@@ -380,10 +359,7 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
               {loading ? (
                 <div className="tw:flex tw:flex-col tw:items-center tw:gap-4 tw:py-8">
                   <div className="tw:text-center">
-                    <Tailwind.Typography
-                      appearance="subdued"
-                      typographyType="body-lg"
-                    >
+                    <Tailwind.Typography appearance="subdued" typographyType="body-lg">
                       {t("collection:browse.loading")}
                     </Tailwind.Typography>
                   </div>
@@ -399,10 +375,7 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
                       {t("collection:browse.error")}
                     </Tailwind.Typography>
 
-                    <Tailwind.Typography
-                      appearance="subdued"
-                      typographyType="body-md"
-                    >
+                    <Tailwind.Typography appearance="subdued" typographyType="body-md">
                       {error.message}
                     </Tailwind.Typography>
                   </div>
@@ -410,10 +383,7 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
               ) : collections.length === 0 ? (
                 <div className="tw:flex tw:flex-col tw:items-center tw:gap-4 tw:py-8">
                   <div className="tw:text-center">
-                    <Tailwind.Typography
-                      appearance="subdued"
-                      typographyType="body-lg"
-                    >
+                    <Tailwind.Typography appearance="subdued" typographyType="body-lg">
                       {t("collection:browse.noCollections")}
                     </Tailwind.Typography>
                   </div>
@@ -438,9 +408,7 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
                       id="sort-select"
                       label={t("collection:browse.sortBy")}
                       value={SORT_OPTIONS.indexOf(sortBy)}
-                      onChange={(e) =>
-                        setSortBy(SORT_OPTIONS[parseInt(e.target.value, 10)])
-                      }
+                      onChange={(e) => setSortBy(SORT_OPTIONS[parseInt(e.target.value, 10)])}
                     >
                       {SORT_OPTIONS.map((option, index) => (
                         <option key={option.field} value={index}>
@@ -456,8 +424,7 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
                       const tileImage =
                         (collection as any).tileImage?.thumbnailUrl ||
                         "https://placehold.co/166x207/1f1f1f/666?text=No+Image";
-                      const latestRevision = (collection as any)
-                        .latestPublishedRevision;
+                      const latestRevision = (collection as any).latestPublishedRevision;
                       const tags: string[] = [];
 
                       // Extract tags from collection - ensure all tags are strings
@@ -478,10 +445,7 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
                           badges={(collection as any).badges}
                           className="tw:max-w-none"
                           coverImage={tileImage}
-                          description={
-                            (collection as any).summary ||
-                            "No description available."
-                          }
+                          description={(collection as any).summary || "No description available."}
                           gameId={gameId}
                           id={collection.id.toString()}
                           key={collection.id}
@@ -494,9 +458,7 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
                           tags={tags}
                           title={collection.name}
                           version={latestRevision?.revisionNumber?.toString()}
-                          onAddCollection={() =>
-                            handleAddCollection(collection)
-                          }
+                          onAddCollection={() => handleAddCollection(collection)}
                           onViewPage={() => handleViewOnNexus(collection)}
                         />
                       );
@@ -533,23 +495,18 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
                           .map((page, idx, array) => {
                             // Add ellipsis if there's a gap
                             const prevPage = array[idx - 1];
-                            const showEllipsis =
-                              prevPage && page - prevPage > 1;
+                            const showEllipsis = prevPage && page - prevPage > 1;
 
                             return (
                               <React.Fragment key={page}>
                                 {showEllipsis && (
-                                  <span className="tw:px-1 tw:py-2 tw:text-gray-500">
-                                    ...
-                                  </span>
+                                  <span className="tw:px-1 tw:py-2 tw:text-gray-500">...</span>
                                 )}
 
                                 <Tailwind.Button
                                   buttonType="tertiary"
                                   className=""
-                                  filled={
-                                    page === currentPage ? "weak" : undefined
-                                  }
+                                  filled={page === currentPage ? "weak" : undefined}
                                   size="md"
                                   onClick={() => handlePageClick(page)}
                                 >
@@ -572,10 +529,7 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
 
                       {/* Direct Page Input */}
                       <div className="tw:flex tw:items-center tw:gap-1 tw:ml-5">
-                        <Tailwind.Typography
-                          appearance="subdued"
-                          typographyType="body-md"
-                        >
+                        <Tailwind.Typography appearance="subdued" typographyType="body-md">
                           {t("collection:pagination.goTo")}
                         </Tailwind.Typography>
 

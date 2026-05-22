@@ -25,9 +25,7 @@ for (const file of files) {
 
 if (missingFiles.length > 0) {
   const destDir = "dist";
-  const allInDist = missingFiles.every((f) =>
-    fs.existsSync(path.join(destDir, path.basename(f))),
-  );
+  const allInDist = missingFiles.every((f) => fs.existsSync(path.join(destDir, path.basename(f))));
   if (allInDist) {
     console.log("Source binaries missing but dist/ already has them — skipping copy");
     process.exit(0);

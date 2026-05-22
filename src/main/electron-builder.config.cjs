@@ -98,10 +98,7 @@ const config = {
         // Stub both build/node_modules/ and src/main/node_modules/ — electron-builder
         // scans parent node_modules to resolve transitive deps and will find the native
         // .node binary there if shamefully-hoist puts it at the workspace package level.
-        const winapiDirs = [
-            winapiDir,
-            path.join(__dirname, "node_modules", "winapi-bindings"),
-        ];
+        const winapiDirs = [winapiDir, path.join(__dirname, "node_modules", "winapi-bindings")];
         for (const dir of winapiDirs) {
             if (!fs.existsSync(dir)) continue;
             fs.rmSync(dir, { recursive: true, force: true });
@@ -148,7 +145,11 @@ const config = {
             const results = [];
             const walk = (d) => {
                 let entries;
-                try { entries = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
+                try {
+                    entries = fs.readdirSync(d, { withFileTypes: true });
+                } catch {
+                    return;
+                }
                 for (const e of entries) {
                     const full = path.join(d, e.name);
                     if (e.isDirectory()) walk(full);

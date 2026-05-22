@@ -2,13 +2,13 @@ name: Rebase Upstream
 
 on:
   schedule:
-    - cron: '0 6 * * *'
+    - cron: "0 6 * * *"
   workflow_dispatch:
     inputs:
       upstream_ref:
-        description: 'Optional upstream ref to target (default: latest release tag)'
+        description: "Optional upstream ref to target (default: latest release tag)"
         required: false
-        default: ''
+        default: ""
 
 permissions:
   contents: write

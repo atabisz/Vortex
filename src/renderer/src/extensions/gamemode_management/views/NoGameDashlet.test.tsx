@@ -1,5 +1,4 @@
 import type * as ReactTypes from "react";
-
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockEmit = vi.fn();
@@ -58,8 +57,8 @@ vi.mock("bluebird", () => ({
   },
 }));
 
-import React from "react";
 import { render } from "@testing-library/react";
+import React from "react";
 
 import Dashlet from "./NoGameDashlet";
 
@@ -96,9 +95,7 @@ describe("NoGameDashlet", () => {
           t={(s: string) => s}
         />,
       );
-      expect(
-        container.querySelector(".no-game-linux-empty-state"),
-      ).not.toBeNull();
+      expect(container.querySelector(".no-game-linux-empty-state")).not.toBeNull();
     });
 
     it('empty-state block contains "No Steam games detected" heading', () => {
@@ -128,9 +125,7 @@ describe("NoGameDashlet", () => {
       );
       const emptyState = container.querySelector(".no-game-linux-empty-state");
       expect(emptyState).not.toBeNull();
-      expect(emptyState!.textContent).toContain(
-        "Make sure Steam has finished loading",
-      );
+      expect(emptyState!.textContent).toContain("Make sure Steam has finished loading");
     });
 
     it("empty-state block contains a Refresh button", () => {

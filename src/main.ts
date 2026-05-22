@@ -22,14 +22,16 @@ if (process.send) {
  * entry point for the main process
  */
 import os from "os";
+
 import { VORTEX_VERSION } from "./constants";
 process.env["UV_THREADPOOL_SIZE"] = (os.cpus().length * 2).toString();
 process.env["VORTEX_VERSION"] = VORTEX_VERSION;
 import "./util/application.electron";
-import getVortexPath from "./util/getVortexPath";
+import * as path from "path";
 
 import { app, dialog } from "electron";
-import * as path from "path";
+
+import getVortexPath from "./util/getVortexPath";
 
 const earlyErrHandler = (error) => {
   if (error.stack.includes("[as dlopen]")) {
@@ -82,9 +84,9 @@ if (!process.argv.includes('--relaunched')
 }
 */
 
-import { DEBUG_PORT, HTTP_HEADER_SIZE } from "./constants";
-
 import * as sourceMapSupport from "source-map-support";
+
+import { DEBUG_PORT, HTTP_HEADER_SIZE } from "./constants";
 sourceMapSupport.install();
 
 import requireRemap from "./util/requireRemap";
@@ -111,11 +113,9 @@ if (process.platform === "win32" && process.env.NODE_ENV !== "development") {
   // The most common problem this should prevent is the edge dll being loaded from
   // "Browser Assistant" instead of our own.
 
-  const userPath =
-    (process.env.HOMEDRIVE || "c:") + (process.env.HOMEPATH || "\\Users");
+  const userPath = (process.env.HOMEDRIVE || "c:") + (process.env.HOMEPATH || "\\Users");
   const programFiles = process.env.ProgramFiles || "C:\\Program Files";
-  const programFilesX86 =
-    process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)";
+  const programFilesX86 = process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)";
   const programData = process.env.ProgramData || "C:\\ProgramData";
 
   const pathFilter = (envPath: string): boolean => {
@@ -128,10 +128,7 @@ if (process.platform === "win32" && process.env.NODE_ENV !== "development") {
   };
 
   process.env["PATH_ORIG"] = process.env["PATH"].slice(0);
-  process.env["PATH"] = process.env["PATH"]
-    .split(";")
-    .filter(pathFilter)
-    .join(";");
+  process.env["PATH"] = process.env["PATH"].split(";").filter(pathFilter).join(";");
 }
 
 // Produce english error messages (windows only atm), otherwise they don't get
@@ -146,26 +143,22 @@ try {
   // nop
 }
 
-import {} from "./util/requireRebuild";
-
 import Application from "./app/Application";
-
 import type { IPresetStep, IPresetStepCommandLine } from "./types/IPreset";
-
 import commandLine, { relaunch } from "./util/commandLine";
 import { sendReportFile, terminate, toError } from "./util/errorHandling";
 // ensures tsc includes this dependency
 // Activate vortex-api polyfill for all extension requires as early as possible
 import extensionRequire from "./util/extensionRequire";
+import {} from "./util/requireRebuild";
 extensionRequire(() => []); // Use an empty array or replace with a global accessor if needed
-import {} from "./util/extensionRequire";
+import * as child_processT from "child_process";
 
 // required for the side-effect!
 import "./util/exeIcon";
 import "./util/monkeyPatching";
 import "./util/webview";
-
-import * as child_processT from "child_process";
+import {} from "./util/extensionRequire";
 import * as fs from "./util/fs";
 import presetManager from "./util/PresetManager";
 
@@ -199,9 +192,7 @@ async function main(): Promise<void> {
 
   const NODE_OPTIONS = process.env.NODE_OPTIONS || "";
   process.env.NODE_OPTIONS =
-    NODE_OPTIONS +
-    ` --max-http-header-size=${HTTP_HEADER_SIZE}` +
-    " --no-force-async-hooks-checks";
+    NODE_OPTIONS + ` --max-http-header-size=${HTTP_HEADER_SIZE}` + " --no-force-async-hooks-checks";
 
   if (mainArgs.disableGPU) {
     app.disableHardwareAcceleration();
@@ -210,10 +201,7 @@ async function main(): Promise<void> {
   }
 
   app.commandLine.appendSwitch("disable-features", "WidgetLayering");
-  app.commandLine.appendSwitch(
-    "disable-features",
-    "UseEcoQoSForBackgroundProcess",
-  );
+  app.commandLine.appendSwitch("disable-features", "UseEcoQoSForBackgroundProcess");
 
   // --run has to be evaluated *before* we request the single instance lock!
   if (mainArgs.run !== undefined) {
@@ -233,27 +221,15 @@ async function main(): Promise<void> {
         ELECTRON_DESKTOP: app.getPath("desktop"),
         ELECTRON_APP_PATH: app.getAppPath(),
         ELECTRON_ASSETS: path.join(app.getAppPath(), "assets"),
-        ELECTRON_ASSETS_UNPACKED: path.join(
-          app.getAppPath() + ".unpacked",
-          "assets",
-        ),
+        ELECTRON_ASSETS_UNPACKED: path.join(app.getAppPath() + ".unpacked", "assets"),
         ELECTRON_MODULES: path.join(app.getAppPath(), "node_modules"),
-        ELECTRON_MODULES_UNPACKED: path.join(
-          app.getAppPath() + ".unpacked",
-          "node_modules",
-        ),
-        ELECTRON_BUNDLEDPLUGINS: path.join(
-          app.getAppPath() + ".unpacked",
-          "bundledPlugins",
-        ),
+        ELECTRON_MODULES_UNPACKED: path.join(app.getAppPath() + ".unpacked", "node_modules"),
+        ELECTRON_BUNDLEDPLUGINS: path.join(app.getAppPath() + ".unpacked", "bundledPlugins"),
         ELECTRON_LOCALES: path.resolve(app.getAppPath(), "..", "locales"),
         ELECTRON_BASE: app.getAppPath(),
         ELECTRON_APPLICATION: path.resolve(app.getAppPath(), ".."),
         ELECTRON_PACKAGE: app.getAppPath(),
-        ELECTRON_PACKAGE_UNPACKED: path.join(
-          path.dirname(app.getAppPath()),
-          "app.asar.unpacked",
-        ),
+        ELECTRON_PACKAGE_UNPACKED: path.join(path.dirname(app.getAppPath()), "app.asar.unpacked"),
       },
       stdio: "inherit",
       detached: true,

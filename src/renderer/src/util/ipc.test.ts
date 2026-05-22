@@ -1,6 +1,7 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
 import * as os from "os";
 import * as path from "path";
+
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { getIPCPath } from "./ipc.js";
 

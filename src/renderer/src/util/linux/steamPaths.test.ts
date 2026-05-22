@@ -1,4 +1,5 @@
 import * as path from "path";
+
 import { beforeEach, describe as _describe, expect, it, vi } from "vitest";
 const describe = _describe.skipIf(process.platform !== "linux");
 
@@ -15,14 +16,15 @@ vi.mock("./xdg", () => ({
 }));
 
 import * as nodeFs from "fs";
+
 import getVortexPath from "../getVortexPath";
-import { xdgDataHome } from "./xdg";
 import {
   findAllLinuxSteamPaths,
   findLinuxSteamPath,
   getLinuxSteamPaths,
   isValidSteamPath,
 } from "./steamPaths";
+import { xdgDataHome } from "./xdg";
 
 const throwEnoent = () => {
   throw Object.assign(new Error("ENOENT"), { code: "ENOENT" });
@@ -45,29 +47,12 @@ describe("getLinuxSteamPaths", () => {
 
   it("includes other hardcoded paths when realpathSync throws", () => {
     const paths = getLinuxSteamPaths();
+    expect(paths).toContain(path.join("/home/testuser", ".steam", "debian-installation"));
     expect(paths).toContain(
-      path.join("/home/testuser", ".steam", "debian-installation"),
+      path.join("/home/testuser", ".var", "app", "com.valvesoftware.Steam", "data", "Steam"),
     );
     expect(paths).toContain(
-      path.join(
-        "/home/testuser",
-        ".var",
-        "app",
-        "com.valvesoftware.Steam",
-        "data",
-        "Steam",
-      ),
-    );
-    expect(paths).toContain(
-      path.join(
-        "/home/testuser",
-        "snap",
-        "steam",
-        "common",
-        ".local",
-        "share",
-        "Steam",
-      ),
+      path.join("/home/testuser", "snap", "steam", "common", ".local", "share", "Steam"),
     );
     expect(paths).toContain(path.join("/home/testuser", ".steam", "steam"));
   });

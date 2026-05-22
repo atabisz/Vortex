@@ -5,12 +5,11 @@ import * as path from "path";
 
 import { getErrorCode, getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
 import * as tmp from "tmp";
-
-import { getIPCPath } from "./ipc";
 import * as winapi from "winapi-bindings";
-import { UserCanceled } from "./CustomErrors";
-import type { INotification } from "../types/INotification";
 
+import type { INotification } from "../types/INotification";
+import { UserCanceled } from "./CustomErrors";
+import { getIPCPath } from "./ipc";
 import { getRealNodeModulePaths } from "./webpack-hacks";
 
 type SpawnerFn = (cmd: string, args: string[]) => ChildProcess;
@@ -46,9 +45,7 @@ export function isSteamOS(): boolean {
   }
   try {
     const content = fs.readFileSync("/etc/os-release", "utf8");
-    _isSteamOS =
-      /^ID=steamos$/im.test(content) ||
-      /^ID_LIKE=.*steamos.*$/im.test(content);
+    _isSteamOS = /^ID=steamos$/im.test(content) || /^ID_LIKE=.*steamos.*$/im.test(content);
   } catch {
     _isSteamOS = false;
   }
@@ -227,50 +224,39 @@ export function runElevated(
           }
         }
 
-          if (process.platform === "linux") {
-            if (isSteamOS()) {
-              // SteamOS: pkexec hangs without polkit agent in Game Mode.
-              // Attempt sudo -n (non-interactive) instead.
-              const proc = getSpawner()("sudo", [
-                "-n",
-                process.execPath,
-                "--run",
-                tmpPath,
-              ]);
-              proc.on("close", (code: number | null) => {
-                if (code !== null && code !== 0) {
-                  // sudo -n failed (password required or ENOENT)
-                  rejectWithSteamOSNotification(reject);
-                }
-                // code 0 or null: normal exit; IPC handles results
-              });
-              proc.on("error", (_spawnErr: Error) => {
-                // sudo not found on PATH
+        if (process.platform === "linux") {
+          if (isSteamOS()) {
+            // SteamOS: pkexec hangs without polkit agent in Game Mode.
+            // Attempt sudo -n (non-interactive) instead.
+            const proc = getSpawner()("sudo", ["-n", process.execPath, "--run", tmpPath]);
+            proc.on("close", (code: number | null) => {
+              if (code !== null && code !== 0) {
+                // sudo -n failed (password required or ENOENT)
                 rejectWithSteamOSNotification(reject);
-              });
-            } else {
-              // Standard desktop Linux: use pkexec (unchanged from Phase 9)
-              const proc = getSpawner()("pkexec", [
-                process.execPath,
-                "--run",
-                tmpPath,
-              ]);
-              proc.on("close", (code: number | null) => {
-                if (code === 126) {
-                  reject(new UserCanceled());
-                } else if (code !== null && code !== 0) {
-                  reject(
-                    new Error(`pkexec exited with code ${code}`),
-                  );
-                }
-                // code 0 or null: normal exit; IPC handles results
-              });
-              proc.on("error", (spawnErr: Error) => {
-                reject(spawnErr);
-              });
-            }
-            return resolve(tmpPath);
+              }
+              // code 0 or null: normal exit; IPC handles results
+            });
+            proc.on("error", (_spawnErr: Error) => {
+              // sudo not found on PATH
+              rejectWithSteamOSNotification(reject);
+            });
+          } else {
+            // Standard desktop Linux: use pkexec (unchanged from Phase 9)
+            const proc = getSpawner()("pkexec", [process.execPath, "--run", tmpPath]);
+            proc.on("close", (code: number | null) => {
+              if (code === 126) {
+                reject(new UserCanceled());
+              } else if (code !== null && code !== 0) {
+                reject(new Error(`pkexec exited with code ${code}`));
+              }
+              // code 0 or null: normal exit; IPC handles results
+            });
+            proc.on("error", (spawnErr: Error) => {
+              reject(spawnErr);
+            });
           }
+          return resolve(tmpPath);
+        }
 
         try {
           winapi.ShellExecuteEx({

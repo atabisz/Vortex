@@ -9,20 +9,24 @@ _Stability-focused release with FOMOD native port completion, collection browsin
 This alpha release focuses on stability, reliability, and completing the FOMOD native port.
 
 **🔧 FOMOD Installer Native Overhaul**
+
 - Complete architectural refactor for better performance and reliability
 - Each installation gets its own native instance for improved isolation
 - Significantly more reliable FOMOD installations in collections
 
 **📚 Collection Improvements**
+
 - Better browsing UX
 - Fixed phase deployment and cancellation issues
 
 **🛡️ Critical Fixes**
+
 - Fixed Mixpanel crash when installing external mods
 - Fixed download cleanup leaving corrupted files
 - Fixed false positive warnings and buffer overflow bugs
 
 **🔐 Security & Quality of Life**
+
 - Warning dialogs for mods with C# scripts
 - Better file type detection and automatic temp file cleanup
 

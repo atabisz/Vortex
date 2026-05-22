@@ -14,7 +14,6 @@ import {
 } from "../extensions/category_management/util/retrieveCategoryPath";
 import { generateCollectionSessionId, modRuleId } from "../extensions/collections_integration/util";
 import { readExtensibleDir } from "../extensions/extension_manager/util";
-import { resolvePathCase } from "./resolvePathCase";
 import getDriveList from "../extensions/gamemode_management/util/getDriveList";
 import { getGame, getGames } from "../extensions/gamemode_management/util/getGame";
 import { getModType } from "../extensions/gamemode_management/util/modTypeExtensions";
@@ -69,6 +68,7 @@ import {
 } from "./errorHandling";
 import extractExeIcon from "./exeIcon";
 import GameStoreHelper from "./GameStoreHelper";
+import { resolvePathCase } from "./resolvePathCase";
 
 /**
  * @deprecated Use window.api for IPC communication from renderer to main process.

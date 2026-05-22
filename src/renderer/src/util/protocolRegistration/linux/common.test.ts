@@ -35,9 +35,7 @@ const defaultSpawnResult = {
 
 describe("applicationsDirectory", () => {
   it("returns xdgDataHome joined with applications", () => {
-    expect(applicationsDirectory()).toBe(
-      "/home/testuser/.local/share/applications",
-    );
+    expect(applicationsDirectory()).toBe("/home/testuser/.local/share/applications");
   });
 });
 
@@ -130,8 +128,6 @@ describe("refreshDesktopDatabase", () => {
     const calls = mockSpawnSync.mock.calls;
     const updateDbCall = calls.find(([cmd]) => cmd === "update-desktop-database");
     expect(updateDbCall).toBeDefined();
-    expect(updateDbCall?.[1]).toContain(
-      "/home/testuser/.local/share/applications",
-    );
+    expect(updateDbCall?.[1]).toContain("/home/testuser/.local/share/applications");
   });
 });

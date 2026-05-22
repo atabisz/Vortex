@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
 import getText from "./texts";
 
 // texts.ts only imports TFunction — no heavy mocks needed
@@ -8,10 +9,7 @@ describe("texts platform-specific path examples", () => {
   let originalPlatform: PropertyDescriptor;
 
   beforeEach(() => {
-    originalPlatform = Object.getOwnPropertyDescriptor(
-      process,
-      "platform",
-    )!;
+    originalPlatform = Object.getOwnPropertyDescriptor(process, "platform")!;
   });
 
   afterEach(() => {

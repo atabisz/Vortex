@@ -3,9 +3,9 @@ import * as path from "path";
 import format from "string-template";
 
 import getVortexPath from "../../util/getVortexPath";
-import { makeOverlayableDictionary } from "../../util/util";
 import { getMyGamesPath } from "../../util/linux/proton";
 import type { ISteamEntry } from "../../util/Steam";
+import { makeOverlayableDictionary } from "../../util/util";
 import type { IDiscoveryResult } from "../gamemode_management/types/IDiscoveryResult";
 
 interface IGameSupport {
@@ -181,11 +181,7 @@ export async function iniFiles(
 ): Promise<string[]> {
   let mygames: string;
 
-  if (
-    process.platform === "linux" &&
-    steamEntry?.usesProton &&
-    steamEntry?.compatDataPath
-  ) {
+  if (process.platform === "linux" && steamEntry?.usesProton && steamEntry?.compatDataPath) {
     mygames = getMyGamesPath(steamEntry.compatDataPath);
   } else {
     mygames = path.join(getVortexPath("documents"), "My Games");

@@ -30,8 +30,10 @@ function requiresLauncher() {
 }
 
 function findGame() {
-  if (process.platform !== 'win32') {
-    return Promise.reject(new util.ProcessCanceled('Epic Games Launcher is not available on Linux'));
+  if (process.platform !== "win32") {
+    return Promise.reject(
+      new util.ProcessCanceled("Epic Games Launcher is not available on Linux"),
+    );
   }
   return util.epicGamesLauncher.findByAppId(EPIC_APP_ID).then((epicEntry) => epicEntry.gamePath);
 }

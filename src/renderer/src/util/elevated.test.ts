@@ -37,11 +37,13 @@ vi.mock("./webpack-hacks", () => ({
   getRealNodeModulePaths: vi.fn(() => ["/fake/node_modules"]),
 }));
 
-import * as tmp from "tmp";
 import * as fs from "fs";
+
+import * as tmp from "tmp";
+
 import type { INotification } from "../types/INotification";
-import { runElevated, _setSpawner, _setNotifier, isSteamOS, _resetSteamOSCache } from "./elevated";
 import { UserCanceled } from "./CustomErrors";
+import { runElevated, _setSpawner, _setNotifier, isSteamOS, _resetSteamOSCache } from "./elevated";
 
 const FAKE_TMP = "/tmp/fake-elevated.js";
 const FAKE_FD = 42;
@@ -51,22 +53,11 @@ function setupSyncMocks(tmpPath = FAKE_TMP) {
   vi.mocked(tmp.file).mockImplementation(
     (
       optsOrCb:
-        | ((
-            err: Error | null,
-            path: string,
-            fd: number,
-            cleanup: () => void,
-          ) => void)
+        | ((err: Error | null, path: string, fd: number, cleanup: () => void) => void)
         | object,
-      cb?: (
-        err: Error | null,
-        path: string,
-        fd: number,
-        cleanup: () => void,
-      ) => void,
+      cb?: (err: Error | null, path: string, fd: number, cleanup: () => void) => void,
     ) => {
-      const callback =
-        typeof optsOrCb === "function" ? optsOrCb : cb;
+      const callback = typeof optsOrCb === "function" ? optsOrCb : cb;
       if (callback) callback(null, tmpPath, FAKE_FD, vi.fn());
     },
   );
@@ -423,7 +414,9 @@ describe("runElevated — SteamOS notification on sudo -n failure", () => {
   beforeEach(() => {
     _resetSteamOSCache();
     capturedNotification = undefined;
-    _setNotifier((n) => { capturedNotification = n; });
+    _setNotifier((n) => {
+      capturedNotification = n;
+    });
     vi.mocked(fs.readFileSync).mockImplementation((filePath: unknown) => {
       if (filePath === "/etc/os-release") {
         return "ID=steamos\nID_LIKE=arch\n";

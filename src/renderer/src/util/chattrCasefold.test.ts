@@ -21,9 +21,7 @@ vi.mock("fs-extra", async (importOriginal) => {
 
 // Mock node:fs/promises for statfs, readdir, writeFile, access, unlink
 vi.mock("node:fs/promises", async (importOriginal) => {
-  const actual = await importOriginal<
-    typeof import("node:fs/promises")
-  >();
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
   return {
     ...actual,
     statfs: vi.fn(),
@@ -35,6 +33,7 @@ vi.mock("node:fs/promises", async (importOriginal) => {
 });
 
 import * as fsPromises from "node:fs/promises";
+
 import * as fs from "./fs";
 
 describe("applyChattrCasefold", () => {
@@ -116,32 +115,24 @@ describe("applyChattrCasefold", () => {
   // CASE-06: Happy path — chattr is called on ext4 + empty dir + linux + no Flatpak
   it("calls chattr +F when ext4 empty dir linux no Flatpak", async () => {
     // which succeeds, chattr succeeds
-    const mockChattr = vi.fn().mockImplementation(
-      (
-        cmd: string,
-        _args: string[],
-        cb: (err: Error | null, stdout: string, stderr: string) => void,
-      ) => {
-        cb(null, "", ""); // success for both which and chattr
-      },
-    );
+    const mockChattr = vi
+      .fn()
+      .mockImplementation(
+        (
+          cmd: string,
+          _args: string[],
+          cb: (err: Error | null, stdout: string, stderr: string) => void,
+        ) => {
+          cb(null, "", ""); // success for both which and chattr
+        },
+      );
     fs._setChattr(mockChattr);
 
     await expect(fs.applyChattrCasefold(TEST_DIR)).resolves.toBeUndefined();
     // which call + chattr +F call
     expect(mockChattr).toHaveBeenCalledTimes(2);
-    expect(mockChattr).toHaveBeenNthCalledWith(
-      1,
-      "which",
-      ["chattr"],
-      expect.any(Function),
-    );
-    expect(mockChattr).toHaveBeenNthCalledWith(
-      2,
-      "chattr",
-      ["+F", TEST_DIR],
-      expect.any(Function),
-    );
+    expect(mockChattr).toHaveBeenNthCalledWith(1, "which", ["chattr"], expect.any(Function));
+    expect(mockChattr).toHaveBeenNthCalledWith(2, "chattr", ["+F", TEST_DIR], expect.any(Function));
   });
 
   // CASE-07: chattr exits code 1 (EOPNOTSUPP) — silent fallback, never rejects
@@ -261,9 +252,7 @@ describe("applyChattrCasefold", () => {
     await fs.applyChattrCasefold(TEST_DIR);
 
     expect(notifier).toHaveBeenCalledTimes(1);
-    expect(notifier).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "info" }),
-    );
+    expect(notifier).toHaveBeenCalledWith(expect.objectContaining({ type: "info" }));
   });
 
   // CASE-11: Second EOPNOTSUPP call does NOT fire notification again

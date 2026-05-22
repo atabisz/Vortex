@@ -20,6 +20,7 @@ vi.mock("./logging", () => ({
 }));
 
 import { shell, BrowserWindow } from "electron";
+
 import { betterIpcMain } from "./ipc";
 import { openUrl } from "./open";
 
@@ -39,9 +40,9 @@ describe("openUrl", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getAllWindows).mockReturnValue(
-      [mockWindow] as unknown as ReturnType<typeof getAllWindows>,
-    );
+    vi.mocked(getAllWindows).mockReturnValue([mockWindow] as unknown as ReturnType<
+      typeof getAllWindows
+    >);
   });
 
   it("pushes shell:openUrlFailed to all windows when openExternal rejects", async () => {

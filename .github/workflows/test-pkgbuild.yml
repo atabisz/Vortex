@@ -30,4 +30,4 @@ jobs:
 
       - name: Validate desktop file with namcap
         working-directory: packaging/arch
-        run: namcap vortex-linux.desktop || true  # desktop-file warnings are informational
+        run: namcap vortex-linux.desktop || true # desktop-file warnings are informational

@@ -1,5 +1,6 @@
-import { shell, BrowserWindow } from "electron";
 import path from "node:path";
+
+import { shell, BrowserWindow } from "electron";
 
 import { betterIpcMain } from "./ipc";
 import { log } from "./logging";
@@ -10,11 +11,7 @@ export function openUrl(url: URL): void {
     log("error", "failed to open URL", { url: url.toString(), error: err });
     for (const win of BrowserWindow.getAllWindows()) {
       if (!win.isDestroyed()) {
-        betterIpcMain.send(
-          win.webContents,
-          "shell:openUrlFailed",
-          url.toString(),
-        );
+        betterIpcMain.send(win.webContents, "shell:openUrlFailed", url.toString());
       }
     }
   });

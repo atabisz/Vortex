@@ -1,3 +1,4 @@
+import { cleanup, render, screen } from "@testing-library/react";
 /**
  * Unit tests for SavegameList.tsx renderTransfer() — Phase 13 addition.
  *
@@ -8,7 +9,6 @@
  */
 import React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 // All vi.mock calls must come before component imports (vitest hoists them).
@@ -20,8 +20,7 @@ vi.mock("react-bootstrap", async () => {
   Panel.Body = ({ children }: any) => R.createElement("div", null, children);
   return {
     Alert: ({ children }: any) => R.createElement("div", null, children),
-    FormControl: ({ children, onChange }: any) =>
-      R.createElement("select", { onChange }, children),
+    FormControl: ({ children, onChange }: any) => R.createElement("select", { onChange }, children),
     Panel,
   };
 });
@@ -38,9 +37,7 @@ vi.mock("vortex-api", async () => {
   const ReactModule = await vi.importActual<any>("react");
   const R = ReactModule.default ?? ReactModule;
 
-  const storeHelper = await vi.importActual<any>(
-    "../../../../src/renderer/src/util/storeHelper",
-  );
+  const storeHelper = await vi.importActual<any>("../../../../src/renderer/src/util/storeHelper");
 
   class ComponentEx extends R.Component {
     public nextState: any;
@@ -50,12 +47,10 @@ vi.mock("vortex-api", async () => {
     }
   }
 
-  const MainPage: any = ({ children }: any) =>
-    R.createElement("div", null, children);
+  const MainPage: any = ({ children }: any) => R.createElement("div", null, children);
   MainPage.Header = ({ children }: any) =>
     R.createElement("div", { "data-testid": "transfer-header" }, children);
-  MainPage.Body = ({ children }: any) =>
-    R.createElement("div", null, children);
+  MainPage.Body = ({ children }: any) => R.createElement("div", null, children);
 
   return {
     ComponentEx,
@@ -158,9 +153,7 @@ describe("SavegameList renderTransfer — profileOptions filter and empty-state"
     );
 
     expect(screen.getByText("Global")).toBeInTheDocument();
-    expect(
-      screen.queryByText(/No profiles with local saves found/),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/No profiles with local saves found/)).not.toBeInTheDocument();
   });
 
   it("includes only same-game local-save profiles and excludes current profile", () => {
@@ -182,16 +175,10 @@ describe("SavegameList renderTransfer — profileOptions filter and empty-state"
     // eligible (same game, local saves) appears as an option
     expect(screen.getByText("Profile: Profile eligible")).toBeInTheDocument();
     // cross-game profile must not appear
-    expect(
-      screen.queryByText("Profile: Profile crossgame"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Profile: Profile crossgame")).not.toBeInTheDocument();
     // current profile must not appear as an option
-    expect(
-      screen.queryByText("Profile: Profile c1"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Profile: Profile c1")).not.toBeInTheDocument();
     // empty-state hidden because eligible profile exists
-    expect(
-      screen.queryByText(/No profiles with local saves found/),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/No profiles with local saves found/)).not.toBeInTheDocument();
   });
 });

@@ -13,7 +13,9 @@
  * - ignoring ENOENT error when deleting a file.
  */
 
+import { execFile as execFileNative } from "child_process";
 import * as net from "net";
+import * as fsPromises from "node:fs/promises";
 import * as path from "path";
 
 import {
@@ -33,21 +35,19 @@ import type * as permissionT from "permissions";
 import rimraf from "rimraf";
 import { generate as shortid } from "shortid";
 import * as tmp from "tmp";
-import { execFile as execFileNative } from "child_process";
-import * as fsPromises from "node:fs/promises";
-import type { INotification } from "../types/INotification";
 import type * as whoLocksT from "wholocks";
 
+import type { INotification } from "../types/INotification";
 import { ProcessCanceled, SelfCopyCheckError, UserCanceled } from "./CustomErrors";
 import { runElevated } from "./elevated";
-import { getIPCPath } from "./ipc";
 import { createErrorReport, getVisibleWindow } from "./errorHandling";
 import type { TFunction } from "./i18n";
+import { getIPCPath } from "./ipc";
 import lazyRequire from "./lazyRequire";
 import { log } from "./log";
 import { decodeSystemError } from "./nativeErrors";
-import { restackErr, truthy } from "./util";
 import { resolvePathCase } from "./resolvePathCase";
+import { restackErr, truthy } from "./util";
 
 const permission: typeof permissionT = lazyRequire(() => require("permissions"));
 const wholocks: typeof whoLocksT = lazyRequire(() => require("wholocks"));
@@ -123,9 +123,7 @@ async function verifyCasefold(dirPath: string): Promise<boolean> {
  *
  * @internal Exported for testing only.
  */
-export async function applyChattrCasefold(
-  dirPath: string,
-): Promise<void> {
+export async function applyChattrCasefold(dirPath: string): Promise<void> {
   // D-04: Platform guard
   if (process.platform !== "linux") {
     return;
@@ -191,11 +189,7 @@ export async function applyChattrCasefold(
               dirPath,
             });
           } else {
-            log(
-              "debug",
-              "chattr+F verify failed (false positive?), using shim",
-              { dirPath },
-            );
+            log("debug", "chattr+F verify failed (false positive?), using shim", { dirPath });
           }
           resolve();
         });
@@ -232,10 +226,7 @@ export {
   writeSync,
 } from "original-fs";
 
-import {
-  readdirSync as readdirSyncOriginal,
-  watch as watchOriginal,
-} from "original-fs";
+import { readdirSync as readdirSyncOriginal, watch as watchOriginal } from "original-fs";
 
 /**
  * Synchronous case-folding for watch paths on Wine prefixes.
@@ -265,10 +256,7 @@ function resolvePathCaseSync(absPath: string): string {
   return current;
 }
 
-export function watch(
-  filename: string,
-  ...args: any[]
-): ReturnType<typeof watchOriginal> {
+export function watch(filename: string, ...args: any[]): ReturnType<typeof watchOriginal> {
   return watchOriginal(resolvePathCaseSync(filename), ...(args as []));
 }
 
@@ -702,9 +690,7 @@ export function genFSWrapperAsync<T extends (...args) => any>(func: T) {
  */
 function isWinePrefixPath(filePath: string): boolean {
   return (
-    process.platform === "linux" &&
-    filePath.includes("/compatdata/") &&
-    filePath.includes("/pfx/")
+    process.platform === "linux" && filePath.includes("/compatdata/") && filePath.includes("/pfx/")
   );
 }
 
@@ -740,20 +726,18 @@ const readFileAsyncRaw: (...args: any[]) => PromiseBB<any> = genFSWrapperAsync(f
 const readFileAsync: (...args: any[]) => PromiseBB<any> = (...args: any[]) => {
   const filePath = args[0];
   if (typeof filePath === "string" && isWinePrefixPath(filePath)) {
-    return PromiseBB.resolve(resolveCaseIfWinePrefix(filePath)).then(
-      (resolved) => {
-        args[0] = resolved;
-        return readFileAsyncRaw(...args);
-      },
-    );
+    return PromiseBB.resolve(resolveCaseIfWinePrefix(filePath)).then((resolved) => {
+      args[0] = resolved;
+      return readFileAsyncRaw(...args);
+    });
   }
   return readFileAsyncRaw(...args);
 };
 const statAsyncRaw: (path: string) => PromiseBB<fs.Stats> = genFSWrapperAsync(fs.stat);
 const statAsync: (path: string) => PromiseBB<fs.Stats> = (filePath: string) => {
   if (isWinePrefixPath(filePath)) {
-    return PromiseBB.resolve(resolveCaseIfWinePrefix(filePath)).then(
-      (resolved) => statAsyncRaw(resolved),
+    return PromiseBB.resolve(resolveCaseIfWinePrefix(filePath)).then((resolved) =>
+      statAsyncRaw(resolved),
     );
   }
   return statAsyncRaw(filePath);
@@ -776,19 +760,20 @@ const writeFileAsyncRaw: (
   data: any,
   options?: fs.WriteFileOptions,
 ) => PromiseBB<void> = genFSWrapperAsync(fs.writeFile);
-const writeFileAsync: (file: string, data: any, options?: fs.WriteFileOptions) => PromiseBB<void> =
-  (...args: any[]) => {
-    const filePath = args[0];
-    if (typeof filePath === "string" && isWinePrefixPath(filePath)) {
-      return PromiseBB.resolve(resolveCaseIfWinePrefix(filePath)).then(
-        (resolved) => {
-          args[0] = resolved;
-          return writeFileAsyncRaw(...(args as [string, any, fs.WriteFileOptions?]));
-        },
-      );
-    }
-    return writeFileAsyncRaw(...(args as [string, any, fs.WriteFileOptions?]));
-  };
+const writeFileAsync: (
+  file: string,
+  data: any,
+  options?: fs.WriteFileOptions,
+) => PromiseBB<void> = (...args: any[]) => {
+  const filePath = args[0];
+  if (typeof filePath === "string" && isWinePrefixPath(filePath)) {
+    return PromiseBB.resolve(resolveCaseIfWinePrefix(filePath)).then((resolved) => {
+      args[0] = resolved;
+      return writeFileAsyncRaw(...(args as [string, any, fs.WriteFileOptions?]));
+    });
+  }
+  return writeFileAsyncRaw(...(args as [string, any, fs.WriteFileOptions?]));
+};
 const appendFileAsync: (file: string, data: any, options?: fs.WriteFileOptions) => PromiseBB<void> =
   genFSWrapperAsync(fs.appendFile);
 // tslint:enable:max-line-length
@@ -1053,8 +1038,8 @@ function unlinkInt(
 
 export function renameAsync(sourcePath: string, destinationPath: string): PromiseBB<void> {
   if (isWinePrefixPath(sourcePath)) {
-    return PromiseBB.resolve(resolveCaseIfWinePrefix(sourcePath)).then(
-      (resolved) => renameInt(resolved, destinationPath, new Error(), NUM_RETRIES),
+    return PromiseBB.resolve(resolveCaseIfWinePrefix(sourcePath)).then((resolved) =>
+      renameInt(resolved, destinationPath, new Error(), NUM_RETRIES),
     );
   }
   return renameInt(sourcePath, destinationPath, new Error(), NUM_RETRIES);

@@ -232,15 +232,10 @@ export async function mygamesPath(gameMode: string): Promise<string> {
 }
 
 export async function iniPath(gameMode: string): Promise<string> {
-  return path.join(
-    await mygamesPath(gameMode),
-    gameSupport.get(gameMode, "iniName"),
-  );
+  return path.join(await mygamesPath(gameMode), gameSupport.get(gameMode, "iniName"));
 }
 
-export async function prefIniPath(
-  gameMode: string,
-): Promise<string | undefined> {
+export async function prefIniPath(gameMode: string): Promise<string | undefined> {
   const prefIniName = gameSupport.get(gameMode, "prefIniName");
   if (prefIniName === undefined) {
     return undefined;

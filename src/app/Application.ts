@@ -1,3 +1,10 @@
+import * as msgpackT from "@msgpack/msgpack";
+import Promise from "bluebird";
+import crashDumpT from "crash-dump";
+import { app, crashReporter as crashReporterT, dialog, ipcMain, protocol, shell } from "electron";
+import contextMenu from "electron-context-menu";
+
+import { addNotification, setCommandLine, showDialog } from "../actions";
 import {
   setApplicationVersion,
   setInstallType,
@@ -10,11 +17,7 @@ import { ThunkStore } from "../types/IExtensionContext";
 import type { IPresetStep, IPresetStepHydrateState } from "../types/IPreset";
 import { IState } from "../types/IState";
 import { getApplication } from "../util/application";
-import commandLine, {
-  IParameters,
-  ISetItem,
-  relaunch,
-} from "../util/commandLine";
+import commandLine, { IParameters, ISetItem, relaunch } from "../util/commandLine";
 import {
   DataInvalid,
   DocumentsPathMissing,
@@ -57,46 +60,22 @@ import {
 } from "../util/store";
 import {} from "../util/storeHelper";
 import SubPersistor from "../util/SubPersistor";
-import {
-  isMajorDowngrade,
-  replaceRecursive,
-  spawnSelf,
-  timeout,
-  truthy,
-} from "../util/util";
-
-import { addNotification, setCommandLine, showDialog } from "../actions";
-
+import { isMajorDowngrade, replaceRecursive, spawnSelf, timeout, truthy } from "../util/util";
 import MainWindowT from "./MainWindow";
 import SplashScreenT from "./SplashScreen";
 import TrayIconT from "./TrayIcon";
-
-import * as msgpackT from "@msgpack/msgpack";
-import Promise from "bluebird";
-import crashDumpT from "crash-dump";
-import {
-  app,
-  crashReporter as crashReporterT,
-  dialog,
-  ipcMain,
-  protocol,
-  shell,
-} from "electron";
-import contextMenu from "electron-context-menu";
 import isAdmin = require("is-admin");
-import * as _ from "lodash";
 import * as os from "os";
 import * as path from "path";
+
+import * as _ from "lodash";
 import type * as permissionsT from "permissions";
 import * as semver from "semver";
 import type * as uuidT from "uuid";
-
 import type * as winapiT from "winapi-bindings";
 
 const uuid = lazyRequire<typeof uuidT>(() => require("uuid"));
-const permissions = lazyRequire<typeof permissionsT>(() =>
-  require("permissions"),
-);
+const permissions = lazyRequire<typeof permissionsT>(() => require("permissions"));
 const winapi = lazyRequire<typeof winapiT>(() => require("winapi-bindings"));
 
 const STATE_CHUNK_SIZE = 128 * 1024;
@@ -129,11 +108,7 @@ class Application {
 
     // this error message appears to happen as the result of some other problem crashing the
     // renderer process, so all this may do is obfuscate what's actually going on.
-    if (
-      error.message.includes(
-        "Error processing argument at index 0, conversion failure from",
-      )
-    ) {
+    if (error.message.includes("Error processing argument at index 0, conversion failure from")) {
       return true;
     }
 
@@ -185,10 +160,7 @@ class Application {
     this.mArgs = args;
 
     ipcMain.on("show-window", () => this.showMainWindow(args?.startMinimized));
-    app.commandLine.appendSwitch(
-      "js-flags",
-      `--max-old-space-size=${args.maxMemory || 4096}`,
-    );
+    app.commandLine.appendSwitch("js-flags", `--max-old-space-size=${args.maxMemory || 4096}`);
 
     this.mBasePath = app.getPath("userData");
     fs.ensureDirSync(this.mBasePath);
@@ -206,8 +178,7 @@ class Application {
     }
 
     if (process.env.CRASH_REPORTING === "electron") {
-      const crashReporter: typeof crashReporterT =
-        require("electron").crashReporter;
+      const crashReporter: typeof crashReporterT = require("electron").crashReporter;
       crashReporter.start({
         productName: "Vortex",
         uploadToServer: false,
@@ -221,10 +192,7 @@ class Application {
       );
     }
 
-    setupLogging(
-      app.getPath("userData"),
-      process.env.NODE_ENV === "development",
-    );
+    setupLogging(app.getPath("userData"), process.env.NODE_ENV === "development");
     this.setupAppEvents(args);
   }
 
@@ -235,10 +203,7 @@ class Application {
       showSaveImageAs: false,
       showInspectElement: false,
       showSearchWithGoogle: false,
-      shouldShowMenu: (
-        event: Electron.Event,
-        params: Electron.ContextMenuParams,
-      ) => {
+      shouldShowMenu: (event: Electron.Event, params: Electron.ContextMenuParams) => {
         // currently only offer menu on selected text
         return params.selectionText.length > 0;
       },
@@ -305,8 +270,7 @@ class Application {
     });
 
     app.whenReady().then(() => {
-      const vortexPath =
-        process.env.NODE_ENV === "development" ? "vortex_devel" : "vortex";
+      const vortexPath = process.env.NODE_ENV === "development" ? "vortex_devel" : "vortex";
 
       // if userData specified, use it
       let userData =
@@ -342,14 +306,11 @@ class Application {
       }
     });
 
-    app.on(
-      "web-contents-created",
-      (event: Electron.Event, contents: Electron.WebContents) => {
-        // tslint:disable-next-line:no-submodule-imports
-        require("@electron/remote/main").enable(contents);
-        contents.on("will-attach-webview", this.attachWebView);
-      },
-    );
+    app.on("web-contents-created", (event: Electron.Event, contents: Electron.WebContents) => {
+      // tslint:disable-next-line:no-submodule-imports
+      require("@electron/remote/main").enable(contents);
+      contents.on("will-attach-webview", this.attachWebView);
+    });
   }
 
   private attachWebView = (
@@ -389,9 +350,7 @@ class Application {
         .then(() => this.testUserEnvironment())
         .then(() => this.validateFiles())
         .then(() =>
-          args?.startMinimized === true
-            ? Promise.resolve(undefined)
-            : this.startSplash(),
+          args?.startMinimized === true ? Promise.resolve(undefined) : this.startSplash(),
         )
         // start initialization
         .tap((splashIn) =>
@@ -401,30 +360,27 @@ class Application {
         )
         .then((splashIn) => {
           splash = splashIn;
-          return this.createStore(args.restore, args.merge).catch(
-            DataInvalid,
-            (err) => {
-              log("error", "store data invalid", err.message);
-              dialog
-                .showMessageBox(getVisibleWindow(), {
-                  type: "error",
-                  buttons: ["Continue"],
-                  title: "Error",
-                  message: "Data corrupted",
-                  detail:
-                    "The application state which contains things like your Vortex " +
-                    "settings, meta data about mods and other important data is " +
-                    "corrupted and can't be read. This could be a result of " +
-                    "hard disk corruption, a power outage or something similar. " +
-                    "Vortex will now try to repair the database, usually this " +
-                    "should work fine but please check that settings, mod list and so " +
-                    "on are ok before you deploy anything. " +
-                    "If not, you can go to settings->workarounds and restore a backup " +
-                    "which shouldn't lose you more than an hour of progress.",
-                })
-                .then(() => this.createStore(args.restore, args.merge, true));
-            },
-          );
+          return this.createStore(args.restore, args.merge).catch(DataInvalid, (err) => {
+            log("error", "store data invalid", err.message);
+            dialog
+              .showMessageBox(getVisibleWindow(), {
+                type: "error",
+                buttons: ["Continue"],
+                title: "Error",
+                message: "Data corrupted",
+                detail:
+                  "The application state which contains things like your Vortex " +
+                  "settings, meta data about mods and other important data is " +
+                  "corrupted and can't be read. This could be a result of " +
+                  "hard disk corruption, a power outage or something similar. " +
+                  "Vortex will now try to repair the database, usually this " +
+                  "should work fine but please check that settings, mod list and so " +
+                  "on are ok before you deploy anything. " +
+                  "If not, you can go to settings->workarounds and restore a backup " +
+                  "which shouldn't lose you more than an hour of progress.",
+              })
+              .then(() => this.createStore(args.restore, args.merge, true));
+          });
         })
         .tap(() => log("debug", "checking admin rights"))
         .then(() => this.warnAdmin())
@@ -575,11 +531,7 @@ class Application {
         .then((res) => {
           res.forEach((value) => {
             if (value !== undefined) {
-              log(
-                "debug",
-                "UAC settings found",
-                `${value.key}: ${value.value}`,
-              );
+              log("debug", "UAC settings found", `${value.key}: ${value.value}`);
             }
           });
           const adminConsent = res[0];
@@ -614,9 +566,7 @@ class Application {
      */
 
     return fs
-      .statAsync(
-        path.join(getVortexPath("application"), "Uninstall Vortex.exe"),
-      )
+      .statAsync(path.join(getVortexPath("application"), "Uninstall Vortex.exe"))
       .then(() => {
         this.mStore.dispatch(setInstallType("regular"));
       })
@@ -702,8 +652,7 @@ class Application {
           return Promise.resolve();
         })
         .catch(
-          (err) =>
-            !(err instanceof UserCanceled) && !(err instanceof ProcessCanceled),
+          (err) => !(err instanceof UserCanceled) && !(err instanceof ProcessCanceled),
           (err: Error) => {
             dialog.showErrorBox(
               "Migration failed",
@@ -719,15 +668,10 @@ class Application {
   }
 
   private splitPath(statePath: string): string[] {
-    return statePath
-      .match(/(\\.|[^.])+/g)
-      .map((input) => input.replace(/\\(.)/g, "$1"));
+    return statePath.match(/(\\.|[^.])+/g).map((input) => input.replace(/\\(.)/g, "$1"));
   }
 
-  private handleGet(
-    getPaths: string[] | boolean,
-    dbpath: string,
-  ): Promise<void> {
+  private handleGet(getPaths: string[] | boolean, dbpath: string): Promise<void> {
     if (typeof getPaths === "boolean") {
       fs.writeSync(1, "Usage: vortex --get <path>\n");
       return;
@@ -749,9 +693,7 @@ class Application {
             );
             return Promise.all(
               matches.map((match) =>
-                persist
-                  .getItem(match)
-                  .then((value) => `${match.join(".")} = ${value}`),
+                persist.getItem(match).then((value) => `${match.join(".")} = ${value}`),
               ),
             )
               .then((output) => {
@@ -830,9 +772,7 @@ class Application {
               matches.map((match) =>
                 persist
                   .removeItem(match)
-                  .then(() =>
-                    process.stdout.write(`removed ${match.join(".")}\n`),
-                  )
+                  .then(() => process.stdout.write(`removed ${match.join(".")}\n`))
                   .catch((err) => {
                     process.stderr.write(err.message + "\n");
                   }),
@@ -896,8 +836,7 @@ class Application {
         .ensureDirAsync(backupPath)
         .then(() => fs.readdirAsync(backupPath))
         .filter(
-          (fileName: string) =>
-            fileName.startsWith("backup") && path.extname(fileName) === ".json",
+          (fileName: string) => fileName.startsWith("backup") && path.extname(fileName) === ".json",
         )
         .then((backupsIn) => {
           backups = backupsIn;
@@ -909,9 +848,7 @@ class Application {
 
     const deleteBackups = () =>
       Promise.map(backups, (backupName) =>
-        fs
-          .removeAsync(path.join(backupPath, backupName))
-          .catch(() => undefined),
+        fs.removeAsync(path.join(backupPath, backupName)).catch(() => undefined),
       ).then(() => null);
 
     // storing the last version that ran in the startup.json settings file.
@@ -932,10 +869,7 @@ class Application {
     )
       .then((levelPersistor) => {
         this.mLevelPersistors.push(levelPersistor);
-        return insertPersistor(
-          "user",
-          new SubPersistor(levelPersistor, "user"),
-        );
+        return insertPersistor("user", new SubPersistor(levelPersistor, "user"));
       })
       .catch(DataInvalid, (err) => {
         const failedPersistor = this.mLevelPersistors.pop();
@@ -965,11 +899,7 @@ class Application {
 
         log("info", `using ${dataPath} as the storage directory`);
         if (multiUser || this.mArgs.userData !== undefined) {
-          log(
-            "info",
-            "all further logging will happen in",
-            path.join(dataPath, "vortex.log"),
-          );
+          log("info", "all further logging will happen in", path.join(dataPath, "vortex.log"));
           setLogPath(dataPath);
           log("info", "--------------------------");
           log("info", "Vortex Version", getApplication().version);
@@ -986,10 +916,7 @@ class Application {
       })
       .then(() => {
         log("debug", "reading app state");
-        return insertPersistor(
-          "app",
-          new SubPersistor(last(this.mLevelPersistors), "app"),
-        );
+        return insertPersistor("app", new SubPersistor(last(this.mLevelPersistors), "app"));
       })
       .then(() => {
         if (newStore.getState().app.instanceId === undefined) {
@@ -1015,14 +942,9 @@ class Application {
           return new Promise(() => null);
         }
         const reducer = require("../reducers/index").default;
-        newStore.replaceReducer(
-          reducer(this.mExtensions.getReducers(), querySanitize),
-        );
+        newStore.replaceReducer(reducer(this.mExtensions.getReducers(), querySanitize));
         return Promise.mapSeries(allHives(this.mExtensions), (hive) =>
-          insertPersistor(
-            hive,
-            new SubPersistor(last(this.mLevelPersistors), hive),
-          ),
+          insertPersistor(hive, new SubPersistor(last(this.mLevelPersistors), hive)),
         );
       })
       .then(() => {
@@ -1067,9 +989,7 @@ class Application {
                 {
                   message: "Failed to restore backup",
                   details:
-                    err.code !== "ENOENT"
-                      ? err.message
-                      : "Specified backup file doesn't exist",
+                    err.code !== "ENOENT" ? err.message : "Specified backup file doesn't exist",
                   path: restoreBackup,
                 },
                 {},
@@ -1094,9 +1014,7 @@ class Application {
                 {
                   message: "Failed to merge backup",
                   details:
-                    err.code !== "ENOENT"
-                      ? err.message
-                      : "Specified backup file doesn't exist",
+                    err.code !== "ENOENT" ? err.message : "Specified backup file doesn't exist",
                   path: mergeBackup,
                 },
                 {},
@@ -1128,19 +1046,10 @@ class Application {
           const msgpack: typeof msgpackT = require("@msgpack/msgpack");
           if (sendState === undefined || idx === 0) {
             sendState = Buffer.from(
-              msgpack.encode(
-                replaceRecursive(
-                  this.mStore.getState(),
-                  undefined,
-                  "__UNDEFINED__",
-                ),
-              ),
+              msgpack.encode(replaceRecursive(this.mStore.getState(), undefined, "__UNDEFINED__")),
             );
           }
-          const res = sendState.slice(
-            idx * STATE_CHUNK_SIZE,
-            (idx + 1) * STATE_CHUNK_SIZE,
-          );
+          const res = sendState.slice(idx * STATE_CHUNK_SIZE, (idx + 1) * STATE_CHUNK_SIZE);
           return res.toString("base64");
         };
 
@@ -1152,9 +1061,7 @@ class Application {
         if (backups.length > 0) {
           const sorted = backups.sort((lhs, rhs) => rhs.localeCompare(lhs));
           const mostRecent = sorted[0];
-          const timestamp = path
-            .basename(mostRecent, ".json")
-            .replace("backup_", "");
+          const timestamp = path.basename(mostRecent, ".json").replace("backup_", "");
           const date = new Date(+timestamp);
           const dateString =
             `${date.toDateString()} ` +
@@ -1163,8 +1070,7 @@ class Application {
           this.mStore.dispatch(
             addNotification({
               type: "info",
-              message:
-                "Found an application state backup. Created on: {{date}}",
+              message: "Found an application state backup. Created on: {{date}}",
               actions: [
                 {
                   title: "Restore",
@@ -1194,10 +1100,7 @@ class Application {
                             label: "Restore",
                             action: () => {
                               log("info", "sorted backups", sorted);
-                              spawnSelf([
-                                "--restore",
-                                path.join(backupPath, mostRecent),
-                              ]);
+                              spawnSelf(["--restore", path.join(backupPath, mostRecent)]);
                               app.exit();
                             },
                           },
@@ -1221,13 +1124,7 @@ class Application {
           // we started without any problems, save this application state
           return createFullStateBackup("startup", this.mStore)
             .then(() => Promise.resolve())
-            .catch((err) =>
-              log(
-                "error",
-                "Failed to create startup state backup",
-                err.message,
-              ),
-            );
+            .catch((err) => log("error", "Failed to create startup state backup", err.message));
         }
         return Promise.resolve();
       })
@@ -1245,8 +1142,7 @@ class Application {
 
   private initDevel(): Promise<void> {
     if (process.env.NODE_ENV === "development") {
-      const { installDevelExtensions } =
-        require("../util/devel") as typeof develT;
+      const { installDevelExtensions } = require("../util/devel") as typeof develT;
       return installDevelExtensions();
     } else {
       return Promise.resolve();
@@ -1300,9 +1196,7 @@ class Application {
   }
 
   private validateFiles(): Promise<void> {
-    return Promise.resolve(
-      validateFiles(getVortexPath("assets_unpacked")),
-    ).then((validation) => {
+    return Promise.resolve(validateFiles(getVortexPath("assets_unpacked"))).then((validation) => {
       if (validation.changed.length > 0 || validation.missing.length > 0) {
         log("info", "Files were manipulated", validation);
         return dialog

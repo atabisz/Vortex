@@ -8,7 +8,6 @@ vi.mock("./fs", () => ({
 }));
 
 import * as fs from "./fs";
-
 import { resolvePathCase } from "./resolvePathCase";
 
 describe("resolvePathCase", () => {
@@ -85,9 +84,7 @@ describe("resolvePathCase", () => {
   it("Test 4: when root dir does not exist, returns path unchanged", async () => {
     setPlatform("linux");
     const mockReaddir = vi.mocked(fs.readdirAsync);
-    mockReaddir.mockRejectedValue(
-      Object.assign(new Error("ENOENT"), { code: "ENOENT" }),
-    );
+    mockReaddir.mockRejectedValue(Object.assign(new Error("ENOENT"), { code: "ENOENT" }));
 
     const result = await resolvePathCase("/nonexistent", "data/file.esp");
     expect(result).toBe(path.join("/nonexistent", "data", "file.esp"));

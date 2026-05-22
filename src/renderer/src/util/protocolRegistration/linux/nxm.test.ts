@@ -1,10 +1,7 @@
 import { afterEach, beforeEach, describe as _describe, expect, it, vi } from "vitest";
 const describe = _describe.skipIf(process.platform !== "linux");
 
-import {
-  deregisterLinuxNxmProtocolHandler,
-  registerLinuxNxmProtocolHandler,
-} from "./nxm";
+import { deregisterLinuxNxmProtocolHandler, registerLinuxNxmProtocolHandler } from "./nxm";
 
 vi.mock("fs-extra", () => ({
   default: {
@@ -55,8 +52,7 @@ beforeEach(() => {
 
   originalPlatform = process.platform;
   originalNodeEnv = process.env.NODE_ENV;
-  originalDefaultApp = (process as NodeJS.Process & { defaultApp?: boolean })
-    .defaultApp;
+  originalDefaultApp = (process as NodeJS.Process & { defaultApp?: boolean }).defaultApp;
 
   // Ensure APPIMAGE is unset by default so production-build path doesn't
   // trigger in tests that don't explicitly want it.
@@ -76,8 +72,7 @@ afterEach(() => {
   if (originalDefaultApp === undefined) {
     delete (process as NodeJS.Process & { defaultApp?: boolean }).defaultApp;
   } else {
-    (process as NodeJS.Process & { defaultApp?: boolean }).defaultApp =
-      originalDefaultApp;
+    (process as NodeJS.Process & { defaultApp?: boolean }).defaultApp = originalDefaultApp;
   }
 });
 
@@ -156,9 +151,7 @@ describe("registerLinuxNxmProtocolHandler", () => {
 
     it("returns true when the current handler differs from the desktop ID", async () => {
       const common = await import("./common");
-      vi.mocked(common.getDefaultUrlSchemeHandler).mockReturnValue(
-        "some.other.handler.desktop",
-      );
+      vi.mocked(common.getDefaultUrlSchemeHandler).mockReturnValue("some.other.handler.desktop");
 
       const result = registerLinuxNxmProtocolHandler({
         ...defaultOptions,

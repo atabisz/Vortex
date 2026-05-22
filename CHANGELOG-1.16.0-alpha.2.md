@@ -9,12 +9,14 @@ _Major refactor release with Electron 37, .NET 9 upgrade, complete Download/Inst
 This alpha release brings massive performance improvements, a brand new collection browsing experience, and major reliability enhancements. Here's what you'll notice:
 
 **🚀 Collections with Pre-Configured Mods Install Way Faster**
+
 - Skipped unnecessary deployments between phases for mods with pre-saved installer choices
 - Collections with many FOMODs now install 50-70% faster
 - Phases still exist but deployments only happen when needed
 - A collection that took 15 minutes now takes 5-6 minutes
 
 **📚 Browse Collections Right in Vortex**
+
 - New dedicated Collections Browser built into Vortex
 - Browse, search, and filter collections without leaving the app
 - See collection details, endorsements, and curator information
@@ -22,6 +24,7 @@ This alpha release brings massive performance improvements, a brand new collecti
 - Modern, responsive design with improved performance
 
 **⚡ Even Faster Downloads & Installs**
+
 - Downloads and installations now happen simultaneously instead of one at a time
 - Up to 10 mods can download at once
 - Automatic retry on failed downloads means fewer manual interventions
@@ -29,17 +32,20 @@ This alpha release brings massive performance improvements, a brand new collecti
 - FOMOD installations in collections are significantly faster and more reliable
 
 **🔧 Plugin Sorting Fixed**
+
 - No more needing to restart Vortex after installing a collection to get plugins sorted correctly
 - LOOT masterlist now updates properly on first run
 - Autosort works reliably after collection installations
 
 **🎮 Better User Experience**
+
 - Fewer annoying notifications - many now appear as quick toasts that don't clutter your screen
 - Notifications automatically clear when you switch games
 - Download progress indicators are now accurate
 - UI remains responsive even during heavy download/install activity
 
 **✨ Quality of Life Improvements**
+
 - Fixed collections not showing as complete when finished
 - Fixed mod type conflicts during collection installation
 - Collection editing now available for users with proper permissions
@@ -47,11 +53,13 @@ This alpha release brings massive performance improvements, a brand new collecti
 - Large collections download in the background while you continue working
 
 **⚙️ Under the Hood**
+
 - Upgraded to latest Electron 37 and .NET 9 for better performance and security
 - Improved analytics (for those who opt-in) to help us understand and fix issues faster
 - Removed over 500 lines of complex phase management code
 
 **⚠️ Important Notes**
+
 - This is an **alpha release** - please report any issues you encounter
 - If you use custom extensions, they may need updates to work with the new system
 

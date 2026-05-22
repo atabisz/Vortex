@@ -15,7 +15,14 @@ export const mainOutputDirectory = path.resolve(import.meta.dirname, "src", "mai
  * @param {Record<string, string>} [alias=undefined]
  * @returns {import("rolldown").RolldownOptions}
  * */
-export function createConfig(input, output, format, customPlugins = [], external = undefined, alias = undefined) {
+export function createConfig(
+  input,
+  output,
+  format,
+  customPlugins = [],
+  external = undefined,
+  alias = undefined,
+) {
   return defineConfig({
     input: input,
     platform: "node",

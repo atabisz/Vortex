@@ -87,8 +87,7 @@ export class VortexIPCConnection extends BaseIPCConnection {
   protected getExecutablePaths(exeName: string): string[] {
     // On Linux, the executable has no .exe extension — it is a .NET 9
     // self-contained ELF binary that runs directly (not via mono).
-    const platformExeName =
-      process.platform === "linux" ? exeName.replace(/\.exe$/i, "") : exeName;
+    const platformExeName = process.platform === "linux" ? exeName.replace(/\.exe$/i, "") : exeName;
     const paths = super.getExecutablePaths(platformExeName);
     paths.push(
       path.join(

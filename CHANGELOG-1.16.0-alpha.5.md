@@ -9,15 +9,18 @@ _Stability fixes and collection installation improvements_
 This alpha release focuses on stability improvements and fixing collection installation issues.
 
 **🛡️ Stability & Bug Fixes**
+
 - Fixed crash on startup when no game is active
 - Fixed race condition causing mods to lack metadata during installation
 - Fixed stalled collection installation when mod archives are present
 - Fixed installer issue where certain files are not linked correctly
 
 **⚡ Performance**
+
 - FOMOD installer now lazy loads for faster startup
 
 **🔧 Technical**
+
 - Fixed handling of undefined game stores
 
 ### Known Issues

@@ -126,9 +126,7 @@ function changes(basePath, patterns, force) {
   return Promise.reduce(
     patterns,
     (total, pattern) =>
-      globAsync(path.join(basePath, pattern), globOptions).then((files) =>
-        [].concat(total, files),
-      ),
+      globAsync(path.join(basePath, pattern), globOptions).then((files) => [].concat(total, files)),
     [],
   )
     .map((filePath) => fsP.stat(filePath).then((stat) => stat.mtime.getTime()))
@@ -224,9 +222,7 @@ function processProject(project, buildType, feedback, noparallel) {
   if (project.type.startsWith("_")) {
     return Promise.resolve();
   }
-  return Promise.reject(
-    new Error("invalid project descriptor " + project.toString()),
-  );
+  return Promise.reject(new Error("invalid project descriptor " + project.toString()));
 }
 
 function main(args) {
@@ -272,10 +268,7 @@ function main(args) {
           args.f || buildState[project.name] === undefined,
         )
           .then((lastChange) => {
-            if (
-              lastChange !== undefined &&
-              lastChange < buildState[project.name]
-            ) {
+            if (lastChange !== undefined && lastChange < buildState[project.name]) {
               return Promise.reject(new Unchanged());
             }
             return processProject(
@@ -287,10 +280,7 @@ function main(args) {
           })
           .then(() => {
             buildState[project.name] = Date.now();
-            return fsP.writeFile(
-              buildStateName,
-              JSON.stringify(buildState, undefined, 2),
-            );
+            return fsP.writeFile(buildStateName, JSON.stringify(buildState, undefined, 2));
           })
           .catch((err) => {
             if (err instanceof Unchanged) {

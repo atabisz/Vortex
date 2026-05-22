@@ -34,9 +34,11 @@ function unsupported(name: string): never {
  * Uses fs.statfsSync which exposes POSIX statvfs data.
  * Callers already catch errors, so ENOENT is allowed to propagate.
  */
-export function GetDiskFreeSpaceEx(
-  filePath: string,
-): { total: number; free: number; freeToCaller: number } {
+export function GetDiskFreeSpaceEx(filePath: string): {
+  total: number;
+  free: number;
+  freeToCaller: number;
+} {
   const stats = fs.statfsSync(filePath);
   return {
     total: stats.blocks * stats.bsize,
@@ -192,11 +194,7 @@ export function SHGetKnownFolderPath(_folder: string, _flag?: string[]): string 
 // NO-OP / SAFE RETURN STUBS — registry, ACL, process, task scheduler, etc.
 // ---------------------------------------------------------------------------
 
-export function RegGetValue(
-  _hkey: unknown,
-  _path: string,
-  _key: string,
-): undefined {
+export function RegGetValue(_hkey: unknown, _path: string, _key: string): undefined {
   return undefined;
 }
 
@@ -215,17 +213,11 @@ export function RegEnumKeys(
   return [];
 }
 
-export function RegEnumValues(
-  _hkey: unknown,
-): Array<{ type: string; key: string }> {
+export function RegEnumValues(_hkey: unknown): Array<{ type: string; key: string }> {
   return [];
 }
 
-export function WithRegOpen(
-  _hive: unknown,
-  _path: string,
-  _cb: (hkey: unknown) => void,
-): void {
+export function WithRegOpen(_hive: unknown, _path: string, _cb: (hkey: unknown) => void): void {
   // no-op — deliberately does NOT call _cb to avoid registry-dependent code paths
 }
 
@@ -289,10 +281,7 @@ export function WalkDir(
   }
 }
 
-export function SetFileAttributes(
-  _filePath: string,
-  _attributes: unknown[],
-): void {
+export function SetFileAttributes(_filePath: string, _attributes: unknown[]): void {
   // no-op
 }
 
@@ -300,17 +289,11 @@ export function AddFileACE(_acc: unknown, _filePath: string): void {
   // no-op
 }
 
-export function GetProcessToken(
-  _type: string,
-  _pid?: number,
-): { isElevated: boolean } {
+export function GetProcessToken(_type: string, _pid?: number): { isElevated: boolean } {
   return { isElevated: false };
 }
 
-export function GetPrivateProfileSection(
-  _section: string,
-  _fileName: string,
-): string {
+export function GetPrivateProfileSection(_section: string, _fileName: string): string {
   return "";
 }
 
@@ -353,9 +336,9 @@ export function GetProcessPreferredUILanguages(): string[] {
 // ---------------------------------------------------------------------------
 
 export const Access = {
-  Grant: (_sid: unknown, _permissions: unknown) => ({} as unknown),
-  Deny: (_sid: unknown, _permissions: unknown) => ({} as unknown),
-  Revoke: (_sid: unknown, _permissions: unknown) => ({} as unknown),
+  Grant: (_sid: unknown, _permissions: unknown) => ({}) as unknown,
+  Deny: (_sid: unknown, _permissions: unknown) => ({}) as unknown,
+  Revoke: (_sid: unknown, _permissions: unknown) => ({}) as unknown,
 };
 
 // ---------------------------------------------------------------------------

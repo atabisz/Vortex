@@ -1,6 +1,8 @@
-import Promise from "bluebird";
 import * as path from "path";
 import { pathToFileURL } from "url";
+
+import Promise from "bluebird";
+
 import getVortexPath from "../util/getVortexPath";
 import { log } from "../util/log";
 
@@ -41,8 +43,7 @@ class SplashScreen {
   }
 
   public create(disableGPU: boolean): Promise<void> {
-    const BrowserWindow: typeof Electron.BrowserWindow =
-      require("electron").BrowserWindow;
+    const BrowserWindow: typeof Electron.BrowserWindow = require("electron").BrowserWindow;
 
     return new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {

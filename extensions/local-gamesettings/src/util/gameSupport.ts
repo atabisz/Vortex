@@ -160,11 +160,7 @@ export function mygamesPath(gameMode: string): string {
           "steamuser",
           "Documents",
         );
-        return path.join(
-          wineDocuments,
-          "My Games",
-          gameSupport.get(gameMode, "mygamesPath"),
-        );
+        return path.join(wineDocuments, "My Games", gameSupport.get(gameMode, "mygamesPath"));
       }
     }
   }
