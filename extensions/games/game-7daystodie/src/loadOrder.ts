@@ -72,13 +72,7 @@ export async function serialize(
 
   const fileData = await fs
     .readFileAsync(loFilePath, { encoding: "utf8" })
-<<<<<<< HEAD
     .catch((err) => (err.code === "ENOENT" ? Promise.resolve("[]") : Promise.reject(err)));
-=======
-    .catch((err) =>
-      err.code === "ENOENT" ? Promise.resolve("[]") : Promise.reject(err),
-    );
->>>>>>> v2.0.1
 
   let savedLO: ILoadOrderEntry[] = [];
   try {
@@ -95,13 +89,7 @@ export async function serialize(
   util.batchDispatch(context.api.store, batchedActions);
 
   // Write the prefixed LO to file.
-<<<<<<< HEAD
   await fs.removeAsync(loFilePath).catch({ code: "ENOENT" }, () => Promise.resolve());
-=======
-  await fs
-    .removeAsync(loFilePath)
-    .catch({ code: "ENOENT" }, () => Promise.resolve());
->>>>>>> v2.0.1
   await util.writeFileAtomic(loFilePath, JSON.stringify(prefixedLO));
   return Promise.resolve();
 }
@@ -145,13 +133,7 @@ export async function deserialize(
     }
     // User may have disabled/removed a mod - we need to filter out any existing
     //  entries from the data we parsed.
-<<<<<<< HEAD
     const filteredData = data.filter((entry) => enabledModIds.includes(entry.id));
-=======
-    const filteredData = data.filter((entry) =>
-      enabledModIds.includes(entry.id),
-    );
->>>>>>> v2.0.1
     const offset = getPrefixOffset(context.api);
     // Check if the user added any new mods.
     const diff = enabledModIds.filter(
@@ -167,13 +149,7 @@ export async function deserialize(
         modId: missingEntry,
         enabled: true,
         name:
-<<<<<<< HEAD
           mods[missingEntry] !== undefined ? util.renderModName(mods[missingEntry]) : missingEntry,
-=======
-          mods[missingEntry] !== undefined
-            ? util.renderModName(mods[missingEntry])
-            : missingEntry,
->>>>>>> v2.0.1
         data: {
           prefix: makePrefix(idx + filteredData.length + offset),
         },
@@ -191,14 +167,7 @@ export async function deserialize(
   }
 }
 
-<<<<<<< HEAD
 export async function validate(prev: LoadOrder, current: LoadOrder): Promise<any> {
-=======
-export async function validate(
-  prev: LoadOrder,
-  current: LoadOrder,
-): Promise<any> {
->>>>>>> v2.0.1
   // Nothing to validate really - the game does not read our load order file
   //  and we don't want to apply any restrictions either, so we just
   //  return.
