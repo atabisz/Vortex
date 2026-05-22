@@ -1,9 +1,6 @@
 const { log, util } = require("vortex-api");
 
-<<<<<<< HEAD
 const { remote } = require("electron");
-=======
->>>>>>> v2.0.1
 const path = require("path");
 const winapi = require("winapi-bindings");
 
@@ -25,11 +22,7 @@ function findGame() {
 }
 
 function modPath() {
-<<<<<<< HEAD
   return path.join(remote.app.getPath("documents"), "Elder Scrolls Online", "live", "Addons");
-=======
-  return path.join(util.getVortexPath("documents"), "Elder Scrolls Online", "live", "Addons");
->>>>>>> v2.0.1
 }
 
 function main(context) {
@@ -41,11 +34,7 @@ function main(context) {
     queryModPath: modPath,
     logo: "gameart.jpg",
     executable: () => "Bethesda.net_Launcher.exe",
-<<<<<<< HEAD
     requiredFiles: ["Bethesda.net_Launcher.exe"],
-=======
-    requiredFiles: [],
->>>>>>> v2.0.1
     environment: {
       SteamAPPId: "306130",
     },
