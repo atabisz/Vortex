@@ -5,10 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "../../../../ui/components/button/Button";
 import { Icon } from "../../../../ui/components/icon/Icon";
 import { Typography } from "../../../../ui/components/typography/Typography";
-<<<<<<< HEAD
 import type { IModFileInfo, IModRequirementExt } from "../../types";
-=======
->>>>>>> v2.0.1
 
 export const ModRequirement = ({
   mod,
