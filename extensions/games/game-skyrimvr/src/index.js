@@ -20,13 +20,7 @@ function findGame() {
     }
     return Promise.resolve(instPath.value);
   } catch (err) {
-<<<<<<< HEAD
     return util.GameStoreHelper.findByAppId(["611670"]).then((game) => game.gamePath);
-=======
-    return util.GameStoreHelper.findByAppId(["611670"]).then(
-      (game) => game.gamePath,
-    );
->>>>>>> v2.0.1
   }
 }
 
@@ -75,18 +69,8 @@ function isESLSupported(api) {
   if (discovery?.store === "xbox") {
     return false;
   }
-<<<<<<< HEAD
   const modState = util.getSafe(state, ["persistent", "profiles", profileId, "modState"], {});
   const isEnabled = (modId) => util.getSafe(modState, [modId, "enabled"], false);
-=======
-  const modState = util.getSafe(
-    state,
-    ["persistent", "profiles", profileId, "modState"],
-    {},
-  );
-  const isEnabled = (modId) =>
-    util.getSafe(modState, [modId, "enabled"], false);
->>>>>>> v2.0.1
   const mods = util.getSafe(state, ["persistent", "mods", GAME_ID], {});
   const hasESLEnabler = Object.keys(mods).some(
     (modId) => isEnabled(modId) && mods[modId]?.attributes?.eslEnabler === true,
@@ -99,13 +83,7 @@ function isESLSupported(api) {
 
 function testEslEnabler(files, gameId) {
   const isSkyrimVR = gameId === GAME_ID;
-<<<<<<< HEAD
   const isESLEnabler = files.some((file) => file.toLowerCase().endsWith(ESL_ENABLER_LIB));
-=======
-  const isESLEnabler = files.some((file) =>
-    file.toLowerCase().endsWith(ESL_ENABLER_LIB),
-  );
->>>>>>> v2.0.1
   return Promise.resolve({
     supported: isSkyrimVR && isESLEnabler,
     requiredFiles: [],
@@ -147,13 +125,7 @@ function prepare(api, discovery) {
         title: "Download",
         action: () =>
           util
-<<<<<<< HEAD
             .opn("https://www.nexusmods.com/skyrimspecialedition/mods/106712?tab=files")
-=======
-            .opn(
-              "https://www.nexusmods.com/skyrimspecialedition/mods/106712?tab=files",
-            )
->>>>>>> v2.0.1
             .catch(() => {}),
       },
     ],
@@ -189,16 +161,7 @@ function main(context) {
     },
   });
 
-<<<<<<< HEAD
   context.registerInstaller("skyvr-esl-enabler", 10, testEslEnabler, installEslEnabler);
-=======
-  context.registerInstaller(
-    "skyvr-esl-enabler",
-    10,
-    testEslEnabler,
-    installEslEnabler,
-  );
->>>>>>> v2.0.1
 
   context.once(() => {
     context.api.events.on("gamemode-activated", (gameId) => {
@@ -227,13 +190,7 @@ function main(context) {
       }
 
       const mods = util.getSafe(state, ["persistent", "mods", GAME_ID], {});
-<<<<<<< HEAD
       const mod = Object.values(mods).find((mod) => mod.installationPath === modESLEnabler.source);
-=======
-      const mod = Object.values(mods).find(
-        (mod) => mod.installationPath === modESLEnabler.source,
-      );
->>>>>>> v2.0.1
       if (mod === undefined || mod.attributes.eslEnabler === true) {
         return sortAndResolve(context.api);
       }
