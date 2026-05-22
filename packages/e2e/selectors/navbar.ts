@@ -14,12 +14,9 @@ export class NavBar {
     this.homeLink = page.getByText("Dashboard", { exact: true }).first();
     this.extensionsLink = page.getByText("Extensions", { exact: true }).first();
     this.settingsLink = page.getByText(/^(Settings|Preferences)$/).first();
-<<<<<<< HEAD
     this.modsLink = page.getByText("Mods", { exact: true }).first();
-=======
     this.gamesLink = page.locator('a[href="#/games"]').first();
     this.homeLink = page.locator(".main-nav-sidebar a").first();
     this.extensionsLink = page.getByText("Extensions", { exact: true }).first();
->>>>>>> v2.0.1
   }
 }
