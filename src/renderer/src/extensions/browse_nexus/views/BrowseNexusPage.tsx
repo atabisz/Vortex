@@ -140,22 +140,10 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
       new CollectionsDownloadClickedEvent(collection.slug, collection.game.id),
     );
 
-<<<<<<< HEAD
     if (adultContentFilter === false && collection.latestPublishedRevision?.adultContent) {
       void adultContentDialog(api, collection, false).then((proceed) => {
         if (proceed) {
           window.api.shell.openUrl("https://next.nexusmods.com/settings/content-blocking");
-=======
-    if (
-      adultContentFilter === false &&
-      collection.latestPublishedRevision?.adultContent
-    ) {
-      void adultContentDialog(api, collection, false).then((proceed) => {
-        if (proceed) {
-          window.api.shell.openUrl(
-            "https://next.nexusmods.com/settings/content-blocking",
-          );
->>>>>>> v2.0.1
         }
       });
     } else {
@@ -177,12 +165,7 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
               collectionId: collection.id,
               revisionId: collection.latestPublishedRevision?.id,
               collectionSlug: collection.slug,
-<<<<<<< HEAD
               revisionNumber: collection.latestPublishedRevision?.revisionNumber,
-=======
-              revisionNumber:
-                collection.latestPublishedRevision?.revisionNumber,
->>>>>>> v2.0.1
             },
           },
         },
@@ -403,13 +386,7 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
                 leftIconPath={mdiOpenInNew}
                 size="sm"
                 onClick={() =>
-<<<<<<< HEAD
                   window.api.shell.openUrl(`https://www.nexusmods.com/games/${gameDomainName}/mods`)
-=======
-                  window.api.shell.openUrl(
-                    `https://www.nexusmods.com/games/${gameDomainName}/mods`,
-                  )
->>>>>>> v2.0.1
                 }
               >
                 {t("collection:browse.modsComingSoon.openWebsite")}
