@@ -1,19 +1,13 @@
 const Promise = require("bluebird");
 const winapi = require("winapi-bindings");
 
-<<<<<<< HEAD
 const { remote, app } = require("electron");
-=======
->>>>>>> v2.0.1
 const path = require("path");
 const semver = require("semver");
 const { actions, fs, log, util } = require("vortex-api");
 const IniParser = require("vortex-parse-ini");
-<<<<<<< HEAD
 
 const appUni = app || remote.app;
-=======
->>>>>>> v2.0.1
 
 // The Sims 4 mods folder may be affected by localization.
 const LOCALE_MODS_FOLDER = {
@@ -95,11 +89,7 @@ function getLocale(eaPath) {
 }
 
 function findModPath() {
-<<<<<<< HEAD
   const eaPath = path.join(appUni.getPath("documents"), "Electronic Arts");
-=======
-  const eaPath = path.join(util.getVortexPath("documents"), "Electronic Arts");
->>>>>>> v2.0.1
 
   const locale = getLocale(eaPath);
   return path.join(eaPath, LOCALE_MODS_FOLDER[locale], "Mods");
