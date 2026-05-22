@@ -9,13 +9,7 @@ const GAME_ID = "teamfortress2";
 const INFO_FILE = path.join("tf", "steam.inf");
 
 function findGame() {
-<<<<<<< HEAD
   return util.steam.findByAppId(STEAM_ID.toString()).then((game) => game.gamePath);
-=======
-  return util.steam
-    .findByAppId(STEAM_ID.toString())
-    .then((game) => game.gamePath);
->>>>>>> v2.0.1
 }
 
 let tools = [
@@ -28,13 +22,7 @@ let tools = [
   },
 ];
 function installContent(files) {
-<<<<<<< HEAD
   const modFile = files.find((file) => path.extname(file).toLowerCase() === MOD_FILE_EXT);
-=======
-  const modFile = files.find(
-    (file) => path.extname(file).toLowerCase() === MOD_FILE_EXT,
-  );
->>>>>>> v2.0.1
   const idx = modFile.indexOf(path.basename(modFile));
   const rootPath = path.dirname(modFile);
 
@@ -55,12 +43,7 @@ function installContent(files) {
 function testSupportedContent(files, gameId) {
   let supported =
     gameId === GAME_ID &&
-<<<<<<< HEAD
     files.find((file) => path.extname(file).toLowerCase() === MOD_FILE_EXT) !== undefined;
-=======
-    files.find((file) => path.extname(file).toLowerCase() === MOD_FILE_EXT) !==
-      undefined;
->>>>>>> v2.0.1
 
   if (
     supported &&
@@ -111,16 +94,7 @@ function main(context) {
     },
   });
 
-<<<<<<< HEAD
   context.registerInstaller("teamfortress2-mod", 25, testSupportedContent, installContent);
-=======
-  context.registerInstaller(
-    "teamfortress2-mod",
-    25,
-    testSupportedContent,
-    installContent,
-  );
->>>>>>> v2.0.1
 
   return true;
 }
