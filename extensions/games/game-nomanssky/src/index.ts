@@ -1,15 +1,9 @@
 /* eslint-disable */
 import path from "path";
-<<<<<<< HEAD
 
 import semver from "semver";
 import { actions, fs, log, types, util } from "vortex-api";
 
-=======
-import semver from "semver";
-import { actions, fs, log, types, util } from "vortex-api";
-
->>>>>>> v2.0.1
 const GAME_ID = "nomanssky";
 const STEAMAPP_ID = "275850";
 const XBOX_ID = "HelloGames.NoMansSky";
@@ -19,13 +13,7 @@ const EXEC = path.join(BIN_PATH, "NMS.exe");
 
 async function purge(api: types.IExtensionApi): Promise<void> {
   return new Promise<void>((resolve, reject) =>
-<<<<<<< HEAD
     api.events.emit("purge-mods", true, (err) => (err ? reject(err) : resolve())),
-=======
-    api.events.emit("purge-mods", true, (err) =>
-      err ? reject(err) : resolve(),
-    ),
->>>>>>> v2.0.1
   );
 }
 
@@ -36,13 +24,7 @@ async function deploy(api: types.IExtensionApi): Promise<void> {
 }
 
 function findGame() {
-<<<<<<< HEAD
   return util.GameStoreHelper.findByAppId([STEAMAPP_ID, XBOX_ID]).then((game) => game.gamePath);
-=======
-  return util.GameStoreHelper.findByAppId([STEAMAPP_ID, XBOX_ID]).then(
-    (game) => game.gamePath,
-  );
->>>>>>> v2.0.1
 }
 
 function deprecatedModPath() {
@@ -53,14 +35,7 @@ function modPath() {
   return path.join("GAMEDATA", "MODS");
 }
 
-<<<<<<< HEAD
 async function migrate101(api: types.IExtensionApi, oldVersion: string): Promise<void> {
-=======
-async function migrate101(
-  api: types.IExtensionApi,
-  oldVersion: string,
-): Promise<void> {
->>>>>>> v2.0.1
   if (semver.gte(oldVersion, "1.0.1")) {
     return Promise.resolve();
   }
@@ -74,21 +49,10 @@ async function migrate101(
   const modIds = Object.keys(mods).filter(
     (modId) => mods[modId].type !== "nomanssky-deprecated-pak",
   );
-<<<<<<< HEAD
   const batched = modIds.map((modId) => actions.setModType(GAME_ID, modId, MODTYPE_DEPRECATED_PAK));
   if (batched.length > 0) {
     try {
       log("info", "Migrating mods to deprecated PAK type.", { mods: batched.length });
-=======
-  const batched = modIds.map((modId) =>
-    actions.setModType(GAME_ID, modId, MODTYPE_DEPRECATED_PAK),
-  );
-  if (batched.length > 0) {
-    try {
-      log("info", "Migrating mods to deprecated PAK type.", {
-        mods: batched.length,
-      });
->>>>>>> v2.0.1
       await api.awaitUI();
       await purge(api);
       util.batchDispatch(api.store, batched);
@@ -102,7 +66,6 @@ async function migrate101(
   return Promise.resolve();
 }
 
-<<<<<<< HEAD
 async function prepareForModding(api: types.IExtensionApi, discovery: types.IDiscoveryResult) {
   const pcbanks = path.join(discovery.path, "GAMEDATA", "PCBANKS");
   const ensureDir = (dir: string) => fs.ensureDirWritableAsync(path.join(discovery.path, dir));
@@ -110,27 +73,6 @@ async function prepareForModding(api: types.IExtensionApi, discovery: types.IDis
     fs
       .renameAsync(path.join(pcbanks, "DISABLEMODS.TXT"), path.join(pcbanks, "ENABLEMODS.TXT"))
       .catch((err) => (err.code === "ENOENT" ? Promise.resolve() : Promise.reject(err))),
-=======
-async function prepareForModding(
-  api: types.IExtensionApi,
-  discovery: types.IDiscoveryResult,
-) {
-  const pcbanks = path.join(discovery.path, "GAMEDATA", "PCBANKS");
-  const ensureDir = (dir: string) =>
-    fs.ensureDirWritableAsync(path.join(discovery.path, dir));
-  return Promise.all([
-    ensureDir(modPath()),
-    ensureDir(deprecatedModPath()),
-  ]).then(() =>
-    fs
-      .renameAsync(
-        path.join(pcbanks, "DISABLEMODS.TXT"),
-        path.join(pcbanks, "ENABLEMODS.TXT"),
-      )
-      .catch((err) =>
-        err.code === "ENOENT" ? Promise.resolve() : Promise.reject(err),
-      ),
->>>>>>> v2.0.1
   );
 }
 
@@ -166,7 +108,6 @@ function getBinariesPath(api: types.IExtensionApi, game: types.IGame) {
   return dataPath;
 }
 
-<<<<<<< HEAD
 async function testDeprecatedPakMod(instructions: types.IInstruction[]): Promise<boolean> {
   const hasPak = instructions.some((inst) => inst.source && inst.source.match(/\.pak$/i));
   return Promise.resolve(hasPak);
@@ -174,35 +115,12 @@ async function testDeprecatedPakMod(instructions: types.IInstruction[]): Promise
 
 async function testBinariesMod(instructions: types.IInstruction[]): Promise<boolean> {
   const hasDll = instructions.some((inst) => inst.source && inst.source.match(/\.dll$/i));
-=======
-async function testDeprecatedPakMod(
-  instructions: types.IInstruction[],
-): Promise<boolean> {
-  const hasPak = instructions.some(
-    (inst) => inst.source && inst.source.match(/\.pak$/i),
-  );
-  return Promise.resolve(hasPak);
-}
-
-async function testBinariesMod(
-  instructions: types.IInstruction[],
-): Promise<boolean> {
-  const hasDll = instructions.some(
-    (inst) => inst.source && inst.source.match(/\.dll$/i),
-  );
->>>>>>> v2.0.1
   return Promise.resolve(hasDll);
 }
 
 async function getGameVersion(gamePath: string) {
   const exeVersion = require("exe-version");
-<<<<<<< HEAD
   return Promise.resolve(exeVersion.getProductVersionLocalized(path.join(gamePath, EXEC)));
-=======
-  return Promise.resolve(
-    exeVersion.getProductVersionLocalized(path.join(gamePath, EXEC)),
-  );
->>>>>>> v2.0.1
 }
 
 function main(context: types.IExtensionContext) {
