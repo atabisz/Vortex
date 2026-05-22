@@ -262,11 +262,6 @@ class ReduxPersistorIPC {
    * Walk the operation list, grouping consecutive same-type ops into runs
    * and dispatching each run to the bulk path when available.
    */
-<<<<<<< HEAD
-  private applyOperation(persistor: IPersistor, operation: DiffOperation): Promise<void> {
-    if (operation.type === "set") {
-      return Promise.resolve(persistor.setItem(operation.path, this.serialize(operation.value)));
-=======
   private async applyOperationsInRuns(
     persistor: IPersistor,
     operations: DiffOperation[],
@@ -288,21 +283,11 @@ class ReduxPersistorIPC {
     }
   }
 
-  private async applySetRun(
-    persistor: IPersistor,
-    run: DiffOperation[],
-  ): Promise<void> {
+  private async applySetRun(persistor: IPersistor, run: DiffOperation[]): Promise<void> {
     if (persistor.bulkSetItem !== undefined) {
       const bulk = persistor.bulkSetItem.bind(persistor);
-      for (
-        let start = 0;
-        start < run.length;
-        start += ReduxPersistorIPC.BULK_CHUNK_SIZE
-      ) {
-        const chunk = run.slice(
-          start,
-          start + ReduxPersistorIPC.BULK_CHUNK_SIZE,
-        );
+      for (let start = 0; start < run.length; start += ReduxPersistorIPC.BULK_CHUNK_SIZE) {
+        const chunk = run.slice(start, start + ReduxPersistorIPC.BULK_CHUNK_SIZE);
         await bulk(
           chunk.map((op) => ({
             key: op.path,
@@ -310,7 +295,6 @@ class ReduxPersistorIPC {
           })),
         );
       }
->>>>>>> v2.0.1
     } else {
       for (const op of run) {
         await persistor.setItem(op.path, this.serialize(op.value));
@@ -318,21 +302,11 @@ class ReduxPersistorIPC {
     }
   }
 
-  private async applyRemoveRun(
-    persistor: IPersistor,
-    run: DiffOperation[],
-  ): Promise<void> {
+  private async applyRemoveRun(persistor: IPersistor, run: DiffOperation[]): Promise<void> {
     if (persistor.bulkRemoveItem !== undefined) {
       const bulk = persistor.bulkRemoveItem.bind(persistor);
-      for (
-        let start = 0;
-        start < run.length;
-        start += ReduxPersistorIPC.BULK_CHUNK_SIZE
-      ) {
-        const chunk = run.slice(
-          start,
-          start + ReduxPersistorIPC.BULK_CHUNK_SIZE,
-        );
+      for (let start = 0; start < run.length; start += ReduxPersistorIPC.BULK_CHUNK_SIZE) {
+        const chunk = run.slice(start, start + ReduxPersistorIPC.BULK_CHUNK_SIZE);
         await bulk(chunk.map((op) => op.path));
       }
     } else {
