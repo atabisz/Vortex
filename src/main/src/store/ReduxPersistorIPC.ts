@@ -292,21 +292,11 @@ class ReduxPersistorIPC {
     }
   }
 
-  private async applySetRun(
-    persistor: IPersistor,
-    run: DiffOperation[],
-  ): Promise<void> {
+  private async applySetRun(persistor: IPersistor, run: DiffOperation[]): Promise<void> {
     if (persistor.bulkSetItem !== undefined) {
       const bulk = persistor.bulkSetItem.bind(persistor);
-      for (
-        let start = 0;
-        start < run.length;
-        start += ReduxPersistorIPC.BULK_CHUNK_SIZE
-      ) {
-        const chunk = run.slice(
-          start,
-          start + ReduxPersistorIPC.BULK_CHUNK_SIZE,
-        );
+      for (let start = 0; start < run.length; start += ReduxPersistorIPC.BULK_CHUNK_SIZE) {
+        const chunk = run.slice(start, start + ReduxPersistorIPC.BULK_CHUNK_SIZE);
         await bulk(
           chunk.map((op) => ({
             key: op.path,
@@ -321,21 +311,11 @@ class ReduxPersistorIPC {
     }
   }
 
-  private async applyRemoveRun(
-    persistor: IPersistor,
-    run: DiffOperation[],
-  ): Promise<void> {
+  private async applyRemoveRun(persistor: IPersistor, run: DiffOperation[]): Promise<void> {
     if (persistor.bulkRemoveItem !== undefined) {
       const bulk = persistor.bulkRemoveItem.bind(persistor);
-      for (
-        let start = 0;
-        start < run.length;
-        start += ReduxPersistorIPC.BULK_CHUNK_SIZE
-      ) {
-        const chunk = run.slice(
-          start,
-          start + ReduxPersistorIPC.BULK_CHUNK_SIZE,
-        );
+      for (let start = 0; start < run.length; start += ReduxPersistorIPC.BULK_CHUNK_SIZE) {
+        const chunk = run.slice(start, start + ReduxPersistorIPC.BULK_CHUNK_SIZE);
         await bulk(chunk.map((op) => op.path));
       }
     } else {
