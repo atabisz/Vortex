@@ -4,8 +4,6 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-<<<<<<< HEAD
-=======
 ## [2.0.1] - 2026-05-12
 
 ### Changed
@@ -28,7 +26,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 - Collection plugin-rules toggles shown for games without plugins ([#23018](https://github.com/Nexus-Mods/Vortex/pull/23018))
 - Awkward line breaks in game-name tooltips in the new UI ([#23019](https://github.com/Nexus-Mods/Vortex/pull/23019))
 
->>>>>>> v2.0.1
 ## [2.0.0] - 2026-05-06
 
 _Stable 2.0 release. See the alpha and beta entries below for the full list of changes since 1.16._
@@ -1774,17 +1771,6 @@ _Yanked due to critical issue found with file overrides_
 - When providing feedback, users are treated as logged out if using OAuth
 - Changelog dashlet was incorrectly displaying markdown
 
-<<<<<<< HEAD
-[2.0.0]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.0.0
-[2.0.0-beta.2]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.0.0-beta.2
-[2.0.0-beta.1]: https://github.com/Nexus-Mods/Vortex/releases/tag/v2.0.0-beta.1
-[2.0.0-alpha.4]: https://github.com/Nexus-Mods/Vortex/releases/tag/v2.0.0-alpha.4
-[2.0.0-alpha.3]: https://github.com/Nexus-Mods/Vortex/releases/tag/v2.0.0-alpha.3
-[2.0.0-alpha.2]: https://github.com/Nexus-Mods/Vortex/releases/tag/v2.0.0-alpha.2
-[2.0.0-alpha.1]: https://github.com/Nexus-Mods/Vortex/releases/tag/v2.0.0-alpha.1
-[1.16.9]: https://github.com/Nexus-Mods/Vortex/releases/tag/v1.16.9
-[1.16.8]: https://github.com/Nexus-Mods/Vortex/releases/tag/v1.16.8
-=======
 [2.0.1]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.0.1
 [2.0.0]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.0.0
 [2.0.0-beta.2]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.0.0-beta.2
@@ -1793,7 +1779,8 @@ _Yanked due to critical issue found with file overrides_
 [2.0.0-alpha.3]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.0.0-alpha.3
 [2.0.0-alpha.2]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.0.0-alpha.2
 [2.0.0-alpha.1]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.0.0-alpha.1
->>>>>>> v2.0.1
+[1.16.9]: https://github.com/Nexus-Mods/Vortex/releases/tag/v1.16.9
+[1.16.8]: https://github.com/Nexus-Mods/Vortex/releases/tag/v1.16.8
 [1.16.7]: https://github.com/Nexus-Mods/Vortex/releases/tag/v1.16.7
 [1.16.6]: https://github.com/Nexus-Mods/Vortex/releases/tag/v1.16.6
 [1.16.5]: https://github.com/Nexus-Mods/Vortex/releases/tag/v1.16.5
