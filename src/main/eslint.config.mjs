@@ -9,16 +9,6 @@ export default defineConfig([
     files: ["src/**/*.ts"],
     languageOptions: {
       globals: { ...globals.node },
-<<<<<<< HEAD
-=======
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-    plugins: {
-      perfectionist,
->>>>>>> v2.0.1
     },
     rules: {
       // TODO: to be removed after warnings have been fixed
