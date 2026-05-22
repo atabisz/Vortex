@@ -1,36 +1,33 @@
 ---
 gsd_state_version: 1.0
-milestone: v7.0
-milestone_name: First-Run Onboarding Wizard
-status: verifying
-stopped_at: Completed 23-02-PLAN.md
-last_updated: "2026-04-17T05:23:39.667Z"
-last_activity: 2026-04-17
+milestone: v8.1
+milestone_name: Upstream v2.0.1 Sync
+status: planning
+last_updated: "2026-05-22T10:17:30.000Z"
+last_activity: 2026-05-22
 progress:
-  total_phases: 7
-  completed_phases: 6
-  total_plans: 12
-  completed_plans: 12
-  percent: 100
+    total_phases: 7
+    completed_phases: 1
+    total_plans: 8
+    completed_plans: 8
+    percent: 14
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
+See: .planning/PROJECT.md (updated 2026-05-22 after v8.0 ship + v8.1 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** Phase 23 — help-links
+**Current focus:** Phase 32 — mod-management hot zone (v8.1)
 
 ## Current Position
 
-Phase: 999.1
+Phase: 32
 Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-17
-
-Progress: [░░░░░░░░░░] 0%
+Status: Phase 31 complete; ready to discuss Phase 32
+Last activity: 2026-05-22 — Phase 31 config-bucket complete + pushed to fork (`v8.1/config-bucket`, 13 commits ahead)
 
 ## Performance Metrics
 
@@ -43,26 +40,26 @@ Progress: [░░░░░░░░░░] 0%
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 11 | 1 | - | - |
-| 12 | 1 | - | - |
-| 14 | 2 | - | - |
-| 13 | 1 | - | - |
-| 15 | 3 | - | - |
-| 16 | 1 | - | - |
-| 17 | 1 | - | - |
-| 19 | 3 | - | - |
-| 20 | 2 | - | - |
-| 21 | 2 | - | - |
-| 22 | 1 | - | - |
-| 23 | 2 | - | - |
+| ----- | ----- | ----- | -------- |
+| 11    | 1     | -     | -        |
+| 12    | 1     | -     | -        |
+| 14    | 2     | -     | -        |
+| 13    | 1     | -     | -        |
+| 15    | 3     | -     | -        |
+| 16    | 1     | -     | -        |
+| 17    | 1     | -     | -        |
+| 19    | 3     | -     | -        |
+| 20    | 2     | -     | -        |
+| 21    | 2     | -     | -        |
+| 22    | 1     | -     | -        |
+| 23    | 2     | -     | -        |
 
 **Recent Trend:**
 
 - Last 5 plans: (none yet for v7.0)
 - Trend: -
 
-*Updated after each plan completion*
+_Updated after each plan completion_
 | Phase 06-steam-proton-detection P01 | 3 | 2 tasks | 3 files |
 | Phase 06-steam-proton-detection P02 | 15 | 2 tasks | 4 files |
 | Phase 06-steam-proton-detection P03 | 5 | 1 tasks | 1 files |
@@ -104,7 +101,7 @@ Recent decisions affecting current work:
 - IPC serialisation trap: extract `getIPCPath(id)` utility and patch BOTH parent server and stringified child closure
 - [Phase 01-runtime-environment]: localAppData Linux branch: XDG_DATA_HOME ?? os.homedir()/.local/share using ?? not || to handle empty string correctly
 - [Phase 01-runtime-environment]: electron-builder: Windows .exe redistributables scoped to win.extraResources; Linux packaging references only cross-platform entries
-- [Phase 02-winapi-bindings-shim]: Test file at winapi-shim.test.ts (not __tests__/): renderer vitest.config.mts excludes __tests__/ pattern
+- [Phase 02-winapi-bindings-shim]: Test file at winapi-shim.test.ts (not **tests**/): renderer vitest.config.mts excludes **tests**/ pattern
 - [Phase 02-winapi-bindings-shim]: RegGetValue returns undefined in production shim (not object as in Jest mock)
 - [Phase 02-winapi-bindings-shim]: webpack/rolldown alias at bundle time catches all 18+ winapi-bindings import sites without source edits
 - [Phase 02-winapi-bindings-shim]: SHIM_PATH uses import.meta.dirname for ESM-safe resolution in build.mjs
@@ -143,12 +140,12 @@ Recent decisions affecting current work:
 - [Phase 09]: MoreInfoException: std::runtime_error base -- GCC rejects MSVC-specific std::exception(runtime_error) constructor form
 - [Phase 09]: No RPATH in gamebryo-savegame patch: lz4 and zlib are system libs, not bundled
 - [Phase 10-save-ui-validation-steamos-polkit]: SteamOS branch: spawn sudo -n before pkexec when isSteamOS() returns true — pkexec hangs without polkit agent in Game Mode
-- [Phase 10-save-ui-validation-steamos-polkit]: isSteamOS() cached in module-level _isSteamOS after first call — avoids repeated file reads
+- [Phase 10-save-ui-validation-steamos-polkit]: isSteamOS() cached in module-level \_isSteamOS after first call — avoids repeated file reads
 - [Phase 10-save-ui-validation-steamos-polkit]: polkit action uses auth_admin (not auth_admin_keep) — prompt every time per D-10
 - [Phase 10-save-ui-validation-steamos-polkit]: getSteamEntry uses GameStoreHelper.getGameStore('steam') — bundled extension constraint, can't import renderer src/
 - [Phase 10-save-ui-validation-steamos-polkit]: ILocalSteamEntry local interface — ISteamEntry not exported by vortex-api; bundled extension constraint
-- [Phase 10-save-ui-validation-steamos-polkit]: tsconfig.json excludes test/mock files — __mocks__ outside src/ causes TS6307; production typecheck must not traverse test infrastructure
-- [Phase 16]: Use node:fs/promises import alias to avoid shadow from * as fs from fs-extra
+- [Phase 10-save-ui-validation-steamos-polkit]: tsconfig.json excludes test/mock files — **mocks** outside src/ causes TS6307; production typecheck must not traverse test infrastructure
+- [Phase 16]: Use node:fs/promises import alias to avoid shadow from \* as fs from fs-extra
 - [Phase 16]: ExecFileFn stays callback-style (not promisified) to match injectable seam contract
 - [Phase 16]: vi.mock node:fs/promises factory chosen over vi.spyOn to avoid getter non-configurable issue in Vitest happy-dom
 - [Phase 17-01]: chmod +x set via git update-index --chmod=+x; sandbox filesystem read-only for scripts dir
@@ -156,7 +153,7 @@ Recent decisions affecting current work:
 - [Phase 17-01]: Always --draft on gh pr create regardless of conflict state per D-11
 - [Phase 17-upstream-rebase-ci-workflow]: gh pr create (GraphQL) replaced with gh api REST POST — GraphQL rejects fork GITHUB_TOKEN for createPullRequest mutation
 - [Phase 17-upstream-rebase-ci-workflow]: git push origin HEAD:refs/heads/BRANCH required in CI — git rebase leaves detached HEAD; named refspec avoids push failure
-- [Phase 18-01]: Injectable seam _setDrivelistLoader added: Vitest vi.mock cannot intercept CJS require() inside function bodies; seam follows _setSpawner pattern in elevated.ts
+- [Phase 18-01]: Injectable seam \_setDrivelistLoader added: Vitest vi.mock cannot intercept CJS require() inside function bodies; seam follows \_setSpawner pattern in elevated.ts
 - [Phase 18-01]: Platform guard placement: first line in closure/value fn before any Windows-specific API access; minDiskSpace guard before props[key] access
 - [Phase 18]: PromiseBB.delay used (not Bluebird.delay) — consistent with GameModeManager.ts bluebird alias convention
 - [Phase 18]: Test assertions use container.querySelector+textContent (not getByText) — refreshMore setTimeout causes re-renders duplicating DOM nodes
@@ -168,7 +165,7 @@ Recent decisions affecting current work:
 - [Phase 19]: ternary inside t() pattern for platform-specific i18n strings: Windows arm byte-for-byte unchanged, Linux arm added as new branch
 - [Phase 19]: Settings.tsx: stat modPaths[''] directly (not path.parse root) for correct device id on Linux multi-device systems
 - [Phase 19]: Settings.tsx: sequential awaits instead of Promise.all to allow await inside mountpoint walk loop body
-- [Phase 20-01]: Static test: use path.resolve(__dirname) not import.meta.url (not file:// in happy-dom)
+- [Phase 20-01]: Static test: use path.resolve(\_\_dirname) not import.meta.url (not file:// in happy-dom)
 - [Phase 20-01]: raiseUACDialog Linux arm uses t() wrapping for i18n consistency with Windows arm
 - [Phase 20-01]: confirmElevate text/button: no t() wrapping, matching existing plain string pattern
 - [Phase 20]: ONBRD-03c satisfied by nativeErrors.ts:13 guard returns undefined on non-win32; message.ts:421 EPERM handler clean — no code changes needed
@@ -205,22 +202,22 @@ None.
 
 ### Quick Tasks Completed
 
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 260401-m5m | fix blank game version in mismatch dialog on Linux | 2026-04-01 | e3d6638 | [260401-m5m-fix-blank-game-version-in-mismatch-dialo](./quick/260401-m5m-fix-blank-game-version-in-mismatch-dialo/) |
-| 260401-mvp | normalize backslashes in FOMOD copy source/destination paths | 2026-04-01 | 926255819 | [260401-mvp-normalize-backslashes-in-fomod-copy-sour](./quick/260401-mvp-normalize-backslashes-in-fomod-copy-sour/) |
-| 260401-oz3 | case-folding path resolver in LinkingDeployment for Linux | 2026-04-01 | 32a9b021b | [260401-oz3-case-folding-path-resolver-in-linkingdep](./quick/260401-oz3-case-folding-path-resolver-in-linkingdep/) |
-| 260401-scf | FOMOD case-sensitivity in InstallManager.extractArchive | 2026-04-01 | 6e56ba5bf | [260401-scf-fix-fomod-case-sensitivity-error-in-inst](./quick/260401-scf-fix-fomod-case-sensitivity-error-in-inst/) |
-| 260402-1b1 | Wine-era deployment manifest detection in loadActivation | 2026-04-02 | 5b2420f | [260402-1b1-implement-wine-era-deployment-manifest-d](./quick/260402-1b1-implement-wine-era-deployment-manifest-d/) |
-| 260402-iko | fix hardlink undeploy orphan when manifest missing | 2026-04-02 | ca5fffb | [260402-iko-fix-hardlink-undeploy-orphan-when-manife](./quick/260402-iko-fix-hardlink-undeploy-orphan-when-manife/) |
-| 260407-grv | Fix NXM download bugs: cli.ts argv slice and no-sandbox propagation | 2026-04-07 | d9986f6 | [260407-grv-fix-nxm-download-bug-cli-ts-argv-slice-a](./quick/260407-grv-fix-nxm-download-bug-cli-ts-argv-slice-a/) |
-| 260407-icu | Remove Linux-disabled guard from NXM toggle in Settings.tsx | 2026-04-07 | b3c474bcc | [260407-icu-remove-the-linux-disabled-guard-from-the](./quick/260407-icu-remove-the-linux-disabled-guard-from-the/) |
+| #          | Description                                                               | Date       | Commit    | Directory                                                                                                           |
+| ---------- | ------------------------------------------------------------------------- | ---------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| 260401-m5m | fix blank game version in mismatch dialog on Linux                        | 2026-04-01 | e3d6638   | [260401-m5m-fix-blank-game-version-in-mismatch-dialo](./quick/260401-m5m-fix-blank-game-version-in-mismatch-dialo/) |
+| 260401-mvp | normalize backslashes in FOMOD copy source/destination paths              | 2026-04-01 | 926255819 | [260401-mvp-normalize-backslashes-in-fomod-copy-sour](./quick/260401-mvp-normalize-backslashes-in-fomod-copy-sour/) |
+| 260401-oz3 | case-folding path resolver in LinkingDeployment for Linux                 | 2026-04-01 | 32a9b021b | [260401-oz3-case-folding-path-resolver-in-linkingdep](./quick/260401-oz3-case-folding-path-resolver-in-linkingdep/) |
+| 260401-scf | FOMOD case-sensitivity in InstallManager.extractArchive                   | 2026-04-01 | 6e56ba5bf | [260401-scf-fix-fomod-case-sensitivity-error-in-inst](./quick/260401-scf-fix-fomod-case-sensitivity-error-in-inst/) |
+| 260402-1b1 | Wine-era deployment manifest detection in loadActivation                  | 2026-04-02 | 5b2420f   | [260402-1b1-implement-wine-era-deployment-manifest-d](./quick/260402-1b1-implement-wine-era-deployment-manifest-d/) |
+| 260402-iko | fix hardlink undeploy orphan when manifest missing                        | 2026-04-02 | ca5fffb   | [260402-iko-fix-hardlink-undeploy-orphan-when-manife](./quick/260402-iko-fix-hardlink-undeploy-orphan-when-manife/) |
+| 260407-grv | Fix NXM download bugs: cli.ts argv slice and no-sandbox propagation       | 2026-04-07 | d9986f6   | [260407-grv-fix-nxm-download-bug-cli-ts-argv-slice-a](./quick/260407-grv-fix-nxm-download-bug-cli-ts-argv-slice-a/) |
+| 260407-icu | Remove Linux-disabled guard from NXM toggle in Settings.tsx               | 2026-04-07 | b3c474bcc | [260407-icu-remove-the-linux-disabled-guard-from-the](./quick/260407-icu-remove-the-linux-disabled-guard-from-the/) |
 | 260407-iv0 | Patch Firefox profiles with nxm expose pref during Linux NXM registration | 2026-04-07 | 35ba35ccb | [260407-iv0-patch-firefox-profiles-with-nxm-expose-p](./quick/260407-iv0-patch-firefox-profiles-with-nxm-expose-p/) |
-| 260407-h9r | Clear Firefox handlers.json nxm entry on registration | 2026-04-07 | e08518b20 | — |
-| 260408-haq | Set deb/AppImage version to major.minor.YYYYMMDDHHMM | 2026-04-08 | 53033d808 | [260408-haq-set-deb-package-version-to-major-minor-f](./quick/260408-haq-set-deb-package-version-to-major-minor-f/) |
-| 260408-mvp | Speed up GH Actions builds: rust cache, workflow_run chain, paths-ignore | 2026-04-08 | 30436ef73 | [260408-mvp-speed-up-gh-actions-builds-rust-cache-wo](./quick/260408-mvp-speed-up-gh-actions-builds-rust-cache-wo/) |
-| 260408-ms8 | Update planning docs with current state after v4.0 backlog analysis | 2026-04-08 | — | [260408-ms8-update-planning-docs-with-current-state-](./quick/260408-ms8-update-planning-docs-with-current-state-/) |
-| 260417-kth | fix unused IDiscoveryState import in NoGameDashlet.tsx | 2026-04-17 | 604daafed | [260417-kth-fix-unused-idiscoverystate-import-in-nog](./quick/260417-kth-fix-unused-idiscoverystate-import-in-nog/) |
+| 260407-h9r | Clear Firefox handlers.json nxm entry on registration                     | 2026-04-07 | e08518b20 | —                                                                                                                   |
+| 260408-haq | Set deb/AppImage version to major.minor.YYYYMMDDHHMM                      | 2026-04-08 | 53033d808 | [260408-haq-set-deb-package-version-to-major-minor-f](./quick/260408-haq-set-deb-package-version-to-major-minor-f/) |
+| 260408-mvp | Speed up GH Actions builds: rust cache, workflow_run chain, paths-ignore  | 2026-04-08 | 30436ef73 | [260408-mvp-speed-up-gh-actions-builds-rust-cache-wo](./quick/260408-mvp-speed-up-gh-actions-builds-rust-cache-wo/) |
+| 260408-ms8 | Update planning docs with current state after v4.0 backlog analysis       | 2026-04-08 | —         | [260408-ms8-update-planning-docs-with-current-state-](./quick/260408-ms8-update-planning-docs-with-current-state-/) |
+| 260417-kth | fix unused IDiscoveryState import in NoGameDashlet.tsx                    | 2026-04-17 | 604daafed | [260417-kth-fix-unused-idiscoverystate-import-in-nog](./quick/260417-kth-fix-unused-idiscoverystate-import-in-nog/) |
 
 ## Session Continuity
 

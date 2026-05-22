@@ -1,11 +1,24 @@
 # Vortex Linux Support
 
-## Current Milestone: v8.0 (planning)
+## Current Milestone: v8.1 Upstream v2.0.1 Sync
 
-**Goal:** TBD — start `/gsd-new-milestone` to define next milestone.
+**Goal:** Fold upstream Nexus-Mods/Vortex `v2.0.1` into the fork on top of `v2.0.0-linux-rebased`. Every Linux fix from `VORTEX-LINUX-MERGE-PLAYBOOK.md` preserved. `pnpm run build` and `pnpm run test` pass on master. Closing artifact: FF-merge of `sync/upstream-v2.0.1` tagged `v2.0.1-linux-rebased`.
+
+**Target features:**
+
+- Phase 31 ✅ Config bucket (workspace + lockfile + root configs parse)
+- Phase 32 — Mod-management hot zone resolution
+- Phase 33 — Gamebryo + per-game extensions resolution
+- Phase 34 — Renderer + main spine resolution
+- Phase 35 — Build verification (typecheck/lint/test/build green)
+- Phase 36 — Land + tag + cherry-pick to `linux-port`
+- Phase 37 — Carry-forward UAT and playbook updates
+
+**Branch:** `v8.1/config-bucket` (Phase 31 pushed to fork; subsequent phases stack here until the Phase 36 FF-merge).
 
 ## Previous Milestones
 
+- ✅ v8.0 Upstream v2.0.0 Sync — SHIPPED 2026-05-22
 - ✅ v7.0 First-Run Onboarding Wizard — SHIPPED 2026-04-17
 - ✅ v6.0 Infrastructure — SHIPPED 2026-04-15
 
@@ -131,6 +144,7 @@ _(Define next milestone requirements via `/gsd-new-milestone`)_
 **Shipped v7.0 on 2026-04-17.** 6 phases, 12 plans, 18/18 v7.0 requirements satisfied (ONBRD-01 through ONBRD-06).
 
 **Technical state after v6.0:**
+
 - fs layer: `applyChattrCasefold(dirPath)` in `src/renderer/src/util/fs.ts` — applies `chattr +F` to new empty staging dirs on ext4-casefold; statfs cache avoids repeated syscalls; injectable seams `_setChattr`, `_setChattrNotifier`, `_resetChattrState` follow `elevated.ts` pattern; 13 Vitest tests pass (CASE-05–CASE-11); wired into `ensureDirWritableAsync`
 - Casefold fallback: EOPNOTSUPP/EINVAL/non-zero exit → silent fallback to existing Wine-prefix shim; Flatpak guard (`FLATPAK_ID`); platform guard (`process.platform !== 'linux'`); post-chattr verify (write uppercase, read lowercase)
 - CI: `rebase-upstream.yml` + `rebase-upstream.sh` — daily cron polls nexus-mods/Vortex, rebases fork master, creates idempotent draft PRs via `gh api` REST (GraphQL rejected for fork tokens); `HAS_CONFLICTS` flag keeps workflow green on conflict; `workflow_dispatch` with optional `upstream_ref`; repo guard `if: github.repository == 'atabisz/Vortex'`
@@ -150,53 +164,54 @@ _(Define next milestone requirements via `/gsd-new-milestone`)_
 
 ## Key Decisions
 
-| Decision | Rationale | Outcome |
-|----------|-----------|---------|
-| FOMOD: recompile for Linux via .NET 9 | Native Linux binary, no Wine dep, .NET 9 already in devcontainer | ✓ Validated — Linux ELF binaries ship in npm packages, TCP transport handshake confirmed |
-| winapi-bindings: platform shim (not removal) | Registry/UAC functions already guarded — shim replaces the module binding only | ✓ Done — webpack + rolldown aliases, 48-function shim, 19 tests passing |
-| winapi-bindings: webpack/rolldown alias approach | One config change catches all 21 import sites without touching source files | ✓ Validated — covers all import sites with zero source edits |
-| Steam Deck: AppImage (not Flatpak) | Flatpak sandbox restrictions on ~/.steam need validation; AppImage works today | ✓ v2.0 decision — AppImage ships, Flatpak deferred |
-| Heroic Launcher: deferred to v4.0+ | Phase 2 focus is Steam only; Heroic adds complexity without core validation | — Pending |
-| Elevation scope: audit first | Most Steam libraries are user-owned — pkexec may not be needed at all | ✓ Confirmed — pkexec absent from all startup paths; deferred to v3.0 |
-| loot: build from source via cmake+cargo | Dropped Linux prebuilts at 0.24.5; postinstall script delivers liblibloot.so | ✓ Done — loot.node compiles and loads on Linux |
-| loot RPATH: LD_LIBRARY_PATH in-process | Simpler than patch-package RPATH; CI wrapper handles .so resolution | ✓ Done — CI and local dev both work |
-| gamebryo-savegame: pnpm patch on Linux | MSVC exception constructor + lz4/zlib linker flags + CHAR_WIDTH fmt macro undef (GCC 13) | ✓ Done — builds and links cleanly; `ldd` confirms liblz4.so.1 + libz.so.1 resolve |
-| IPC serialisation trap: getIPCPath via argument | `.toString()`'d child closure must receive getIPCPath as argument — source grep insufficient | ✓ Done — both parent and stringified child patched |
-| pkexec: defer to v3.0 | Phase 1 audit confirms no startup path requires elevation; user-triggered only | ✓ Confirmed — 6 call sites documented, all user-triggered |
-| Steam detection: findAllLinuxSteamPaths() additive | findLinuxSteamPath() kept intact for backward compat; new function adds multi-root | ✓ Done — no regressions in existing path |
-| oslist as primary Proton signal | Enables never-launched game detection without compatdata dir | ✓ Done — tested across STAM-03 requirements |
-| PROTON_USERNAME = "steamuser" (constant) | Wine prefix always uses steamuser as home dirname, never os.userInfo().username | ✓ Validated — critical pitfall avoided |
-| build-linux: parallel sibling job (no needs:) | Runs concurrently with Windows build — no sequencing overhead | ✓ Done — DIST-03 satisfied |
-| pnpm run package:nosign for Linux CI | electron-builder ignores Windows signing config on Linux automatically | ✓ Done — clean unsigned Linux builds |
-| AppImage desktop entry before xdg-settings | xdg-settings must register a desktop ID that has a matching .desktop file | ✓ Done — ensureAppImageDesktopEntry() runs first |
-| mPendingDownload cold-start buffer | Cold-start NXM URL silently dropped before Redux store ready | ✓ Done — PROT-01 cold-start path sealed |
-| PROT-02: SteamOS Steam Browser deferred to v4.0 | Hardware unavailable; WebKit-based Discover overlay behavior unknown | — Deferred per PROT-03 |
-| getSteamEntry uses GameStoreHelper (not direct Steam import) | Bundled extension cannot import from renderer src/; GameStoreHelper available via vortex-api util | ✓ Done — v3.0 bundled extension constraint solved |
-| isSteamOS() cached at module level | Avoids repeated /etc/os-release reads; function called on every elevation attempt | ✓ Done — module-level `_isSteamOS` variable |
-| polkit action uses auth_admin (not auth_admin_keep) | Prompt every time — no persistent token risk; simpler security model | ✓ Done — D-10 decision validated |
-| SteamOS: sudo -n before pkexec | pkexec hangs without polkit agent in Game Mode; sudo -n is lightweight first check | ✓ Done — ELEV-02 satisfied |
-| tsconfig.json excludes __mocks__/ | TS6307 error: __mocks__ outside src/ causes TS to traverse test infrastructure in production typecheck | ✓ Done — production build clean |
-| 10-vortex.rules: no isInGroup guard | Simpler than group-based; consistent with .policy auth_admin semantics; all active desktop users may cache credential | ✓ Done — v4.0 Phase 11 |
-| deb.extraFiles for rules (not linux.extraFiles) | AppImage must not receive the rules file — degraded elevation is correct for AppImage | ✓ Done — v4.0 Phase 11 |
-| _setNotifier injectable seam (not global state) | Mirrors _setSpawner pattern; testable without mocking module internals; optional chaining prevents pre-init failure | ✓ Done — v4.0 Phase 12 |
-| rejectWithSteamOSNotification helper DRYs both SteamOS paths | Both close (non-zero exit) and error (ENOENT spawn) paths must fire notification — shared helper prevents divergence | ✓ Done — v4.0 Phase 12 |
-| isWinePrefixPath() three-way conjunction | platform===linux AND /compatdata/ AND /pfx/ — prevents false positives on non-Wine Linux paths | ✓ Done — v4.0 Phase 14 |
-| resolvePathCase promoted to util/ (not @vortex/shared) | Avoids new shared package churn; util/ already exported via vortex-api; mod_management and bundled extensions can both import | ✓ Done — v4.0 Phase 14 |
-| fs shim wraps at fs.ts level (not per-callsite) | 7+ callsites would each need patching; shim at source guarantees all future callers get case-folding automatically | ✓ Done — v4.0 Phase 14 |
-| fileName.toLowerCase() in watch handler retained permanently | inotify event filenames arrive from OS, outside shim reach — toLowerCase fix must stay in watch handler | ✓ Done — v4.0 Phase 14 D-11 |
-| applyChattrCasefold: node:fs/promises import alias | Avoids shadow from `* as fs from fs-extra`; explicit alias makes the import unambiguous | ✓ Done — v6.0 Phase 16 |
-| ExecFileFn stays callback-style (not promisified) | Matches injectable seam contract; promisifying would break the test seam pattern | ✓ Done — v6.0 Phase 16 |
-| vi.mock node:fs/promises factory over vi.spyOn | Getter non-configurable issue in Vitest happy-dom makes spyOn fail; factory mock is reliable | ✓ Done — v6.0 Phase 16 |
-| gh api REST for PR ops (not GraphQL) | GraphQL createPullRequest mutation rejects fork GITHUB_TOKEN; REST POST works | ✓ Done — v6.0 Phase 17 |
-| git push origin HEAD:refs/heads/BRANCH in CI | git rebase leaves detached HEAD; named refspec avoids push failure | ✓ Done — v6.0 Phase 17 |
-| CONFLICT_FILES captured before git add -A | git add -A stages conflict markers; capturing diff stat first preserves accurate conflict list | ✓ Done — v6.0 Phase 17 |
-| Always --draft on gh pr create | Draft on both clean and conflict PRs — upstream changes always require human review | ✓ Done — v6.0 Phase 17 D-11 |
+| Decision                                                     | Rationale                                                                                                                     | Outcome                                                                                  |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| FOMOD: recompile for Linux via .NET 9                        | Native Linux binary, no Wine dep, .NET 9 already in devcontainer                                                              | ✓ Validated — Linux ELF binaries ship in npm packages, TCP transport handshake confirmed |
+| winapi-bindings: platform shim (not removal)                 | Registry/UAC functions already guarded — shim replaces the module binding only                                                | ✓ Done — webpack + rolldown aliases, 48-function shim, 19 tests passing                  |
+| winapi-bindings: webpack/rolldown alias approach             | One config change catches all 21 import sites without touching source files                                                   | ✓ Validated — covers all import sites with zero source edits                             |
+| Steam Deck: AppImage (not Flatpak)                           | Flatpak sandbox restrictions on ~/.steam need validation; AppImage works today                                                | ✓ v2.0 decision — AppImage ships, Flatpak deferred                                       |
+| Heroic Launcher: deferred to v4.0+                           | Phase 2 focus is Steam only; Heroic adds complexity without core validation                                                   | — Pending                                                                                |
+| Elevation scope: audit first                                 | Most Steam libraries are user-owned — pkexec may not be needed at all                                                         | ✓ Confirmed — pkexec absent from all startup paths; deferred to v3.0                     |
+| loot: build from source via cmake+cargo                      | Dropped Linux prebuilts at 0.24.5; postinstall script delivers liblibloot.so                                                  | ✓ Done — loot.node compiles and loads on Linux                                           |
+| loot RPATH: LD_LIBRARY_PATH in-process                       | Simpler than patch-package RPATH; CI wrapper handles .so resolution                                                           | ✓ Done — CI and local dev both work                                                      |
+| gamebryo-savegame: pnpm patch on Linux                       | MSVC exception constructor + lz4/zlib linker flags + CHAR_WIDTH fmt macro undef (GCC 13)                                      | ✓ Done — builds and links cleanly; `ldd` confirms liblz4.so.1 + libz.so.1 resolve        |
+| IPC serialisation trap: getIPCPath via argument              | `.toString()`'d child closure must receive getIPCPath as argument — source grep insufficient                                  | ✓ Done — both parent and stringified child patched                                       |
+| pkexec: defer to v3.0                                        | Phase 1 audit confirms no startup path requires elevation; user-triggered only                                                | ✓ Confirmed — 6 call sites documented, all user-triggered                                |
+| Steam detection: findAllLinuxSteamPaths() additive           | findLinuxSteamPath() kept intact for backward compat; new function adds multi-root                                            | ✓ Done — no regressions in existing path                                                 |
+| oslist as primary Proton signal                              | Enables never-launched game detection without compatdata dir                                                                  | ✓ Done — tested across STAM-03 requirements                                              |
+| PROTON_USERNAME = "steamuser" (constant)                     | Wine prefix always uses steamuser as home dirname, never os.userInfo().username                                               | ✓ Validated — critical pitfall avoided                                                   |
+| build-linux: parallel sibling job (no needs:)                | Runs concurrently with Windows build — no sequencing overhead                                                                 | ✓ Done — DIST-03 satisfied                                                               |
+| pnpm run package:nosign for Linux CI                         | electron-builder ignores Windows signing config on Linux automatically                                                        | ✓ Done — clean unsigned Linux builds                                                     |
+| AppImage desktop entry before xdg-settings                   | xdg-settings must register a desktop ID that has a matching .desktop file                                                     | ✓ Done — ensureAppImageDesktopEntry() runs first                                         |
+| mPendingDownload cold-start buffer                           | Cold-start NXM URL silently dropped before Redux store ready                                                                  | ✓ Done — PROT-01 cold-start path sealed                                                  |
+| PROT-02: SteamOS Steam Browser deferred to v4.0              | Hardware unavailable; WebKit-based Discover overlay behavior unknown                                                          | — Deferred per PROT-03                                                                   |
+| getSteamEntry uses GameStoreHelper (not direct Steam import) | Bundled extension cannot import from renderer src/; GameStoreHelper available via vortex-api util                             | ✓ Done — v3.0 bundled extension constraint solved                                        |
+| isSteamOS() cached at module level                           | Avoids repeated /etc/os-release reads; function called on every elevation attempt                                             | ✓ Done — module-level `_isSteamOS` variable                                              |
+| polkit action uses auth_admin (not auth_admin_keep)          | Prompt every time — no persistent token risk; simpler security model                                                          | ✓ Done — D-10 decision validated                                                         |
+| SteamOS: sudo -n before pkexec                               | pkexec hangs without polkit agent in Game Mode; sudo -n is lightweight first check                                            | ✓ Done — ELEV-02 satisfied                                                               |
+| tsconfig.json excludes **mocks**/                            | TS6307 error: **mocks** outside src/ causes TS to traverse test infrastructure in production typecheck                        | ✓ Done — production build clean                                                          |
+| 10-vortex.rules: no isInGroup guard                          | Simpler than group-based; consistent with .policy auth_admin semantics; all active desktop users may cache credential         | ✓ Done — v4.0 Phase 11                                                                   |
+| deb.extraFiles for rules (not linux.extraFiles)              | AppImage must not receive the rules file — degraded elevation is correct for AppImage                                         | ✓ Done — v4.0 Phase 11                                                                   |
+| \_setNotifier injectable seam (not global state)             | Mirrors \_setSpawner pattern; testable without mocking module internals; optional chaining prevents pre-init failure          | ✓ Done — v4.0 Phase 12                                                                   |
+| rejectWithSteamOSNotification helper DRYs both SteamOS paths | Both close (non-zero exit) and error (ENOENT spawn) paths must fire notification — shared helper prevents divergence          | ✓ Done — v4.0 Phase 12                                                                   |
+| isWinePrefixPath() three-way conjunction                     | platform===linux AND /compatdata/ AND /pfx/ — prevents false positives on non-Wine Linux paths                                | ✓ Done — v4.0 Phase 14                                                                   |
+| resolvePathCase promoted to util/ (not @vortex/shared)       | Avoids new shared package churn; util/ already exported via vortex-api; mod_management and bundled extensions can both import | ✓ Done — v4.0 Phase 14                                                                   |
+| fs shim wraps at fs.ts level (not per-callsite)              | 7+ callsites would each need patching; shim at source guarantees all future callers get case-folding automatically            | ✓ Done — v4.0 Phase 14                                                                   |
+| fileName.toLowerCase() in watch handler retained permanently | inotify event filenames arrive from OS, outside shim reach — toLowerCase fix must stay in watch handler                       | ✓ Done — v4.0 Phase 14 D-11                                                              |
+| applyChattrCasefold: node:fs/promises import alias           | Avoids shadow from `* as fs from fs-extra`; explicit alias makes the import unambiguous                                       | ✓ Done — v6.0 Phase 16                                                                   |
+| ExecFileFn stays callback-style (not promisified)            | Matches injectable seam contract; promisifying would break the test seam pattern                                              | ✓ Done — v6.0 Phase 16                                                                   |
+| vi.mock node:fs/promises factory over vi.spyOn               | Getter non-configurable issue in Vitest happy-dom makes spyOn fail; factory mock is reliable                                  | ✓ Done — v6.0 Phase 16                                                                   |
+| gh api REST for PR ops (not GraphQL)                         | GraphQL createPullRequest mutation rejects fork GITHUB_TOKEN; REST POST works                                                 | ✓ Done — v6.0 Phase 17                                                                   |
+| git push origin HEAD:refs/heads/BRANCH in CI                 | git rebase leaves detached HEAD; named refspec avoids push failure                                                            | ✓ Done — v6.0 Phase 17                                                                   |
+| CONFLICT_FILES captured before git add -A                    | git add -A stages conflict markers; capturing diff stat first preserves accurate conflict list                                | ✓ Done — v6.0 Phase 17                                                                   |
+| Always --draft on gh pr create                               | Draft on both clean and conflict PRs — upstream changes always require human review                                           | ✓ Done — v6.0 Phase 17 D-11                                                              |
 
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
 
 **After each phase transition** (via `/gsd:transition`):
+
 1. Requirements invalidated? → Move to Out of Scope with reason
 2. Requirements validated? → Move to Validated with phase reference
 3. New requirements emerged? → Add to Active
@@ -204,10 +219,12 @@ This document evolves at phase transitions and milestone boundaries.
 5. "What This Is" still accurate? → Update if drifted
 
 **After each milestone** (via `/gsd:complete-milestone`):
+
 1. Full review of all sections
 2. Core Value check — still the right priority?
 3. Audit Out of Scope — reasons still valid?
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-17 after v7.0 milestone — First-Run Onboarding Wizard shipped, all ONBRD requirements satisfied*
+
+_Last updated: 2026-04-17 after v7.0 milestone — First-Run Onboarding Wizard shipped, all ONBRD requirements satisfied_

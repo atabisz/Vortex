@@ -1,5 +1,21 @@
 # Milestones
 
+## v8.0 Upstream v2.0.0 Sync (Shipped: 2026-05-22)
+
+**Phases completed:** 7 phases (24–30), ~50 plans
+
+**Key accomplishments:**
+
+- 109 files / 365 conflict regions from PR #4 hand-resolved bucket-by-bucket: config (24), restore-dropped (25), mod-mgmt hot zone (26), gamebryo + per-game (27), renderer + main spine (28)
+- All `VORTEX-LINUX-MERGE-PLAYBOOK.md` items preserved across resolution: §1 platform guards, §3 LOOT casing, §6 mod-management, §7a-d external changes, §10 native binaries
+- Restored dropped scaffolding: `packages/paths/`, `packages/paths-node/`, `gamebryo-ba2-support/`, `chunking{,.test}.ts`, missing CI workflows
+- Jest renderer scaffolding (`__mocks__/`, `__tests__/`) deliberately dropped — fork is on Vitest
+- Build verification (Phase 29): typecheck/lint/test all green; RC tag `v2.0.0-linux-rebased-rc1` SSH-signed; CI green; AppImage + .deb published with SHA256 manifest
+- Land (Phase 30): rebase 380→264 commits with cascading `--theirs` drift fixes; FF-merge PR #4; SSH-signed `v2.0.0-linux-rebased` tag; 75 Linux-only commits cherry-picked to `linux-port` branch
+- Closing artifact: master at `f570149ea`; tag `v2.0.0-linux-rebased` at `622c99b49`; `linux-port` updated to `6a28945d1`
+
+---
+
 ## v7.0 First-Run Onboarding Wizard (Shipped: 2026-04-17)
 
 **Phases completed:** 6 phases, 12 plans, 21 tasks
