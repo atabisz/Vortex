@@ -153,14 +153,9 @@ if (process.platform === "linux") {
   // co-located with node-loot.node inside bundledPlugins/gamebryo-plugin-management.
   // Prepend that directory to LD_LIBRARY_PATH so dlopen finds libloot.so.0 when
   // the extension is loaded in the renderer process (which inherits this env var).
-  const lootLibDir = path.join(
-    getVortexPath("bundledPlugins"),
-    "gamebryo-plugin-management",
-  );
+  const lootLibDir = path.join(getVortexPath("bundledPlugins"), "gamebryo-plugin-management");
   const existing = process.env.LD_LIBRARY_PATH;
-  process.env.LD_LIBRARY_PATH = existing
-    ? `${lootLibDir}:${existing}`
-    : lootLibDir;
+  process.env.LD_LIBRARY_PATH = existing ? `${lootLibDir}:${existing}` : lootLibDir;
 }
 
 const handleError = (error: Error) => {
@@ -184,10 +179,7 @@ async function main(): Promise<void> {
   // after the --run handler spawns the inner Node child; winston's buffered
   // writes can be lost in that window, and winston itself isn't initialised
   // until later in Application's constructor.
-  const traceElevation = (
-    stage: string,
-    data?: Record<string, unknown>,
-  ): void => {
+  const traceElevation = (stage: string, data?: Record<string, unknown>): void => {
     try {
       const line =
         new Date().toISOString() +
@@ -214,49 +206,11 @@ async function main(): Promise<void> {
       .then(() => app.quit());
   }
 
-<<<<<<< HEAD
-  const NODE_OPTIONS = process.env.NODE_OPTIONS || "";
-  process.env.NODE_OPTIONS =
-    NODE_OPTIONS + ` --max-http-header-size=${HTTP_HEADER_SIZE}` + " --no-force-async-hooks-checks";
-
-  if (mainArgs.disableGPU) {
-    app.disableHardwareAcceleration();
-    app.commandLine.appendSwitch("--disable-software-rasterizer");
-    app.commandLine.appendSwitch("--disable-gpu");
-  }
-
-  app.commandLine.appendSwitch("disable-features", "WidgetLayering");
-  app.commandLine.appendSwitch("disable-features", "UseEcoQoSForBackgroundProcess");
-
-  createMainTelemetryProvider();
-
-  // Now that telemetry is available, swap in the proper error handler
-  // that supports crash reporting
-  process.removeListener("uncaughtException", earlyErrHandler);
-  process.removeListener("unhandledRejection", earlyErrHandler);
-  process.on("uncaughtException", handleError);
-  process.on("unhandledRejection", handleError);
-
-  const downloadManager = new DownloadManager({ concurrency: 3 });
-
-  initIpcHandlers();
-  initDownloadIpc(downloadManager);
-  initAdaptorHost().catch((err: unknown) => {
-    log("warn", "Failed to initialize adaptor host", {
-      error: err instanceof Error ? err.message : String(err as string),
-    });
-  });
-  initTelemetryIpcHandler();
-  StylesheetCompiler.init();
-
-  // --run has to be evaluated *before* we request the single instance lock!
-=======
   // --run is the entry point for the elevated helper chain (see
   // src/renderer/src/util/elevated.ts). The renderer-side monitorConsent
   // watchdog is tight, so this must run before the telemetry / IPC /
   // stylesheet init below; in v2.0 those steps burned the budget and broke
   // deployment elevation (issue #23043).
->>>>>>> v2.0.1
   if (mainArgs.run !== undefined) {
     traceElevation("--run detected, spawning inner Node child", {
       tmpScript: mainArgs.run,
@@ -306,9 +260,7 @@ async function main(): Promise<void> {
 
   const NODE_OPTIONS = process.env.NODE_OPTIONS || "";
   process.env.NODE_OPTIONS =
-    NODE_OPTIONS +
-    ` --max-http-header-size=${HTTP_HEADER_SIZE}` +
-    " --no-force-async-hooks-checks";
+    NODE_OPTIONS + ` --max-http-header-size=${HTTP_HEADER_SIZE}` + " --no-force-async-hooks-checks";
 
   if (mainArgs.disableGPU) {
     app.disableHardwareAcceleration();
@@ -317,10 +269,7 @@ async function main(): Promise<void> {
   }
 
   app.commandLine.appendSwitch("disable-features", "WidgetLayering");
-  app.commandLine.appendSwitch(
-    "disable-features",
-    "UseEcoQoSForBackgroundProcess",
-  );
+  app.commandLine.appendSwitch("disable-features", "UseEcoQoSForBackgroundProcess");
 
   createMainTelemetryProvider();
 
@@ -331,7 +280,15 @@ async function main(): Promise<void> {
   process.on("uncaughtException", handleError);
   process.on("unhandledRejection", handleError);
 
+  const downloadManager = new DownloadManager({ concurrency: 3 });
+
   initIpcHandlers();
+  initDownloadIpc(downloadManager);
+  initAdaptorHost().catch((err: unknown) => {
+    log("warn", "Failed to initialize adaptor host", {
+      error: err instanceof Error ? err.message : String(err as string),
+    });
+  });
   initTelemetryIpcHandler();
   StylesheetCompiler.init();
 
