@@ -1,22 +1,12 @@
-<<<<<<< HEAD:__tests__/reducers.download_management.test.js
-import { stateReducer } from '../src/extensions/download_management/reducers/state';
-import * as _ from 'lodash';
-
-jest.mock('../src/util/errorHandling', () => ({
-  terminate: jest.fn(),
-}));
-
-const { terminate } = require('../src/util/errorHandling');
-=======
-import { stateReducer } from "../extensions/download_management/reducers/state";
 import * as _ from "lodash";
 
-jest.mock("../util/errorHandling", () => ({
+import { stateReducer } from "../src/extensions/download_management/reducers/state";
+
+jest.mock("../src/util/errorHandling", () => ({
   terminate: jest.fn(),
 }));
 
-const { terminate } = require("../util/errorHandling");
->>>>>>> v2.0.1:src/renderer/src/__tests__/reducers.download_management.test.js
+const { terminate } = require("../src/util/errorHandling");
 
 describe("addLocalDownload", () => {
   it("adds the download", () => {
