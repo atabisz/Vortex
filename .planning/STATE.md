@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v8.1
 milestone_name: Upstream v2.0.1 Sync
 status: executing
-stopped_at: Phase 34 CLOSED
-last_updated: "2026-05-23T24:00:00.000Z"
+stopped_at: Phase 34 CLOSED — plan 34-09 complete
+last_updated: "2026-05-23T24:30:00.000Z"
 last_activity: 2026-05-23 -- Phase 34 CLOSED. Wave 9 done-gate executed: D-34-14 7-criterion gate evaluated GREEN (markers=0, harness 13/13 GREEN skip-mode, bucket typechecks shared/preload/main/fingerprints/e2e all 0, renderer-bucket=9 errors all confined to extensions/download_management/ deferred-to-Phase-35 scope (filtered=0), commit accounting 131 commits in v8.1/config-bucket~131..HEAD with 114 work + 7 docs(phase-34) + 9 chore(state) + 1 misc, SYNC-34b [x] verified, STATE+ROADMAP updated this wave); D-34-09 no-verify count = 0; SSH-sign audit 131/131 commits signed (gpgsig SSH-SIGNATURE block present on every commit); all 21 D-34-* decisions honored; D-34-12 dist/index.js regenerated via ncc 0.38.4 (NOT hand-merged); D-34-13 R2 dropped (23 files via git rm -r); D-34-17 trigger HEAD-empty (nativeErr import dropped at v2.0.1 surface — no catalog re-add, no lockfile regen); D-34-20 full pnpm test/lint/build deferred to Phase 35; carry-over to Phase 35: 9 download_management/ typecheck errors (FileAssembler + SpeedCalculator missing modules + IDownload signature/type drift) — pre-existing v2.0.1 merge fallout, NOT a Phase 34 blocker.
 progress:
     total_phases: 8
