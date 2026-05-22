@@ -58,8 +58,8 @@ vi.mock("./util/activationStore", () => ({
 }));
 
 vi.mock("./util/getInstallPath", () => ({
-  resolveInstallPath: vi.fn(
-    (p: string) => p.replace("{USERDATA}", "/home/user/.local/share/Vortex"),
+  resolveInstallPath: vi.fn((p: string) =>
+    p.replace("{USERDATA}", "/home/user/.local/share/Vortex"),
   ),
 }));
 
@@ -71,10 +71,7 @@ describe("stagingDirectory Linux partition check", () => {
   let originalPlatform: PropertyDescriptor;
 
   beforeEach(() => {
-    originalPlatform = Object.getOwnPropertyDescriptor(
-      process,
-      "platform",
-    )!;
+    originalPlatform = Object.getOwnPropertyDescriptor(process, "platform")!;
     vi.clearAllMocks();
   });
 
@@ -101,9 +98,7 @@ describe("stagingDirectory Linux partition check", () => {
     expect(findAccessibleAncestor).toBeDefined();
 
     // Mock statAsync to resolve (path is accessible)
-    vi.mocked(fsUtil.statAsync).mockResolvedValueOnce(
-      { dev: 1 } as any,
-    );
+    vi.mocked(fsUtil.statAsync).mockResolvedValueOnce({ dev: 1 } as any);
 
     const result = await findAccessibleAncestor("/home/user/.local/share/Vortex/mods");
     expect(result).toBe(true);

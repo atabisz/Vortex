@@ -869,11 +869,7 @@ export async function suggestStagingPath(
       if (parentStat.dev !== statModPath.dev) break;
       mountpoint = parent;
     }
-    suggestion = path.join(
-      mountpoint,
-      state.settings.mods.suggestInstallPathDirectory,
-      "{game}",
-    );
+    suggestion = path.join(mountpoint, state.settings.mods.suggestInstallPathDirectory, "{game}");
   } else {
     // Windows, different drive
     const volume = winapi.GetVolumePathName(modPaths[""]);

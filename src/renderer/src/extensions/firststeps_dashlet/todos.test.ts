@@ -25,6 +25,7 @@ vi.mock("../settings_interface/actions/interface", () => ({
 
 import type { TFunction } from "i18next";
 import * as winapi from "winapi-bindings";
+
 import todos from "./todos";
 
 // Minimal mock api matching what todos() uses
@@ -41,10 +42,7 @@ describe("todos platform guards", () => {
   let originalPlatform: PropertyDescriptor;
 
   beforeEach(() => {
-    originalPlatform = Object.getOwnPropertyDescriptor(
-      process,
-      "platform",
-    )!;
+    originalPlatform = Object.getOwnPropertyDescriptor(process, "platform")!;
     vi.clearAllMocks();
     // Reset winapi mocks to their default return values after clearAllMocks
     vi.mocked(winapi.GetDiskFreeSpaceEx).mockReturnValue({

@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+
 import * as shimNs from "./winapi-shim";
 import shimDefault from "./winapi-shim";
 import {
@@ -17,18 +18,21 @@ import {
 } from "./winapi-shim";
 
 describe("GetDiskFreeSpaceEx", () => {
-  it.skipIf(process.platform !== "linux")("returns total, free, freeToCaller as positive numbers for /tmp", () => {
-    const result = GetDiskFreeSpaceEx("/tmp");
-    expect(result).toHaveProperty("total");
-    expect(result).toHaveProperty("free");
-    expect(result).toHaveProperty("freeToCaller");
-    expect(typeof result.total).toBe("number");
-    expect(typeof result.free).toBe("number");
-    expect(typeof result.freeToCaller).toBe("number");
-    expect(result.total).toBeGreaterThan(0);
-    expect(result.free).toBeGreaterThan(0);
-    expect(result.freeToCaller).toBeGreaterThan(0);
-  });
+  it.skipIf(process.platform !== "linux")(
+    "returns total, free, freeToCaller as positive numbers for /tmp",
+    () => {
+      const result = GetDiskFreeSpaceEx("/tmp");
+      expect(result).toHaveProperty("total");
+      expect(result).toHaveProperty("free");
+      expect(result).toHaveProperty("freeToCaller");
+      expect(typeof result.total).toBe("number");
+      expect(typeof result.free).toBe("number");
+      expect(typeof result.freeToCaller).toBe("number");
+      expect(result.total).toBeGreaterThan(0);
+      expect(result.free).toBeGreaterThan(0);
+      expect(result.freeToCaller).toBeGreaterThan(0);
+    },
+  );
 
   it("throws or returns for a nonexistent path (caller catches)", () => {
     // Callers already catch errors; just verify it doesn't crash the test with something unexpected
@@ -47,10 +51,13 @@ describe("GetVolumePathName", () => {
     expect(result.length).toBeGreaterThan(0);
   });
 
-  it.skipIf(process.platform !== "linux")("returns '/' as fallback for nonexistent path (ENOENT)", () => {
-    const result = GetVolumePathName("/nonexistent/path/abc123xyz987");
-    expect(result).toBe("/");
-  });
+  it.skipIf(process.platform !== "linux")(
+    "returns '/' as fallback for nonexistent path (ENOENT)",
+    () => {
+      const result = GetVolumePathName("/nonexistent/path/abc123xyz987");
+      expect(result).toBe("/");
+    },
+  );
 });
 
 describe("ShellExecuteEx", () => {
@@ -98,17 +105,26 @@ describe("GetNativeArch", () => {
 describe("WalkDir", () => {
   it("calls callback with null or undefined without throwing (3-arg form)", () => {
     let cbArg: unknown = "NOT_CALLED";
-    WalkDir("/tmp", () => true, (err: Error | null) => {
-      cbArg = err;
-    });
+    WalkDir(
+      "/tmp",
+      () => true,
+      (err: Error | null) => {
+        cbArg = err;
+      },
+    );
     expect(cbArg === null || cbArg === undefined).toBe(true);
   });
 
   it("calls callback with null when options object provided (4-arg form)", () => {
     let cbArg: unknown = "NOT_CALLED";
-    WalkDir("/tmp", () => true, {}, (err: Error | null) => {
-      cbArg = err;
-    });
+    WalkDir(
+      "/tmp",
+      () => true,
+      {},
+      (err: Error | null) => {
+        cbArg = err;
+      },
+    );
     expect(cbArg === null || cbArg === undefined).toBe(true);
   });
 });

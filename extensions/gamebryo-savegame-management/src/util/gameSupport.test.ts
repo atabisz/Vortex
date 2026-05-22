@@ -1,7 +1,9 @@
 import * as path from "path";
+
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { mygamesPath, iniPath, initGameSupport } from "./gameSupport";
+
 import { mockAllGames, mockDiscoveryByGame } from "../../__mocks__/vortex-api";
+import { mygamesPath, iniPath, initGameSupport } from "./gameSupport";
 
 let originalPlatform: PropertyDescriptor | undefined;
 
@@ -58,7 +60,16 @@ describe("mygamesPath", () => {
     const result = await mygamesPath("skyrimse");
 
     expect(result).toBe(
-      path.join("/steam/steamapps/compatdata/489830", "pfx", "drive_c", "users", "steamuser", "Documents", "My Games", "Skyrim Special Edition"),
+      path.join(
+        "/steam/steamapps/compatdata/489830",
+        "pfx",
+        "drive_c",
+        "users",
+        "steamuser",
+        "Documents",
+        "My Games",
+        "Skyrim Special Edition",
+      ),
     );
   });
 
@@ -133,7 +144,17 @@ describe("iniPath", () => {
     const result = await iniPath("skyrimse");
 
     expect(result).toBe(
-      path.join("/steam/steamapps/compatdata/489830", "pfx", "drive_c", "users", "steamuser", "Documents", "My Games", "Skyrim Special Edition", "Skyrim.ini"),
+      path.join(
+        "/steam/steamapps/compatdata/489830",
+        "pfx",
+        "drive_c",
+        "users",
+        "steamuser",
+        "Documents",
+        "My Games",
+        "Skyrim Special Edition",
+        "Skyrim.ini",
+      ),
     );
   });
 });

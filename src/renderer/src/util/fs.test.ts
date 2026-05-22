@@ -48,8 +48,8 @@ vi.mock("fs-extra", async (importOriginal) => {
   };
 });
 
-import { resolvePathCase } from "./resolvePathCase";
 import * as fs from "./fs";
+import { resolvePathCase } from "./resolvePathCase";
 
 describe("readFileBOM", () => {
   it("supports files without BOM", async () => {
@@ -169,25 +169,19 @@ describe("fs.ts Wine prefix case-folding shim", () => {
   describe("copyAsync", () => {
     it("calls resolvePathCase for Wine prefix src on Linux", async () => {
       setPlatform("linux");
-      await fs.copyAsync(WINE_PATH, "/tmp/dest", { noSelfCopy: true }).catch(
-        () => {},
-      );
+      await fs.copyAsync(WINE_PATH, "/tmp/dest", { noSelfCopy: true }).catch(() => {});
       expect(vi.mocked(resolvePathCase)).toHaveBeenCalled();
     });
 
     it("does NOT call resolvePathCase for non-Wine src on Linux", async () => {
       setPlatform("linux");
-      await fs.copyAsync(NORMAL_PATH, "/tmp/dest", { noSelfCopy: true }).catch(
-        () => {},
-      );
+      await fs.copyAsync(NORMAL_PATH, "/tmp/dest", { noSelfCopy: true }).catch(() => {});
       expect(vi.mocked(resolvePathCase)).not.toHaveBeenCalled();
     });
 
     it("does NOT call resolvePathCase on Windows", async () => {
       setPlatform("win32");
-      await fs.copyAsync(WINE_PATH, "/tmp/dest", { noSelfCopy: true }).catch(
-        () => {},
-      );
+      await fs.copyAsync(WINE_PATH, "/tmp/dest", { noSelfCopy: true }).catch(() => {});
       expect(vi.mocked(resolvePathCase)).not.toHaveBeenCalled();
     });
   });
@@ -215,9 +209,7 @@ describe("fs.ts Wine prefix case-folding shim", () => {
   describe("ensureDirAsync", () => {
     it("calls resolvePathCase for Wine prefix dirPath on Linux", async () => {
       setPlatform("linux");
-      await fs
-        .ensureDirAsync(WINE_PATH)
-        .catch(() => {});
+      await fs.ensureDirAsync(WINE_PATH).catch(() => {});
       expect(vi.mocked(resolvePathCase)).toHaveBeenCalled();
     });
 
@@ -245,10 +237,7 @@ describe("raiseUACDialog platform-guarded message (static)", () => {
   it("source contains Linux arm with pkexec-appropriate copy", async () => {
     const { readFileSync } = await import("node:fs");
     const { resolve } = await import("node:path");
-    const source = readFileSync(
-      resolve(__dirname, "./fs.ts"),
-      "utf-8",
-    );
+    const source = readFileSync(resolve(__dirname, "./fs.ts"), "utf-8");
     expect(source).toContain("You will be asked for your password.");
     expect(source).toContain('process.platform === "linux"');
   });
@@ -256,10 +245,7 @@ describe("raiseUACDialog platform-guarded message (static)", () => {
   it("source preserves Windows arm unchanged", async () => {
     const { readFileSync } = await import("node:fs");
     const { resolve } = await import("node:path");
-    const source = readFileSync(
-      resolve(__dirname, "./fs.ts"),
-      "utf-8",
-    );
+    const source = readFileSync(resolve(__dirname, "./fs.ts"), "utf-8");
     expect(source).toContain("Windows will show an UAC dialog.");
   });
 });
@@ -269,10 +255,7 @@ describe("confirmElevate platform-guarded strings (static)", () => {
     const { readFileSync } = await import("node:fs");
     const { resolve } = await import("node:path");
     const source = readFileSync(
-      resolve(
-        __dirname,
-        "../extensions/download_management/views/Settings.tsx",
-      ),
+      resolve(__dirname, "../extensions/download_management/views/Settings.tsx"),
       "utf-8",
     );
     expect(source).toContain(
@@ -285,25 +268,17 @@ describe("confirmElevate platform-guarded strings (static)", () => {
     const { readFileSync } = await import("node:fs");
     const { resolve } = await import("node:path");
     const source = readFileSync(
-      resolve(
-        __dirname,
-        "../extensions/download_management/views/Settings.tsx",
-      ),
+      resolve(__dirname, "../extensions/download_management/views/Settings.tsx"),
       "utf-8",
     );
-    expect(source).toContain(
-      "This directory is not writable to the current windows user account.",
-    );
+    expect(source).toContain("This directory is not writable to the current windows user account.");
   });
 
   it("source contains Linux arm for button label", async () => {
     const { readFileSync } = await import("node:fs");
     const { resolve } = await import("node:path");
     const source = readFileSync(
-      resolve(
-        __dirname,
-        "../extensions/download_management/views/Settings.tsx",
-      ),
+      resolve(__dirname, "../extensions/download_management/views/Settings.tsx"),
       "utf-8",
     );
     expect(source).toContain("Create with elevated permissions");

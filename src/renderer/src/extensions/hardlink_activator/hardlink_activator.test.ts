@@ -26,9 +26,7 @@ vi.mock("@vortex/shared", () => ({
 }));
 
 vi.mock("../../util/selectors", () => ({
-  installPathForGame: vi.fn(
-    () => "/home/user/.local/share/Vortex/skyrimse/mods",
-  ),
+  installPathForGame: vi.fn(() => "/home/user/.local/share/Vortex/skyrimse/mods"),
 }));
 
 vi.mock("../gamemode_management/util/getGame", () => ({
@@ -66,6 +64,7 @@ vi.mock("../mod_management/LinkingDeployment", () => ({
 
 // Imports after all vi.mock declarations
 import { getErrorCode } from "@vortex/shared";
+
 import * as fsModule from "../../util/fs";
 import init from "./index";
 
@@ -131,11 +130,7 @@ describe("hardlink_activator isSupported", () => {
     vi.mocked(getErrorCode).mockReturnValue("ENOENT");
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = (dm as any).isSupported(
-      createMockState("skyrimse"),
-      "skyrimse",
-      "",
-    );
+    const result = (dm as any).isSupported(createMockState("skyrimse"), "skyrimse", "");
 
     // Currently FAILS: current code returns { description: ... } for all errors.
     // After fix, ENOENT returns undefined (supported).
@@ -146,11 +141,7 @@ describe("hardlink_activator isSupported", () => {
     vi.mocked(getErrorCode).mockReturnValue("EACCES");
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = (dm as any).isSupported(
-      createMockState("skyrimse"),
-      "skyrimse",
-      "",
-    );
+    const result = (dm as any).isSupported(createMockState("skyrimse"), "skyrimse", "");
 
     expect(result).toBeDefined();
     expect(result).toHaveProperty("description");
@@ -163,10 +154,7 @@ describe("symlink_activator isGamebryoGame blocklist", () => {
     const { readFileSync } = require("fs");
     const { resolve } = require("path");
 
-    const src = readFileSync(
-      resolve(__dirname, "../symlink_activator/index.ts"),
-      "utf8",
-    );
+    const src = readFileSync(resolve(__dirname, "../symlink_activator/index.ts"), "utf8");
     expect(src).toContain('"skyrimse"');
 
     // Verify "skyrimse" appears inside the isGamebryoGame method definition.

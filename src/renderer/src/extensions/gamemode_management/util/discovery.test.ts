@@ -15,9 +15,7 @@ vi.mock("../../../util/fs", () => ({
 }));
 
 vi.mock("../../../util/getVortexPath", () => ({
-  default: vi.fn((key: string) =>
-    key === "userData" ? "/home/user/.local/share/Vortex" : "/tmp",
-  ),
+  default: vi.fn((key: string) => (key === "userData" ? "/home/user/.local/share/Vortex" : "/tmp")),
 }));
 
 // modPathsForGame is used by suggestStagingPath to get mod paths
@@ -79,10 +77,11 @@ vi.mock("./Progress", () => ({
 
 // Import after mocks
 import * as winapi from "winapi-bindings";
+
 import * as fsUtil from "../../../util/fs";
 import getVortexPath from "../../../util/getVortexPath";
-import { suggestStagingPath } from "./discovery";
 import { modPathsForGame } from "../../mod_management/selectors";
+import { suggestStagingPath } from "./discovery";
 
 // Minimal mock api with state shape expected by suggestStagingPath
 function makeMockApi(discovered: Record<string, any> = {}): any {
@@ -108,10 +107,7 @@ describe("suggestStagingPath device-aware path suggestion", () => {
   let originalPlatform: PropertyDescriptor;
 
   beforeEach(() => {
-    originalPlatform = Object.getOwnPropertyDescriptor(
-      process,
-      "platform",
-    )!;
+    originalPlatform = Object.getOwnPropertyDescriptor(process, "platform")!;
     vi.clearAllMocks();
 
     // Restore implementations cleared by vi.clearAllMocks()
@@ -147,8 +143,8 @@ describe("suggestStagingPath device-aware path suggestion", () => {
 
     // Both mod path and userData return dev: 1 (same device)
     vi.mocked(fsUtil.statAsync)
-      .mockResolvedValueOnce({ dev: 1 } as any)   // idModPath resolves for "/mnt/games/skyrim/mods"
-      .mockResolvedValueOnce({ dev: 1 } as any);  // statUserData "/home/user/.local/share/Vortex"
+      .mockResolvedValueOnce({ dev: 1 } as any) // idModPath resolves for "/mnt/games/skyrim/mods"
+      .mockResolvedValueOnce({ dev: 1 } as any); // statUserData "/home/user/.local/share/Vortex"
 
     const result = await suggestStagingPath(mockApi, "skyrim");
     expect(result).toBe(`{USERDATA}/{game}/mods`);
@@ -170,10 +166,10 @@ describe("suggestStagingPath device-aware path suggestion", () => {
     // 4. mountpoint walk: stat("/mnt/games") → { dev: 2 } (still same device)
     // 5. mountpoint walk: stat("/mnt") → { dev: 1 } (device changed = boundary)
     vi.mocked(fsUtil.statAsync)
-      .mockResolvedValueOnce({ dev: 2 } as any)  // idModPath
-      .mockResolvedValueOnce({ dev: 1 } as any)  // statUserData
-      .mockResolvedValueOnce({ dev: 2 } as any)  // walk: /mnt/games/skyrim
-      .mockResolvedValueOnce({ dev: 2 } as any)  // walk: /mnt/games
+      .mockResolvedValueOnce({ dev: 2 } as any) // idModPath
+      .mockResolvedValueOnce({ dev: 1 } as any) // statUserData
+      .mockResolvedValueOnce({ dev: 2 } as any) // walk: /mnt/games/skyrim
+      .mockResolvedValueOnce({ dev: 2 } as any) // walk: /mnt/games
       .mockResolvedValueOnce({ dev: 1 } as any); // walk: /mnt — boundary found
 
     const result = await suggestStagingPath(mockApi, "skyrim");
@@ -192,13 +188,12 @@ describe("suggestStagingPath device-aware path suggestion", () => {
     const mockApi = makeMockApi();
 
     vi.mocked(fsUtil.statAsync)
-      .mockResolvedValueOnce({ dev: 1 } as any)  // idModPath
+      .mockResolvedValueOnce({ dev: 1 } as any) // idModPath
       .mockResolvedValueOnce({ dev: 1 } as any); // statUserData
 
     const result = await suggestStagingPath(mockApi, "skyrim");
     expect(result).toBe(`{USERDATA}/{game}/mods`);
   });
-
 });
 
 // Separate describe to isolate the win32 different-device regression guard from

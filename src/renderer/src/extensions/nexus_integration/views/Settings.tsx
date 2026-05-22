@@ -78,10 +78,7 @@ class Settings extends ComponentEx<IProps, {}> {
     return (
       <form>
         <FormGroup>
-          <Toggle
-            checked={associated}
-            onToggle={this.associate}
-          >
+          <Toggle checked={associated} onToggle={this.associate}>
             {t("Handle Mod Manager Download buttons on")}{" "}
             <a onClick={this.openNexus}>nexusmods.com</a> (nxm:// links)
           </Toggle>

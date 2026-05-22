@@ -86,7 +86,9 @@ class GameModeManager {
     this.mStore = null;
     this.mKnownGames = extensionGames;
     this.mGameStubs = gameStubs;
-    this.mKnownGameStores = [Steam, EpicGamesLauncher, ...gameStoreExtensions].filter((s): s is IGameStore => s != null);
+    this.mKnownGameStores = [Steam, EpicGamesLauncher, ...gameStoreExtensions].filter(
+      (s): s is IGameStore => s != null,
+    );
     this.mActiveSearch = null;
     this.mOnGameModeActivated = onGameModeActivated;
   }
@@ -289,8 +291,7 @@ class GameModeManager {
         // D-09: One-shot retry on Linux when no games detected.
         // Handles race where Vortex starts before Steam finishes loading its library.
         if (process.platform === "linux") {
-          const discovered =
-            this.mStore.getState().settings.gameMode.discovered;
+          const discovered = this.mStore.getState().settings.gameMode.discovered;
           const hasGames = Object.keys(discovered).some(
             (gameId) => discovered[gameId].path !== undefined,
           );

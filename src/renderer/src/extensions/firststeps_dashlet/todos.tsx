@@ -167,8 +167,7 @@ function todos(api: IExtensionApi): IToDo[] {
       props: (state) => ({
         discoveryRunning: state.session.discovery.running,
       }),
-      condition: (props) =>
-        process.platform === "linux" ? true : props.searchPaths !== undefined,
+      condition: (props) => (process.platform === "linux" ? true : props.searchPaths !== undefined),
       text: (t: TFunction, props: any): JSX.Element =>
         props.discoveryRunning
           ? t("Discovery running")

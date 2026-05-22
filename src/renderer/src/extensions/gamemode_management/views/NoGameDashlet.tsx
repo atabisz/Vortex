@@ -62,13 +62,9 @@ class Dashlet extends ComponentEx<IProps, IComponentState> {
     // D-07/D-08: Show empty-state guidance on Linux when no games detected and
     // discovery has completed. Hides during active discovery to prevent double-trigger.
     const linuxEmptyState =
-      process.platform === "linux" &&
-      games.length === 0 &&
-      !discoveryRunning ? (
+      process.platform === "linux" && games.length === 0 && !discoveryRunning ? (
         <div className="no-game-linux-empty-state">
-          <h4 className="empty-state-heading">
-            {t("No Steam games detected")}
-          </h4>
+          <h4 className="empty-state-heading">{t("No Steam games detected")}</h4>
           <p className="empty-state-body">
             {t("Make sure Steam has finished loading, then click Refresh.")}
           </p>

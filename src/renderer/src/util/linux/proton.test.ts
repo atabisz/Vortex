@@ -9,8 +9,9 @@ vi.mock("../fs", () => ({
 vi.mock("../log", () => ({ log: vi.fn() }));
 vi.mock("simple-vdf", () => ({ parse: vi.fn() }));
 
-import * as fsModule from "../fs";
 import { parse } from "simple-vdf";
+
+import * as fsModule from "../fs";
 import {
   PROTON_USERNAME,
   getMyGamesPath,
@@ -42,17 +43,13 @@ describe("getMyGamesPath", () => {
 
   it("returns the expected full path", () => {
     const result = getMyGamesPath("/compat");
-    expect(result).toBe(
-      "/compat/pfx/drive_c/users/steamuser/Documents/My Games",
-    );
+    expect(result).toBe("/compat/pfx/drive_c/users/steamuser/Documents/My Games");
   });
 });
 
 describe("getCompatDataPath", () => {
   it("returns steamapps/compatdata/{appId}", () => {
-    expect(getCompatDataPath("/steamapps", "123")).toBe(
-      "/steamapps/compatdata/123",
-    );
+    expect(getCompatDataPath("/steamapps", "123")).toBe("/steamapps/compatdata/123");
   });
 });
 
@@ -123,12 +120,7 @@ describe("buildProtonCommand", () => {
       "--fullscreen",
       "--nosplash",
     ]);
-    expect(result.args).toEqual([
-      "run",
-      "/game/game.exe",
-      "--fullscreen",
-      "--nosplash",
-    ]);
+    expect(result.args).toEqual(["run", "/game/game.exe", "--fullscreen", "--nosplash"]);
   });
 
   it("handles empty extra args", () => {
@@ -153,34 +145,22 @@ describe("detectProtonUsage", () => {
   it("calls statAsync with the expected compatdata path", async () => {
     vi.mocked(fsModule.statAsync).mockResolvedValue(undefined as any);
     await detectProtonUsage("/steamapps", "789");
-    expect(fsModule.statAsync).toHaveBeenCalledWith(
-      "/steamapps/compatdata/789",
-    );
+    expect(fsModule.statAsync).toHaveBeenCalledWith("/steamapps/compatdata/789");
   });
 });
 
 describe("getProtonInfo", () => {
   describe("when oslist contains linux", () => {
-    it('returns { usesProton: false }', async () => {
+    it("returns { usesProton: false }", async () => {
       // statAsync resolves — compatdata exists, but oslist wins
       vi.mocked(fsModule.statAsync).mockResolvedValue(undefined as any);
-      const result = await getProtonInfo(
-        "/steam",
-        "/steamapps",
-        "100",
-        "linux,windows",
-      );
+      const result = await getProtonInfo("/steam", "/steamapps", "100", "linux,windows");
       expect(result).toEqual({ usesProton: false });
     });
 
     it("returns usesProton false even if compatdata exists", async () => {
       vi.mocked(fsModule.statAsync).mockResolvedValue(undefined as any);
-      const result = await getProtonInfo(
-        "/steam",
-        "/steamapps",
-        "101",
-        "linux",
-      );
+      const result = await getProtonInfo("/steam", "/steamapps", "101", "linux");
       expect(result.usesProton).toBe(false);
     });
   });
@@ -190,42 +170,23 @@ describe("getProtonInfo", () => {
       // detectProtonUsage → stat resolves (compatdata exists)
       vi.mocked(fsModule.statAsync).mockResolvedValue(undefined as any);
       // getConfiguredProtonName → readFileAsync throws so protonName = undefined
-      vi.mocked(fsModule.readFileAsync).mockRejectedValue(
-        new Error("ENOENT"),
-      );
+      vi.mocked(fsModule.readFileAsync).mockRejectedValue(new Error("ENOENT"));
       // findLatestProton → readdirAsync returns a Proton folder
-      vi.mocked(fsModule.readdirAsync).mockResolvedValue([
-        "Proton 9.0",
-      ] as any);
+      vi.mocked(fsModule.readdirAsync).mockResolvedValue(["Proton 9.0"] as any);
     });
 
     it("returns usesProton: true", async () => {
-      const result = await getProtonInfo(
-        "/steam",
-        "/steamapps",
-        "200",
-        "windows",
-      );
+      const result = await getProtonInfo("/steam", "/steamapps", "200", "windows");
       expect(result.usesProton).toBe(true);
     });
 
     it("returns the expected compatDataPath", async () => {
-      const result = await getProtonInfo(
-        "/steam",
-        "/steamapps",
-        "200",
-        "windows",
-      );
+      const result = await getProtonInfo("/steam", "/steamapps", "200", "windows");
       expect(result.compatDataPath).toBe("/steamapps/compatdata/200");
     });
 
     it("returns a protonPath from the latest Proton scan", async () => {
-      const result = await getProtonInfo(
-        "/steam",
-        "/steamapps",
-        "200",
-        "windows",
-      );
+      const result = await getProtonInfo("/steam", "/steamapps", "200", "windows");
       expect(result.protonPath).toBe("/steam/steamapps/common/Proton 9.0");
     });
   });
@@ -262,9 +223,7 @@ describe("getProtonInfo", () => {
         return Promise.reject(new Error("ENOENT"));
       });
 
-      vi.mocked(fsModule.readFileAsync).mockResolvedValue(
-        Buffer.from("") as any,
-      );
+      vi.mocked(fsModule.readFileAsync).mockResolvedValue(Buffer.from("") as any);
       vi.mocked(parse).mockReturnValue({
         InstallConfigStore: {
           Software: {
@@ -283,12 +242,7 @@ describe("getProtonInfo", () => {
         "Proton 9.0",
       ] as any);
 
-      const result = await getProtonInfo(
-        "/steam",
-        "/steamapps",
-        "400",
-        "windows",
-      );
+      const result = await getProtonInfo("/steam", "/steamapps", "400", "windows");
       expect(result.usesProton).toBe(true);
       expect(result.protonPath).toContain("Experimental");
     });

@@ -1,17 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Use vi.hoisted so these are available inside vi.mock factory functions
-const { mockReloadGames, mockQuickDiscovery, mockQuickDiscoveryTools } =
-  vi.hoisted(() => {
-    const Bluebird = require("bluebird") as typeof import("bluebird");
-    return {
-      mockReloadGames: vi.fn().mockReturnValue(Bluebird.resolve()),
-      mockQuickDiscovery: vi
-        .fn()
-        .mockReturnValue(Bluebird.resolve(undefined)),
-      mockQuickDiscoveryTools: vi.fn().mockReturnValue(Bluebird.resolve()),
-    };
-  });
+const { mockReloadGames, mockQuickDiscovery, mockQuickDiscoveryTools } = vi.hoisted(() => {
+  const Bluebird = require("bluebird") as typeof import("bluebird");
+  return {
+    mockReloadGames: vi.fn().mockReturnValue(Bluebird.resolve()),
+    mockQuickDiscovery: vi.fn().mockReturnValue(Bluebird.resolve(undefined)),
+    mockQuickDiscoveryTools: vi.fn().mockReturnValue(Bluebird.resolve()),
+  };
+});
 
 // Mock GameStoreHelper
 vi.mock("../../util/GameStoreHelper", () => ({
@@ -103,6 +100,7 @@ vi.mock("../starter_dashlet/actions", () => ({
 }));
 
 import Bluebird from "bluebird";
+
 import GameModeManager from "./GameModeManager";
 
 function setPlatform(platform: string) {

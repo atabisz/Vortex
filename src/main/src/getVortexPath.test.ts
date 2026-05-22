@@ -1,5 +1,6 @@
-import * as nodePath from "node:path";
 import * as nodeOs from "node:os";
+import * as nodePath from "node:path";
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock electron before importing getVortexPath
@@ -68,9 +69,7 @@ describe("getVortexPath - localAppData", () => {
 
     const { getVortexPath } = await import("./getVortexPath");
     const result = getVortexPath("localAppData");
-    expect(result).toBe(
-      nodePath.join(nodeOs.homedir(), ".local", "share"),
-    );
+    expect(result).toBe(nodePath.join(nodeOs.homedir(), ".local", "share"));
   });
 
   it("returns LOCALAPPDATA on Windows (unchanged behavior)", async () => {
@@ -83,8 +82,6 @@ describe("getVortexPath - localAppData", () => {
     vi.stubEnv("XDG_DATA_HOME", "");
 
     const { getVortexPath } = await import("./getVortexPath");
-    expect(getVortexPath("localAppData")).toBe(
-      "C:\\Users\\Test\\AppData\\Local",
-    );
+    expect(getVortexPath("localAppData")).toBe("C:\\Users\\Test\\AppData\\Local");
   });
 });

@@ -25,8 +25,7 @@ const WIKI_TOPICS = {
 
 const WIKI_URL = "https://github.com/Nexus-Mods/Vortex/wiki";
 
-const LINUX_WIKI_URL =
-  "https://github.com/Nexus-Mods/Vortex/wiki/Vortex-on-Linux";
+const LINUX_WIKI_URL = "https://github.com/Nexus-Mods/Vortex/wiki/Vortex-on-Linux";
 
 function generateUrl(wikiId: string) {
   const topicId = WIKI_TOPICS[wikiId] || undefined;
@@ -122,8 +121,7 @@ export default function init(context: types.IExtensionContext) {
       const state = context.api.store.getState();
       const isModernLayout = state.settings?.window?.useModernLayout;
       if (isModernLayout) {
-        const fallbackUrl =
-          process.platform === "linux" ? LINUX_WIKI_URL : WIKI_URL;
+        const fallbackUrl = process.platform === "linux" ? LINUX_WIKI_URL : WIKI_URL;
         const url = generateUrl(wikiId) ?? fallbackUrl;
         util.opn(url).catch(() => null);
       } else {
