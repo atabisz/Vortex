@@ -2,25 +2,15 @@ import { useCallback, useContext, useState } from "react";
 import { useDispatch } from "react-redux";
 import { generate as shortid } from "shortid";
 
-<<<<<<< HEAD
-=======
-import type { IGameStored } from "../../../types/IState";
-import type { IStarterInfo } from "../../../util/StarterInfo";
-
->>>>>>> v2.0.1
 import { setToolVisible } from "../../../extensions/gamemode_management/actions/settings";
 import {
   setPrimaryTool,
   setToolOrder,
   setToolPinned,
 } from "../../../extensions/starter_dashlet/actions";
-<<<<<<< HEAD
 import type { IGameStored } from "../../../types/IState";
 import { showError } from "../../../util/message";
 import type { IStarterInfo } from "../../../util/StarterInfo";
-=======
-import { showError } from "../../../util/message";
->>>>>>> v2.0.1
 import StarterInfo from "../../../util/StarterInfo";
 import { MainContext } from "../../MainWindow";
 import { useToolsData } from "./useToolsData";
@@ -47,12 +37,7 @@ export const useToolsPage = () => {
   } = data;
 
   // ── Edit dialog state ─────────────────────────────────────────────────
-<<<<<<< HEAD
   const [toolBeingEdited, setToolBeingEdited] = useState<StarterInfo>(undefined);
-=======
-  const [toolBeingEdited, setToolBeingEdited] =
-    useState<StarterInfo>(undefined);
->>>>>>> v2.0.1
   const [counter, setCounter] = useState(1);
 
   const closeEditDialog = useCallback(() => {
@@ -100,15 +85,7 @@ export const useToolsPage = () => {
         );
         return;
       }
-<<<<<<< HEAD
       context.api.events.emit("analytics-track-click-event", "Tools", "Manually ran tool");
-=======
-      context.api.events.emit(
-        "analytics-track-click-event",
-        "Tools",
-        "Manually ran tool",
-      );
->>>>>>> v2.0.1
       StarterInfo.run(info, context.api, onShowError);
     },
     [onShowError],
@@ -124,13 +101,7 @@ export const useToolsPage = () => {
           "Tools",
           "Selected new primary tool",
         );
-<<<<<<< HEAD
         reduxDispatch(setPrimaryTool(starter.gameId, starter.isGame ? null : starter.id));
-=======
-        reduxDispatch(
-          setPrimaryTool(starter.gameId, starter.isGame ? null : starter.id),
-        );
->>>>>>> v2.0.1
       }
     },
     [reduxDispatch, primaryTool],
@@ -138,15 +109,7 @@ export const useToolsPage = () => {
 
   const removeTool = useCallback(
     (starter: StarterInfo) => {
-<<<<<<< HEAD
       context.api.events.emit("analytics-track-click-event", "Tools", "Removed tool");
-=======
-      context.api.events.emit(
-        "analytics-track-click-event",
-        "Tools",
-        "Removed tool",
-      );
->>>>>>> v2.0.1
       reduxDispatch(setToolVisible(gameMode, starter.id, false));
     },
     [reduxDispatch, gameMode],
@@ -154,13 +117,7 @@ export const useToolsPage = () => {
 
   const togglePin = useCallback(
     (starter: IStarterInfo) => {
-<<<<<<< HEAD
       const currentlyPinned = data.otherPinnedTools.some((s) => s.id === starter.id);
-=======
-      const currentlyPinned = data.otherPinnedTools.some(
-        (s) => s.id === starter.id,
-      );
->>>>>>> v2.0.1
       reduxDispatch(setToolPinned(gameMode, starter.id, !currentlyPinned));
     },
     [reduxDispatch, gameMode, data.otherPinnedTools],
@@ -170,13 +127,7 @@ export const useToolsPage = () => {
 
   const applyOrder = useCallback(
     (ordered: string[]) => {
-<<<<<<< HEAD
       const names = ordered.map((id) => tools.find((t) => t.id === id)?.name).filter(Boolean);
-=======
-      const names = ordered
-        .map((id) => tools.find((t) => t.id === id)?.name)
-        .filter(Boolean);
->>>>>>> v2.0.1
       context.api.events.emit(
         "analytics-track-event",
         "Tools",
@@ -191,14 +142,7 @@ export const useToolsPage = () => {
 
   const getVisibleIds = useCallback(() => {
     return tools
-<<<<<<< HEAD
       .filter((s) => s.isGame || discoveredTools[s.id] === undefined || !isToolHidden(s))
-=======
-      .filter(
-        (s) =>
-          s.isGame || discoveredTools[s.id] === undefined || !isToolHidden(s),
-      )
->>>>>>> v2.0.1
       .map((s) => s.id);
   }, [tools, discoveredTools, isToolHidden]);
 
