@@ -1,13 +1,8 @@
-<<<<<<< HEAD
 import * as path from "path";
-=======
-import type ZipT from "node-7z";
->>>>>>> v2.0.1
 
 import { unknownToError } from "@vortex/shared";
 import PromiseBB from "bluebird";
 import * as _ from "lodash";
-<<<<<<< HEAD
 import type ZipT from "node-7z";
 import rimraf from "rimraf";
 
@@ -17,32 +12,13 @@ import { log } from "../../logging";
 import type { ExtensionType, IExtension } from "../../types/extensions";
 import type { IExtensionApi } from "../../types/IExtensionContext";
 import type { IState } from "../../types/IState";
-=======
-import * as path from "path";
-import rimraf from "rimraf";
-
-import type { ExtensionType, IExtension } from "../../types/extensions";
-import type { IExtensionApi } from "../../types/IExtensionContext";
-import type { IState } from "../../types/IState";
-
-import { removeExtension } from "../../actions";
-import ExtensionManager from "../../ExtensionManager";
-import { log } from "../../logging";
->>>>>>> v2.0.1
 import { DataInvalid } from "../../util/CustomErrors";
 import { withTrackedActivity } from "../../util/errorHandling";
 import * as fs from "../../util/fs";
 import getVortexPath from "../../util/getVortexPath";
 import { INVALID_FILENAME_RE } from "../../util/util";
 import { webpackRequireHack } from "../../util/webpack-hacks";
-<<<<<<< HEAD
 import { countryExists, languageExists } from "../settings_interface/languagemap";
-=======
-import {
-  countryExists,
-  languageExists,
-} from "../settings_interface/languagemap";
->>>>>>> v2.0.1
 import { readExtensionInfo } from "./util";
 
 const rimrafAsync: (removePath: string, options: any) => PromiseBB<void> =
@@ -325,15 +301,7 @@ function installExtension(
             () => undefined,
             () => undefined,
           )
-<<<<<<< HEAD
           .then(() => validateInstall(tempPath, info).then((guessedType) => (type = guessedType)))
-=======
-          .then(() =>
-            validateInstall(tempPath, info).then(
-              (guessedType) => (type = guessedType),
-            ),
-          )
->>>>>>> v2.0.1
           .then(() => readExtensionInfo(tempPath, false, info))
           // merge the caller-provided info with the stuff parsed from the info.json file because there
           // is data we may only know at runtime (e.g. the modId)
@@ -356,13 +324,7 @@ function installExtension(
                   id: path.basename(archivePath, path.extname(archivePath)),
                   info,
                 })
-<<<<<<< HEAD
               : PromiseBB.reject(new Error("not an extension, info.json missing")),
-=======
-              : PromiseBB.reject(
-                  new Error("not an extension, info.json missing"),
-                ),
->>>>>>> v2.0.1
           )
           .then((manifestInfo) =>
             // update the manifest on disc, in case we had new info from the caller
@@ -391,13 +353,7 @@ function installExtension(
               return fs
                 .readdirAsync(destPath)
                 .map((entry: string) =>
-<<<<<<< HEAD
                   fs.statAsync(path.join(destPath, entry)).then((stat) => ({ name: entry, stat })),
-=======
-                  fs
-                    .statAsync(path.join(destPath, entry))
-                    .then((stat) => ({ name: entry, stat })),
->>>>>>> v2.0.1
                 )
                 .then(() => null);
             } else if (type === "theme") {
@@ -405,15 +361,7 @@ function installExtension(
             } else {
               // don't install dependencies for extensions that are already loaded because
               // doing so could cause an exception
-<<<<<<< HEAD
               if (api.getLoadedExtensions().find((ext) => ext.name === extName) === undefined) {
-=======
-              if (
-                api
-                  .getLoadedExtensions()
-                  .find((ext) => ext.name === extName) === undefined
-              ) {
->>>>>>> v2.0.1
                 return installExtensionDependencies(api, destPath);
               } else {
                 return PromiseBB.resolve();
@@ -429,15 +377,7 @@ function installExtension(
               return Promise.reject(err);
             }),
           )
-<<<<<<< HEAD
           .catch((err) => rimrafAsync(tempPath, { glob: false }).then(() => PromiseBB.reject(err))),
-=======
-          .catch((err) =>
-            rimrafAsync(tempPath, { glob: false }).then(() =>
-              PromiseBB.reject(err),
-            ),
-          ),
->>>>>>> v2.0.1
     ),
   );
 }
