@@ -63,22 +63,6 @@ import modName from "./util/modName";
 import queryGameId from "./util/queryGameId";
 import refreshMods from "./util/refreshMods";
 
-<<<<<<< HEAD
-=======
-import type InstallManager from "./InstallManager";
-import { currentActivator, installPath, installPathForGame } from "./selectors";
-import { ensureStagingDirectory } from "./stagingDirectory";
-
-import * as _ from "lodash";
-import type { RuleType } from "modmeta-db";
-import * as path from "path";
-import {
-  getErrorCode,
-  getErrorMessageOrDefault,
-  unknownToError,
-} from "@vortex/shared";
-
->>>>>>> v2.0.1
 async function checkStagingGame(
   api: IExtensionApi,
   gameId: string,
@@ -117,14 +101,7 @@ async function checkStagingFolder(
   const t = api.translate;
 
   // manifestPath can be undefined if the manifest is older
-<<<<<<< HEAD
   const normalize = manifestPath !== undefined ? await getNormalizeFunc(manifestPath) : undefined;
-=======
-  const normalize =
-    manifestPath !== undefined
-      ? await getNormalizeFunc(manifestPath)
-      : undefined;
->>>>>>> v2.0.1
 
   if (manifestPath !== undefined && normalize(manifestPath) !== normalize(configuredPath)) {
     log("error", "staging folder stored in manifest differs from configured one", {
@@ -314,21 +291,14 @@ export function onGameModeActivated(
   }
 
   setErrorContext("gamemode", game.name);
-  setErrorContext(
-    "extension_type",
-    game.contributed ? "community" : "official",
-  );
+  setErrorContext("extension_type", game.contributed ? "community" : "official");
   if (truthy(game?.version)) {
     setErrorContext("extension_version", game.version);
   }
   if (activatorToUse !== undefined) {
     setErrorContext("deployment_method", activatorToUse.id);
   }
-  const updateChannel = getSafe(
-    state,
-    ["settings", "update", "channel"],
-    "stable",
-  );
+  const updateChannel = getSafe(state, ["settings", "update", "channel"], "stable");
   setErrorContext("update_channel", updateChannel);
   const modTable = getSafe(state, ["persistent", "mods", gameId], {});
   setErrorContext("mod_count", String(Object.keys(modTable).length));
@@ -805,11 +775,7 @@ async function undeploy(
           }
           throw err;
         }
-        const newActivation = await activator.finalize(
-          gameMode,
-          deployPath,
-          stagingPath,
-        );
+        const newActivation = await activator.finalize(gameMode, deployPath, stagingPath);
         await saveActivation(
           gameMode,
           typeId,
@@ -1035,19 +1001,7 @@ export function onRemoveMod(
     callback?.(null);
     return;
   }
-<<<<<<< HEAD
   return onRemoveMods(api, activators, installManager, gameId, [modId], callback, options);
-=======
-  return onRemoveMods(
-    api,
-    activators,
-    installManager,
-    gameId,
-    [modId],
-    callback,
-    options,
-  );
->>>>>>> v2.0.1
 }
 
 export function onAddMod(
