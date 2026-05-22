@@ -74,47 +74,47 @@
 
 ## Traceability
 
-| Requirement | Phase    | Status   |
-| ----------- | -------- | -------- |
-| SYNC-01     | Phase 29 | Pending  |
-| SYNC-02     | Phase 24 | Pending  |
-| SYNC-03     | Phase 24 | Pending  |
-| SYNC-04     | Phase 26 | Pending  |
-| SYNC-05     | Phase 27 | Complete |
-| SYNC-06     | Phase 27 | Complete |
-| SYNC-07     | Phase 28 | Pending  |
-| SYNC-08     | Phase 28 | Pending  |
-| SYNC-09     | Phase 28 | Pending  |
-| SYNC-10     | Phase 28 | Pending  |
-| SYNC-11     | Phase 25 | Complete |
-| SYNC-12     | Phase 25 | Complete |
-| SYNC-13     | Phase 25 | Complete |
-| SYNC-14     | Phase 25 | Complete |
-| SYNC-15     | Phase 25 | Complete |
-| SYNC-16     | Phase 25 | Complete |
-| SYNC-17     | Phase 27 | Complete |
-| SYNC-18     | Phase 28 | Pending  |
-| SYNC-19     | Phase 27 | Complete |
-| SYNC-20     | Phase 28 | Pending  |
-| SYNC-21     | Phase 29 | Pending  |
-| SYNC-22     | Phase 26 | Pending  |
-| SYNC-23     | Phase 26 | Pending  |
-| SYNC-24     | Phase 28 | Pending  |
-| SYNC-25     | Phase 28 | Pending  |
-| SYNC-26     | Phase 28 | Pending  |
-| SYNC-27     | Phase 26 | Pending  |
-| SYNC-28     | Phase 29 | Pending  |
-| SYNC-29     | Phase 29 | Pending  |
-| SYNC-30     | Phase 29 | Pending  |
-| SYNC-31     | Phase 29 | Pending  |
-| SYNC-32     | Phase 29 | Pending  |
-| SYNC-33     | Phase 29 | Pending  |
-| SYNC-34     | Phase 29 | Pending  |
-| SYNC-35     | Phase 30 | Pending  |
-| SYNC-36     | Phase 30 | Pending  |
-| SYNC-37     | Phase 30 | Pending  |
-| SYNC-38     | Phase 30 | Pending  |
-| SYNC-39     | Phase 30 | Pending  |
+| Requirement | Phase    | Status                                                              |
+| ----------- | -------- | ------------------------------------------------------------------- |
+| SYNC-01     | Phase 29 | Complete                                                            |
+| SYNC-02     | Phase 24 | Complete                                                            |
+| SYNC-03     | Phase 24 | Complete                                                            |
+| SYNC-04     | Phase 26 | Complete                                                            |
+| SYNC-05     | Phase 27 | Complete                                                            |
+| SYNC-06     | Phase 27 | Complete                                                            |
+| SYNC-07     | Phase 28 | Complete                                                            |
+| SYNC-08     | Phase 28 | Complete                                                            |
+| SYNC-09     | Phase 28 | Complete                                                            |
+| SYNC-10     | Phase 28 | Complete                                                            |
+| SYNC-11     | Phase 25 | Complete                                                            |
+| SYNC-12     | Phase 25 | Complete                                                            |
+| SYNC-13     | Phase 25 | Complete                                                            |
+| SYNC-14     | Phase 25 | Complete                                                            |
+| SYNC-15     | Phase 25 | Complete                                                            |
+| SYNC-16     | Phase 25 | Complete                                                            |
+| SYNC-17     | Phase 27 | Complete                                                            |
+| SYNC-18     | Phase 28 | Complete                                                            |
+| SYNC-19     | Phase 27 | Complete                                                            |
+| SYNC-20     | Phase 28 | Complete                                                            |
+| SYNC-21     | Phase 29 | Complete                                                            |
+| SYNC-22     | Phase 26 | Complete                                                            |
+| SYNC-23     | Phase 26 | Complete                                                            |
+| SYNC-24     | Phase 28 | Complete                                                            |
+| SYNC-25     | Phase 28 | Complete                                                            |
+| SYNC-26     | Phase 28 | Complete                                                            |
+| SYNC-27     | Phase 26 | Complete                                                            |
+| SYNC-28     | Phase 29 | Complete                                                            |
+| SYNC-29     | Phase 29 | Complete                                                            |
+| SYNC-30     | Phase 29 | Complete                                                            |
+| SYNC-31     | Phase 29 | Complete                                                            |
+| SYNC-32     | Phase 29 | Complete (D fix landed mid-Phase-30, see 30-TAG-EVIDENCE.md)        |
+| SYNC-33     | Phase 29 | Complete (parts A+B; part C carry-forward DEFERRED → v8.1)          |
+| SYNC-34     | Phase 29 | Complete (real-usage PASS via D-29-03; walkthrough DEFERRED → v8.1) |
+| SYNC-35     | Phase 30 | Complete                                                            |
+| SYNC-36     | Phase 30 | Complete                                                            |
+| SYNC-37     | Phase 30 | Complete                                                            |
+| SYNC-38     | Phase 30 | Complete (with SYNC-39 follow-up tracked → v8.1)                    |
+| SYNC-39     | Phase 30 | Complete (linux-port baseline drift catch-up → v8.1)                |
 
 **Coverage:**
 
