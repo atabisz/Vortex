@@ -41,18 +41,8 @@ interface IGamebryoRules {
   groups?: IUserlistEntry[];
 }
 
-<<<<<<< HEAD
 function extractPluginRules(state: IStateWithLootLists, plugins: string[]): IGamebryoRules {
   const installedPlugins: Set<string> = new Set(plugins.map((name) => name.toLowerCase()));
-=======
-function extractPluginRules(
-  state: IStateWithLootLists,
-  plugins: string[],
-): IGamebryoRules {
-  const installedPlugins: Set<string> = new Set(
-    plugins.map((name) => name.toLowerCase()),
-  );
->>>>>>> v2.0.1
   const customisedPlugins = (state.userlist?.plugins ?? []).filter(
     (plug: IUserlistEntry) =>
       installedPlugins.has(plug.name.toLowerCase()) &&
@@ -170,14 +160,8 @@ export async function parser(
       api.store,
       collection.pluginRules.groups.reduce((prev, group) => {
         const isNew =
-<<<<<<< HEAD
           userlist.groups.find((g) => g.name.toUpperCase() === group.name.toUpperCase()) ===
           undefined;
-=======
-          userlist.groups.find(
-            (g) => g.name.toUpperCase() === group.name.toUpperCase(),
-          ) === undefined;
->>>>>>> v2.0.1
         if (isNew) {
           prev.push({
             type: "ADD_PLUGIN_GROUP",
