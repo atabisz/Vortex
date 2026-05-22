@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import path from "path";
 
 /* eslint-disable */
@@ -13,26 +12,6 @@ import { IItemRendererProps } from "./types";
 import { forceRefresh } from "./util";
 import InfoComponent from "./views/InfoComponent";
 import ItemRenderer from "./views/ItemRenderer";
-=======
-/* eslint-disable */
-import React from "react";
-import path from "path";
-import { actions, fs, selectors, types, util } from "vortex-api";
-
-import {
-  ACTIVITY_ID_IMPORTING_LOADORDER,
-  GAME_ID,
-  LOCKED_PREFIX,
-  UNI_PATCH,
-} from "./common";
-import InfoComponent from "./views/InfoComponent";
-import IniStructure from "./iniParser";
-import { PriorityManager } from "./priorityManager";
-import { getPersistentLoadOrder } from "./migrations";
-import { forceRefresh } from "./util";
-import ItemRenderer from "./views/ItemRenderer";
-import { IItemRendererProps } from "./types";
->>>>>>> v2.0.1
 
 export interface IBaseProps {
   api: types.IExtensionApi;
@@ -60,13 +39,7 @@ class TW3LoadOrder implements types.ILoadOrderGameInfo {
     this.clearStateOnPurge = true;
     this.toggleableEntries = true;
     this.noCollectionGeneration = true;
-<<<<<<< HEAD
     this.usageInstructions = () => <InfoComponent onToggleModsState={props.onToggleModsState} />;
-=======
-    this.usageInstructions = () => (
-      <InfoComponent onToggleModsState={props.onToggleModsState} />
-    );
->>>>>>> v2.0.1
     this.customItemRenderer = (props) => {
       return <ItemRenderer className={props.className} item={props.item} />;
     };
@@ -78,14 +51,7 @@ class TW3LoadOrder implements types.ILoadOrderGameInfo {
   }
 
   public async serializeLoadOrder(loadOrder: types.LoadOrder): Promise<void> {
-<<<<<<< HEAD
     return IniStructure.getInstance(this.mApi, () => this.mPriorityManager).setINIStruct(loadOrder);
-=======
-    return IniStructure.getInstance(
-      this.mApi,
-      () => this.mPriorityManager,
-    ).setINIStruct(loadOrder);
->>>>>>> v2.0.1
   }
 
   private readableNames = { [UNI_PATCH]: "Unification/Community Patch" };
@@ -198,15 +164,7 @@ export async function importLoadOrder(
     });
     await util.toPromise((cb) => api.events.emit("deploy-mods", cb));
     const fileData = await fs.readFileAsync(
-<<<<<<< HEAD
       path.join(stagingFolder, collectionMod.installationPath, "collection.json"),
-=======
-      path.join(
-        stagingFolder,
-        collectionMod.installationPath,
-        "collection.json",
-      ),
->>>>>>> v2.0.1
       { encoding: "utf8" },
     );
     const collection = JSON.parse(fileData);
