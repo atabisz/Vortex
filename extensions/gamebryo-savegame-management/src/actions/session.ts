@@ -4,14 +4,7 @@ import { ISavegame } from "../types/ISavegame";
 
 export const setSavegames = createAction(
   "SET_SAVEGAMES",
-<<<<<<< HEAD
   (savegames: { [id: string]: ISavegame }, truncated: boolean) => ({ savegames, truncated }),
-=======
-  (savegames: { [id: string]: ISavegame }, truncated: boolean) => ({
-    savegames,
-    truncated,
-  }),
->>>>>>> v2.0.1
 );
 
 export const setSavegameAttribute = createAction(
