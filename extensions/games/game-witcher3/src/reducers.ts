@@ -1,8 +1,5 @@
 import { types, util } from "vortex-api";
-<<<<<<< HEAD
 
-=======
->>>>>>> v2.0.1
 import { setPriorityType, setSuppressModLimitPatch } from "./actions";
 
 // reducer
