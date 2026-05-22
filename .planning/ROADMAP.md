@@ -125,12 +125,30 @@
 
 Plans:
 
+**Wave 1**
+
 - [ ] 32-01-PLAN.md — Wave 0: extract v8.0 harness, pre-flight verification, baseline capture, no-new-sites finding
 - [ ] 32-02-PLAN.md — Wave 1 leaf tier: 7 files (NotificationAggregator, util/{VersionFilter,removeMods,activationStore,externalChanges,deploy}, stagingDirectory)
+
+**Wave 2** _(blocked on Wave 1 completion)_
+
 - [ ] 32-03-PLAN.md — Wave 2 mid tier: 5 files (modMerging, views/{DeactivationButton,Settings,ModList}, eventHandlers)
+
+**Wave 3** _(blocked on Wave 2 completion)_
+
 - [ ] 32-04-PLAN.md — Wave 3 playbook-heavy: LinkingDeployment.ts (8 regions, fork-wins @212) + InstallManager.ts (40 regions, 6 dangerous fork-wins)
+
+**Wave 4** _(blocked on Wave 3 completion)_
+
 - [ ] 32-05-PLAN.md — Wave 4 barrel: index.ts (18 regions, smaller-diff)
+
+**Wave 5** _(blocked on Wave 4 completion)_
+
 - [ ] 32-06-PLAN.md — Wave 5 verification: final harness (no skip), commit-body audit, VALIDATION sign-off, PHASE-SUMMARY
+
+**Cross-cutting constraints:**
+
+- Each file resolution is its own SSH-signed commit per D-32-08
 
 ### Phase 33: Gamebryo + per-game extensions (v2.0.1)
 

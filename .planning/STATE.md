@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v8.1
 milestone_name: Upstream v2.0.1 Sync
-status: completed
+status: executing
 stopped_at: Phase 32 context gathered
-last_updated: "2026-05-22T10:29:41.572Z"
-last_activity: 2026-05-22 — Phase 31 config-bucket complete + pushed to fork (`v8.1/config-bucket`, 13 commits ahead)
+last_updated: "2026-05-22T11:17:23.667Z"
+last_activity: 2026-05-22 -- Phase 32 planning complete
 progress:
     total_phases: 8
     completed_phases: 0
-    total_plans: 0
+    total_plans: 6
     completed_plans: 8
     percent: 0
 ---
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-05-22 after v8.0 ship + v8.1 milestone s
 
 Phase: 32
 Plan: Not started
-Status: Phase 31 complete; ready to discuss Phase 32
-Last activity: 2026-05-22 — Phase 31 config-bucket complete + pushed to fork (`v8.1/config-bucket`, 13 commits ahead)
+Status: Ready to execute
+Last activity: 2026-05-22 -- Phase 32 planning complete
 
 ## Performance Metrics
 
