@@ -233,7 +233,17 @@
 3. Tag `v2.0.0-linux-rebased` exists on the merge commit and is pushed to `origin`
 4. The Linux subset of the merge is cherry-picked onto `linux-port` per existing branch policy (excludes `.planning/`, fork-only CI, fingerprint disablement) — `linux-port` history stays Linux-only
 5. `VORTEX-LINUX-MERGE-PLAYBOOK.md` is updated with any new gotchas surfaced during resolution; the commit-index table reflects the new master and linux-port hashes for the affected fixes
-   **Plans**: TBD
+   **Plans**: 9 plans
+
+- [ ] 30-00-PLAN.md — Phase setup: pre-rebase state captured (verified-live SHAs, gh merge-flag behaviour, fork/master pushed)
+- [ ] 30-01-PLAN.md — Rebase v8.0/config-bucket onto master + lease-pinned force-push + 30-REBASE-NOTES.md
+- [ ] 30-02-PLAN.md — SYNC-35: Main + Format CI green on rebased HEAD
+- [ ] 30-03-PLAN.md — SYNC-36: PR #4 fast-forward merged onto master (gh primary, manual FF fallback)
+- [ ] 30-04-PLAN.md — SYNC-37: canonical tag `v2.0.0-linux-rebased` + AppImage/.deb published via release-linux.yml
+- [ ] 30-05-PLAN.md — SYNC-33-C + SYNC-34 carry-forward: canonical AppImage + .deb boot + Skyrim SE 4-screenshot smoke
+- [ ] 30-06-PLAN.md — SYNC-38: linux-port cherry-pick complete (path-filter per D-30-03)
+- [ ] 30-07-PLAN.md — SYNC-39: VORTEX-LINUX-MERGE-PLAYBOOK.md milestone post-mortem (5 D-30-04 deltas + commit-index refresh)
+- [ ] 30-08-PLAN.md — Phase 30 done-gate: 7-SYNC roll-up + STATE/ROADMAP flip
 
 ## Backlog
 
