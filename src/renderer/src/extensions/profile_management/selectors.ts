@@ -60,12 +60,7 @@ export const enabledModCountForProfile = createCachedSelector(
     }
     const gameMods = mods[profile.gameId] ?? {};
     return Object.keys(profile.modState).filter(
-<<<<<<< HEAD
       (id) => profile.modState[id]?.enabled && gameMods[id]?.state === "installed",
-=======
-      (id) =>
-        profile.modState[id]?.enabled && gameMods[id]?.state === "installed",
->>>>>>> v2.0.1
     ).length;
   },
 )((state, profileId) => profileId ?? "___empty");
