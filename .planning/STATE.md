@@ -4,14 +4,14 @@ milestone: v8.1
 milestone_name: Upstream v2.0.1 Sync
 status: executing
 stopped_at: Phase 34 context gathered
-last_updated: "2026-05-23T19:30:00.000Z"
-last_activity: 2026-05-23 -- Phase 34 Wave D complete (20 atomic SSH-signed resolve commits + 1 SUMMARY commit on v8.1/config-bucket; util/* (8) + reducers/hooks/store/telemetry (6) + contexts/ui (6); §3 Linux-guard preserved in util/elevated.ts (SteamOS sudo + desktop pkexec branches); bluebird-trap audit clean for util/{errorHandling,elevated}.ts; filtered renderer bucket-typecheck = 0 errors against Wave-D-resolved files; markers in src/renderer/ 68→48; harness 12/12 GREEN in skip-mode)
+last_updated: "2026-05-23T22:15:00.000Z"
+last_activity: 2026-05-23 -- Phase 34 Wave E complete (30 atomic SSH-signed resolve commits + 2 linter-dup fix commits on v8.1/config-bucket; nexus_integration (9) + health_check (6) + misc (15); §1 platform guards preserved in symlink_activator_elevate/index.ts (10× process.platform + 3× getIPCPath); §3 Linux-guard preserved in hardlink_activator/index.ts (enrichLinuxEntries + cross-volume detection) and installer_fomod_ipc/VortexIPCConnection.ts (.NET 9 ELF path); adaptor bridge fallback preserved in gamemode_management/index.ts; bluebird-trap audit clean for all 4 risk files (eventHandlers.ts, util.ts, hardlink_activator/index.ts, symlink_activator_elevate/index.ts); filtered renderer bucket-typecheck = 0 errors against Wave-E-resolved files; markers in src/renderer/ 140→66; harness 12/12 GREEN in skip-mode)
 progress:
     total_phases: 8
     completed_phases: 2
     total_plans: 26
-    completed_plans: 30
-    percent: 25
+    completed_plans: 31
+    percent: 26
 ---
 
 # Project State
@@ -91,6 +91,7 @@ _Updated after each plan completion_
 | Phase 34 P02 | 10 | 2 tasks | 1 files |
 | Phase 34 P03 | 50 | 10 tasks | 9 files |
 | Phase 34 P04 | 60 | 21 tasks | 20 files |
+| Phase 34 P05 | 90 | 32 tasks | 30 files |
 
 ## Accumulated Context
 
