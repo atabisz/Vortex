@@ -77,7 +77,7 @@ function progressUpdate(
     if (received < 0) {
       log("warn", "invalid download progress", { received, total });
     }
-    updates.push(downloadProgress(dlId, received, total, urls));
+    updates.push(downloadProgress(dlId, received, total, chunks, urls));
   }
   if (filePath !== undefined && path.basename(filePath) !== download.localPath) {
     updates.push(setDownloadFilePath(dlId, path.basename(filePath)));
@@ -438,7 +438,7 @@ export class DownloadObserver {
               const downloadResult: IDownloadResult = {
                 filePath: path.join(downloadPath, existingDownload.localPath || err.fileName),
                 headers: existingDownload.modInfo?.headers || {},
-                unfinishedChunks: [],
+                unfinishedChunks: existingDownload.chunks || [],
                 hadErrors: false,
                 size: existingDownload.size || 0,
                 metaInfo: existingDownload.modInfo || {},
@@ -535,12 +535,12 @@ export class DownloadObserver {
       callback?.(null, id);
       return onceFinished();
     } else if (res.unfinishedChunks.length > 0) {
-      this.mApi.store.dispatch(pauseDownload(id, true));
+      this.mApi.store.dispatch(pauseDownload(id, true, res.unfinishedChunks));
       callback?.(null, id);
       return onceFinished();
     } else if (res.filePath.toLowerCase().endsWith(".html")) {
       const batched = [
-        downloadProgress(id, res.size, res.size, []),
+        downloadProgress(id, res.size, res.size, [], undefined),
         finishDownload(id, "redirect", { htmlFile: res.filePath }),
       ];
       batchDispatch(this.mApi.store.dispatch, batched);
@@ -861,7 +861,7 @@ export class DownloadObserver {
           tag: download.modInfo?.referenceTag,
         });
       }
-      this.mApi.store.dispatch(pauseDownload(downloadId, true));
+      this.mApi.store.dispatch(pauseDownload(downloadId, true, unfinishedChunks));
       callback?.(null);
     }
   }
@@ -894,7 +894,7 @@ export class DownloadObserver {
         const downloadPath = selectors.downloadPathForGame(this.mApi.store.getState(), convertedId);
 
         const fullPath = path.join(downloadPath, download.localPath);
-        this.mApi.store.dispatch(pauseDownload(downloadId, false));
+        this.mApi.store.dispatch(pauseDownload(downloadId, false, undefined));
 
         const extraInfo = this.getExtraDlOptions(download.modInfo ?? {}, "always");
 
@@ -950,7 +950,7 @@ export class DownloadObserver {
                     download.received,
                     download.size,
                     download.startTime,
-                    [],
+                    download.chunks,
                     this.genProgressCB(downloadId),
                     extraInfo,
                   ),
