@@ -39,13 +39,7 @@ export const useIsMaximized = () => {
     });
 
     // Subscribe to window maximized state changes
-<<<<<<< HEAD
     const unsubscribe = api.window.onMaximized((maximized) => setIsMaximized(maximized));
-=======
-    const unsubscribe = api.window.onMaximized((maximized) =>
-      setIsMaximized(maximized),
-    );
->>>>>>> v2.0.1
 
     return unsubscribe;
   }, []);
