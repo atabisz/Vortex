@@ -1,7 +1,4 @@
 /* eslint-disable */
-import path from "path";
-<<<<<<< HEAD
-
 import { actions, selectors, types, util } from "vortex-api";
 
 import { GAME_ID, I18N_NAMESPACE, LOCKED_PREFIX } from "./common";
@@ -10,18 +7,6 @@ import { makeOnContextImport } from "./mergeBackup";
 import { getPersistentLoadOrder } from "./migrations";
 import { PriorityManager } from "./priorityManager";
 import { forceRefresh } from "./util";
-=======
-import { actions, selectors, types, util } from "vortex-api";
-
-import { GAME_ID, I18N_NAMESPACE, LOCKED_PREFIX } from "./common";
-import { PriorityManager } from "./priorityManager";
-
-import TW3LoadOrder, { importLoadOrder } from "./loadOrder";
-import { makeOnContextImport } from "./mergeBackup";
-
-import { forceRefresh } from "./util";
-import { getPersistentLoadOrder } from "./migrations";
->>>>>>> v2.0.1
 
 interface IProps {
   context: types.IExtensionContext;
@@ -148,20 +133,9 @@ export const registerActions = (props: IProps) => {
               const gameMods = state.persistent.mods?.[GAME_ID] || {};
               const profile = selectors.activeProfile(state);
               const mods = Object.keys(gameMods)
-<<<<<<< HEAD
                 .filter((key) => util.getSafe(profile, ["modState", key, "enabled"], false))
                 .map((key) => gameMods[key]);
               const findIndex = (entry: types.ILoadOrderEntry, modList: types.IMod[]) => {
-=======
-                .filter((key) =>
-                  util.getSafe(profile, ["modState", key, "enabled"], false),
-                )
-                .map((key) => gameMods[key]);
-              const findIndex = (
-                entry: types.ILoadOrderEntry,
-                modList: types.IMod[],
-              ) => {
->>>>>>> v2.0.1
                 return modList.findIndex((m) => m.id === entry.modId);
               };
               return util
@@ -169,17 +143,11 @@ export const registerActions = (props: IProps) => {
                 .then((sorted) => {
                   const loadOrder = getPersistentLoadOrder(context.api);
                   const filtered = loadOrder.filter(
-<<<<<<< HEAD
                     (entry) => sorted.find((mod) => mod.id === entry.id) !== undefined,
-=======
-                    (entry) =>
-                      sorted.find((mod) => mod.id === entry.id) !== undefined,
->>>>>>> v2.0.1
                   );
                   const sortedLO = filtered.sort(
                     (a, b) => findIndex(a, sorted) - findIndex(b, sorted),
                   );
-<<<<<<< HEAD
                   const locked = loadOrder.filter((entry) => entry.name.includes(LOCKED_PREFIX));
                   const manuallyAdded = loadOrder.filter(
                     (key) => !filtered.includes(key) && !locked.includes(key),
@@ -204,39 +172,6 @@ export const registerActions = (props: IProps) => {
                   context.api.showErrorNotification("Failed to sort by deployment order", err, {
                     allowReport,
                   });
-=======
-                  const locked = loadOrder.filter((entry) =>
-                    entry.name.includes(LOCKED_PREFIX),
-                  );
-                  const manuallyAdded = loadOrder.filter(
-                    (key) => !filtered.includes(key) && !locked.includes(key),
-                  );
-                  const newLO = [
-                    ...locked,
-                    ...sortedLO,
-                    ...manuallyAdded,
-                  ].reduce((accum, entry, idx) => {
-                    accum.push({
-                      ...entry,
-                      data: {
-                        prefix: idx + 1,
-                      },
-                    });
-                    return accum;
-                  }, []);
-
-                  context.api.store.dispatch(
-                    actions.setLoadOrder(profile.id, newLO as any),
-                  );
-                })
-                .catch((err) => {
-                  const allowReport = !(err instanceof util.CycleError);
-                  context.api.showErrorNotification(
-                    "Failed to sort by deployment order",
-                    err,
-                    { allowReport },
-                  );
->>>>>>> v2.0.1
                 })
                 .finally(() => {
                   forceRefresh(context.api);
