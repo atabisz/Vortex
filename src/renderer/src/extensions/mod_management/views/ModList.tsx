@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import path from "path";
 
 import type { TFunction } from "i18next";
@@ -13,20 +12,18 @@ import { showDialog } from "../../../actions/notifications";
 import CollapseIcon from "../../../controls/CollapseIcon";
 import { ComponentEx, connect, translate } from "../../../controls/ComponentEx";
 import DropdownButton from "../../../controls/DropdownButton";
-=======
-import type { TFunction } from "i18next";
-import type * as Redux from "redux";
-import type { ThunkDispatch } from "redux-thunk";
-
-import * as _ from "lodash";
-import path from "path";
-import * as React from "react";
-import { Button, ButtonGroup, MenuItem, Panel } from "react-bootstrap";
-import * as semver from "semver";
-
->>>>>>> v2.0.1
 import type { DropType } from "../../../controls/Dropzone";
+import Dropzone from "../../../controls/Dropzone";
+import EmptyPlaceholder from "../../../controls/EmptyPlaceholder";
+import FlexLayout from "../../../controls/FlexLayout";
+import Icon from "../../../controls/Icon";
+import IconBar from "../../../controls/IconBar";
 import type { ITableRowAction } from "../../../controls/Table";
+import SuperTable from "../../../controls/Table";
+import OptionsFilter from "../../../controls/table/OptionsFilter";
+import TextFilter from "../../../controls/table/TextFilter";
+import { IconButton } from "../../../controls/TooltipControls";
+import ZoomableImage from "../../../controls/ZoomableImage";
 import type { IActionDefinition } from "../../../types/IActionDefinition";
 import type {
   DialogActions,
@@ -36,30 +33,6 @@ import type {
 } from "../../../types/IDialog";
 import type { IState } from "../../../types/IState";
 import type { ITableAttribute } from "../../../types/ITableAttribute";
-<<<<<<< HEAD
-=======
-import type { IProfileMod } from "../../profile_management/types/IProfile";
-import type { IInstallOptions } from "../types/IInstallOptions";
-import type { IMod } from "../types/IMod";
-import type { IModProps } from "../types/IModProps";
-import type { IModSource } from "../types/IModSource";
-import type { UpdateState } from "../util/modUpdateState";
-
-import { showDialog } from "../../../actions/notifications";
-import CollapseIcon from "../../../controls/CollapseIcon";
-import { ComponentEx, connect, translate } from "../../../controls/ComponentEx";
-import DropdownButton from "../../../controls/DropdownButton";
-import Dropzone from "../../../controls/Dropzone";
-import EmptyPlaceholder from "../../../controls/EmptyPlaceholder";
-import FlexLayout from "../../../controls/FlexLayout";
-import Icon from "../../../controls/Icon";
-import IconBar from "../../../controls/IconBar";
-import SuperTable from "../../../controls/Table";
-import OptionsFilter from "../../../controls/table/OptionsFilter";
-import TextFilter from "../../../controls/table/TextFilter";
-import { IconButton } from "../../../controls/TooltipControls";
-import ZoomableImage from "../../../controls/ZoomableImage";
->>>>>>> v2.0.1
 import { knownArchiveExt } from "../../../util/archives";
 import { withBatchContext } from "../../../util/BatchContext";
 import calculateFolderSize from "../../../util/calculateFolderSize";
@@ -76,30 +49,21 @@ import {
 } from "../../../util/util";
 import MainPage from "../../../views/MainPage";
 import getDownloadGames from "../../download_management/util/getDownloadGames";
-<<<<<<< HEAD
 import { setModEnabled, setModsEnabled } from "../../profile_management/actions/profiles";
 import type { IProfileMod } from "../../profile_management/types/IProfile";
-=======
-import {
-  setModEnabled,
-  setModsEnabled,
-} from "../../profile_management/actions/profiles";
->>>>>>> v2.0.1
 import { removeMod, setModAttribute } from "../actions/mods";
 import { setShowModDropzone } from "../actions/settings";
 import { DOWNLOAD_TIME, ENABLED_TIME, INSTALL_TIME } from "../modAttributes";
 import getText from "../texts";
-<<<<<<< HEAD
 import type { IInstallOptions } from "../types/IInstallOptions";
 import type { IMod } from "../types/IMod";
 import type { IModProps } from "../types/IModProps";
 import type { IModSource } from "../types/IModSource";
-=======
->>>>>>> v2.0.1
 import combineMods from "../util/combine";
 import filterModInfo from "../util/filterModInfo";
 import groupMods from "../util/modGrouping";
 import modName from "../util/modName";
+import type { UpdateState } from "../util/modUpdateState";
 import modUpdateState, { isIdValid } from "../util/modUpdateState";
 import updateState from "../util/modUpdateState";
 import { removeMods } from "../util/removeMods";
@@ -301,13 +265,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
           const cond = (id: string) =>
             this.props.mods[id] !== undefined && truthy(this.props.mods[id].archiveId);
           const res: boolean =
-<<<<<<< HEAD
             typeof instanceId === "string" ? cond(instanceId) : instanceId.find(cond) !== undefined;
-=======
-            typeof instanceId === "string"
-              ? cond(instanceId)
-              : instanceId.find(cond) !== undefined;
->>>>>>> v2.0.1
           return res ? true : this.props.t("No associated archive.");
         },
         position: 60,
@@ -452,13 +410,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
 
         <MainPage.Body>
           <FlexLayout type="column">
-<<<<<<< HEAD
             <FlexLayout.Flex className="mod-list-container">{content}</FlexLayout.Flex>
-=======
-            <FlexLayout.Flex className="mod-list-container">
-              {content}
-            </FlexLayout.Flex>
->>>>>>> v2.0.1
 
             <FlexLayout.Fixed className="mod-drop-container">
               <Panel className="mod-drop-panel" expanded={showDropzone} onToggle={nop}>
@@ -548,16 +500,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
     }
 
     return (
-<<<<<<< HEAD
       <DropdownButton bsStyle="link" container={this.mRef} id="btn-more-mods" title={text}>
-=======
-      <DropdownButton
-        bsStyle="link"
-        container={this.mRef}
-        id="btn-more-mods"
-        title={text}
-      >
->>>>>>> v2.0.1
         {filtered.map(this.renderModSource)}
       </DropdownButton>
     );
@@ -623,19 +566,8 @@ class ModList extends ComponentEx<IProps, IComponentState> {
       ) : null;
 
     return (
-<<<<<<< HEAD
       <div className={"mod-update " + this.updateClass(updateState, isIdValid(mod))}>
         {alternatives.length === 1 ? getSafe(mod.attributes, ["version"], null) : null}
-=======
-      <div
-        className={
-          "mod-update " + this.updateClass(updateState, isIdValid(mod))
-        }
-      >
-        {alternatives.length === 1
-          ? getSafe(mod.attributes, ["version"], null)
-          : null}
->>>>>>> v2.0.1
 
         <ButtonGroup className="btngroup-version" id={`btngroup-${mod.id}`}>
           {versionDropdown}
@@ -1033,12 +965,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
     return Promise.all(
       Object.keys(newProps.downloads).map((archiveId) => {
         if (
-<<<<<<< HEAD
           getDownloadGames(newProps.downloads[archiveId]).indexOf(gameMode) !== -1 &&
-=======
-          getDownloadGames(newProps.downloads[archiveId]).indexOf(gameMode) !==
-            -1 &&
->>>>>>> v2.0.1
           newProps.downloads[archiveId].state === "finished" &&
           !installedIds.has(archiveId)
         ) {
@@ -1152,20 +1079,9 @@ class ModList extends ComponentEx<IProps, IComponentState> {
             // Activation store can potentially provide an err.allowReport value
             //  if/when the manifest is corrupted - we're going to suppress the
             //  report button for that use case.
-<<<<<<< HEAD
             this.context.api.showErrorNotification("Failed to set mod to uninstalled", err, {
               allowReport: (err as { allowReport?: boolean })?.allowReport !== false,
             });
-=======
-            this.context.api.showErrorNotification(
-              "Failed to set mod to uninstalled",
-              err,
-              {
-                allowReport:
-                  (err as { allowReport?: boolean })?.allowReport !== false,
-              },
-            );
->>>>>>> v2.0.1
           });
       }
     } else if (modsWithState[modId].state === "downloaded") {
@@ -1326,16 +1242,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
     if (modsWithState[modId]?.state === "downloaded") {
       return Promise.resolve(
         toPromise<string>((cb) =>
-<<<<<<< HEAD
           this.context.api.events.emit("start-install-download", modId, false, cb),
-=======
-          this.context.api.events.emit(
-            "start-install-download",
-            modId,
-            false,
-            cb,
-          ),
->>>>>>> v2.0.1
         ),
       );
     } else {
