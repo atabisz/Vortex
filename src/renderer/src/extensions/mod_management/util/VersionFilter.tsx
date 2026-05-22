@@ -60,13 +60,7 @@ class VersionFilterComponent extends React.Component<IProps, {}> {
 
   private changeFilter = (value: Array<{ value: string; label: string }>) => {
     const { attributeId, onSetFilter } = this.props;
-<<<<<<< HEAD
     const values = [...new Set((Array.isArray(value) ? value : []).map((v) => v.value))];
-=======
-    const values = [
-      ...new Set((Array.isArray(value) ? value : []).map((v) => v.value)),
-    ];
->>>>>>> v2.0.1
     onSetFilter(attributeId, values.length > 0 ? values : undefined);
   };
 }
