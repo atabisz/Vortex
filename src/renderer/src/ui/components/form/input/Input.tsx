@@ -12,13 +12,7 @@ import type { BaseFormFieldProps } from "../formfield/FormField";
 import { FormField } from "../formfield/FormField";
 
 export interface InputProps
-<<<<<<< HEAD
   extends BaseFormFieldProps, Omit<InputHTMLAttributes<HTMLInputElement>, "size"> {
-=======
-  extends
-    BaseFormFieldProps,
-    Omit<InputHTMLAttributes<HTMLInputElement>, "size"> {
->>>>>>> v2.0.1
   /**
    * Restrict default value to string | number as we don't use this component for checkbox
    */
