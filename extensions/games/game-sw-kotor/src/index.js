@@ -90,15 +90,7 @@ function findGame(kotorGame) {
       ),
     )
     .catch(() =>
-<<<<<<< HEAD
       readRegistryKey("HKEY_LOCAL_MACHINE", `SOFTWARE\\GOG.com\\Games\\${gogId}`, "PATH"),
-=======
-      readRegistryKey(
-        "HKEY_LOCAL_MACHINE",
-        `SOFTWARE\\GOG.com\\Games\\${gogId}`,
-        "PATH",
-      ),
->>>>>>> v2.0.1
     );
 }
 
@@ -150,32 +142,11 @@ function main(context) {
   context.registerInstaller("kotor-tslpatcher", 10, testTSLSupported, () =>
     installTSLContent(context.api),
   );
-<<<<<<< HEAD
   context.registerInstaller("kotor-tslpatcher-mod", 10, testTSLModSupported, () =>
     installTSLModContent(context.api),
   );
   context.registerInstaller("kotor-root-mod", 15, testRootSupported, installRootContent);
   context.registerInstaller("kotor-override-mod", 25, testSupported, installContent);
-=======
-  context.registerInstaller(
-    "kotor-tslpatcher-mod",
-    10,
-    testTSLModSupported,
-    () => installTSLModContent(context.api),
-  );
-  context.registerInstaller(
-    "kotor-root-mod",
-    15,
-    testRootSupported,
-    installRootContent,
-  );
-  context.registerInstaller(
-    "kotor-override-mod",
-    25,
-    testSupported,
-    installContent,
-  );
->>>>>>> v2.0.1
 
   return true;
 }
@@ -208,13 +179,7 @@ function installRootContent(files, destinationPath, gameId, progressDelegate) {
         return accum;
       }
       const segments = file.split(path.sep);
-<<<<<<< HEAD
       const rootIdx = segments.findIndex((seg) => GAME_FOLDERS.includes(seg.toLowerCase()));
-=======
-      const rootIdx = segments.findIndex((seg) =>
-        GAME_FOLDERS.includes(seg.toLowerCase()),
-      );
->>>>>>> v2.0.1
       if (rootIdx === -1) {
         return accum;
       }
@@ -255,13 +220,7 @@ function installTSLModContent(api) {
 
 function testTSLSupported(files, gameId) {
   const isTslPatcher =
-<<<<<<< HEAD
     files.find((file) => path.basename(file.toLowerCase()) === "tslpatcher.exe") !== undefined;
-=======
-    files.find(
-      (file) => path.basename(file.toLowerCase()) === "tslpatcher.exe",
-    ) !== undefined;
->>>>>>> v2.0.1
   return Promise.resolve({
     supported: isTslPatcher && isKotorGame(gameId),
     requiredFiles: [],
