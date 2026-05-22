@@ -4,14 +4,7 @@ import { Icon } from "../../../ui/components/icon/Icon";
 import { Typography } from "../../../ui/components/typography/Typography";
 import { joinClasses } from "../../../ui/utils/joinClasses";
 
-<<<<<<< HEAD
 interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
-=======
-interface IconButtonProps extends Omit<
-  ButtonHTMLAttributes<HTMLButtonElement>,
-  "children"
-> {
->>>>>>> v2.0.1
   appearance?: "primary" | "secondary";
   className?: string;
   iconPath: string;
