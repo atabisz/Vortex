@@ -57,12 +57,7 @@ export interface BaseFormFieldProps {
   showRequiredLabel?: boolean;
 }
 
-<<<<<<< HEAD
 export interface FormFieldProps extends BaseFormFieldProps, HTMLAttributes<HTMLElement> {
-=======
-export interface FormFieldProps
-  extends BaseFormFieldProps, HTMLAttributes<HTMLElement> {
->>>>>>> v2.0.1
   /**
    * Form element to be rendered
    */
