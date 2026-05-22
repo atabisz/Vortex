@@ -2,17 +2,9 @@ import path from "path";
 
 /* eslint-disable */
 import _ from "lodash";
-<<<<<<< HEAD
 import { actions, fs, selectors, types, util } from "vortex-api";
 
 import { setSuppressModLimitPatch } from "./actions";
-=======
-import path from "path";
-import { actions, fs, selectors, types, util } from "vortex-api";
-
-import { setSuppressModLimitPatch } from "./actions";
-
->>>>>>> v2.0.1
 import { GAME_ID, I18N_NAMESPACE } from "./common";
 
 /**
@@ -47,15 +39,7 @@ export class ModLimitPatcher {
     await this.queryPatch();
     const stagingPath = selectors.installPathForGame(state, GAME_ID);
     const modName = "Mod Limit Patcher";
-<<<<<<< HEAD
     let mod: types.IMod = util.getSafe(state, ["persistent", "mods", GAME_ID, modName], undefined);
-=======
-    let mod: types.IMod = util.getSafe(
-      state,
-      ["persistent", "mods", GAME_ID, modName],
-      undefined,
-    );
->>>>>>> v2.0.1
     if (mod === undefined) {
       try {
         await this.createModLimitPatchMod(modName);
@@ -70,25 +54,10 @@ export class ModLimitPatcher {
     }
     try {
       const src = path.join(discovery.path, game.executable);
-<<<<<<< HEAD
       const dest = path.join(stagingPath, mod.installationPath, game.executable);
       await fs
         .removeAsync(dest)
         .catch((err) => (["ENOENT"].includes(err.code) ? Promise.resolve() : Promise.reject(err)));
-=======
-      const dest = path.join(
-        stagingPath,
-        mod.installationPath,
-        game.executable,
-      );
-      await fs
-        .removeAsync(dest)
-        .catch((err) =>
-          ["ENOENT"].includes(err.code)
-            ? Promise.resolve()
-            : Promise.reject(err),
-        );
->>>>>>> v2.0.1
       await fs.copyAsync(src, dest);
       const tempFile = dest + ".tmp";
       await this.streamExecutable(RANGE_START, RANGE_END, dest, tempFile);
@@ -101,15 +70,7 @@ export class ModLimitPatcher {
       });
     } catch (err) {
       const allowReport = !(err instanceof util.UserCanceled);
-<<<<<<< HEAD
       this.mApi.showErrorNotification("Failed to generate mod limit patch", err, { allowReport });
-=======
-      this.mApi.showErrorNotification(
-        "Failed to generate mod limit patch",
-        err,
-        { allowReport },
-      );
->>>>>>> v2.0.1
       this.mApi.events.emit("remove-mod", GAME_ID, modName);
       return Promise.resolve(undefined);
     }
@@ -126,14 +87,7 @@ export class ModLimitPatcher {
         "which should cater for most if not all modding environments.{{bl}}Please note - the patch is applied as " +
         "a mod which will be generated and automatically enabled; to disable the patch, simply remove or disable " +
         'the "Witcher 3 Mod Limit Patcher" mod and the original game executable will be restored.',
-<<<<<<< HEAD
       { ns: I18N_NAMESPACE, replace: { bl: "[br][/br][br][/br]", br: "[br][/br]" } },
-=======
-      {
-        ns: I18N_NAMESPACE,
-        replace: { bl: "[br][/br][br][/br]", br: "[br][/br]" },
-      },
->>>>>>> v2.0.1
     );
   }
 
@@ -145,17 +99,7 @@ export class ModLimitPatcher {
       "Mod Limit Patch",
       {
         bbcode: message,
-<<<<<<< HEAD
         checkboxes: [{ id: "suppress-limit-patcher-test", text: "Do not ask again", value: false }],
-=======
-        checkboxes: [
-          {
-            id: "suppress-limit-patcher-test",
-            text: "Do not ask again",
-            value: false,
-          },
-        ],
->>>>>>> v2.0.1
       },
       [{ label: "Cancel" }, { label: "Generate Patch" }],
     ) as any);
