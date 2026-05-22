@@ -1,13 +1,6 @@
 import { describe, it, expect } from "vitest";
-<<<<<<< HEAD
 
 import { parseDuckDBVersion, buildExtensionUrl } from "./download-duckdb-extensions";
-=======
-import {
-  parseDuckDBVersion,
-  buildExtensionUrl,
-} from "./download-duckdb-extensions";
->>>>>>> v2.0.1
 
 describe("parseDuckDBVersion", () => {
   it("strips the -r.X suffix and prepends v", () => {
@@ -30,12 +23,7 @@ describe("buildExtensionUrl", () => {
     const url = buildExtensionUrl({
       type: "http",
       name: "level_pivot",
-<<<<<<< HEAD
       repository: "https://halgari.github.io/duckdb-level-pivot/current_release",
-=======
-      repository:
-        "https://halgari.github.io/duckdb-level-pivot/current_release",
->>>>>>> v2.0.1
       version: "v1.5.1",
       platform: "windows_amd64",
     });
