@@ -24,16 +24,11 @@ import type { Action } from "redux";
 import {} from "uuid";
 
 import { setDownloadModInfo, setForcedLogout, setModAttribute } from "../../actions";
-import { setDownloadModInfo, setForcedLogout, setModAttribute } from "../../actions";
 import type { IDialogResult } from "../../actions/notifications";
 import { showDialog } from "../../actions/notifications";
-import { showDialog } from "../../actions/notifications";
-import FlexLayout from "../../controls/FlexLayout";
 import FlexLayout from "../../controls/FlexLayout";
 import Icon from "../../controls/Icon";
 import Image from "../../controls/Image";
-import Image from "../../controls/Image";
-import LazyComponent from "../../controls/LazyComponent";
 import LazyComponent from "../../controls/LazyComponent";
 import type { IComponentContext } from "../../types/IComponentContext";
 import type { IExtensionApi, IExtensionContext } from "../../types/IExtensionContext";
@@ -50,7 +45,6 @@ import {
 import Debouncer from "../../util/Debouncer";
 import * as fs from "../../util/fs";
 import getVortexPath from "../../util/getVortexPath";
-import type { LogLevel } from "../../util/log";
 import type { LogLevel } from "../../util/log";
 import { log } from "../../util/log";
 import { showError } from "../../util/message";
