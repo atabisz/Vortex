@@ -3,13 +3,8 @@
  * Ported from the root playwright/src/game-setup-helpers.ts.
  */
 import fs from "node:fs";
-<<<<<<< HEAD
 import os from "node:os";
 import path from "node:path";
-=======
-import path from "node:path";
-import os from "node:os";
->>>>>>> v2.0.1
 
 export interface GameConfig {
   gameId: string;
@@ -25,31 +20,15 @@ export const GAME_CONFIGS: Record<string, GameConfig> = {
   stardewvalley: {
     gameId: "stardewvalley",
     gameName: "Stardew Valley",
-<<<<<<< HEAD
     executable: process.platform === "win32" ? "Stardew Valley.exe" : "StardewValley",
-=======
-    executable:
-      process.platform === "win32" ? "Stardew Valley.exe" : "StardewValley",
->>>>>>> v2.0.1
     requiredFiles: [
       process.platform === "win32" ? "Stardew Valley.exe" : "StardewValley",
       "Stardew Valley.deps.json",
       "Stardew Valley.dll",
       "Stardew Valley.pdb",
       "Stardew Valley.runtimeconfig.json",
-<<<<<<< HEAD
     ],
     directories: ["Content", "Content/Characters", "Content/Data", "Content/Maps", "Mods"],
-=======
-    ],
-    directories: [
-      "Content",
-      "Content/Characters",
-      "Content/Data",
-      "Content/Maps",
-      "Mods",
-    ],
->>>>>>> v2.0.1
     optionalFiles: [
       { path: "steam_appid.txt", content: "413150" },
       { path: "Content/XACT/FarmerSounds.xwb", content: "FAKE_AUDIO_FILE" },
@@ -60,26 +39,12 @@ export const GAME_CONFIGS: Record<string, GameConfig> = {
     gameId: "skyrimse",
     gameName: "Skyrim Special Edition",
     executable: "SkyrimSE.exe",
-<<<<<<< HEAD
     requiredFiles: ["SkyrimSE.exe", "SkyrimSELauncher.exe", "binkw64.dll", "steam_api64.dll"],
     directories: ["Data", "Data/Scripts", "Data/Meshes", "Data/Textures"],
     optionalFiles: [
       { path: "steam_appid.txt", content: "489830" },
       { path: "Data/Skyrim.esm", content: "TES4\x00\x00\x00\x00" },
     ],
-=======
-    requiredFiles: [
-      "SkyrimSE.exe",
-      "SkyrimSELauncher.exe",
-      "binkw64.dll",
-      "steam_api64.dll",
-    ],
-    directories: ["Data", "Data/Scripts", "Data/Meshes", "Data/Textures"],
-    optionalFiles: [
-      { path: "steam_appid.txt", content: "489830" },
-      { path: "Data/Skyrim.esm", content: "TES4\x00\x00\x00\x00" },
-    ],
->>>>>>> v2.0.1
     modFolderPath: "Data",
   },
 };
@@ -95,10 +60,7 @@ function createFakeExecutable(): Buffer {
 }
 
 /** Creates a fake game installation directory with all required files. */
-export function createFakeGameInstallation(
-  gameConfig: GameConfig,
-  basePath: string,
-): string {
+export function createFakeGameInstallation(gameConfig: GameConfig, basePath: string): string {
   const gamePath = path.join(basePath, gameConfig.gameName);
   fs.mkdirSync(gamePath, { recursive: true });
 
