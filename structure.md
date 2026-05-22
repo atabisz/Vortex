@@ -7,8 +7,8 @@
     - **src/shared/**: code shared across processes
     - **src/extensions/**: embedded extensions (statically loaded)
     - **extensions/**: bundled extensions (built separately, shipped with app)
-    - ****mocks**/**: mocks for unit tests
-    - ****tests**/**: root integration/cross-cutting tests
+    - \***\*mocks**/\*\*: mocks for unit tests
+    - \***\*tests**/\*\*: root integration/cross-cutting tests
     - **.vscode/**: VS Code launch/tasks/settings config
     - **dist/**: packaged installer/output artifacts
     - **src/main/out/**: development runtime output (`pnpm run build`)
@@ -24,7 +24,6 @@
 - `.npmrc`: native module build defaults (electron headers/msvs settings)
 - `BuildSubprojects.json`: bundled extension build descriptors
 - `InstallAssets.json`: static asset copy/build manifest
-- `src/main/electron-builder.config.json`: electron-builder packaging config
 - `versions.json`: minimum Vortex version accepted for feedback
 
 # Utility scripts
