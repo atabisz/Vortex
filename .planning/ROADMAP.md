@@ -180,6 +180,7 @@ Plans:
 
 ### Phase 34: Renderer + main spine (v2.0.1)
 
+**Status:** 🚧 Planned 2026-05-23 (10 plans ready; 117 marker files mapped to 8 waves; D-34-14 7-criterion done-gate)
 **Goal:** Resolve ExtensionManager, controls/Table, Application, cli, errorReporting, autoupdater, TrayIcon, store/{DuckDBSingleton,LevelPersist}, preload/index, shared/{errors,errors.test,telemetry/spans}, nexus_integration; document Jest `__mocks__/` decision (R2 carry-forward from 31-01).
 **Requirements:** SYNC-34a, SYNC-34b
 **Canonical refs:** VORTEX-LINUX-MERGE-PLAYBOOK.md, .planning/milestones/v8.0-phases/28-renderer-main-spine
@@ -188,6 +189,21 @@ Plans:
 1. Process-boot path resolved (Application, cli, errorReporting, autoupdater) with Linux platform guards intact
 2. Jest `__mocks__/` decision documented (drop or restore)
 3. `pnpm typecheck` clean across all workspaces
+
+**Plans:** 10/10 ready
+
+Plans:
+
+- [ ] 34-00-PLAN.md — Wave 0: copy Phase 33 harness, add gate 13 (single-host `getIPCPath`)
+- [ ] 34-01-PLAN.md — Wave A shared (5 files: shared/types/{errors,state}, shared/errors{,test}, telemetry/spans)
+- [ ] 34-02-PLAN.md — Wave B preload (1 file: preload/src/index.ts)
+- [ ] 34-03-PLAN.md — Wave C main (9 files: Application, cli, errorReporting, autoupdater, TrayIcon, main, store/{LevelPersist,ReduxPersistorIPC,SubPersistor})
+- [ ] 34-04-PLAN.md — Wave D renderer leaves (20 files: contexts, hooks, reducers, store, telemetry, ui, util)
+- [ ] 34-05-PLAN.md — Wave E renderer extensions (30 files: nexus_integration heavy + health_check + others)
+- [ ] 34-06-PLAN.md — Wave F renderer views/pages + heaviest (18 files: views/{components,layout,pages/Tools}, controls/Table, ExtensionManager, renderer.tsx; D-34-17 trigger)
+- [ ] 34-07-PLAN.md — Wave G repo-wide leaves (34 files: fingerprints + e2e + top-level docs + scripts)
+- [ ] 34-08-PLAN.md — Wave H R2 DROP (`git rm -r src/renderer/src/__mocks__/`; SYNC-34b)
+- [ ] 34-09-PLAN.md — Wave 9 7-criterion done-gate per D-34-14
 
 ### Phase 35: Build verification (v2.0.1)
 
