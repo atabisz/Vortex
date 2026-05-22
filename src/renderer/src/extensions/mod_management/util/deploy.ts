@@ -153,7 +153,6 @@ export function purgeMods(
           const deployedActivator = getActivator(manifest?.deploymentMethod);
           return purgeModsImpl(api, deployedActivator, profile);
         } else {
-<<<<<<< HEAD
           return purgeModsImpl(api, undefined, profile).catch((err: unknown) => {
             // If the user is unmanaging the game and the purge was unable to find any
             //  of the game's mods path during the purge, that suggests that the user
@@ -165,21 +164,6 @@ export function purgeMods(
               return Promise.reject(err);
             }
           });
-=======
-          return purgeModsImpl(api, undefined, profile).catch(
-            (err: unknown) => {
-              // If the user is unmanaging the game and the purge was unable to find any
-              //  of the game's mods path during the purge, that suggests that the user
-              //  has uninstalled the game and is trying to "unmanage" the game.
-              //  In this case, there's nothing left to purge so we can safely resolve.
-              if (["ENOENT"].includes(getErrorCode(err)) && isUnmanaging) {
-                return Promise.resolve();
-              } else {
-                return Promise.reject(err);
-              }
-            },
-          );
->>>>>>> v2.0.1
         }
       }),
   );
@@ -390,14 +374,7 @@ export async function resolveExternalChangesBeforePurge(
     stagingPath,
   );
 
-  await dealWithExternalChanges(
-    api,
-    activator,
-    profile.id,
-    stagingPath,
-    modPaths,
-    deployments,
-  );
+  await dealWithExternalChanges(api, activator, profile.id, stagingPath, modPaths, deployments);
 }
 
 export function purgeModsInPath(
@@ -459,7 +436,6 @@ export function purgeModsInPath(
     },
     () =>
       withActivationLock(async () => {
-<<<<<<< HEAD
         log("debug", "purging mods", { activatorId: activator.id, stagingPath });
         onProgress(0, "Preparing purge");
 
@@ -501,59 +477,6 @@ export function purgeModsInPath(
             await api.emitAndAwait("did-purge", profile.id);
           }
         }
-=======
-        log("debug", "purging mods", {
-          activatorId: activator.id,
-          stagingPath,
-        });
-        onProgress(0, "Preparing purge");
-
-        if (gameId !== undefined && profile === undefined) {
-          // gameId was set but we have no last active profile for that game.
-          // In this case there is probably nothing to purge but if that's true
-          // there will also be no manifest so we can just as easily try a fallback
-          // purge just to be safe.
-          return fallbackPurgeType(
-            api,
-            activator,
-            gameId,
-            typeId,
-            modPath,
-            stagingPath,
-          );
-        }
-
-        // TODO: we really should be using the deployment specified in the manifest,
-        //   not the current one! This only works because we force a purge when switching
-        //   deployment method.
-        let purgeSucceeded = true;
-        try {
-          await activator.prePurge(stagingPath);
-          onProgress(25, "Removing links");
-          await activator.purge(stagingPath, modPath, gameId);
-          onProgress(50, "Saving updated manifest");
-          await saveActivation(
-            gameId,
-            typeId,
-            state.app.instanceId,
-            modPath,
-            stagingPath,
-            [],
-            activator.id,
-          );
-        } catch (err: unknown) {
-          if (!(err instanceof ProcessCanceled)) {
-            purgeSucceeded = false;
-            throw err;
-          }
-        } finally {
-          onProgress(75, "Post purge events");
-          await activator.postPurge();
-          if (purgeSucceeded) {
-            await api.emitAndAwait("did-purge", profile.id);
-          }
-        }
->>>>>>> v2.0.1
       }, true)
         .then(() => null)
         .finally(() => {
