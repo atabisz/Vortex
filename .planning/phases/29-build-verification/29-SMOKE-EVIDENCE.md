@@ -124,7 +124,23 @@ None of the 13 errors prevent the main window from rendering or interaction. Sky
 
 ## SYNC-33 part C — AppImage + .deb local boot
 
-_To be filled by Plan 29-08._
+**Status:** **DEFERRED** — closing SYNC-33 with parts A + B only per Alex's call.
+
+### Why deferred
+
+Local boot of the CI-built AppImage (and `sudo apt install` of the .deb + desktop-entry launch) is human-driven evidence — it requires a sudo prompt, an Activities-launcher click, and a screenshot capture pass. The from-source boot in part A already proves the Linux runtime path is healthy on `v8.0/config-bucket` HEAD; part B proves the CI packaging path produces both artefacts cleanly with SHA256s pinned. The remaining gap — "the binary that ships to users actually launches when double-clicked" — is real but lower risk than parts A/B and lives more naturally as a Phase 30 acceptance gate after the tag is non-RC.
+
+### What this means for SYNC-33
+
+- **Part A (`pnpm run start` from source):** PASS — see above.
+- **Part B (AppImage + .deb CI build):** PASS — see above.
+- **Part C (AppImage + .deb local boot):** DEFERRED — folded into Phase 30 acceptance.
+
+The SYNC-33 done-gate citation in `29-10` cites parts A + B as the load-bearing evidence; part C is documented here as a known deferred check, not a silent gap.
+
+### Phase 30 follow-up
+
+When `v2.0.0-linux-rebased` lands and the RC tag gets cleaned per D-29-04, do a single local-boot pass on the final tag's AppImage + .deb (one chmod+x, one apt install, two screenshots). That closes part C against the canonical artefact rather than the RC.
 
 ---
 
