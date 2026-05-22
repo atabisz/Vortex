@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v8.1
 milestone_name: Upstream v2.0.1 Sync
 status: completed
-stopped_at: Phase 32 context gathered
-last_updated: "2026-05-22T12:17:03.517Z"
+stopped_at: Phase 33 context gathered
+last_updated: "2026-05-22T12:27:23.228Z"
 last_activity: 2026-05-22 -- Phase 32 marked complete
 progress:
     total_phases: 8
@@ -222,6 +222,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-22T10:29:41.560Z
-Stopped at: Phase 32 context gathered
-Resume file: .planning/phases/32-mod-management-hot-zone-v2-0-1/32-CONTEXT.md
+Last session: 2026-05-22T12:27:23.216Z
+Stopped at: Phase 33 context gathered
+Resume file: .planning/phases/33-gamebryo-per-game-extensions-v2-0-1/33-CONTEXT.md
