@@ -55,34 +55,11 @@ import { showError } from "../../../util/message";
 import opn from "../../../util/opn";
 import * as selectors from "../../../util/selectors";
 import { getSafe } from "../../../util/storeHelper";
-<<<<<<< HEAD
 import { cleanFailedTransfer, testPathTransfer, transferPath } from "../../../util/transferPath";
 import { ciEqual, isChildPath, isPathValid, isReservedDirectory } from "../../../util/util";
 import { currentGame, currentGameDiscovery } from "../../gamemode_management/selectors";
 import type { IDiscoveryResult } from "../../gamemode_management/types/IDiscoveryResult";
 import type { IGameStored } from "../../gamemode_management/types/IGameStored";
-=======
-import {
-  cleanFailedTransfer,
-  testPathTransfer,
-  transferPath,
-} from "../../../util/transferPath";
-import {
-  ciEqual,
-  isChildPath,
-  isPathValid,
-  isReservedDirectory,
-} from "../../../util/util";
-import {
-  getErrorCode,
-  getErrorMessageOrDefault,
-  unknownToError,
-} from "@vortex/shared";
-import {
-  currentGame,
-  currentGameDiscovery,
-} from "../../gamemode_management/selectors";
->>>>>>> v2.0.1
 import { setDeploymentNecessary } from "../actions/deployment";
 import { setActivator, setInstallPath, setInstallPathMode } from "../actions/settings";
 import { setTransferMods } from "../actions/transactions";
@@ -599,11 +576,7 @@ class Settings extends ComponentEx<IProps, IComponentState> {
       })
       .catch((err) => {
         if (err instanceof TemporaryError) {
-          onShowError(
-            "Failed to move directories, please try again",
-            err,
-            false,
-          );
+          onShowError("Failed to move directories, please try again", err, false);
           return;
         }
         if (err instanceof UserCanceled) {
@@ -896,14 +869,7 @@ class Settings extends ComponentEx<IProps, IComponentState> {
           return;
         }
         const errCode = getErrorCode(err);
-<<<<<<< HEAD
         if (errCode === null && (err as { errno?: number }).errno !== undefined) {
-=======
-        if (
-          errCode === null &&
-          (err as { errno?: number }).errno !== undefined
-        ) {
->>>>>>> v2.0.1
           // unresolved windows error code
           onShowError(
             "Failed to purge previous deployment",
