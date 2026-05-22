@@ -2,13 +2,8 @@
 import semver from "semver";
 import { selectors, types, util } from "vortex-api";
 
-<<<<<<< HEAD
 import { ILoadOrder, ILoadOrderEntry } from "./collections/types";
 import { GAME_ID } from "./common";
-=======
-import { GAME_ID } from "./common";
-import { ILoadOrder, ILoadOrderEntry } from "./collections/types";
->>>>>>> v2.0.1
 
 export async function migrate148(
   context: types.IExtensionContext,
@@ -77,13 +72,7 @@ export function getPersistentLoadOrder(
   if (profile?.gameId !== GAME_ID) {
     return [];
   }
-<<<<<<< HEAD
   loadOrder = loadOrder ?? util.getSafe(state, ["persistent", "loadOrder", profile.id], undefined);
-=======
-  loadOrder =
-    loadOrder ??
-    util.getSafe(state, ["persistent", "loadOrder", profile.id], undefined);
->>>>>>> v2.0.1
   if (loadOrder === undefined) {
     return [];
   }
@@ -91,13 +80,7 @@ export function getPersistentLoadOrder(
     return loadOrder;
   }
   if (typeof loadOrder === "object") {
-<<<<<<< HEAD
     return Object.entries(loadOrder).map(([key, item]) => convertDisplayItem(key, item));
-=======
-    return Object.entries(loadOrder).map(([key, item]) =>
-      convertDisplayItem(key, item),
-    );
->>>>>>> v2.0.1
   }
   return [];
 }
