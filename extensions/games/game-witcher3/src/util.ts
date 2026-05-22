@@ -2,7 +2,6 @@ import path from "path";
 
 /* eslint-disable */
 import Bluebird from "bluebird";
-<<<<<<< HEAD
 import turbowalk, { IEntry, IWalkOptions } from "turbowalk";
 import { fs, log, types, selectors, util } from "vortex-api";
 
@@ -17,41 +16,12 @@ import IniStructure from "./iniParser";
 import { getMergedModNames } from "./mergeInventoryParsing";
 import { IDeployedFile, IDeployment, PrefixType } from "./types";
 
-=======
-import { fs, log, types, selectors, util } from "vortex-api";
-
-import IniStructure from "./iniParser";
-
-import path from "path";
-
-import { getMergedModNames } from "./mergeInventoryParsing";
-
-import turbowalk, { IEntry, IWalkOptions } from "turbowalk";
-
-import {
-  GAME_ID,
-  LOCKED_PREFIX,
-  I18N_NAMESPACE,
-  ACTIVITY_ID_IMPORTING_LOADORDER,
-  PART_SUFFIX,
-} from "./common";
-import { IDeployedFile, IDeployment, PrefixType } from "./types";
-
->>>>>>> v2.0.1
 export async function getDeployment(
   api: types.IExtensionApi,
   includedMods?: string[],
 ): Promise<IDeployment> {
   const state = api.getState();
-<<<<<<< HEAD
   const discovery = util.getSafe(state, ["settings", "gameMode", "discovered", GAME_ID], undefined);
-=======
-  const discovery = util.getSafe(
-    state,
-    ["settings", "gameMode", "discovered", GAME_ID],
-    undefined,
-  );
->>>>>>> v2.0.1
   const game = util.getGame(GAME_ID);
   if (game === undefined || discovery?.path === undefined) {
     log("error", "game is not discovered", GAME_ID);
@@ -65,19 +35,12 @@ export async function getDeployment(
   );
 
   const installationDirectories = Object.values(mods)
-<<<<<<< HEAD
     .filter((mod) => (includedMods !== undefined ? includedMods.includes(mod.id) : true))
-=======
-    .filter((mod) =>
-      includedMods !== undefined ? includedMods.includes(mod.id) : true,
-    )
->>>>>>> v2.0.1
     .map((mod) => mod.installationPath);
 
   const filterFunc = (file: IDeployedFile) =>
     installationDirectories.includes(file.source);
 
-<<<<<<< HEAD
   const modPaths: { [typeId: string]: string } = game.getModPaths(discovery.path);
   const modTypes = Object.keys(modPaths).filter((key) => !!modPaths[key]);
   const deployment: IDeployment = await modTypes.reduce(async (accumP, modType) => {
@@ -90,29 +53,6 @@ export async function getDeployment(
     }
     return accum;
   }, {});
-=======
-  const modPaths: { [typeId: string]: string } = game.getModPaths(
-    discovery.path,
-  );
-  const modTypes = Object.keys(modPaths).filter((key) => !!modPaths[key]);
-  const deployment: IDeployment = await modTypes.reduce(
-    async (accumP, modType) => {
-      const accum = await accumP;
-      try {
-        const manifest: types.IDeploymentManifest = await util.getManifest(
-          api,
-          modType,
-          GAME_ID,
-        );
-        accum[modType] = manifest.files.filter(filterFunc);
-      } catch (err) {
-        log("error", "failed to get manifest", err);
-      }
-      return accum;
-    },
-    {},
-  );
->>>>>>> v2.0.1
 
   return deployment;
 }
@@ -185,13 +125,7 @@ export function notifyMissingScriptMerger(api) {
                   util
                     .opn("https://www.nexusmods.com/witcher3/mods/484")
                     .catch((err) => null)
-<<<<<<< HEAD
                     .then(() => api.dismissNotification("missing-script-merger")),
-=======
-                    .then(() =>
-                      api.dismissNotification("missing-script-merger"),
-                    ),
->>>>>>> v2.0.1
               },
             ],
           );
@@ -229,13 +163,7 @@ export async function findModFolders(
     (entries: IEntry[]) => {
       entries.forEach((entry) => {
         const segments = entry.filePath.split(path.sep);
-<<<<<<< HEAD
         const contentIdx = segments.findIndex((seg) => seg.toLowerCase() === "content");
-=======
-        const contentIdx = segments.findIndex(
-          (seg) => seg.toLowerCase() === "content",
-        );
->>>>>>> v2.0.1
         if (![-1, 0].includes(contentIdx)) {
           validNames.add(segments[contentIdx - 1]);
         }
@@ -253,26 +181,12 @@ export async function getManagedModNames(
   api: types.IExtensionApi,
   mods: types.IMod[],
 ): Promise<{ name: string; id: string }[]> {
-<<<<<<< HEAD
   const installationPath = selectors.installPathForGame(api.getState(), GAME_ID);
-=======
-  const installationPath = selectors.installPathForGame(
-    api.getState(),
-    GAME_ID,
-  );
->>>>>>> v2.0.1
   return mods.reduce(async (accumP, mod) => {
     const accum = await accumP;
     let folderNames = [];
     try {
-<<<<<<< HEAD
       if (!folderNames || ["collection", "w3modlimitpatcher"].includes(mod.type)) {
-=======
-      if (
-        !folderNames ||
-        ["collection", "w3modlimitpatcher"].includes(mod.type)
-      ) {
->>>>>>> v2.0.1
         return Promise.resolve(accum);
       }
       folderNames = await findModFolders(installationPath, mod);
@@ -298,27 +212,12 @@ export async function getAllMods(api: types.IExtensionApi) {
       managed: [],
     });
   }
-<<<<<<< HEAD
   const modState = util.getSafe(state, ["persistent", "profiles", profile.id, "modState"], {});
-=======
-  const modState = util.getSafe(
-    state,
-    ["persistent", "profiles", profile.id, "modState"],
-    {},
-  );
->>>>>>> v2.0.1
   const mods = util.getSafe(state, ["persistent", "mods", GAME_ID], {});
 
   // Only select mods which are enabled, and are not a menu mod.
   const enabledMods = Object.keys(modState).filter(
-<<<<<<< HEAD
     (key) => !!mods[key] && modState[key].enabled && !invalidModTypes.includes(mods[key].type),
-=======
-    (key) =>
-      !!mods[key] &&
-      modState[key].enabled &&
-      !invalidModTypes.includes(mods[key].type),
->>>>>>> v2.0.1
   );
 
   const mergedModNames = await getMergedModNames(api);
@@ -336,15 +235,7 @@ export async function getAllMods(api: types.IExtensionApi) {
 
 export async function getManuallyAddedMods(api: types.IExtensionApi) {
   const state = api.getState();
-<<<<<<< HEAD
   const discovery = util.getSafe(state, ["settings", "gameMode", "discovered", GAME_ID], undefined);
-=======
-  const discovery = util.getSafe(
-    state,
-    ["settings", "gameMode", "discovered", GAME_ID],
-    undefined,
-  );
->>>>>>> v2.0.1
   if (discovery?.path === undefined) {
     // How/why are we even here ?
     return Promise.reject(new util.ProcessCanceled("Game is not discovered!"));
@@ -353,13 +244,7 @@ export async function getManuallyAddedMods(api: types.IExtensionApi) {
   try {
     ini = await IniStructure.getInstance().ensureModSettings();
   } catch (err) {
-<<<<<<< HEAD
     api.showErrorNotification("Failed to load INI structure", err, { allowReport: false });
-=======
-    api.showErrorNotification("Failed to load INI structure", err, {
-      allowReport: false,
-    });
->>>>>>> v2.0.1
     return Promise.resolve([]);
   }
 
@@ -367,17 +252,8 @@ export async function getManuallyAddedMods(api: types.IExtensionApi) {
   const modKeys = Object.keys(mods);
   const iniEntries = Object.keys(ini.data);
   const manualCandidates = [].concat(iniEntries).filter((entry) => {
-<<<<<<< HEAD
     const hasVortexKey = util.getSafe(ini.data[entry], ["VK"], undefined) !== undefined;
     return !hasVortexKey || (ini.data[entry].VK === entry && !modKeys.includes(entry));
-=======
-    const hasVortexKey =
-      util.getSafe(ini.data[entry], ["VK"], undefined) !== undefined;
-    return (
-      !hasVortexKey ||
-      (ini.data[entry].VK === entry && !modKeys.includes(entry))
-    );
->>>>>>> v2.0.1
   });
   const uniqueCandidates = new Set(new Set(manualCandidates));
   const modsPath = path.join(discovery.path, "Mods");
@@ -483,13 +359,7 @@ export async function walkPath(
         //  in the process of being installed/removed. We can safely ignore this.
       },
       walkOptions,
-<<<<<<< HEAD
     ).catch((err) => (err.code === "ENOENT" ? Promise.resolve() : Promise.reject(err)));
-=======
-    ).catch((err) =>
-      err.code === "ENOENT" ? Promise.resolve() : Promise.reject(err),
-    );
->>>>>>> v2.0.1
     return resolve(walkResults);
   });
 }
@@ -497,15 +367,7 @@ export async function walkPath(
 export function validateProfile(profileId: string, state: types.IState) {
   const activeProfile = selectors.activeProfile(state);
   const deployProfile = selectors.profileById(state, profileId);
-<<<<<<< HEAD
   if (!!activeProfile && !!deployProfile && deployProfile.id !== activeProfile.id) {
-=======
-  if (
-    !!activeProfile &&
-    !!deployProfile &&
-    deployProfile.id !== activeProfile.id
-  ) {
->>>>>>> v2.0.1
     return undefined;
   }
 
