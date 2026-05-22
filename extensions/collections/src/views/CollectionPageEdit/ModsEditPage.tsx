@@ -903,13 +903,7 @@ class ModsEditPage extends ComponentEx<IProps, IModsPageState> {
         isGroupable: true,
         groupName: (saveEdits: "" | true) => {
           const { t } = this.props;
-<<<<<<< HEAD
           return saveEdits ? t("Has Binary Patching") : t("<No Binary Patching>");
-=======
-          return saveEdits
-            ? t("Has Binary Patching")
-            : t("<No Binary Patching>");
->>>>>>> v2.0.1
         },
         filter: new OptionsFilter(
           [
