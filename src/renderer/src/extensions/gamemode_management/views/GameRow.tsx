@@ -8,26 +8,16 @@ import { ListGroupItem, Media, Popover } from "react-bootstrap";
 import { Provider } from "react-redux";
 
 import { ComponentEx } from "../../../controls/ComponentEx";
-import { ComponentEx } from "../../../controls/ComponentEx";
-import IconBar from "../../../controls/IconBar";
 import IconBar from "../../../controls/IconBar";
 import OverlayTrigger from "../../../controls/OverlayTrigger";
-import OverlayTrigger from "../../../controls/OverlayTrigger";
-import { IconButton } from "../../../controls/TooltipControls";
 import { IconButton } from "../../../controls/TooltipControls";
 import { nexusGames } from "../../../extensions/nexus_integration/util";
 import { nexusGameId } from "../../../extensions/nexus_integration/util/convertGameId";
 import type { IActionDefinition } from "../../../types/IActionDefinition";
-import type { IActionDefinition } from "../../../types/IActionDefinition";
-import opn from "../../../util/opn";
 import opn from "../../../util/opn";
 import type { IMod } from "../../mod_management/types/IMod";
-import type { IMod } from "../../mod_management/types/IMod";
-import type { IDiscoveryResult } from "../types/IDiscoveryResult";
 import type { IDiscoveryResult } from "../types/IDiscoveryResult";
 import type { IGameStored } from "../types/IGameStored";
-import type { IGameStored } from "../types/IGameStored";
-import GameInfoPopover from "./GameInfoPopover";
 import GameInfoPopover from "./GameInfoPopover";
 
 export interface IProps {
