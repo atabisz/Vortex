@@ -1,26 +1,16 @@
-<<<<<<< HEAD
 const { app, remote } = require("electron");
-=======
->>>>>>> v2.0.1
 const path = require("path");
 const { fs, selectors, util } = require("vortex-api");
 const winapi = require("winapi-bindings");
 
 const GAME_ID = "divinityoriginalsin2";
 const GAME_ID_DE = "divinityoriginalsin2definitiveedition";
-<<<<<<< HEAD
 
 const appUni = app || remote.app;
 
 function modPath() {
   return path.join(
     appUni.getPath("documents"),
-=======
-
-function modPath() {
-  return path.join(
-    util.getVortexPath("documents"),
->>>>>>> v2.0.1
     "Larian Studios",
     "Divinity Original Sin 2",
     "Mods",
@@ -29,11 +19,7 @@ function modPath() {
 
 function modPathDE() {
   return path.join(
-<<<<<<< HEAD
     appUni.getPath("documents"),
-=======
-    util.getVortexPath("documents"),
->>>>>>> v2.0.1
     "Larian Studios",
     "Divinity Original Sin 2 Definitive Edition",
     "Mods",
