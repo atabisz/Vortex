@@ -18,7 +18,6 @@ import {
   types,
   util,
 } from "vortex-api";
-<<<<<<< HEAD
 
 import { updateSuccessRate } from "../../actions/persistent";
 import { doExportToAPI } from "../../collectionExport";
@@ -30,9 +29,6 @@ import CollectionEdit from "../CollectionPageEdit";
 import { IPathTools } from "../CollectionPageEdit/FileOverrides";
 import CollectionPage from "../CollectionPageView";
 import StartPage from "./StartPage";
-=======
-import { hasEditPermissions, uploadCollection } from "../../util/util";
->>>>>>> v2.0.1
 
 export interface ICollectionsMainPageBaseProps extends WithTranslation {
   active: boolean;
@@ -266,13 +262,7 @@ class CollectionsMainPage extends ComponentEx<ICollectionsMainPageProps, ICompon
     }
 
     const author = mods[modId].attributes?.["uploaderId"];
-<<<<<<< HEAD
     const canContribute = hasEditPermissions(mods[modId].attributes?.permissions);
-=======
-    const canContribute = hasEditPermissions(
-      mods[modId].attributes?.permissions,
-    );
->>>>>>> v2.0.1
 
     if (author !== undefined && author !== userInfo?.userId && !canContribute) {
       const result = await api.showDialog(
