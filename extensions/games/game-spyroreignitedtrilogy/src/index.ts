@@ -1,19 +1,4 @@
 import path from "path";
-<<<<<<< HEAD
-
-import { fs, log, selectors, types, util } from "vortex-api";
-
-import { GAME_ID, MOD_FILE_EXT, modsRelPath } from "./common";
-import { deserialize, serialize, validate } from "./loadOrder";
-import { migrate100 } from "./migrations";
-import { ILoadOrderEntry, IProps, LoadOrder } from "./types";
-import { genProps, getPakFiles, toBlue } from "./util";
-
-const STEAM_ID = "996580";
-
-async function findGame() {
-  return util.GameStoreHelper.findByAppId([STEAM_ID]).then((game) => game.gamePath);
-=======
 import { fs, log, selectors, types, util } from "vortex-api";
 
 import { GAME_ID, MOD_FILE_EXT, modsRelPath } from "./common";
@@ -28,7 +13,6 @@ async function findGame() {
   return util.GameStoreHelper.findByAppId([STEAM_ID]).then(
     (game) => game.gamePath,
   );
->>>>>>> v2.0.1
 }
 
 async function externalFilesWarning(
@@ -53,15 +37,11 @@ async function externalFilesWarning(
             "Alternatively, Vortex can try to import these files into its mods list which will " +
             "allow Vortex to take control over them and display them inside the load ordering page. " +
             "Vortex's load ordering functionality will not display external mod entries unless imported!",
-<<<<<<< HEAD
-          { replace: { files: externalMods.map((mod) => `"${mod}"`).join("[br][/br]") } },
-=======
           {
             replace: {
               files: externalMods.map((mod) => `"${mod}"`).join("[br][/br]"),
             },
           },
->>>>>>> v2.0.1
         ),
       },
       [
@@ -80,14 +60,10 @@ async function ImportExternalMods(
   const downloadsPath = selectors.downloadPathForGame(state, GAME_ID);
   const szip = new util.SevenZip();
   for (const modFile of external) {
-<<<<<<< HEAD
-    const archivePath = path.join(downloadsPath, path.basename(modFile, MOD_FILE_EXT) + ".zip");
-=======
     const archivePath = path.join(
       downloadsPath,
       path.basename(modFile, MOD_FILE_EXT) + ".zip",
     );
->>>>>>> v2.0.1
     try {
       await szip.add(archivePath, [modFile], { raw: ["-r"] });
       await fs.removeAsync(modFile);
@@ -110,13 +86,9 @@ async function prepareForModding(
     const deployedFiles = await getPakFiles(modsPath);
     const modifier = (filePath) => path.basename(filePath).toLowerCase();
     const unManagedPredicate = (filePath: string) =>
-<<<<<<< HEAD
-      managedFiles.find((managed) => modifier(managed) === modifier(filePath)) === undefined;
-=======
       managedFiles.find(
         (managed) => modifier(managed) === modifier(filePath),
       ) === undefined;
->>>>>>> v2.0.1
     const externalMods = deployedFiles.filter(unManagedPredicate);
     try {
       await externalFilesWarning(context.api, externalMods);
@@ -134,13 +106,9 @@ async function prepareForModding(
 }
 
 function installContent(files) {
-<<<<<<< HEAD
-  const modFile = files.find((file) => path.extname(file).toLowerCase() === MOD_FILE_EXT);
-=======
   const modFile = files.find(
     (file) => path.extname(file).toLowerCase() === MOD_FILE_EXT,
   );
->>>>>>> v2.0.1
   const idx = modFile.indexOf(path.basename(modFile));
   const rootPath = path.dirname(modFile);
 
@@ -164,12 +132,8 @@ function testSupportedContent(files, gameId) {
   // Make sure we're able to support this mod.
   let supported =
     gameId === GAME_ID &&
-<<<<<<< HEAD
-    files.find((file) => path.extname(file).toLowerCase() === MOD_FILE_EXT) !== undefined;
-=======
     files.find((file) => path.extname(file).toLowerCase() === MOD_FILE_EXT) !==
       undefined;
->>>>>>> v2.0.1
 
   if (
     supported &&
@@ -195,13 +159,6 @@ function toLOPrefix(context: types.IExtensionContext, mod: types.IMod): string {
   }
 
   // Retrieve the load order as stored in Vortex's application state.
-<<<<<<< HEAD
-  const loadOrder = util.getSafe(props.state, ["persistent", "loadOrder", props.profile.id], []);
-
-  // Find the mod entry in the load order state and insert the prefix in front
-  //  of the mod's name/id/whatever
-  const loEntry: ILoadOrderEntry = loadOrder.find((loEntry) => loEntry.id === mod.id);
-=======
   const loadOrder = util.getSafe(
     props.state,
     ["persistent", "loadOrder", props.profile.id],
@@ -213,7 +170,6 @@ function toLOPrefix(context: types.IExtensionContext, mod: types.IMod): string {
   const loEntry: ILoadOrderEntry = loadOrder.find(
     (loEntry) => loEntry.id === mod.id,
   );
->>>>>>> v2.0.1
   return loEntry?.data?.prefix !== undefined
     ? loEntry.data.prefix + "-" + mod.id
     : "ZZZZ-" + mod.id;
