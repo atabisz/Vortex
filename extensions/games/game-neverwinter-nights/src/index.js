@@ -1,8 +1,5 @@
 const Promise = require("bluebird");
-<<<<<<< HEAD
 const { remote } = require("electron");
-=======
->>>>>>> v2.0.1
 const path = require("path");
 const winapi = require("winapi-bindings");
 const { fs, util } = require("vortex-api");
@@ -109,11 +106,7 @@ function modPath(context) {
 let _modsFolder;
 function modPathEE() {
   if (_modsFolder === undefined) {
-<<<<<<< HEAD
     _modsFolder = path.join(remote.app.getPath("documents"), "Neverwinter Nights");
-=======
-    _modsFolder = path.join(util.getVortexPath("documents"), "Neverwinter Nights");
->>>>>>> v2.0.1
   }
 
   return _modsFolder;
