@@ -121,6 +121,17 @@
 2. `pnpm typecheck` clean for `@vortex/renderer` and `@vortex/main`
 3. Atomic commit per resolved file with decision-anchored stance
 
+**Plans:** 6 plans
+
+Plans:
+
+- [ ] 32-01-PLAN.md — Wave 0: extract v8.0 harness, pre-flight verification, baseline capture, no-new-sites finding
+- [ ] 32-02-PLAN.md — Wave 1 leaf tier: 7 files (NotificationAggregator, util/{VersionFilter,removeMods,activationStore,externalChanges,deploy}, stagingDirectory)
+- [ ] 32-03-PLAN.md — Wave 2 mid tier: 5 files (modMerging, views/{DeactivationButton,Settings,ModList}, eventHandlers)
+- [ ] 32-04-PLAN.md — Wave 3 playbook-heavy: LinkingDeployment.ts (8 regions, fork-wins @212) + InstallManager.ts (40 regions, 6 dangerous fork-wins)
+- [ ] 32-05-PLAN.md — Wave 4 barrel: index.ts (18 regions, smaller-diff)
+- [ ] 32-06-PLAN.md — Wave 5 verification: final harness (no skip), commit-body audit, VALIDATION sign-off, PHASE-SUMMARY
+
 ### Phase 33: Gamebryo + per-game extensions (v2.0.1)
 
 **Goal:** Resolve gamebryo-{plugin,savegame}-mgmt, collections, modtype-bepinex, BG3, Morrowind, Witcher 3 with playbook §1 (guards), §3 (LOOT casing), §10 (native binaries) preserved; re-add catalog entries pnpm dropped in Phase 31.
