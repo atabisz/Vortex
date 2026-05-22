@@ -20,12 +20,7 @@ describe("computeStateDiff", () => {
 
     const ops = computeStateDiff(oldState, newState);
     const installTimeOp = ops.find(
-<<<<<<< HEAD
       (op) => op.path.join(".") === "mods.skyrim.testMod.attributes.installTime",
-=======
-      (op) =>
-        op.path.join(".") === "mods.skyrim.testMod.attributes.installTime",
->>>>>>> v2.0.1
     );
     expect(installTimeOp).toBeDefined();
     expect(installTimeOp.type).toBe("set");
@@ -48,12 +43,7 @@ describe("computeStateDiff", () => {
 
     const ops = computeStateDiff(oldState, newState);
     const installTimeOp = ops.find(
-<<<<<<< HEAD
       (op) => op.path.join(".") === "mods.skyrim.testMod.attributes.installTime",
-=======
-      (op) =>
-        op.path.join(".") === "mods.skyrim.testMod.attributes.installTime",
->>>>>>> v2.0.1
     );
     expect(installTimeOp).toBeDefined();
     expect(installTimeOp.type).toBe("remove");
@@ -114,24 +104,14 @@ describe("computeStateDiff", () => {
 
     const addOps = computeStateDiff(oldState, withInvalidDate);
     const setOp = addOps.find(
-<<<<<<< HEAD
       (op) => op.path.join(".") === "mods.skyrim.testMod.attributes.installTime",
-=======
-      (op) =>
-        op.path.join(".") === "mods.skyrim.testMod.attributes.installTime",
->>>>>>> v2.0.1
     );
     expect(setOp).toBeDefined();
     expect(setOp.type).toBe("set");
 
     const removeOps = computeStateDiff(withInvalidDate, oldState);
     const removeOp = removeOps.find(
-<<<<<<< HEAD
       (op) => op.path.join(".") === "mods.skyrim.testMod.attributes.installTime",
-=======
-      (op) =>
-        op.path.join(".") === "mods.skyrim.testMod.attributes.installTime",
->>>>>>> v2.0.1
     );
     expect(removeOp).toBeDefined();
     expect(removeOp.type).toBe("remove");
