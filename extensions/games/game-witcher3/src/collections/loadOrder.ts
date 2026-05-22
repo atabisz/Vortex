@@ -1,21 +1,9 @@
 import { actions, selectors, types, util } from "vortex-api";
-<<<<<<< HEAD
 
 import { GAME_ID } from "../common";
 import { getPersistentLoadOrder } from "../migrations";
 import { IW3CollectionsData } from "./types";
 import { CollectionGenerateError, CollectionParseError, genCollectionLoadOrder } from "./util";
-=======
-import { GAME_ID } from "../common";
-import { IW3CollectionsData } from "./types";
-
-import {
-  CollectionGenerateError,
-  CollectionParseError,
-  genCollectionLoadOrder,
-} from "./util";
-import { getPersistentLoadOrder } from "../migrations";
->>>>>>> v2.0.1
 
 export async function exportLoadOrder(
   api: types.IExtensionApi,
@@ -61,14 +49,7 @@ export async function importLoadOrder(
   const profileId = selectors.lastActiveProfileForGame(state, GAME_ID);
   if (profileId === undefined) {
     return Promise.reject(
-<<<<<<< HEAD
       new CollectionParseError(collection?.["info"]?.["name"] || "", "Invalid profile id"),
-=======
-      new CollectionParseError(
-        collection?.["info"]?.["name"] || "",
-        "Invalid profile id",
-      ),
->>>>>>> v2.0.1
     );
   }
 
