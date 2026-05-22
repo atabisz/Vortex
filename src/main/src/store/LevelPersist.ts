@@ -1,18 +1,9 @@
-<<<<<<< HEAD
 import * as path from "node:path";
 
 import type { DuckDBConnection } from "@duckdb/node-api";
 import { unknownToError } from "@vortex/shared";
 import { DataInvalid } from "@vortex/shared/errors";
 import type { IPersistor } from "@vortex/shared/state";
-=======
-import type { DuckDBConnection } from "@duckdb/node-api";
-import type { IPersistor } from "@vortex/shared/state";
-
-import { unknownToError } from "@vortex/shared";
-import { DataInvalid } from "@vortex/shared/errors";
-import * as path from "node:path";
->>>>>>> v2.0.1
 
 import { getVortexPath } from "../getVortexPath";
 import { log } from "../logging";
@@ -78,14 +69,7 @@ class LevelPersist implements IPersistor {
     }
     try {
       const singleton = DuckDBSingleton.getInstance();
-<<<<<<< HEAD
       const extensionDir = path.join(getVortexPath("base_unpacked"), "duckdb-extensions");
-=======
-      const extensionDir = path.join(
-        getVortexPath("base_unpacked"),
-        "duckdb-extensions",
-      );
->>>>>>> v2.0.1
       await singleton.initialize(extensionDir);
 
       const alias = singleton.nextAlias();
@@ -149,11 +133,7 @@ class LevelPersist implements IPersistor {
   // line before the await and an exit line after - so an indefinite hang
   // (where the exit line never appears in vortex.log) pinpoints the
   // wedged call.
-  private async timedWrite<T>(
-    method: string,
-    count: number,
-    op: () => Promise<T>,
-  ): Promise<T> {
+  private async timedWrite<T>(method: string, count: number, op: () => Promise<T>): Promise<T> {
     const trace = traceWritesEnabled();
     const start = Date.now();
     if (trace) {
@@ -248,45 +228,6 @@ class LevelPersist implements IPersistor {
   }
 
   public async setItem(statePath: string[], newState: string): Promise<void> {
-<<<<<<< HEAD
-    const key = statePath.join(SEPARATOR);
-    // level_pivot tables don't support UNIQUE indexes, so ON CONFLICT
-    // upserts aren't possible.  UPDATE … RETURNING is also unreliable:
-    // level_pivot's EmitRowCount unconditionally emits a single-row chunk
-    // (the "rows affected" count), which DuckDB's RETURNING pipeline
-    // surfaces as the query result — so RETURNING always reports 1 row
-    // regardless of whether any row was matched.  Use SELECT to check
-    // existence, then UPDATE or INSERT accordingly.
-    const ownTransaction = !this.#mInTransaction;
-    if (ownTransaction) {
-      await this.beginTransaction();
-    }
-    try {
-      const exists = await this.#mConnection.runAndReadAll(
-        `SELECT 1 FROM ${this.#mAlias}.kv WHERE key = $1`,
-        [key],
-      );
-      if (exists.getRows().length > 0) {
-        await this.#mConnection.run(`UPDATE ${this.#mAlias}.kv SET value = $2 WHERE key = $1`, [
-          key,
-          newState,
-        ]);
-      } else {
-        await this.#mConnection.run(`INSERT INTO ${this.#mAlias}.kv VALUES ($1, $2)`, [
-          key,
-          newState,
-        ]);
-      }
-      if (ownTransaction) {
-        await this.commitTransaction();
-      }
-    } catch (err) {
-      if (ownTransaction) {
-        await this.rollbackTransaction();
-      }
-      throw err;
-    }
-=======
     // No internal BEGIN/COMMIT here. The previous implementation issued
     // three statements (SELECT-then-UPDATE-or-INSERT) and self-wrapped in a
     // transaction to keep them atomic against concurrent writers to the
@@ -305,7 +246,6 @@ class LevelPersist implements IPersistor {
         newState,
       ]),
     );
->>>>>>> v2.0.1
   }
 
   // Removes the exact key and any descendants (keys whose stored form is
@@ -319,19 +259,12 @@ class LevelPersist implements IPersistor {
   // cannot contain `###` except as a separator.
   public async removeItem(statePath: string[]): Promise<void> {
     const key = statePath.join(SEPARATOR);
-<<<<<<< HEAD
-    await this.#mConnection.run(`DELETE FROM ${this.#mAlias}.kv WHERE key = $1 OR key LIKE $2`, [
-      key,
-      key + SEPARATOR + "%",
-    ]);
-=======
     await this.timedWrite("removeItem", 1, () =>
       this.#mConnection.run(
         `DELETE FROM ${this.#mAlias}.kv WHERE key = $1 OR starts_with(key, $2)`,
         [key, `${key}${SEPARATOR}`],
       ),
     );
->>>>>>> v2.0.1
   }
 
   /**
@@ -340,9 +273,7 @@ class LevelPersist implements IPersistor {
    * to chunk large diffs to bound failure granularity (see
    * ReduxPersistorIPC.processOperations).
    */
-  public async bulkSetItem(
-    items: ReadonlyArray<{ key: string[]; value: string }>,
-  ): Promise<void> {
+  public async bulkSetItem(items: ReadonlyArray<{ key: string[]; value: string }>): Promise<void> {
     if (items.length === 0) {
       return;
     }
@@ -382,10 +313,7 @@ class LevelPersist implements IPersistor {
       params.push(key, `${key}${SEPARATOR}`);
     }
     await this.timedWrite("bulkRemoveItem", keys.length, () =>
-      this.#mConnection.run(
-        `DELETE FROM ${this.#mAlias}.kv WHERE ${clauses.join(" OR ")}`,
-        params,
-      ),
+      this.#mConnection.run(`DELETE FROM ${this.#mAlias}.kv WHERE ${clauses.join(" OR ")}`, params),
     );
   }
 
