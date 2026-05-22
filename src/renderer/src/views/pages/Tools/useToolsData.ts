@@ -1,5 +1,4 @@
 import path from "path";
-<<<<<<< HEAD
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { shallowEqual, useSelector } from "react-redux";
@@ -10,31 +9,12 @@ import * as fs from "../../../util/fs";
 import { activeGameId } from "../../../util/selectors";
 import type { IStarterInfo } from "../../../util/StarterInfo";
 import type StarterInfo from "../../../util/StarterInfo";
-=======
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { shallowEqual, useSelector } from "react-redux";
-
-import type { IState } from "../../../types/IState";
-import type { IStarterInfo } from "../../../util/StarterInfo";
-import type StarterInfo from "../../../util/StarterInfo";
-
-import { updateJumpList } from "../../../extensions/starter_dashlet/util";
-import * as fs from "../../../util/fs";
-import { activeGameId } from "../../../util/selectors";
->>>>>>> v2.0.1
 import { truthy } from "../../../util/util";
 import { generateGameStarter, generateToolStarters } from "./toolStarters";
 
 const MAX_PINNED_TOOLS = 5;
 
-<<<<<<< HEAD
 async function validateTools(starters: IStarterInfo[], discoveryPath: string): Promise<string[]> {
-=======
-async function validateTools(
-  starters: IStarterInfo[],
-  discoveryPath: string,
-): Promise<string[]> {
->>>>>>> v2.0.1
   const validIds: string[] = [];
   for (const starter of starters) {
     if (!starter?.exePath) continue;
@@ -53,22 +33,10 @@ async function validateTools(
 
 export const useToolsData = () => {
   const gameMode = useSelector(activeGameId);
-<<<<<<< HEAD
   const knownGames = useSelector((state: IState) => state.session.gameMode.known);
   const discoveredGames = useSelector((state: IState) => state.settings.gameMode.discovered);
   const discoveredTools = useSelector(
     (state: IState) => state.settings.gameMode.discovered?.[gameMode]?.tools ?? {},
-=======
-  const knownGames = useSelector(
-    (state: IState) => state.session.gameMode.known,
-  );
-  const discoveredGames = useSelector(
-    (state: IState) => state.settings.gameMode.discovered,
-  );
-  const discoveredTools = useSelector(
-    (state: IState) =>
-      state.settings.gameMode.discovered?.[gameMode]?.tools ?? {},
->>>>>>> v2.0.1
     shallowEqual,
   );
   const toolsOrder = useSelector(
@@ -82,37 +50,17 @@ export const useToolsData = () => {
     (state: IState) => state.settings.interface.tools?.pinned?.[gameMode] ?? {},
     shallowEqual,
   );
-<<<<<<< HEAD
   const toolsRunning = useSelector((state: IState) => state.session.base.toolsRunning);
   const mods = useSelector((state: IState) => state.persistent.mods?.[gameMode]);
   const deploymentCounter = useSelector(
     (state: IState) => state.persistent?.deployment?.deploymentCounter?.[gameMode] ?? 0,
-=======
-  const toolsRunning = useSelector(
-    (state: IState) => state.session.base.toolsRunning,
-  );
-  const mods = useSelector(
-    (state: IState) => state.persistent.mods?.[gameMode],
-  );
-  const deploymentCounter = useSelector(
-    (state: IState) =>
-      state.persistent?.deployment?.deploymentCounter?.[gameMode] ?? 0,
->>>>>>> v2.0.1
   );
 
   // ── Tool generation & validation ────────────────────────────────────────
   const [validToolIds, setValidToolIds] = useState<string[]>([]);
 
   const tools = useMemo(() => {
-<<<<<<< HEAD
     const gameStarter = generateGameStarter(knownGames, discoveredGames, gameMode);
-=======
-    const gameStarter = generateGameStarter(
-      knownGames,
-      discoveredGames,
-      gameMode,
-    );
->>>>>>> v2.0.1
     const newTools = generateToolStarters(
       knownGames,
       discoveredGames,
@@ -121,13 +69,7 @@ export const useToolsData = () => {
       gameMode,
       gameStarter?.id,
     );
-<<<<<<< HEAD
     const jumpList = truthy(gameStarter) ? [gameStarter].concat(newTools) : newTools;
-=======
-    const jumpList = truthy(gameStarter)
-      ? [gameStarter].concat(newTools)
-      : newTools;
->>>>>>> v2.0.1
     updateJumpList(jumpList);
     return newTools;
   }, [knownGames, discoveredGames, discoveredTools, toolsOrder, gameMode]);
@@ -154,12 +96,7 @@ export const useToolsData = () => {
   const { launcherTool, otherPinnedTools, unpinnedTools } = useMemo(() => {
     // Hidden tools (removed in classic UI) are excluded entirely
     const visible = tools.filter(
-<<<<<<< HEAD
       (s) => s.isGame || discoveredTools[s.id] === undefined || !isToolHidden(s),
-=======
-      (s) =>
-        s.isGame || discoveredTools[s.id] === undefined || !isToolHidden(s),
->>>>>>> v2.0.1
     );
 
     const launcher = visible.find((s) => s.id === primaryTool);
@@ -176,18 +113,7 @@ export const useToolsData = () => {
       otherPinnedTools: pinned,
       unpinnedTools: unpinned,
     };
-<<<<<<< HEAD
   }, [tools, primaryTool, discoveredTools, pinnedToolsMap, isToolHidden, isToolPinned]);
-=======
-  }, [
-    tools,
-    primaryTool,
-    discoveredTools,
-    pinnedToolsMap,
-    isToolHidden,
-    isToolPinned,
-  ]);
->>>>>>> v2.0.1
 
   const pinnedCount = otherPinnedTools.length;
   const maxPinnedReached = pinnedCount >= MAX_PINNED_TOOLS;
@@ -200,14 +126,7 @@ export const useToolsData = () => {
   const isToolRunning = useCallback(
     (starter: IStarterInfo) => {
       const starterInfo = starter as StarterInfo;
-<<<<<<< HEAD
       return starterInfo?.exePath !== undefined && toolsRunning[starterInfo.exePath] !== undefined;
-=======
-      return (
-        starterInfo?.exePath !== undefined &&
-        toolsRunning[starterInfo.exePath] !== undefined
-      );
->>>>>>> v2.0.1
     },
     [toolsRunning],
   );
