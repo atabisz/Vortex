@@ -97,20 +97,11 @@ function updateSaves(store: Redux.Store<any>, savesPath: string): Promise<string
       const state = store.getState();
       const oldSaves: { [id: string]: ISavegame } = state.session.saves.saves;
 
-<<<<<<< HEAD
       if (!saveDictEqual(oldSaves, savesDict)) {
         store.dispatch(setSavegames(savesDict, result.truncated));
       }
       return Promise.resolve(result.failedReads);
     });
-=======
-        if (!saveDictEqual(oldSaves, savesDict)) {
-          store.dispatch(setSavegames(savesDict, result.truncated));
-        }
-        return Promise.resolve(result.failedReads);
-      },
-    );
->>>>>>> v2.0.1
 }
 
 function genUpdateSavegameHandler(api: types.IExtensionApi) {
