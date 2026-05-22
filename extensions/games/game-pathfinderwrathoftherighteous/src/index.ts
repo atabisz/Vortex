@@ -7,13 +7,7 @@ const STEAM_ID = "1184370";
 const GOG_ID = "1207187357";
 
 function findGame() {
-<<<<<<< HEAD
   return util.GameStoreHelper.findByAppId([STEAM_ID, GOG_ID]).then((game) => game.gamePath);
-=======
-  return util.GameStoreHelper.findByAppId([STEAM_ID, GOG_ID]).then(
-    (game) => game.gamePath,
-  );
->>>>>>> v2.0.1
 }
 
 function setup(discovery) {
@@ -21,16 +15,7 @@ function setup(discovery) {
 }
 
 async function resolveGameVersion(discoveryPath: string) {
-<<<<<<< HEAD
   const versionFilepath = path.join(discoveryPath, "Wrath_Data", "StreamingAssets", "Version.info");
-=======
-  const versionFilepath = path.join(
-    discoveryPath,
-    "Wrath_Data",
-    "StreamingAssets",
-    "Version.info",
-  );
->>>>>>> v2.0.1
   try {
     const data = await fs.readFileAsync(versionFilepath, { encoding: "utf8" });
     const segments = data.split(" ");
