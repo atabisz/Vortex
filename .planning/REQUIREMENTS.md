@@ -16,7 +16,7 @@ This milestone is the brownfield repeat of v8.0 (which folded `v2.0.0`). Phase n
 - [x] **SYNC-33a**: Gamebryo + per-game extensions (`gamebryo-{plugin-mgmt,savegame-mgmt}`, collections, modtype-bepinex, BG3, Morrowind, Witcher 3) resolved with playbook §1 (guards), §3 (LOOT casing), §10 (native binaries) preserved — Phase 33
 - [x] **SYNC-33b**: Catalog entries dropped by pnpm `cleanupUnusedCatalogs` in Phase 31 (`esptk`, `exe-version`, `gamebryo-savegame`, `native-errors`) re-added when their consumer extensions become workspace members — Phase 33 (resolved as full deferral per D-33-13: 3 packages replaced by pure-TS workspace rewrites during v8.0/v8.1 port; 1 satisfied via workspace package; 0 catalog re-adds warranted)
 - [ ] **SYNC-34a**: Renderer + main + shared spine (`ExtensionManager`, `controls/Table`, `Application`, `cli`, `errorReporting`, `autoupdater`, `TrayIcon`, `store/{DuckDBSingleton,LevelPersist}`, `preload/index`, `shared/{errors,errors.test,telemetry/spans}`, nexus_integration) resolved — Phase 34
-- [ ] **SYNC-34b**: R2 carry-forward — Jest `__mocks__/` reintroduction decision documented (likely keep dropped per v8.0 precedent) — Phase 34
+- [x] **SYNC-34b**: R2 carry-forward — Jest `__mocks__/` reintroduction decision documented (likely keep dropped per v8.0 precedent) — Phase 34 — done in 34-08 (R2 DROP 6c41da31b, renderer typecheck unchanged at 9 errors all in deferred download_management/ scope)
 
 ### Build verification
 
