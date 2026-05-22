@@ -1,5 +1,4 @@
 import path from "path";
-<<<<<<< HEAD
 
 import React from "react";
 import {
@@ -16,23 +15,6 @@ import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { Icon, More, util } from "vortex-api";
 
-=======
-import React from "react";
-import { useSelector } from "react-redux";
-import { useTranslation } from "react-i18next";
-import {
-  Button,
-  FormGroup,
-  ControlLabel,
-  InputGroup,
-  FormControl,
-  HelpBlock,
-  Panel,
-  Label,
-} from "react-bootstrap";
-import { Icon, More, util } from "vortex-api";
-
->>>>>>> v2.0.1
 import { GAME_ID, I18N_NAMESPACE } from "./common";
 
 interface IProps {
@@ -47,13 +29,7 @@ export default function Settings(props: IProps) {
   const { t } = useTranslation(I18N_NAMESPACE);
   const { onSelectUDF } = props;
   const connectedProps = useSelector(mapStateToProps);
-<<<<<<< HEAD
   const [currentUDF, setUDF] = React.useState<string>(path.join(connectedProps.udf, "Mods"));
-=======
-  const [currentUDF, setUDF] = React.useState<string>(
-    path.join(connectedProps.udf, "Mods"),
-  );
->>>>>>> v2.0.1
 
   const onSelectUDFHandler = React.useCallback(() => {
     onSelectUDF().then((res) => {
@@ -65,13 +41,7 @@ export default function Settings(props: IProps) {
   return (
     <form id={`${GAME_ID}-settings-form`}>
       <FormGroup controlId="default-enable">
-<<<<<<< HEAD
         <ControlLabel className={`${GAME_ID}-settings-heading`}>{t("7DTD Settings")}</ControlLabel>
-=======
-        <ControlLabel className={`${GAME_ID}-settings-heading`}>
-          {t("7DTD Settings")}
-        </ControlLabel>
->>>>>>> v2.0.1
         <Panel key={`${GAME_ID}-user-default-folder`}>
           <Panel.Body>
             <ControlLabel className={`${GAME_ID}-settings-subheading`}>
@@ -83,15 +53,7 @@ export default function Settings(props: IProps) {
               </More>
             </ControlLabel>
             <InputGroup>
-<<<<<<< HEAD
               <FormControl className="install-path-input" disabled={true} value={currentUDF} />
-=======
-              <FormControl
-                className="install-path-input"
-                disabled={true}
-                value={currentUDF}
-              />
->>>>>>> v2.0.1
               <Button onClick={onSelectUDFHandler}>
                 <Icon name="browse" />
               </Button>
