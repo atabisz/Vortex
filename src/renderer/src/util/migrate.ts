@@ -25,19 +25,7 @@ import type { IState } from "../types/IState";
 import { UserCanceled } from "./CustomErrors";
 import * as fs from "./fs";
 import { log } from "./log";
-<<<<<<< HEAD
 import makeCI from "./makeCaseInsensitive";
-=======
-
-import PromiseBB from "bluebird";
-import type { BrowserWindow } from "electron";
-import { dialog } from "electron";
-import * as path from "path";
-import type * as Redux from "redux";
-import * as semver from "semver";
-import format from "string-template";
-import { getErrorCode } from "@vortex/shared";
->>>>>>> v2.0.1
 import { batchDispatch } from "./util";
 
 interface IMigration {
