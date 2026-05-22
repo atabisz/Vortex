@@ -3,17 +3,13 @@ import { ControlLabel, FormGroup, HelpBlock, Panel } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
 import { useSelector, useStore } from "react-redux";
 import { Toggle, types } from "vortex-api";
-<<<<<<< HEAD
 
-=======
->>>>>>> v2.0.1
 import { setAutoExportLoadOrder } from "./actions";
 
 function Settings() {
   const store = useStore();
 
   const autoExportLoadOrder = useSelector(
-<<<<<<< HEAD
     (state: types.IState) => state.settings["baldursgate3"]?.autoExportLoadOrder,
   );
 
@@ -22,20 +18,6 @@ function Settings() {
     store.dispatch(setAutoExportLoadOrder(enabled));
   }, []);
 
-=======
-    (state: types.IState) =>
-      state.settings["baldursgate3"]?.autoExportLoadOrder,
-  );
-
-  const setUseAutoExportLoadOrderToGame = React.useCallback(
-    (enabled: boolean) => {
-      console.log(`setAutoExportLoadOrder=${enabled}`);
-      store.dispatch(setAutoExportLoadOrder(enabled));
-    },
-    [],
-  );
-
->>>>>>> v2.0.1
   const { t } = useTranslation();
 
   return (
@@ -44,14 +26,7 @@ function Settings() {
         <Panel>
           <Panel.Body>
             <ControlLabel>{t("Baldur's Gate 3")}</ControlLabel>
-<<<<<<< HEAD
             <Toggle checked={autoExportLoadOrder} onToggle={setUseAutoExportLoadOrderToGame}>
-=======
-            <Toggle
-              checked={autoExportLoadOrder}
-              onToggle={setUseAutoExportLoadOrderToGame}
-            >
->>>>>>> v2.0.1
               {t("Auto export load order")}
             </Toggle>
             <HelpBlock>
