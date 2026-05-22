@@ -195,16 +195,6 @@
   },
   {
     "type": "file",
-<<<<<<< HEAD
-=======
-    "url": "https://codeload.github.com/Nexus-Mods/bsdiff-node/tar.gz/a2bd60f5f96d172892b7f6708fb9a7a212b3b2e5",
-    "sha256": "660d5520183d74e57ec29a00561857c5a5442be43820b32da3908fdafbe4ae8f",
-    "dest-filename": "a2bd60f5f96d172892b7f6708fb9a7a212b3b2e5",
-    "dest": "flatpak-node/yarn-mirror"
-  },
-  {
-    "type": "file",
->>>>>>> v2.0.1
     "url": "https://codeload.github.com/Nexus-Mods/modmeta-db/tar.gz/daa8935b6e38e255ec192c908adfce35d47c0336",
     "sha256": "73971d7f83635634bcd183f2dcf80e2f76c6c77a35ceae34d3615bcc352683ac",
     "dest-filename": "daa8935b6e38e255ec192c908adfce35d47c0336",
@@ -261,44 +251,6 @@
   },
   {
     "type": "file",
-<<<<<<< HEAD
-=======
-    "url": "https://codeload.github.com/Nexus-Mods/node-crash-dump/tar.gz/7fc76dabdc9117a7f238d7bf5e5fb7841a374804",
-    "sha256": "ecd01b32991c07abb0fa371baaa18239af1b2ef8e2a746cb1518bd60633f76be",
-    "dest-filename": "7fc76dabdc9117a7f238d7bf5e5fb7841a374804",
-    "dest": "flatpak-node/yarn-mirror"
-  },
-  {
-    "type": "file",
-    "url": "https://codeload.github.com/Nexus-Mods/node-esptk/tar.gz/6b8900658d66438fe92ac55bc182a45404e8bf3f",
-    "sha256": "322c6c105454491eab4d97747a3782acf54ca9a13889966b18172ed50cf17cff",
-    "dest-filename": "6b8900658d66438fe92ac55bc182a45404e8bf3f",
-    "dest": "flatpak-node/yarn-mirror"
-  },
-  {
-    "type": "file",
-    "url": "https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/893a394c9e113f9b5c797acb32f93e172829ae00",
-    "sha256": "c6a6ffeed02fa017a940bae9f5b2a677d6bc2d4a72c8fe2330618932fa9275c2",
-    "dest-filename": "893a394c9e113f9b5c797acb32f93e172829ae00",
-    "dest": "flatpak-node/yarn-mirror"
-  },
-  {
-    "type": "file",
-    "url": "https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/bd5ef39efe9a14f652ba4af1bcfa7b64d99aaca9",
-    "sha256": "d220582082ec599209a7e3ba9d218efee1532bf5c75dc2ade8bae45a6d02ab62",
-    "dest-filename": "bd5ef39efe9a14f652ba4af1bcfa7b64d99aaca9",
-    "dest": "flatpak-node/yarn-mirror"
-  },
-  {
-    "type": "file",
-    "url": "https://codeload.github.com/Nexus-Mods/node-exe-version/tar.gz/eded60fc0a0f3c234e1d586d2eb9952401945406",
-    "sha256": "c872213a63b2ee86274c5570b00118456c970b2530ae55375ca4240c64be0aa4",
-    "dest-filename": "eded60fc0a0f3c234e1d586d2eb9952401945406",
-    "dest": "flatpak-node/yarn-mirror"
-  },
-  {
-    "type": "file",
->>>>>>> v2.0.1
     "url": "https://codeload.github.com/Nexus-Mods/node-gamebryo-savegames/tar.gz/0f4f5bf5293fe6ed8f0da226c67fb79b3c877739",
     "sha256": "24a58fcb78801748427127afca5ade551111d933e5a8cf63c5a0ea8929d058f4",
     "dest-filename": "0f4f5bf5293fe6ed8f0da226c67fb79b3c877739",
@@ -313,16 +265,6 @@
   },
   {
     "type": "file",
-<<<<<<< HEAD
-=======
-    "url": "https://codeload.github.com/Nexus-Mods/node-native-errors/tar.gz/51913db07e4c9b68a96ba7fcf741b32796758f18",
-    "sha256": "0b03c10d8d4d1627b6cd6634b4a3f6b14dd6837ff54129cdbe02c77b4cb9cee5",
-    "dest-filename": "51913db07e4c9b68a96ba7fcf741b32796758f18",
-    "dest": "flatpak-node/yarn-mirror"
-  },
-  {
-    "type": "file",
->>>>>>> v2.0.1
     "url": "https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/3a8c20c7cf770c9684ce6eda58fe56b04d095906",
     "sha256": "5a7f2ae0e1af55c203db81dc68a03038404763c5e6c1ada0d0750a6f82a93dad",
     "dest-filename": "3a8c20c7cf770c9684ce6eda58fe56b04d095906",
@@ -631,16 +573,6 @@
   },
   {
     "type": "file",
-<<<<<<< HEAD
-=======
-    "url": "https://codeload.github.com/TanninOne/node-diskusage/tar.gz/eb52fd176b2c311dd3ae5f0e68ff7488c08a179d",
-    "sha256": "f0fb199589c451d184daf60011d4f5caaf29c179dcfed7b9af29f2934492b2ed",
-    "dest-filename": "eb52fd176b2c311dd3ae5f0e68ff7488c08a179d",
-    "dest": "flatpak-node/yarn-mirror"
-  },
-  {
-    "type": "file",
->>>>>>> v2.0.1
     "url": "https://codeload.github.com/TanninOne/rimraf/tar.gz/7b8b70d4e8783cd233fca3283cf1f930af4e39c2",
     "sha256": "1b6a9cd18170ff3060e65143fdb582b55bbe294e3d26f592210151b5a928ed4f",
     "dest-filename": "7b8b70d4e8783cd233fca3283cf1f930af4e39c2",
