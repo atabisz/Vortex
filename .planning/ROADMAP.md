@@ -121,30 +121,30 @@
 2. `pnpm typecheck` clean for `@vortex/renderer` and `@vortex/main`
 3. Atomic commit per resolved file with decision-anchored stance
 
-**Plans:** 6 plans
+**Plans:** 7/6 plans complete
 
 Plans:
 
 **Wave 1**
 
-- [ ] 32-01-PLAN.md — Wave 0: extract v8.0 harness, pre-flight verification, baseline capture, no-new-sites finding
-- [ ] 32-02-PLAN.md — Wave 1 leaf tier: 7 files (NotificationAggregator, util/{VersionFilter,removeMods,activationStore,externalChanges,deploy}, stagingDirectory)
+- [x] 32-01-PLAN.md — Wave 0: extract v8.0 harness, pre-flight verification, baseline capture, no-new-sites finding
+- [x] 32-02-PLAN.md — Wave 1 leaf tier: 7 files (NotificationAggregator, util/{VersionFilter,removeMods,activationStore,externalChanges,deploy}, stagingDirectory)
 
 **Wave 2** _(blocked on Wave 1 completion)_
 
-- [ ] 32-03-PLAN.md — Wave 2 mid tier: 5 files (modMerging, views/{DeactivationButton,Settings,ModList}, eventHandlers)
+- [x] 32-03-PLAN.md — Wave 2 mid tier: 5 files (modMerging, views/{DeactivationButton,Settings,ModList}, eventHandlers)
 
 **Wave 3** _(blocked on Wave 2 completion)_
 
-- [ ] 32-04-PLAN.md — Wave 3 playbook-heavy: LinkingDeployment.ts (8 regions, fork-wins @212) + InstallManager.ts (40 regions, 6 dangerous fork-wins)
+- [x] 32-04-PLAN.md — Wave 3 playbook-heavy: LinkingDeployment.ts (8 regions, fork-wins @212) + InstallManager.ts (40 regions, 6 dangerous fork-wins)
 
 **Wave 4** _(blocked on Wave 3 completion)_
 
-- [ ] 32-05-PLAN.md — Wave 4 barrel: index.ts (18 regions, smaller-diff)
+- [x] 32-05-PLAN.md — Wave 4 barrel: index.ts (18 regions, smaller-diff)
 
 **Wave 5** _(blocked on Wave 4 completion)_
 
-- [ ] 32-06-PLAN.md — Wave 5 verification: final harness (no skip), commit-body audit, VALIDATION sign-off, PHASE-SUMMARY
+- [x] 32-06-PLAN.md — Wave 5 verification: final harness (no skip), commit-body audit, VALIDATION sign-off, PHASE-SUMMARY
 
 **Cross-cutting constraints:**
 
@@ -262,7 +262,7 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 | 29. Build verification                                    | v8.0      | —              | Complete | 2026-05-22 |
 | 30. Land + tag (v2.0.0-linux-rebased)                     | v8.0      | —              | Complete | 2026-05-22 |
 | 31. Config bucket (v2.0.1)                                | v8.1      | 8/8            | Complete | 2026-05-22 |
-| 32. Mod-management hot zone (v2.0.1)                      | v8.1      | TBD            | Pending  | —          |
+| 32. Mod-management hot zone (v2.0.1)                      | v8.1      | 7/6            | Complete | 2026-05-22 |
 | 33. Gamebryo + per-game extensions (v2.0.1)               | v8.1      | TBD            | Pending  | —          |
 | 34. Renderer + main spine (v2.0.1)                        | v8.1      | TBD            | Pending  | —          |
 | 35. Build verification (v2.0.1)                           | v8.1      | TBD            | Pending  | —          |
