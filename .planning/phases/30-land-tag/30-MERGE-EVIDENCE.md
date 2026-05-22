@@ -8,7 +8,8 @@ captured_by: Wave 4 (30-03) inline execution
 
 Pre-FF master SHA: db8035192034ba6ee786e88dfdb708956200308c
 PR #4 head SHA: cf9a8a59980ee8166139913ee04a4ed8d3ab8860
-Post-FF master SHA: cf9a8a59980ee8166139913ee04a4ed8d3ab8860
+Bare FF master SHA: cf9a8a59980ee8166139913ee04a4ed8d3ab8860
+Post-FF master SHA: f570149ea9554fe2d24b00b86e688855b845a4fe
 
 # Phase 30 Merge Evidence (SYNC-36)
 
