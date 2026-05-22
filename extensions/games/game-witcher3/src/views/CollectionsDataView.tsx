@@ -3,7 +3,6 @@ import * as React from "react";
 import { Button, ListGroup, ListGroupItem } from "react-bootstrap";
 import { withTranslation } from "react-i18next";
 import { connect } from "react-redux";
-<<<<<<< HEAD
 import {
   ComponentEx,
   EmptyPlaceholder,
@@ -18,27 +17,7 @@ import { IFBLOLoadOrderEntry } from "vortex-api/lib/types/api";
 import { IExtendedInterfaceProps, ILoadOrder, ILoadOrderEntry } from "../collections/types";
 import { genCollectionLoadOrder } from "../collections/util";
 
-=======
 
-import {
-  ComponentEx,
-  EmptyPlaceholder,
-  FlexLayout,
-  Icon,
-  selectors,
-  types,
-  util,
-} from "vortex-api";
-
-import {
-  IExtendedInterfaceProps,
-  ILoadOrder,
-  ILoadOrderEntry,
-} from "../collections/types";
-import { genCollectionLoadOrder } from "../collections/util";
-import { IFBLOLoadOrderEntry } from "vortex-api/lib/types/api";
-
->>>>>>> v2.0.1
 const NAMESPACE: string = "generic-load-order-extension";
 
 interface IBaseState {
@@ -171,13 +150,7 @@ class CollectionsDataView extends ComponentEx<IProps, IComponentState> {
     return (
       <EmptyPlaceholder
         icon="sort-none"
-<<<<<<< HEAD
         text={t("You have no load order entries (for the current mods in the collection)")}
-=======
-        text={t(
-          "You have no load order entries (for the current mods in the collection)",
-        )}
->>>>>>> v2.0.1
         subtext={this.renderOpenLOButton()}
       />
     );
@@ -208,15 +181,7 @@ function mapStateToProps(
   const profile = selectors.activeProfile(state) || undefined;
   let loadOrder: types.LoadOrder = [];
   if (!!profile?.gameId) {
-<<<<<<< HEAD
     loadOrder = util.getSafe(state, ["persistent", "loadOrder", profile.id], []);
-=======
-    loadOrder = util.getSafe(
-      state,
-      ["persistent", "loadOrder", profile.id],
-      [],
-    );
->>>>>>> v2.0.1
   }
 
   return {
