@@ -1,25 +1,16 @@
-<<<<<<< HEAD
 import { spawn } from "child_process";
 import type { ChildProcess } from "child_process";
-=======
-import {
-  getErrorCode,
-  getErrorMessageOrDefault,
-  unknownToError,
-} from "@vortex/shared";
->>>>>>> v2.0.1
 import * as fs from "fs";
 import * as path from "path";
 
 import { getErrorCode, getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
 import * as tmp from "tmp";
-
-import { getIPCPath } from "./ipc";
 import * as winapi from "winapi-bindings";
-import { UserCanceled } from "./CustomErrors";
-import type { INotification } from "../types/INotification";
 
 import { log } from "../logging";
+import type { INotification } from "../types/INotification";
+import { UserCanceled } from "./CustomErrors";
+import { getIPCPath } from "./ipc";
 import { getRealNodeModulePaths } from "./webpack-hacks";
 
 type SpawnerFn = (cmd: string, args: string[]) => ChildProcess;
@@ -55,9 +46,7 @@ export function isSteamOS(): boolean {
   }
   try {
     const content = fs.readFileSync("/etc/os-release", "utf8");
-    _isSteamOS =
-      /^ID=steamos$/im.test(content) ||
-      /^ID_LIKE=.*steamos.*$/im.test(content);
+    _isSteamOS = /^ID=steamos$/im.test(content) || /^ID_LIKE=.*steamos.*$/im.test(content);
   } catch {
     _isSteamOS = false;
   }
@@ -218,28 +207,22 @@ export function runElevated(
         return reject(err);
       }
 
-<<<<<<< HEAD
       const modulePaths = getRealNodeModulePaths(process.cwd()).map((p) => p.split("\\").join("/"));
-=======
-        const modulePaths = getRealNodeModulePaths(process.cwd()).map((p) =>
-          p.split("\\").join("/"),
-        );
 
-        // In production builds the elevated Node child runs with
-        // ELECTRON_RUN_AS_NODE, which disables Electron's asar resolution.
-        // Asar-unpacked deps (e.g. json-socket) live under
-        // resources/app.asar.unpacked/node_modules and must be on the
-        // require search path explicitly. In dev the path doesn't exist
-        // and is harmless. See issue #23043.
-        if (process.resourcesPath) {
-          modulePaths.unshift(
-            path
-              .join(process.resourcesPath, "app.asar.unpacked", "node_modules")
-              .split("\\")
-              .join("/"),
-          );
-        }
->>>>>>> v2.0.1
+      // In production builds the elevated Node child runs with
+      // ELECTRON_RUN_AS_NODE, which disables Electron's asar resolution.
+      // Asar-unpacked deps (e.g. json-socket) live under
+      // resources/app.asar.unpacked/node_modules and must be on the
+      // require search path explicitly. In dev the path doesn't exist
+      // and is harmless. See issue #23043.
+      if (process.resourcesPath) {
+        modulePaths.unshift(
+          path
+            .join(process.resourcesPath, "app.asar.unpacked", "node_modules")
+            .split("\\")
+            .join("/"),
+        );
+      }
 
       let mainBody = elevatedMain.toString();
       mainBody = mainBody.slice(mainBody.indexOf("{") + 1, mainBody.lastIndexOf("}"));
@@ -269,14 +252,14 @@ export function runElevated(
         ${mainBody}\n
       `;
 
-<<<<<<< HEAD
       fs.write(fd, prog, (writeErr: Error, _written: number, _str: string) => {
         if (writeErr) {
           try {
             cleanup();
           } catch (cleanupErr) {
-            const errorMessage = getErrorMessageOrDefault(cleanupErr);
-            console.error("failed to clean up temporary script", errorMessage);
+            log("warn", "failed to clean up temporary script", {
+              error: getErrorMessageOrDefault(cleanupErr),
+            });
           }
           return reject(writeErr);
         }
@@ -291,50 +274,39 @@ export function runElevated(
           }
         }
 
-          if (process.platform === "linux") {
-            if (isSteamOS()) {
-              // SteamOS: pkexec hangs without polkit agent in Game Mode.
-              // Attempt sudo -n (non-interactive) instead.
-              const proc = getSpawner()("sudo", [
-                "-n",
-                process.execPath,
-                "--run",
-                tmpPath,
-              ]);
-              proc.on("close", (code: number | null) => {
-                if (code !== null && code !== 0) {
-                  // sudo -n failed (password required or ENOENT)
-                  rejectWithSteamOSNotification(reject);
-                }
-                // code 0 or null: normal exit; IPC handles results
-              });
-              proc.on("error", (_spawnErr: Error) => {
-                // sudo not found on PATH
+        if (process.platform === "linux") {
+          if (isSteamOS()) {
+            // SteamOS: pkexec hangs without polkit agent in Game Mode.
+            // Attempt sudo -n (non-interactive) instead.
+            const proc = getSpawner()("sudo", ["-n", process.execPath, "--run", tmpPath]);
+            proc.on("close", (code: number | null) => {
+              if (code !== null && code !== 0) {
+                // sudo -n failed (password required or ENOENT)
                 rejectWithSteamOSNotification(reject);
-              });
-            } else {
-              // Standard desktop Linux: use pkexec (unchanged from Phase 9)
-              const proc = getSpawner()("pkexec", [
-                process.execPath,
-                "--run",
-                tmpPath,
-              ]);
-              proc.on("close", (code: number | null) => {
-                if (code === 126) {
-                  reject(new UserCanceled());
-                } else if (code !== null && code !== 0) {
-                  reject(
-                    new Error(`pkexec exited with code ${code}`),
-                  );
-                }
-                // code 0 or null: normal exit; IPC handles results
-              });
-              proc.on("error", (spawnErr: Error) => {
-                reject(spawnErr);
-              });
-            }
-            return resolve(tmpPath);
+              }
+              // code 0 or null: normal exit; IPC handles results
+            });
+            proc.on("error", (_spawnErr: Error) => {
+              // sudo not found on PATH
+              rejectWithSteamOSNotification(reject);
+            });
+          } else {
+            // Standard desktop Linux: use pkexec (unchanged from Phase 9)
+            const proc = getSpawner()("pkexec", [process.execPath, "--run", tmpPath]);
+            proc.on("close", (code: number | null) => {
+              if (code === 126) {
+                reject(new UserCanceled());
+              } else if (code !== null && code !== 0) {
+                reject(new Error(`pkexec exited with code ${code}`));
+              }
+              // code 0 or null: normal exit; IPC handles results
+            });
+            proc.on("error", (spawnErr: Error) => {
+              reject(spawnErr);
+            });
           }
+          return resolve(tmpPath);
+        }
 
         try {
           winapi.ShellExecuteEx({
@@ -350,48 +322,5 @@ export function runElevated(
         }
       });
     });
-=======
-        fs.write(
-          fd,
-          prog,
-          (writeErr: Error, _written: number, _str: string) => {
-            if (writeErr) {
-              try {
-                cleanup();
-              } catch (cleanupErr) {
-                log("warn", "failed to clean up temporary script", {
-                  error: getErrorMessageOrDefault(cleanupErr),
-                });
-              }
-              return reject(writeErr);
-            }
-
-            try {
-              fs.closeSync(fd);
-            } catch (closeErr) {
-              const err = unknownToError(closeErr);
-              const errCode = getErrorCode(err);
-              if (errCode !== "EBADF") {
-                return reject(err);
-              }
-            }
-
-            try {
-              winapi.ShellExecuteEx({
-                verb: "runas",
-                file: process.execPath,
-                parameters: `--run ${tmpPath}`,
-                directory: path.dirname(process.execPath),
-                show: "shownormal",
-              });
-              return resolve(tmpPath);
-            } catch (shellErr) {
-              return reject(unknownToError(shellErr));
-            }
-          },
-        );
-      },
-    );
->>>>>>> v2.0.1
   });
 }
