@@ -28,13 +28,7 @@ test.describe("Settings - Interface Tab", () => {
     });
   });
 
-<<<<<<< HEAD
   test("customisation toggles can be switched on and off", async ({ vortexWindow }) => {
-=======
-  test("customisation toggles can be switched on and off", async ({
-    vortexWindow,
-  }) => {
->>>>>>> v2.0.1
     const settings = new SettingsPage(vortexWindow);
     const toggleCount = await settings.checkboxes.count();
 
@@ -60,23 +54,10 @@ test.describe("Settings - Tab Navigation", () => {
     await navigateToSettings(vortexWindow);
   });
 
-<<<<<<< HEAD
   const settingsTabs = ["Interface", "Vortex", "Mods", "Download", "Workarounds", "Theme"];
-=======
-  const settingsTabs = [
-    "Interface",
-    "Vortex",
-    "Mods",
-    "Download",
-    "Workarounds",
-    "Theme",
-  ];
->>>>>>> v2.0.1
 
   for (const tabName of settingsTabs) {
-    test(`can navigate to ${tabName} settings tab`, async ({
-      vortexWindow,
-    }) => {
+    test(`can navigate to ${tabName} settings tab`, async ({ vortexWindow }) => {
       const settings = new SettingsPage(vortexWindow);
       const tab = settings.tabByName(tabName);
 
