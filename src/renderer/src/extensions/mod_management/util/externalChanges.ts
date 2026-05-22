@@ -123,14 +123,7 @@ async function applyFileActions(
   const affectedMods = new Set<string>();
   const testFileOverrides: { [modId: string]: string[] } = {};
   fileActions.forEach((action) => {
-<<<<<<< HEAD
     if (["import", "newest", "nop", "delete", "drop"].indexOf(action.action) !== -1) {
-=======
-    if (
-      ["import", "newest", "nop", "delete", "drop"].indexOf(action.action) !==
-      -1
-    ) {
->>>>>>> v2.0.1
       affectedMods.add(action.source);
     }
 
@@ -267,12 +260,7 @@ export function dealWithExternalChanges(
   return checkForExternalChanges(api, activator, profileId, stagingPath, modPaths, lastDeployment)
     .then((changes: { [typeId: string]: IFileChange[] }) => {
       const automaticActions: IFileEntry[] = [];
-<<<<<<< HEAD
       const isInstallingCollection = getCollectionActiveSession(api.store.getState()) !== undefined;
-=======
-      const isInstallingCollection =
-        getCollectionActiveSession(api.store.getState()) !== undefined;
->>>>>>> v2.0.1
       const userChanges = Object.keys(changes).reduce((prev, typeId) => {
         const { merged, rest, autoResolved } = changes[typeId].reduce(
           (prevInner, change) => {
@@ -294,13 +282,7 @@ export function dealWithExternalChanges(
         );
 
         if (merged.length > 0) {
-<<<<<<< HEAD
           merged.forEach((change) => automaticActions.push(defaultInternalAction(typeId, change)));
-=======
-          merged.forEach((change) =>
-            automaticActions.push(defaultInternalAction(typeId, change)),
-          );
->>>>>>> v2.0.1
         }
 
         if (autoResolved.length > 0) {
