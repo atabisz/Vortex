@@ -53,12 +53,7 @@ export class PriorityManager {
       // Send it off to the end.
       return ++this.mMaxPriority;
     }
-<<<<<<< HEAD
     const minPriority = Object.keys(loadOrder).filter((key) => loadOrder[key]?.locked).length + 1;
-=======
-    const minPriority =
-      Object.keys(loadOrder).filter((key) => loadOrder[key]?.locked).length + 1;
->>>>>>> v2.0.1
 
     const itemIdx = loadOrder.findIndex((x) => x?.id === item.id);
     if (itemIdx !== -1) {
@@ -66,15 +61,8 @@ export class PriorityManager {
         const position = itemIdx + 1;
         return position > minPriority ? position : ++this.mMaxPriority;
       } else {
-<<<<<<< HEAD
         const prefixVal = loadOrder[itemIdx]?.data?.prefix ?? loadOrder[itemIdx]?.["prefix"];
         const intVal = prefixVal !== undefined ? parseInt(prefixVal, 10) : itemIdx;
-=======
-        const prefixVal =
-          loadOrder[itemIdx]?.data?.prefix ?? loadOrder[itemIdx]?.["prefix"];
-        const intVal =
-          prefixVal !== undefined ? parseInt(prefixVal, 10) : itemIdx;
->>>>>>> v2.0.1
         const posVal = itemIdx;
         if (posVal !== intVal && intVal > minPriority) {
           return intVal;
@@ -100,13 +88,7 @@ export class PriorityManager {
 
     const loadOrder: types.LoadOrder = getPersistentLoadOrder(this.mApi);
 
-<<<<<<< HEAD
     const lockedEntries = Object.keys(loadOrder).filter((key) => loadOrder[key]?.locked);
-=======
-    const lockedEntries = Object.keys(loadOrder).filter(
-      (key) => loadOrder[key]?.locked,
-    );
->>>>>>> v2.0.1
     const minPriority = min ? min : lockedEntries.length;
     return { state, profile, loadOrder, minPriority };
   };
@@ -116,13 +98,7 @@ export class PriorityManager {
     return Object.keys(loadOrder).reduce((prev, key) => {
       const prefixVal = loadOrder[key]?.data?.prefix ?? loadOrder[key]?.prefix;
       const intVal =
-<<<<<<< HEAD
         prefixVal !== undefined ? parseInt(loadOrder[key].prefix, 10) : loadOrder[key].pos;
-=======
-        prefixVal !== undefined
-          ? parseInt(loadOrder[key].prefix, 10)
-          : loadOrder[key].pos;
->>>>>>> v2.0.1
       const posVal = loadOrder[key].pos;
       if (posVal !== intVal) {
         prev = intVal > prev ? intVal : prev;
