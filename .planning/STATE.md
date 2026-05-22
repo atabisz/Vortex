@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v8.1
 milestone_name: Upstream v2.0.1 Sync
 status: executing
-stopped_at: Phase 34 Wave 0 (harness setup) complete
-last_updated: "2026-05-23T04:30:00.000Z"
-last_activity: 2026-05-23 -- Phase 34 Wave 0 complete (harness extended to 13 gates)
+stopped_at: Phase 34 context gathered
+last_updated: "2026-05-22T18:35:42.364Z"
+last_activity: 2026-05-23 -- Phase 34 Wave 0 complete (harness extended to 13 gates, gate-13 single-host getIPCPath added, gate-14 marker scope broadened)
 progress:
     total_phases: 8
     completed_phases: 2
-    total_plans: 27
+    total_plans: 26
     completed_plans: 27
-    percent: 26
+    percent: 25
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-05-22 after v8.0 ship + v8.1 milestone s
 
 ## Current Position
 
-Phase: 34 — IN PROGRESS (Wave 0 complete)
-Plan: 34-00 — COMPLETE; Wave A (plan 34-01) ready to start
+Phase: 34 — IN PROGRESS (Wave A complete)
+Plan: 34-01 — COMPLETE (5 shared spine files resolved, bucket typecheck = 0); Wave B (plan 34-02) ready to start
 Status: Ready to execute
-Last activity: 2026-05-23 -- Phase 34 Wave 0 complete (harness extended to 13 gates, gate-13 single-host getIPCPath added, gate-14 marker scope broadened)
+Last activity: 2026-05-23 -- Phase 34 Wave A complete (5 atomic SSH-signed resolve commits + 1 SUMMARY commit on v8.1/config-bucket; types/errors.ts, types/state.ts, errors.ts, telemetry/spans.ts, errors.test.ts; AlreadyDownloaded + DownloadIsHTML preserved; isUserCanceled merged in; bulk persistor methods adopted; harness 13/13 GREEN in skip-mode)
 
 ## Performance Metrics
 
