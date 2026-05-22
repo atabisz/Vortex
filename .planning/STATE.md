@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v8.1
 milestone_name: Upstream v2.0.1 Sync
 status: executing
-stopped_at: Phase 33 context gathered
-last_updated: "2026-05-22T13:14:00.728Z"
-last_activity: 2026-05-22 -- Phase 33 planning complete
+stopped_at: Phase 33 complete; ready for Phase 34
+last_updated: "2026-05-23T00:00:00.000Z"
+last_activity: 2026-05-23 -- Phase 33 done-gate sealed (6/6 criteria PASS)
 progress:
     total_phases: 8
-    completed_phases: 1
-    total_plans: 16
-    completed_plans: 15
-    percent: 13
+    completed_phases: 3
+    total_plans: 26
+    completed_plans: 25
+    percent: 38
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-22 after v8.0 ship + v8.1 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** Phase 32 — mod-management hot zone (v8.1)
+**Current focus:** Phase 34 — renderer + main spine (v8.1)
 
 ## Current Position
 
-Phase: 32 — COMPLETE
+Phase: 33 — COMPLETE
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-05-22 -- Phase 33 planning complete
+Status: Ready for Phase 34 (renderer + main spine)
+Last activity: 2026-05-23 -- Phase 33 done-gate sealed (6/6 criteria PASS; 193 SSH-signed commits; harness 11/11 GREEN; per-extension typecheck/build clean across 85 touched paths)
 
 ## Performance Metrics
 
@@ -222,6 +222,22 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-22T12:27:23.216Z
-Stopped at: Phase 33 context gathered
-Resume file: .planning/phases/33-gamebryo-per-game-extensions-v2-0-1/33-CONTEXT.md
+Last session: 2026-05-23T00:00:00.000Z
+Stopped at: Phase 33 done-gate sealed; ready for Phase 34
+Resume file: .planning/phases/34-renderer-main-spine-v2-0-1/34-CONTEXT.md (to be created)
+
+### Phase 33 close-out summary
+
+- **Done-gate result:** 6/6 criteria PASS per D-33-14
+- **Commits:** 193 total Phase 33 commits (3b30563d9..006432b0a + Wave 9), all SSH-signed
+    - 182 `resolve(<slug>)` file resolutions across Waves A–E
+    - 1 `resolve(checkpoint)` (Wave 0 harness extension)
+    - 8 `docs(33-NN)` Wave SUMMARYs (33-00..33-08; this commit + 33-09 SUMMARY are Wave 9)
+    - 2 `fix(<slug>)` D1 carryovers (bg3, witcher3)
+    - 0 `chore(catalog)` (Wave F fully deferred per D-33-13: 3/4 packages already replaced by pure-TS workspace rewrites; 1/4 satisfied via `workspace:*`)
+- **Markers in `extensions/`:** 0 (was 879 across 183 files at Phase start)
+- **Harness:** 11/11 active gates GREEN in skip-mode; full-mode 12/12 GREEN since Wave E (b83278732)
+- **Per-extension typecheck/build:** clean across 85 touched paths (12 Route-1 typecheck + 71 Route-2 build + 2 Route-3 node --check)
+- **Active gates exercised:** gate-10 BG3 4-class divine errors (Wave D1 D-33-11/Pattern P2), gate-11 Morrowind migrate103 (Wave D2)
+- **Critical preservation receipts:** copy-native.mjs Linux-rebased dist-fallback, Morrowind migrate103 sentinel, BG3 4 named error classes
+- **Out of scope (Phase 34):** 5 remaining `<<<<<<< ` markers in `src/` (renderer.tsx + 4 src/main/\*.ts files)

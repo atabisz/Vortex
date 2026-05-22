@@ -10,7 +10,7 @@
 - ✅ **v6.0 Infrastructure** — Phases 16–17 (shipped 2026-04-15) — [archive](milestones/v6.0-ROADMAP.md)
 - ✅ **v7.0 First-Run Onboarding Wizard** — Phases 18–23 (shipped 2026-04-17) — [archive](milestones/v7.0-ROADMAP.md)
 - ✅ **v8.0 Upstream v2.0.0 Sync** — Phases 24–30 (shipped 2026-05-22) — [scope](milestones/v8.0-SCOPE-PROPOSAL.md)
-- 🚧 **v8.1 Upstream v2.0.1 Sync** — Phases 31–37 (in progress; Phase 31 complete)
+- 🚧 **v8.1 Upstream v2.0.1 Sync** — Phases 31–37 (in progress; Phases 31–33 complete)
 
 ## Phases
 
@@ -152,14 +152,31 @@ Plans:
 
 ### Phase 33: Gamebryo + per-game extensions (v2.0.1)
 
+**Status:** ✅ Complete 2026-05-23 (10/10 plans; 193 SSH-signed commits 3b30563d9..HEAD on `v8.1/config-bucket`; harness 11/11 GREEN skip-mode; full-mode 12/12 GREEN since Wave E)
 **Goal:** Resolve gamebryo-{plugin,savegame}-mgmt, collections, modtype-bepinex, BG3, Morrowind, Witcher 3 with playbook §1 (guards), §3 (LOOT casing), §10 (native binaries) preserved; re-add catalog entries pnpm dropped in Phase 31.
-**Requirements:** SYNC-33a, SYNC-33b
+**Requirements:** SYNC-33a ✅, SYNC-33b ✅ (resolved as full deferral per D-33-13: 3/4 packages replaced by pure-TS workspace rewrites; 1/4 already satisfied via `workspace:*`)
 **Canonical refs:** VORTEX-LINUX-MERGE-PLAYBOOK.md, .planning/milestones/v8.0-phases/27-gamebryo-and-per-game-extensions
+**Result:** 182 atomic file resolves + 1 harness checkpoint + 8 wave SUMMARYs + 2 D1 carryover fixes + 0 catalog (deferred); per-extension typecheck/build clean across 85 touched paths (12 Route-1 typecheck + 71 Route-2 build + 2 Route-3 node --check); 0 markers remaining in `extensions/`.
 **Success criteria:**
 
-1. Every playbook §1 (guards), §3 (LOOT casing), §10 (native binaries) site preserved
-2. Each extension passes its own typecheck and build
-3. Catalog entries (`esptk`, `exe-version`, `gamebryo-savegame`, `native-errors`) re-added when consumers restored
+1. ✅ Every playbook §1 (guards), §3 (LOOT casing), §10 (native binaries) site preserved
+2. ✅ Each extension passes its own typecheck and build (85/85 paths clean per Wave 9 sweep)
+3. ✅ Catalog entries: SYNC-33b satisfied via D-33-13 partial-application clause — pre-audit confirmed all 4 candidate packages either replaced by pure-TS workspace rewrites (esptk, gamebryo-savegame, native-errors) or already satisfied via `workspace:*` (exe-version)
+
+**Plans:** 10/10 complete
+
+Plans:
+
+- [x] 33-00-harness-extension-PLAN.md — Wave 0: extend harness from 7 to 12 gates (1 commit; full-mode marker gate flipped GREEN at b83278732)
+- [x] 33-01-wave-A-gamebryo-core-PLAN.md — Wave A gamebryo core (4 ext, 11 files, 11 commits)
+- [x] 33-02-wave-B-bepinex-PLAN.md — Wave B modtype-bepinex (1 ext, 3 files, 3 commits)
+- [x] 33-03-wave-C-collections-PLAN.md — Wave C collections (1 ext, 12 files, 12 commits)
+- [x] 33-04-wave-D1-heavy-pergame-PLAN.md — Wave D1 heavy per-game (4 ext, 57 files, 57 commits; gate-10 BG3 active)
+- [x] 33-05-wave-D2-medium-pergame-PLAN.md — Wave D2 medium per-game (7 ext, 28 files, 28 commits; gate-11 Morrowind active)
+- [x] 33-06-wave-D3-light-pergame-PLAN.md — Wave D3 light per-game (60 ext, 60 files, 60 commits)
+- [x] 33-07-wave-E-build-scaffolding-PLAN.md — Wave E build scaffolding (7 ext/scripts, 12 files, 12 commits; copy-extension.mjs API + copy-native.mjs Linux-rebased dist-fallback preserved)
+- [x] 33-08-wave-F-catalog-readd-PLAN.md — Wave F catalog re-add (full deferral per D-33-13 + bg3 D1 parse fix-up; 0 catalog commits, 1 fix commit)
+- [x] 33-09-done-gate-PLAN.md — Wave 9 6-criterion done gate (this entry; STATE+ROADMAP commit + master closeout SUMMARY)
 
 ### Phase 34: Renderer + main spine (v2.0.1)
 
