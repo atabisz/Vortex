@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
-=======
->>>>>>> v2.0.1
 /**
  * End-to-end tests for divineCore against the real divine.exe shipped in
  * extensions/games/game-baldursgate3/tools/. No mocks: a .pak is built in
@@ -13,11 +10,6 @@ import * as os from "node:os";
  * The whole suite is skipped on non-win32 platforms.
  */
 import * as path from "node:path";
-<<<<<<< HEAD
-=======
-import * as os from "node:os";
-import * as fs from "node:fs/promises";
->>>>>>> v2.0.1
 
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
@@ -78,13 +70,7 @@ describe.skipIf(!isWindows)("divineCore end-to-end", () => {
     test("rejects with DivineExecMissing when the exe path does not exist", async () => {
       const missingExe = path.join(tempDir, "no-such-divine.exe");
 
-<<<<<<< HEAD
       await expect(listPackageCore(missingExe, testPak)).rejects.toBeInstanceOf(DivineExecMissing);
-=======
-      await expect(listPackageCore(missingExe, testPak)).rejects.toBeInstanceOf(
-        DivineExecMissing,
-      );
->>>>>>> v2.0.1
     });
 
     test("rejects with DivinePakInvalid for a pak that does not exist", async () => {
@@ -93,13 +79,7 @@ describe.skipIf(!isWindows)("divineCore end-to-end", () => {
       // generic "divine failed" error so loadOrder.ts can suppress it.
       const bogusPak = path.join(tempDir, "does-not-exist.pak");
 
-<<<<<<< HEAD
       await expect(listPackageCore(DIVINE_EXE, bogusPak)).rejects.toBeInstanceOf(DivinePakInvalid);
-=======
-      await expect(
-        listPackageCore(DIVINE_EXE, bogusPak),
-      ).rejects.toBeInstanceOf(DivinePakInvalid);
->>>>>>> v2.0.1
     });
 
     test("rejects with DivineAborted when the signal is pre-aborted", async () => {
@@ -159,28 +139,16 @@ describe.skipIf(!isWindows)("divineCore end-to-end", () => {
       const realPak = await fs.readFile(testPak);
       await fs.writeFile(truncatedPak, realPak.subarray(0, 16));
 
-<<<<<<< HEAD
       await expect(listPackageCore(DIVINE_EXE, truncatedPak)).rejects.toBeInstanceOf(
         DivinePakInvalid,
       );
-=======
-      await expect(
-        listPackageCore(DIVINE_EXE, truncatedPak),
-      ).rejects.toBeInstanceOf(DivinePakInvalid);
->>>>>>> v2.0.1
     });
 
     test("rejects with DivinePakInvalid for an empty pak file", async () => {
       const emptyPak = path.join(tempDir, "empty.pak");
       await fs.writeFile(emptyPak, "");
 
-<<<<<<< HEAD
       await expect(listPackageCore(DIVINE_EXE, emptyPak)).rejects.toBeInstanceOf(DivinePakInvalid);
-=======
-      await expect(
-        listPackageCore(DIVINE_EXE, emptyPak),
-      ).rejects.toBeInstanceOf(DivinePakInvalid);
->>>>>>> v2.0.1
     });
   });
 
@@ -257,13 +225,7 @@ describe("translateDivineError", () => {
     // short-circuit before the timeout branch.
     const err: IExecErrorShape = { signal: "SIGTERM" };
 
-<<<<<<< HEAD
     expect(translateDivineError(err, "list-package", true)).toBeInstanceOf(DivineAborted);
-=======
-    expect(translateDivineError(err, "list-package", true)).toBeInstanceOf(
-      DivineAborted,
-    );
->>>>>>> v2.0.1
   });
 });
 
