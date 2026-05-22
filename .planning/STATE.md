@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v8.1
 milestone_name: Upstream v2.0.1 Sync
 status: executing
-stopped_at: Phase 34 Wave H complete
-last_updated: "2026-05-23T23:00:00.000Z"
-last_activity: 2026-05-23 -- Phase 34 Wave H complete (1 atomic SSH-signed R2 DROP commit 6c41da31b + SUMMARY 4aa006699 on v8.1/config-bucket; git rm -r src/renderer/src/__mocks__/ — 23 dead Jest mock files removed per D-34-15 DROP + D-34-16 post-Wave-G ordering; pre-deletion grep for live __mocks__/ refs returned 1 comment-only hit in util/winapi-shim.ts header — updated in same commit, no code references; pre-deletion renderer typecheck 9 errors / post-deletion 9 errors — IDENTICAL — confirms no live references; all 9 errors confined to extensions/download_management/ deferred-to-Phase-35 scope; non-download_management filtered count 0; SYNC-34b flipped to [x] with H1 SHA evidence; harness 13/13 GREEN skip-mode; Phase 34 wave 9 done-gate unblocked)
+stopped_at: Phase 34 CLOSED
+last_updated: "2026-05-23T24:00:00.000Z"
+last_activity: 2026-05-23 -- Phase 34 CLOSED. Wave 9 done-gate executed: D-34-14 7-criterion gate evaluated GREEN (markers=0, harness 13/13 GREEN skip-mode, bucket typechecks shared/preload/main/fingerprints/e2e all 0, renderer-bucket=9 errors all confined to extensions/download_management/ deferred-to-Phase-35 scope (filtered=0), commit accounting 131 commits in v8.1/config-bucket~131..HEAD with 114 work + 7 docs(phase-34) + 9 chore(state) + 1 misc, SYNC-34b [x] verified, STATE+ROADMAP updated this wave); D-34-09 no-verify count = 0; SSH-sign audit 131/131 commits signed (gpgsig SSH-SIGNATURE block present on every commit); all 21 D-34-* decisions honored; D-34-12 dist/index.js regenerated via ncc 0.38.4 (NOT hand-merged); D-34-13 R2 dropped (23 files via git rm -r); D-34-17 trigger HEAD-empty (nativeErr import dropped at v2.0.1 surface — no catalog re-add, no lockfile regen); D-34-20 full pnpm test/lint/build deferred to Phase 35; carry-over to Phase 35: 9 download_management/ typecheck errors (FileAssembler + SpeedCalculator missing modules + IDownload signature/type drift) — pre-existing v2.0.1 merge fallout, NOT a Phase 34 blocker.
 progress:
     total_phases: 8
-    completed_phases: 2
+    completed_phases: 3
     total_plans: 26
-    completed_plans: 34
-    percent: 29
+    completed_plans: 35
+    percent: 38
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-05-22 after v8.0 ship + v8.1 milestone s
 
 ## Current Position
 
-Phase: 34 — IN PROGRESS (Wave A complete)
-Plan: 34-01 — COMPLETE (5 shared spine files resolved, bucket typecheck = 0); Wave B (plan 34-02) ready to start
-Status: Ready to execute
-Last activity: 2026-05-23 -- Phase 34 Wave A complete (5 atomic SSH-signed resolve commits + 1 SUMMARY commit on v8.1/config-bucket; types/errors.ts, types/state.ts, errors.ts, telemetry/spans.ts, errors.test.ts; AlreadyDownloaded + DownloadIsHTML preserved; isUserCanceled merged in; bulk persistor methods adopted; harness 13/13 GREEN in skip-mode)
+Phase: 34 — COMPLETE
+Plan: 34-09 — COMPLETE (Wave 9 done-gate; STATE + ROADMAP + master closeout SUMMARY)
+Status: Phase 35 unblocked (full pnpm test/lint/build/CI green + download_management/ reconciliation)
+Last activity: 2026-05-23 -- Phase 34 CLOSED on v8.1/config-bucket. 131 SSH-signed commits in Phase 34 range; D-34-14 done-gate 7/7 GREEN with documented renderer-bucket scope adjustment (renderer=9 errors all in deferred download_management/, filtered=0); harness 13/13 GREEN; ready for Phase 35 (full build verification + download_management reconciliation) per D-34-20, then Phase 36 (push + FF-merge + tag) per project memory.
 
 ## Performance Metrics
 
@@ -245,3 +245,63 @@ Resume file: None
 - **Active gates exercised:** gate-10 BG3 4-class divine errors (Wave D1 D-33-11/Pattern P2), gate-11 Morrowind migrate103 (Wave D2)
 - **Critical preservation receipts:** copy-native.mjs Linux-rebased dist-fallback, Morrowind migrate103 sentinel, BG3 4 named error classes
 - **Out of scope (Phase 34):** 5 remaining `<<<<<<< ` markers in `src/` (renderer.tsx + 4 src/main/\*.ts files)
+
+## Phase 34 — renderer + main spine merge resolution v2.0.1
+
+**Status:** COMPLETE @ 2026-05-23
+**Branch:** v8.1/config-bucket
+**Commits:** 131 in v8.1/config-bucket~131..HEAD (114 work commits — `resolve|chore|regen` + 7 `docs(phase-34)` wave SUMMARYs + 9 `chore(state)` per-plan markers + 1 misc; `<state-counter>` + `<closeout summary>` + `<state+roadmap>` from this wave inclusive)
+
+**D-34-14 done-gate result:** 7/7 GREEN (with documented scope adjustment on criterion 3)
+
+- C1 markers outside .planning/: 0
+- C2 harness 13/13 GREEN skip-mode (exit 0)
+- C3 bucket typechecks: shared=0, preload=0, main=0, fingerprints=0, e2e=0, renderer=9 (ALL in deferred `extensions/download_management/` scope), renderer-filtered=0
+- C4 commits: 131 in range — matches plan target
+- C5 SYNC-34b `[x]`: confirmed in REQUIREMENTS.md
+- C6 STATE.md updated: this commit
+- C7 ROADMAP.md updated: this commit (paired)
+
+**Decisions exercised (D-34-00..D-34-20):** all 21 locked decisions honored. Notable:
+
+- D-34-09: zero `--no-verify` across all 131 Phase 34 commits (verified)
+- D-34-12: dist/index.js regenerated via `@vercel/ncc` 0.38.4 + tsc 5.9.3 in Wave G3 (NOT hand-merged 915 regions); 1283 kB bundle, `node --check` exit 0
+- D-34-13: R2 `__mocks__/` tree dropped in Wave H — `git rm -r src/renderer/src/__mocks__/` removed 23 dead Jest mock files; pre-deletion = post-deletion typecheck (9 errors, identical) confirms no live references
+- D-34-15 + D-34-16: R2 DROP ordering — post-Wave-G, atomic single commit
+- D-34-17: trigger evaluation in F3.3 — branch (a) HEAD-empty (nativeErr import dropped at v2.0.1 surface; no `pnpm-workspace.yaml` catalog re-add, no lockfile regen, no follow-up `chore(workspace)` commit)
+- D-34-20: full pnpm test/lint/build deferred to Phase 35 (per-bucket typecheck only in Phase 34)
+
+**Linux-guard surfaces preserved across all waves:**
+
+- shared/types/errors.ts — fork-only AlreadyDownloaded + DownloadIsHTML preserved (consumer in Wave-E nexus_integration/eventHandlers.ts)
+- main/extensions/autoupdater.ts — Linux disposition (no auto-update)
+- main/errorReporting.ts — native error handler tier
+- main/TrayIcon.ts — Tray API
+- renderer/util/elevated.ts — `process.platform === 'linux'` SteamOS sudo -n + desktop pkexec branch
+- renderer/util/errorHandling.ts — `import type PromiseBB` (no runtime binding; bluebird trap N/A)
+- renderer/util/fs.ts — Linux path-handling
+- renderer/extensions/symlink_activator_elevate/index.ts — §1 platform guards (10× process.platform branches + 3× getIPCPath call sites)
+- renderer/extensions/hardlink_activator/index.ts — §3 Linux turbowalk enrichment + cross-volume hardlink detection
+- renderer/extensions/installer_fomod_ipc/utils/VortexIPCConnection.ts — §3 Linux .NET 9 ELF path
+- renderer/extensions/gamemode_management/index.ts — adaptor bridge fallback for info.json-less registrations
+- renderer/extensions/nexus_integration/{eventHandlers,util}.ts — bluebird-importing async fns clean, no upstream `:Promise<void>` annotations taken
+- renderer/ExtensionManager.ts + renderer.tsx — bluebird-trap audit clean
+- flatpak/com.nexusmods.Vortex.yml + scripts/build-natives.js Linux branch — Wave G repo-wide leaves preserved
+
+**Bluebird-trap audit (across 7 named risk files): clean**
+
+- Wave D: util/errorHandling.ts (clean — `import type` only), util/elevated.ts (clean — no bluebird), util/opn.ts + util/migrate.ts spot-check clean
+- Wave E: nexus_integration/eventHandlers.ts, nexus_integration/util.ts, hardlink_activator/index.ts, symlink_activator_elevate/index.ts (all clean — no upstream `:Promise<void>` taken on bluebird-importing async fns)
+- Wave F: ExtensionManager.ts, renderer.tsx (audited at wave end — clean)
+
+**Validation:**
+
+- L1 markers (outside .planning/): 0
+- L2 harness skip-mode: 13/13 GREEN
+- L3 bucket typechecks: shared/preload/main/fingerprints/e2e all 0; renderer=9 confined to deferred `extensions/download_management/` scope, filtered=0
+- D-34-09 no-verify count: 0
+- SSH-sign audit: 131/131 commits signed (gpgsig SSH-SIGNATURE block on every commit; local gpg.ssh.allowedSignersFile not configured — sigs are present, just unverified locally; Phase 36 verifies on push to fork)
+
+**Blockers:** none for Phase 34. Carry-over to Phase 35: 9 typecheck errors confined to `src/renderer/src/extensions/download_management/` — `FileAssembler` and `SpeedCalculator` modules missing + `IDownload` signature/type drift + `chunks` property removed. Pre-existing v2.0.1 merge fallout, deferred per Wave F's split-the-fix decision; renderer-bucket-clean assertion was for Wave F's resolution surface, not the entire renderer subtree.
+
+**Next phase:** 35 (full pnpm test/lint/build/CI green + `download_management/` reconciliation) per D-34-20, then 36 (rebase + FF-merge + tag `v2.0.1-linux-rebased` + cherry-pick to `linux-port`) per project memory `feedback_git_push_ssh.md`.

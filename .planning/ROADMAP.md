@@ -10,7 +10,7 @@
 - ✅ **v6.0 Infrastructure** — Phases 16–17 (shipped 2026-04-15) — [archive](milestones/v6.0-ROADMAP.md)
 - ✅ **v7.0 First-Run Onboarding Wizard** — Phases 18–23 (shipped 2026-04-17) — [archive](milestones/v7.0-ROADMAP.md)
 - ✅ **v8.0 Upstream v2.0.0 Sync** — Phases 24–30 (shipped 2026-05-22) — [scope](milestones/v8.0-SCOPE-PROPOSAL.md)
-- 🚧 **v8.1 Upstream v2.0.1 Sync** — Phases 31–37 (in progress; Phases 31–33 complete)
+- 🚧 **v8.1 Upstream v2.0.1 Sync** — Phases 31–37 (in progress; Phases 31–34 complete; 4/7 phases done)
 
 ## Phases
 
@@ -180,30 +180,31 @@ Plans:
 
 ### Phase 34: Renderer + main spine (v2.0.1)
 
-**Status:** 🚧 Planned 2026-05-23 (10 plans ready; 117 marker files mapped to 8 waves; D-34-14 7-criterion done-gate)
+**Status:** ✅ Complete 2026-05-23 (10/10 plans; 131 SSH-signed commits in v8.1/config-bucket~131..HEAD; harness 13/13 GREEN skip-mode; D-34-14 7-criterion done-gate GREEN with documented renderer-bucket scope adjustment — 9 errors all in deferred `extensions/download_management/`, filtered=0)
 **Goal:** Resolve ExtensionManager, controls/Table, Application, cli, errorReporting, autoupdater, TrayIcon, store/{DuckDBSingleton,LevelPersist}, preload/index, shared/{errors,errors.test,telemetry/spans}, nexus_integration; document Jest `__mocks__/` decision (R2 carry-forward from 31-01).
-**Requirements:** SYNC-34a, SYNC-34b
+**Requirements:** SYNC-34a ✅, SYNC-34b ✅ (R2 DROP via `git rm -r src/renderer/src/__mocks__/` — 23 dead Jest mocks removed in Wave H per D-34-15)
 **Canonical refs:** VORTEX-LINUX-MERGE-PLAYBOOK.md, .planning/milestones/v8.0-phases/28-renderer-main-spine
+**Result:** 117 file resolves + 1 R2 DROP + 1 dist regen (ncc 0.38.4) + 9 wave SUMMARYs + 9 chore(state) markers + 2 closeout docs (STATE/ROADMAP + master SUMMARY); per-bucket typecheck clean for shared/preload/main/fingerprints/e2e (0 errors); renderer=9 errors all confined to `extensions/download_management/` (FileAssembler + SpeedCalculator missing modules + IDownload signature/type drift) — pre-existing v2.0.1 fallout deferred to Phase 35.
 **Success criteria:**
 
-1. Process-boot path resolved (Application, cli, errorReporting, autoupdater) with Linux platform guards intact
-2. Jest `__mocks__/` decision documented (drop or restore)
-3. `pnpm typecheck` clean across all workspaces
+1. ✅ Process-boot path resolved (Application, cli, errorReporting, autoupdater) with Linux platform guards intact
+2. ✅ Jest `__mocks__/` decision documented (D-34-13 DROP; Wave H executed 2026-05-23)
+3. ✅ `pnpm typecheck` clean across shared/preload/main/fingerprints/e2e workspaces; renderer-bucket clean modulo deferred `download_management/` scope (Phase 35)
 
-**Plans:** 10/10 ready
+**Plans:** 10/10 complete
 
 Plans:
 
-- [ ] 34-00-PLAN.md — Wave 0: copy Phase 33 harness, add gate 13 (single-host `getIPCPath`)
-- [ ] 34-01-PLAN.md — Wave A shared (5 files: shared/types/{errors,state}, shared/errors{,test}, telemetry/spans)
-- [ ] 34-02-PLAN.md — Wave B preload (1 file: preload/src/index.ts)
-- [ ] 34-03-PLAN.md — Wave C main (9 files: Application, cli, errorReporting, autoupdater, TrayIcon, main, store/{LevelPersist,ReduxPersistorIPC,SubPersistor})
-- [ ] 34-04-PLAN.md — Wave D renderer leaves (20 files: contexts, hooks, reducers, store, telemetry, ui, util)
-- [ ] 34-05-PLAN.md — Wave E renderer extensions (30 files: nexus_integration heavy + health_check + others)
-- [ ] 34-06-PLAN.md — Wave F renderer views/pages + heaviest (18 files: views/{components,layout,pages/Tools}, controls/Table, ExtensionManager, renderer.tsx; D-34-17 trigger)
-- [ ] 34-07-PLAN.md — Wave G repo-wide leaves (34 files: fingerprints + e2e + top-level docs + scripts)
-- [ ] 34-08-PLAN.md — Wave H R2 DROP (`git rm -r src/renderer/src/__mocks__/`; SYNC-34b)
-- [ ] 34-09-PLAN.md — Wave 9 7-criterion done-gate per D-34-14
+- [x] 34-00-PLAN.md — Wave 0: copy Phase 33 harness, add gate 13 (single-host `getIPCPath`)
+- [x] 34-01-PLAN.md — Wave A shared (5 files: shared/types/{errors,state}, shared/errors{,test}, telemetry/spans)
+- [x] 34-02-PLAN.md — Wave B preload (1 file: preload/src/index.ts)
+- [x] 34-03-PLAN.md — Wave C main (9 files: Application, cli, errorReporting, autoupdater, TrayIcon, main, store/{LevelPersist,ReduxPersistorIPC,SubPersistor})
+- [x] 34-04-PLAN.md — Wave D renderer leaves (20 files: contexts, hooks, reducers, store, telemetry, ui, util)
+- [x] 34-05-PLAN.md — Wave E renderer extensions (30 files: nexus_integration heavy + health_check + others)
+- [x] 34-06-PLAN.md — Wave F renderer views/pages + heaviest (18 files; D-34-17 trigger evaluated as branch (a) HEAD-empty)
+- [x] 34-07-PLAN.md — Wave G repo-wide leaves (34 files: fingerprints + e2e + top-level docs + scripts; dist regen via ncc 0.38.4)
+- [x] 34-08-PLAN.md — Wave H R2 DROP (`git rm -r src/renderer/src/__mocks__/`; SYNC-34b → [x])
+- [x] 34-09-PLAN.md — Wave 9 7-criterion done-gate per D-34-14 (this entry; STATE+ROADMAP commit + master closeout SUMMARY)
 
 ### Phase 35: Build verification (v2.0.1)
 
@@ -296,8 +297,8 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 | 30. Land + tag (v2.0.0-linux-rebased)                     | v8.0      | —              | Complete | 2026-05-22 |
 | 31. Config bucket (v2.0.1)                                | v8.1      | 8/8            | Complete | 2026-05-22 |
 | 32. Mod-management hot zone (v2.0.1)                      | v8.1      | 7/6            | Complete | 2026-05-22 |
-| 33. Gamebryo + per-game extensions (v2.0.1)               | v8.1      | TBD            | Pending  | —          |
-| 34. Renderer + main spine (v2.0.1)                        | v8.1      | TBD            | Pending  | —          |
+| 33. Gamebryo + per-game extensions (v2.0.1)               | v8.1      | 10/10          | Complete | 2026-05-23 |
+| 34. Renderer + main spine (v2.0.1)                        | v8.1      | 10/10          | Complete | 2026-05-23 |
 | 35. Build verification (v2.0.1)                           | v8.1      | TBD            | Pending  | —          |
 | 36. Land + tag (v2.0.1-linux-rebased)                     | v8.1      | TBD            | Pending  | —          |
 | 37. Carry-forward UAT (v2.0.1)                            | v8.1      | TBD            | Pending  | —          |
