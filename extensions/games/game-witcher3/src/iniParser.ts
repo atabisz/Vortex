@@ -1,6 +1,5 @@
 /* eslint-disable */
 import path from "path";
-<<<<<<< HEAD
 
 import { fs, selectors, types, util } from "vortex-api";
 import IniParser, { IniFile, WinapiFormat } from "vortex-parse-ini";
@@ -8,24 +7,6 @@ import IniParser, { IniFile, WinapiFormat } from "vortex-parse-ini";
 import { GAME_ID, ResourceInaccessibleError, getLoadOrderFilePath } from "./common";
 import { PriorityManager } from "./priorityManager";
 import { forceRefresh, isLockedEntry, getAllMods, getManuallyAddedMods } from "./util";
-=======
-import IniParser, { IniFile, WinapiFormat } from "vortex-parse-ini";
-import { fs, selectors, types, util } from "vortex-api";
-
-import {
-  forceRefresh,
-  isLockedEntry,
-  getAllMods,
-  getManuallyAddedMods,
-} from "./util";
-import { PriorityManager } from "./priorityManager";
-
-import {
-  GAME_ID,
-  ResourceInaccessibleError,
-  getLoadOrderFilePath,
-} from "./common";
->>>>>>> v2.0.1
 
 export default class IniStructure {
   private static instance: IniStructure = null;
@@ -82,13 +63,7 @@ export default class IniStructure {
         return accum;
       }
 
-<<<<<<< HEAD
       const idxOfEntry = (loadOrder || []).findIndex((iter) => iter.id === name);
-=======
-      const idxOfEntry = (loadOrder || []).findIndex(
-        (iter) => iter.id === name,
-      );
->>>>>>> v2.0.1
       const LOEntry = loadOrder.at(idxOfEntry);
       if (idx === 0) {
         this.mPriorityManager?.resetMaxPriority(totalLocked.length);
@@ -128,30 +103,14 @@ export default class IniStructure {
             forceRefresh(this.mApi);
             return Promise.resolve();
           })
-<<<<<<< HEAD
           .catch((err) => this.modSettingsErrorHandler(err, "Failed to cleanup load order file"));
-=======
-          .catch((err) =>
-            this.modSettingsErrorHandler(
-              err,
-              "Failed to cleanup load order file",
-            ),
-          );
->>>>>>> v2.0.1
       } else {
         const filePath = getLoadOrderFilePath();
         await fs
           .removeAsync(filePath)
           .catch((err) =>
             err.code !== "ENOENT"
-<<<<<<< HEAD
               ? this.mApi.showErrorNotification("Failed to cleanup load order file", err)
-=======
-              ? this.mApi.showErrorNotification(
-                  "Failed to cleanup load order file",
-                  err,
-                )
->>>>>>> v2.0.1
               : null,
           );
         forceRefresh(this.mApi);
