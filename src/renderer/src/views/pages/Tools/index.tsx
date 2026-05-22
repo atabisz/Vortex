@@ -77,13 +77,7 @@ export const ToolsPage: FC = () => {
             <EmptyPlaceholder
               fill={true}
               icon="game"
-<<<<<<< HEAD
               text={t("When you are managing a game, supported tools will appear here")}
-=======
-              text={t(
-                "When you are managing a game, supported tools will appear here",
-              )}
->>>>>>> v2.0.1
             />
           </div>
         </MainPage.Body>
@@ -105,13 +99,7 @@ export const ToolsPage: FC = () => {
               </Typography>
 
               <Typography appearance="moderate">
-<<<<<<< HEAD
                 {t("Tools are external programs or launch options used alongside the game.")}
-=======
-                {t(
-                  "Tools are external programs or launch options used alongside the game.",
-                )}
->>>>>>> v2.0.1
               </Typography>
             </div>
           </div>
@@ -119,24 +107,11 @@ export const ToolsPage: FC = () => {
           <div className="space-y-6">
             {/* Edit dialog */}
             {toolBeingEdited !== undefined && (
-<<<<<<< HEAD
               <ToolEditDialog tool={toolBeingEdited} onClose={closeEditDialog} />
             )}
 
             {/* Default launcher & pinned tools - only shown when tools exist */}
             {(launcherTool || otherPinnedTools.length > 0 || unpinnedTools.length > 0) && (
-=======
-              <ToolEditDialog
-                tool={toolBeingEdited}
-                onClose={closeEditDialog}
-              />
-            )}
-
-            {/* Default launcher & pinned tools - only shown when tools exist */}
-            {(launcherTool ||
-              otherPinnedTools.length > 0 ||
-              unpinnedTools.length > 0) && (
->>>>>>> v2.0.1
               <>
                 {/* Default launcher section */}
                 <Panel
@@ -172,13 +147,7 @@ export const ToolsPage: FC = () => {
                     max: MAX_PINNED_TOOLS,
                   })}
                   iconPath={mdiPin}
-<<<<<<< HEAD
                   tooltip={t("Pin shortcuts to your most used tools in the left menu")}
-=======
-                  tooltip={t(
-                    "Pin shortcuts to your most used tools in the left menu",
-                  )}
->>>>>>> v2.0.1
                 >
                   {otherPinnedTools.length > 0 ? (
                     otherPinnedTools.map((starter, idx) => (
@@ -204,13 +173,7 @@ export const ToolsPage: FC = () => {
                     ))
                   ) : (
                     <Typography appearance="subdued" typographyType="body-sm">
-<<<<<<< HEAD
                       {t("Pin shortcuts to your most used tools in the left menu.")}
-=======
-                      {t(
-                        "Pin shortcuts to your most used tools in the left menu.",
-                      )}
->>>>>>> v2.0.1
                     </Typography>
                   )}
                 </Panel>
@@ -243,17 +206,10 @@ export const ToolsPage: FC = () => {
                     isValid={isToolValid(starter)}
                     key={starter.id}
                     pinDisabled={maxPinnedReached}
-<<<<<<< HEAD
                     pinDisabledReason={t("Max pinned tools reached ({{count}}/{{max}})", {
                       count: pinnedCount,
                       max: MAX_PINNED_TOOLS,
                     })}
-=======
-                    pinDisabledReason={t(
-                      "Max pinned tools reached ({{count}}/{{max}})",
-                      { count: pinnedCount, max: MAX_PINNED_TOOLS },
-                    )}
->>>>>>> v2.0.1
                     starter={starter}
                     onEdit={editTool}
                     onRemove={removeTool}
