@@ -1,12 +1,6 @@
-<<<<<<< HEAD
 import * as child_process from "child_process";
 import * as fs from "fs/promises";
 import * as nodeUtil from "util";
-=======
-import * as nodeUtil from "util";
-import * as child_process from "child_process";
-import * as fs from "fs/promises";
->>>>>>> v2.0.1
 
 import type { DivineAction, IDivineOptions, IDivineOutput } from "./types";
 
@@ -64,14 +58,7 @@ export interface IDivineRunOptions {
   timeoutMs?: number;
 }
 
-<<<<<<< HEAD
 export function buildDivineArgs(action: DivineAction, opts: IDivineOptions): string[] {
-=======
-export function buildDivineArgs(
-  action: DivineAction,
-  opts: IDivineOptions,
-): string[] {
->>>>>>> v2.0.1
   // Default to 'error' (not 'off') so divine surfaces genuine failures on
   // stdout — the exit-code path alone doesn't distinguish "empty pak" from
   // "unreadable pak" for the list-package action.
@@ -98,23 +85,10 @@ export function buildDivineArgs(
 // above. Used to classify pak-format failures distinct from generic errors.
 const PAK_INVALID_MARKER = /\[(?:ERROR|FATAL)\]/i;
 
-<<<<<<< HEAD
 function classifyPakInvalid(stdout: string, stderr: string): DivinePakInvalid | undefined {
   const stdoutTrim = stdout.trim();
   const stderrTrim = stderr.trim();
   if (PAK_INVALID_MARKER.test(stdoutTrim) || PAK_INVALID_MARKER.test(stderrTrim)) {
-=======
-function classifyPakInvalid(
-  stdout: string,
-  stderr: string,
-): DivinePakInvalid | undefined {
-  const stdoutTrim = stdout.trim();
-  const stderrTrim = stderr.trim();
-  if (
-    PAK_INVALID_MARKER.test(stdoutTrim) ||
-    PAK_INVALID_MARKER.test(stderrTrim)
-  ) {
->>>>>>> v2.0.1
     return new DivinePakInvalid(stdoutTrim || stderrTrim);
   }
   return undefined;
@@ -165,12 +139,7 @@ export function translateDivineError(
   if (stdoutTrim) {
     parts.push(`stdout=${stdoutTrim}`);
   }
-<<<<<<< HEAD
   const detail = parts.length > 1 ? parts.join("; ") : (err.message ?? "unknown");
-=======
-  const detail =
-    parts.length > 1 ? parts.join("; ") : (err.message ?? "unknown");
->>>>>>> v2.0.1
   return new Error(`divine.exe failed: ${detail}`);
 }
 
@@ -210,27 +179,10 @@ export async function runDivineCore(
   let stderr: string;
   try {
     const result = await exec(command, execOpts);
-<<<<<<< HEAD
     stdout = typeof result.stdout === "string" ? result.stdout : (result.stdout?.toString() ?? "");
     stderr = typeof result.stderr === "string" ? result.stderr : (result.stderr?.toString() ?? "");
   } catch (e) {
     throw translateDivineError(e as IExecErrorShape, action, runOpts.signal?.aborted ?? false);
-=======
-    stdout =
-      typeof result.stdout === "string"
-        ? result.stdout
-        : (result.stdout?.toString() ?? "");
-    stderr =
-      typeof result.stderr === "string"
-        ? result.stderr
-        : (result.stderr?.toString() ?? "");
-  } catch (e) {
-    throw translateDivineError(
-      e as IExecErrorShape,
-      action,
-      runOpts.signal?.aborted ?? false,
-    );
->>>>>>> v2.0.1
   }
 
   // exec succeeded (exit 0) but divine may still have reported a problem:
@@ -255,16 +207,7 @@ export async function listPackageCore(
   pakPath: string,
   runOpts: IDivineRunOptions = {},
 ): Promise<string[]> {
-<<<<<<< HEAD
   const res = await runDivineCore(exePath, "list-package", { source: pakPath }, runOpts);
-=======
-  const res = await runDivineCore(
-    exePath,
-    "list-package",
-    { source: pakPath },
-    runOpts,
-  );
->>>>>>> v2.0.1
   return parsePackageListOutput(res.stdout);
 }
 
