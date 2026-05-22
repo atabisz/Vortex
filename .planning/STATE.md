@@ -6,9 +6,9 @@ status: planning
 last_updated: "2026-05-22T08:23:29.550Z"
 last_activity: 2026-05-22
 progress:
-    total_phases: 0
+    total_phases: 7
     completed_phases: 0
-    total_plans: 0
+    total_plans: 55
     completed_plans: 0
     percent: 0
 ---
@@ -17,17 +17,29 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
+See: .planning/PROJECT.md (updated 2026-05-22 after v8.1 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** v8.0 (Upstream v2.0.0 Sync) milestone CLOSED — next work moves to v8.1+ backlog.
+**Current focus:** v8.1 (Upstream v2.0.1 Sync) — roadmap drafted; Phase 31 (Config bucket) is the next phase to plan.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Phase 31 — Config bucket (next; not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-22 — Milestone v8.1 started
+Status: Roadmap drafted; awaiting `/gsd:plan-phase 31`
+Last activity: 2026-05-22 — Milestone v8.1 roadmap created (7 phases, 31–37)
+
+**Phases planned for v8.1:**
+
+- Phase 31: Config bucket (~7 plans)
+- Phase 32: Mod-management hot zone (~9 plans)
+- Phase 33: Gamebryo + per-game extensions (~8 plans)
+- Phase 34: Renderer + main spine (~10 plans)
+- Phase 35: Build verification (~9 plans)
+- Phase 36: Land + tag + cherry-pick (~8 plans)
+- Phase 37: Carry-forward UAT (~4 plans)
+
+Plan counts are estimates derived from v8.0 ranges; actual counts get fixed at `/gsd:plan-phase <N>` time and propagated back to `progress.total_plans`.
 
 ## Performance Metrics
 
@@ -56,7 +68,7 @@ Last activity: 2026-05-22 — Milestone v8.1 started
 
 **Recent Trend:**
 
-- Last 5 plans: (none yet for v7.0)
+- Last 5 plans: (none yet for v8.1)
 - Trend: -
 
 _Updated after each plan completion_
@@ -216,18 +228,16 @@ Recent decisions affecting current work:
 - [Phase 27-gamebryo-per-game-extensions]: Plan 27-08 done-gate — all six D-27-05 checks complete. Checks 1/2/3/5/6 green. Check 4 (full-repo `pnpm typecheck`) surfaced 15 pre-existing TS1185 conflict-marker errors in `src/shared/src/{errors.ts, errors.test.ts, telemetry/spans.ts}` from base commit `138da2249 merge upstream v2.0.0 (conflicts)` — verified pre-existing on `fork/sync/upstream-v2.0.0` (the merge base) via `git grep -l '^<<<<<<< ' fork/sync/upstream-v2.0.0 -- src/shared/`. Phase 28 territory; non-blocking per deviation_handling rule. Force-with-lease push landed: pre `f15bbabb8` → post `1b7427dba` on `fork/sync/upstream-v2.0.0`. HTTPS via configured `fork` remote worked first try; SSH inline URL fallback not needed.
 - [Phase 27-gamebryo-per-game-extensions]: Phase 28 readiness signal — Check 4 of the done-gate also functions as a forward-looking inventory: `src/shared/src/{errors.ts, errors.test.ts, telemetry/spans.ts}` are 3 of the renderer/main spine conflict files Phase 28 will need to resolve. The 15 TS1185 line-number positions in those three files give a cheap pre-cost on conflict region density.
 
-### Research Context (v7.0)
+### Research Context (v8.1)
 
-Key findings from research/SUMMARY.md affecting Phase 18–23 execution:
+Key findings from v8.0 post-mortem informing v8.1 execution:
 
-- v7.0 is wiring + string cleanup on top of the v1.0–v6.0 infrastructure — no new subsystems or dependencies
-- Primary crash: `todos.tsx` undefined `instPath`/`dlPath` before `GetVolumePathName` — wrap with undefined guard
-- Primary wrong dialog: `stagingDirectory.ts` partition-exists check uses Windows-only error code — replace with `statAsync`
-- String changes must be NEW conditional branches, never edits to existing `t("...")` literals — silently breaks Windows wording and stales locale caches
-- `getDriveList.ts` hardcoded `"C:"` fallback on lines 23/44 — replace with `"/"` on Linux
-- Steam cache retry: 2s delay + `reloadGames()` call in firststeps_dashlet game-detection step
-- Phase 22 targets: `onboarding_dashlet/Dashlet.tsx` (overlay clamp) + `stylesheets/vortex/dialogs.scss` (modal max-height + flex-shrink)
-- Phase 23 targets: `extensions/documentation/src/index.tsx` (WIKI_TOPICS + handler) + `opn()` failure fallback
+- v8.1 mirrors v8.0's seven-bucket conflict-resolution shape on a smaller diff (264 commits / ~330 conflict files vs v8.0's larger surface)
+- `scripts/grep-checkpoint.sh` (relocated to `.planning/milestones/v8.0/scripts/` in v8.0 Phase 28-00) is reusable verbatim — 12 gates encode playbook §1/§3/§6/§7a–d/§9/§10 + BG3 + Morrowind preservation; broaden conflict-marker gate path list as needed for v8.1 file set
+- Bluebird-Promise trap (D-27-04 footnote): never add `: Promise<T>` annotations to async functions in files that `import Promise from "bluebird"` — TS1064 results
+- Per-extension typecheck pattern: `pnpm --filter <bare-pkg-name> typecheck`; for extensions without typecheck script (BG3, Morrowind, Witcher 3), route to `pnpm run build` or `node --check <file>` for `.js` files
+- Force-with-lease push pattern verified end-to-end via configured `fork` remote (HTTPS); SSH inline URL fallback per memory `feedback_git_push_ssh.md` if needed
+- Carry-forward UAT (SYNC-33-C / SYNC-34 / SYNC-39) deliberately scheduled as final phase post-ship — real-usage daily-driver evidence preferred over contrived single-launch screenshot per v8.0 D-30-04 decision
 
 ### Pending Todos
 
@@ -283,14 +293,14 @@ Items acknowledged and deferred at v8.0 milestone close on 2026-05-22 — all pr
 | quick_task | 260415-h43-fix-d1-plugins-tab-dev-vs-deb-ld-library | missing               |
 | quick_task | 260417-kth-fix-unused-idiscoverystate-import-in-nog | missing               |
 
-These are inherited from earlier milestones (v4.0 / v5.0 backlog) and are not blockers for v8.0. The two debug sessions are independent from the v8.0 sync surface; the 18 quick-task slugs are orphan directory entries flagged by the audit as `missing` (their corresponding fixes were committed but the slug folders weren't reconciled). Sweep these as part of cleanup or v8.1 housekeeping.
+These are inherited from earlier milestones (v4.0 / v5.0 backlog) and are not blockers for v8.1. The two debug sessions are independent from the v8.1 sync surface; the 18 quick-task slugs are orphan directory entries flagged by the audit as `missing` (their corresponding fixes were committed but the slug folders weren't reconciled). Sweep these as part of cleanup or v8.2 housekeeping.
 
 ## Session Continuity
 
-Last session: 2026-05-22T07:30:00Z
-Stopped at: Phase 30 complete; v8.0 milestone done
+Last session: 2026-05-22T08:23:29Z
+Stopped at: v8.1 roadmap drafted (Phases 31–37); next is `/gsd:plan-phase 31`
 Resume file: None
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Approve the v8.1 roadmap, then run `/gsd:plan-phase 31` to author Phase 31 (Config bucket) plans.

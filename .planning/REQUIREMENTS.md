@@ -80,8 +80,41 @@
 
 ## Traceability
 
-Filled by roadmap.
-
-| REQ-ID            | Phase |
-| ----------------- | ----- |
-| (pending roadmap) | —     |
+| REQ-ID        | Phase    |
+| ------------- | -------- |
+| SYNC-2.0.1-01 | Phase 35 |
+| SYNC-2.0.1-02 | Phase 31 |
+| SYNC-2.0.1-03 | Phase 31 |
+| SYNC-2.0.1-04 | Phase 32 |
+| SYNC-2.0.1-05 | Phase 33 |
+| SYNC-2.0.1-06 | Phase 33 |
+| SYNC-2.0.1-07 | Phase 34 |
+| SYNC-2.0.1-08 | Phase 34 |
+| SYNC-2.0.1-09 | Phase 34 |
+| SYNC-2.0.1-10 | Phase 34 |
+| SYNC-2.0.1-11 | Phase 33 |
+| SYNC-2.0.1-12 | Phase 34 |
+| SYNC-2.0.1-13 | Phase 33 |
+| SYNC-2.0.1-14 | Phase 34 |
+| SYNC-2.0.1-15 | Phase 35 |
+| SYNC-2.0.1-16 | Phase 32 |
+| SYNC-2.0.1-17 | Phase 32 |
+| SYNC-2.0.1-18 | Phase 34 |
+| SYNC-2.0.1-19 | Phase 34 |
+| SYNC-2.0.1-20 | Phase 34 |
+| SYNC-2.0.1-21 | Phase 32 |
+| SYNC-2.0.1-22 | Phase 34 |
+| SYNC-2.0.1-23 | Phase 35 |
+| SYNC-2.0.1-24 | Phase 35 |
+| SYNC-2.0.1-25 | Phase 35 |
+| SYNC-2.0.1-26 | Phase 35 |
+| SYNC-2.0.1-27 | Phase 35 |
+| SYNC-2.0.1-28 | Phase 36 |
+| SYNC-2.0.1-29 | Phase 36 |
+| SYNC-2.0.1-30 | Phase 36 |
+| SYNC-2.0.1-31 | Phase 36 |
+| SYNC-2.0.1-32 | Phase 36 |
+| SYNC-2.0.1-33 | Phase 36 |
+| SYNC-33-C     | Phase 37 |
+| SYNC-34       | Phase 37 |
+| SYNC-39       | Phase 37 |
