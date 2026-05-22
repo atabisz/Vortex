@@ -25,14 +25,7 @@ const getBlacklist = (() => {
         game.details?.ignoreConflicts !== undefined && Array.isArray(game.details.ignoreConflicts);
       const filterList = (item) => typeof item === "string";
       lastBlacklist = customBlacklist
-<<<<<<< HEAD
         ? [].concat(blacklist, (game?.details?.ignoreConflicts || []).filter(filterList))
-=======
-        ? [].concat(
-            blacklist,
-            (game?.details?.ignoreConflicts || []).filter(filterList),
-          )
->>>>>>> v2.0.1
         : blacklist;
     }
 
