@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v8.1
 milestone_name: Upstream v2.0.1 Sync
 status: executing
-stopped_at: Phase 34 context gathered
-last_updated: "2026-05-23T22:15:00.000Z"
-last_activity: 2026-05-23 -- Phase 34 Wave E complete (30 atomic SSH-signed resolve commits + 2 linter-dup fix commits on v8.1/config-bucket; nexus_integration (9) + health_check (6) + misc (15); §1 platform guards preserved in symlink_activator_elevate/index.ts (10× process.platform + 3× getIPCPath); §3 Linux-guard preserved in hardlink_activator/index.ts (enrichLinuxEntries + cross-volume detection) and installer_fomod_ipc/VortexIPCConnection.ts (.NET 9 ELF path); adaptor bridge fallback preserved in gamemode_management/index.ts; bluebird-trap audit clean for all 4 risk files (eventHandlers.ts, util.ts, hardlink_activator/index.ts, symlink_activator_elevate/index.ts); filtered renderer bucket-typecheck = 0 errors against Wave-E-resolved files; markers in src/renderer/ 140→66; harness 12/12 GREEN in skip-mode)
+stopped_at: Phase 34 Wave F complete
+last_updated: "2026-05-23T20:30:45.000Z"
+last_activity: 2026-05-23 -- Phase 34 Wave F complete (18 atomic SSH-signed resolve commits 8f7847831→a204f28bd + 1 Rule-1 carryover-cleanup fix 6708d571a + SUMMARY 0b2e76c3a on v8.1/config-bucket; F1 Header+Menu+Spine+Layout (10) + F2 Tools page (5) + F3 heaviest controls/Table.tsx + ExtensionManager.ts + renderer.tsx (3); D-34-17 branch (a) HEAD-empty (no pnpm-workspace.yaml edit); bluebird-trap audit clean for ExtensionManager.ts (PromiseBB) + renderer.tsx (Bluebird); Linux-guard surfaces preserved in SpineContext.tsx typed selector + toolStarters.ts process.platform guard + ExtensionManager.ts loader path; markers in src/renderer/ 0; repo-wide markers 24 (Wave G surface); harness 13/13 GREEN skip-mode; UNFILTERED renderer typecheck 9 errors all in download_management/ — DEFERRED to Wave G per split-the-fix Option 1)
 progress:
     total_phases: 8
     completed_phases: 2
     total_plans: 26
-    completed_plans: 31
-    percent: 26
+    completed_plans: 32
+    percent: 27
 ---
 
 # Project State
