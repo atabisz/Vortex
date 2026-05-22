@@ -1,16 +1,10 @@
 const Promise = require("bluebird");
-<<<<<<< HEAD
 const { app, remote } = require("electron");
-=======
->>>>>>> v2.0.1
 const path = require("path");
 const { fs, selectors, util } = require("vortex-api");
 const winapi = require("winapi-bindings");
 
-<<<<<<< HEAD
 const appUni = app || remote.app;
-=======
->>>>>>> v2.0.1
 const GAME_ID = "galacticcivilizations3";
 
 const STEAM_ID = 976210;
@@ -35,19 +29,11 @@ function findGame() {
 }
 
 function modPath() {
-<<<<<<< HEAD
   return path.join(appUni.getPath("documents"), "My Games", "GalCiv3");
 }
 
 function crusadeModPath() {
   return path.join(appUni.getPath("documents"), "My Games", "GC3Crusade");
-=======
-  return path.join(util.getVortexPath("documents"), "My Games", "GalCiv3");
-}
-
-function crusadeModPath() {
-  return path.join(util.getVortexPath("documents"), "My Games", "GC3Crusade");
->>>>>>> v2.0.1
 }
 
 function dirExists(dirPath) {
