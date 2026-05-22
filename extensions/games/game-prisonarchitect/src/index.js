@@ -2,10 +2,7 @@ const Promise = require("bluebird");
 const path = require("path");
 const winapi = require("winapi-bindings");
 const { fs, util } = require("vortex-api");
-<<<<<<< HEAD
 const { app, remote } = require("electron");
-=======
->>>>>>> v2.0.1
 
 const executable = process.platform == "linux" ? "PrisonArchitect" : "Prison Architect64.exe";
 
@@ -18,7 +15,6 @@ const MODS_LOCAL = path.resolve(
   "mods",
 );
 
-<<<<<<< HEAD
 const MODS_LOCAL = path.resolve(
   appUni.getPath("appData"),
   "..",
@@ -28,8 +24,6 @@ const MODS_LOCAL = path.resolve(
   "mods",
 );
 
-=======
->>>>>>> v2.0.1
 const GAME_ID = "prisonarchitect";
 const STEAM_ID = 233450;
 const STEAM_DLL = "steam_api64.dll";
