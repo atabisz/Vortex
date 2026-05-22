@@ -16,13 +16,7 @@ export async function serialize(
 
   // Make sure the LO file is created and ready to be written to.
   const loFilePath = await ensureLOFile(context, profileId, props);
-<<<<<<< HEAD
   const filteredLO = loadOrder.filter((lo) => props.mods?.[lo?.modId]?.type !== "collection");
-=======
-  const filteredLO = loadOrder.filter(
-    (lo) => props.mods?.[lo?.modId]?.type !== "collection",
-  );
->>>>>>> v2.0.1
 
   // The array at this point is sorted in the order in which we want the game to load the
   //  mods, which means we can just loop through it and use the index to assign the prefix.
@@ -35,17 +29,8 @@ export async function serialize(
   });
 
   // Write the prefixed LO to file.
-<<<<<<< HEAD
   await fs.removeAsync(loFilePath).catch({ code: "ENOENT" }, () => Promise.resolve());
   await fs.writeFileAsync(loFilePath, JSON.stringify(prefixedLO), { encoding: "utf8" });
-=======
-  await fs
-    .removeAsync(loFilePath)
-    .catch({ code: "ENOENT" }, () => Promise.resolve());
-  await fs.writeFileAsync(loFilePath, JSON.stringify(prefixedLO), {
-    encoding: "utf8",
-  });
->>>>>>> v2.0.1
   return Promise.resolve();
 }
 
@@ -109,13 +94,7 @@ export async function deserialize(
     }
     // User may have disabled/removed a mod - we need to filter out any existing
     //  entries from the data we parsed.
-<<<<<<< HEAD
     const filteredData = data.filter((entry) => enabledModIds.includes(entry.id));
-=======
-    const filteredData = data.filter((entry) =>
-      enabledModIds.includes(entry.id),
-    );
->>>>>>> v2.0.1
 
     // Check if the user added any new mods.
     const diff = enabledModIds.filter(
@@ -131,13 +110,7 @@ export async function deserialize(
         modId: missingEntry,
         enabled: true,
         name:
-<<<<<<< HEAD
           mods[missingEntry] !== undefined ? util.renderModName(mods[missingEntry]) : missingEntry,
-=======
-          mods[missingEntry] !== undefined
-            ? util.renderModName(mods[missingEntry])
-            : missingEntry,
->>>>>>> v2.0.1
       });
     });
 
@@ -147,14 +120,7 @@ export async function deserialize(
   }
 }
 
-<<<<<<< HEAD
 export async function validate(prev: LoadOrder, current: LoadOrder): Promise<any> {
-=======
-export async function validate(
-  prev: LoadOrder,
-  current: LoadOrder,
-): Promise<any> {
->>>>>>> v2.0.1
   // Nothing to validate really - the game does not read our load order file
   //  and we don't want to apply any restrictions either, so we just
   //  return.
