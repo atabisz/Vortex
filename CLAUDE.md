@@ -1,7 +1,7 @@
 @AGENTS.md
-<<<<<<< HEAD
 
 <!-- GSD:project-start source:PROJECT.md -->
+
 ## Project
 
 **Vortex Linux Support — Phase 1: Boot on Linux**
@@ -17,25 +17,31 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 - **Dependencies**: No new runtime deps that affect Windows (Linux-only deps are fine)
 - **FOMOD**: .NET 9 recompile path chosen — Wine wrapper explicitly rejected
 - **Heroic Launcher**: Deferred to Phase 4 (not Phase 2)
-<!-- GSD:project-end -->
+  <!-- GSD:project-end -->
 
 <!-- GSD:stack-start source:codebase/STACK.md -->
+
 ## Technology Stack
 
 ## Languages
+
 - TypeScript 5.9.3 - Core application code (main, renderer, shared, preload processes)
 - JavaScript - Build configuration, tooling, and scripts
 - SCSS 1.97.3 - Styling and Bootstrap theming
 - CSS (Tailwind v4) - Modern utility-first styling via `src/stylesheets/tailwind-v4.css`
 - HTML - Embedded in React components
 - C++/C# - Native modules (separate Git repositories, managed via `scripts/manage-node-modules.js`)
+
 ## Runtime
+
 - Node.js 22.22.0 (via Volta for toolchain management)
 - Electron 39.8.0 - Desktop application framework
 - pnpm 10.33.0 - Package manager with monorepo workspace support
 - pnpm 10.33.0 - Strict lockfile enforced via `preinstall` script (`npx only-allow pnpm`)
 - Lockfile: `pnpm-lock.yaml` (committed)
+
 ## Frameworks
+
 - Electron 39.8.0 - Desktop application container (main + renderer + preload processes)
 - React 16.12.0 - UI rendering in renderer process
 - Redux 4.0.4 - State management (actions in `src/actions/`, reducers in `src/reducers/`)
@@ -60,7 +66,9 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 - TypeScript ESLint 8.47.0 - TS linting rules
 - Prettier (via oxfmt 0.41.0) - Code formatting
 - ESLint Plugins:
+
 ## Key Dependencies
+
 - electron 39.8.0 - Desktop application runtime; enables native module access and multi-process architecture
 - react 16.12.0 - UI rendering; foundation for all interface components
 - redux 4.0.4 - Predictable state management; enables time-travel debugging and state persistence
@@ -122,7 +130,9 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 - i18next 19.0.1 - Translation framework
 - i18next-fs-backend 2.1.1 - Load translations from files
 - react-i18next 11.11.0 - React component integration
+
 ## Configuration
+
 - Volta lockfile: Package manager and Node version locked in `package.json` (node: 22.22.0, yarn: 1.22.19)
 - pnpm workspaces: Monorepo structure in `pnpm-workspace.yaml` (strict catalog mode with `catalogMode: strict`)
 - Environment variables: `.env` file mechanism (not committed; see `.gitignore`)
@@ -135,7 +145,9 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 - SASS: `sass` CLI for custom styles and Bootstrap compilation
 - Strict mode: Some packages have `tsconfig.strict.json` (indicated by build instructions)
 - API Extractor: Generates `.d.ts` files for public API (`packages/vortex-api/`)
+
 ## Platform Requirements
+
 - Node.js 22+ (managed by Volta)
 - pnpm 10.33.0+
 - Windows (primary target) OR Linux (secondary)
@@ -148,12 +160,14 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 - .NET Desktop Runtime 9.0 (Windows; bundled as `windowsdesktop-runtime-win-x64.exe`)
 - Node.js test environment (no Electron binary required for Jest/Vitest)
 - GitHub Actions CI/CD (uses `junit` reporter and GitHub Actions reporter)
-<!-- GSD:stack-end -->
+  <!-- GSD:stack-end -->
 
 <!-- GSD:conventions-start source:CONVENTIONS.md -->
+
 ## Conventions
 
 ## Naming Patterns
+
 - PascalCase for classes and components: `ComponentEx.ts`, `Database.ts`, `Table.ts`
 - camelCase for utilities and modules: `util.ts`, `logging.ts`, `errorHandling.ts`
 - camelCase with `.test.ts` suffix for test files: `Database.test.ts`, `Debouncer.test.ts`
@@ -171,7 +185,9 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 - PascalCase for type aliases: `ModRow`, `NotificationFunc`
 - PascalCase for enum names
 - Prefixes: `I` for interfaces, `T` for generic type parameters
+
 ## Code Style
+
 - Tool: `oxfmt` (Prettier-compatible)
 - Print width: 80 characters (see `.oxfmtrc.json`)
 - Semicolons required
@@ -188,14 +204,18 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 - `@typescript-eslint/no-explicit-any`: Warn (not strict yet)
 - React: `@eslint-react/jsx-shorthand-boolean` warn, `@eslint-react/no-useless-fragment` warn
 - Perfectionist plugin: Sort imports and exports alphabetically
+
 ## Import Organization
+
 - `@/` maps to `src/` in renderer (Jest config, vite tsconfig)
 - Relative imports preferred for local modules
 - No absolute paths in application code
 - Used selectively in `controls/api.ts`, `types/` directories
 - `export * from "../types/IDialog"` pattern for type aggregation
 - Main entry points re-export public API
+
 ## Error Handling
+
 - Typed error classes with custom inheritance: `UserCanceled`, `TimeoutError`
 - Catch blocks explicitly handle all errors
 - `.catch(() => { /* best-effort */ })` pattern for non-critical errors
@@ -204,12 +224,16 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 - `errorToReportableError()` for telemetry conversion
 - `throw new UserCanceled()` for user-initiated cancellation
 - Error propagation preserves stack traces
+
 ## Logging
+
 - `log(level, context, message, [data])`
 - Levels: `"error"`, `"info"`, `"debug"`, `"warn"`
 - Always include descriptive context: `log("error", "unrecoverable error", error)`
 - User errors logged as `"info"`, system errors as `"error"`
+
 ## Comments
+
 - JSDoc for public functions and exported classes
 - Explain WHY, not WHAT (code shows WHAT)
 - Complex algorithm steps warrant inline comments
@@ -219,7 +243,9 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 - Parameters, return types, and exceptions documented
 - Example from `util.ts`:
 - Type annotations in JSDoc optional when TypeScript types are explicit
+
 ## Function Design
+
 - Max 3-4 parameters; use object for related params
 - Type all parameters explicitly (TypeScript enforced)
 - Destructure object params for clarity
@@ -229,7 +255,9 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 - `void` for side-effect-only functions
 - Nullable returns use `T | null` or `T | undefined`
 - Example: `async query<ModRow>(sql: string): Promise<ModRow[]>`
+
 ## Module Design
+
 - Prefer named exports over default exports for modules
 - Default exports used for Redux actions (legacy): `export default createAction`
 - Deprecation warnings on legacy exports: `/** @deprecated Use createAction from redux-act directly */`
@@ -240,12 +268,14 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 - Prefix private/internal exports with underscore: `_internalHelper()`
 - Use module-level `const` for private utilities
 - Example from `notifications.ts`:
-<!-- GSD:conventions-end -->
+  <!-- GSD:conventions-end -->
 
 <!-- GSD:architecture-start source:ARCHITECTURE.md -->
+
 ## Architecture
 
 ## Pattern Overview
+
 - Three-tier process model: Main (Electron), Renderer (React/Redux), Preload (IPC bridge)
 - Redux-based state management centralized in renderer process
 - Type-safe IPC communication between processes
@@ -253,7 +283,9 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 - Persistence layer: LevelDB + DuckDB for state and queries
 - Main process handles OS integration, filesystem, updater, extensibility coordination
 - Renderer process owns Redux store, UI rendering, extension manager
+
 ## Layers
+
 - Purpose: Secure bridge exposing Electron APIs to renderer without direct access
 - Location: `src/preload/src/index.ts`
 - Contains: Typed IPC wrappers (invoke, send, on, off), context bridge exposure
@@ -285,8 +317,11 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 - Storage: LevelDB for state blobs, DuckDB for queryable data
 - Key files: `LevelPersist.ts` (LevelDB interface), `DuckDBSingleton.ts` (query engine), `ReduxPersistorIPC.ts` (state sync), `Database.ts` (typed model access)
 - Flow: Renderer sends state diffs via IPC → Main persists to LevelDB → On startup, main hydrates renderer with saved state
+
 ## Data Flow
+
 ## Key Abstractions
+
 - Purpose: API surface for extensions to interact with core system
 - Examples: `src/renderer/src/types/IExtensionContext.ts`
 - Pattern: Plugins call methods like `context.registerReducer()`, `context.registerUIAPI()` during init
@@ -307,7 +342,9 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 - Examples: "settings", "user", "session", "gameMode", etc.
 - Mechanism: Each hive maps to a LevelDB key prefix, synced independently
 - Flow: Renderer diffs computed per hive → sent to main → persisted per hive
+
 ## Entry Points
+
 - Location: `src/main/src/main.ts`
 - Triggers: Electron app startup (when user runs Vortex.exe)
 - Responsibilities: Error setup, app initialization, module import orchestration
@@ -320,13 +357,17 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 - Location: `src/preload/src/index.ts`
 - Triggers: Loaded by BrowserWindow preload option
 - Responsibilities: Expose typed API to renderer via contextBridge
+
 ## Error Handling
+
 - Main process: Early error handler before Application init (reports to telemetry before exit)
 - Main process: Unhandled rejection/exception handlers (tries to report, then terminates)
 - Renderer process: Early error handler on window object
 - User-triggered errors: Caught in Redux reducer try-catch, emitted via error action
 - Extension errors: Wrapped at ExtensionManager level, tagged with extension name in action metadata
+
 ## Cross-Cutting Concerns
+
 - Framework: Custom logging in `src/main/src/logging.ts` and `src/renderer/src/logging.ts`
 - Pattern: `log(level, message, metadata)` where level = "info" | "debug" | "warn" | "error"
 - Channel: Renderer logs sent via preload IPC to main, aggregated in main logs
@@ -340,9 +381,10 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 - Impl main: `src/main/src/telemetry/` - providers, crash reporting
 - Impl renderer: `src/renderer/src/telemetry/` - event tracking
 - Disabled by flag in state (user setting)
-<!-- GSD:architecture-end -->
+  <!-- GSD:architecture-end -->
 
 <!-- GSD:workflow-start source:GSD defaults -->
+
 ## Branch Strategy
 
 This fork maintains two branches:
@@ -358,34 +400,36 @@ This fork maintains two branches:
 
 ### What belongs where
 
-| Change type | Branch |
-|---|---|
-| Platform guards, Linux code paths | cherry-pick to `linux-port` after merging in `master` |
-| Bug fixes with Linux platform guards | cherry-pick to `linux-port` after merging in `master` |
-| Devcontainer Linux support | cherry-pick to `linux-port` after merging in `master` |
+| Change type                            | Branch                                                |
+| -------------------------------------- | ----------------------------------------------------- |
+| Platform guards, Linux code paths      | cherry-pick to `linux-port` after merging in `master` |
+| Bug fixes with Linux platform guards   | cherry-pick to `linux-port` after merging in `master` |
+| Devcontainer Linux support             | cherry-pick to `linux-port` after merging in `master` |
 | Native addon / build tooling for Linux | cherry-pick to `linux-port` after merging in `master` |
-| GSD `.planning/` docs | `master` only |
-| AppImage / deb build config | `master` only |
-| GitHub Actions distribution CI | `master` only |
-| Fork-specific IDE config | `master` only |
+| GSD `.planning/` docs                  | `master` only                                         |
+| AppImage / deb build config            | `master` only                                         |
+| GitHub Actions distribution CI         | `master` only                                         |
+| Fork-specific IDE config               | `master` only                                         |
 
 ## GSD Workflow Enforcement
 
 Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
 
 Use these entry points:
+
 - `/gsd:quick` for small fixes, doc updates, and ad-hoc tasks
 - `/gsd:debug` for investigation and bug fixing
 - `/gsd:execute-phase` for planned phase work
 
 Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
+
 <!-- GSD:workflow-end -->
 
 <!-- GSD:profile-start -->
+
 ## Developer Profile
 
 > Profile not yet configured. Run `/gsd:profile-user` to generate your developer profile.
 > This section is managed by `generate-claude-profile` -- do not edit manually.
+
 <!-- GSD:profile-end -->
-=======
->>>>>>> v2.0.1
