@@ -1,17 +1,11 @@
 const Promise = require("bluebird");
-<<<<<<< HEAD
 const { app, remote } = require("electron");
-=======
->>>>>>> v2.0.1
 const path = require("path");
 const winapi = require("winapi-bindings");
 const { fs, util } = require("vortex-api");
 
-<<<<<<< HEAD
 const appUni = app || remote.app;
 
-=======
->>>>>>> v2.0.1
 const GAME_ID = "neverwinter2";
 const MODULE_EXT = ".mod";
 
@@ -35,7 +29,6 @@ function findGame() {
 }
 
 function modPath() {
-<<<<<<< HEAD
   return path.join(appUni.getPath("documents"), "Neverwinter Nights 2");
 }
 
@@ -45,17 +38,6 @@ function overrideModPath() {
 
 function modulesModPath() {
   return path.join(appUni.getPath("documents"), "Neverwinter Nights 2", "modules");
-=======
-  return path.join(util.getVortexPath("documents"), "Neverwinter Nights 2");
-}
-
-function overrideModPath() {
-  return path.join(util.getVortexPath("documents"), "Neverwinter Nights 2", "override");
-}
-
-function modulesModPath() {
-  return path.join(util.getVortexPath("documents"), "Neverwinter Nights 2", "modules");
->>>>>>> v2.0.1
 }
 
 function install(files) {
