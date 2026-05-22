@@ -3,10 +3,7 @@ import * as path from "path";
 import { getErrorCode, getErrorMessageOrDefault } from "@vortex/shared";
 import type { IParameters } from "@vortex/shared/cli";
 
-<<<<<<< HEAD
-=======
 import { log } from "../logging";
->>>>>>> v2.0.1
 import { getApplication } from "./application";
 import Debouncer from "./Debouncer";
 import * as fs from "./fs";
