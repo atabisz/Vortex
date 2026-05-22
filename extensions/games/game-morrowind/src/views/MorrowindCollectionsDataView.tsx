@@ -2,7 +2,6 @@ import * as React from "react";
 import { Button, ListGroup, ListGroupItem } from "react-bootstrap";
 import { WithTranslation, withTranslation } from "react-i18next";
 import { connect } from "react-redux";
-<<<<<<< HEAD
 import {
   ComponentEx,
   EmptyPlaceholder,
@@ -17,25 +16,6 @@ import { NATIVE_PLUGINS } from "../constants";
 import { deserializeLoadOrder } from "../loadorder";
 import { IExtendedInterfaceProps, ILoadOrderEntry } from "../types/types";
 
-=======
-
-import {
-  ComponentEx,
-  EmptyPlaceholder,
-  FlexLayout,
-  Icon,
-  selectors,
-  types,
-  util,
-} from "vortex-api";
-
-import { IExtendedInterfaceProps, ILoadOrderEntry } from "../types/types";
-
-import { NATIVE_PLUGINS } from "../constants";
-
-import { deserializeLoadOrder } from "../loadorder";
-
->>>>>>> v2.0.1
 const NAMESPACE: string = "game-morrowind";
 
 interface IBaseState {
@@ -77,14 +57,7 @@ class MorrowindCollectionsDataView extends ComponentEx<
   }
 
   public componentDidUpdate(prevProps: IProps, prevState: IBaseState): void {
-<<<<<<< HEAD
     if (JSON.stringify(this.state.sortedMods) !== JSON.stringify(this.props.loadOrder)) {
-=======
-    if (
-      JSON.stringify(this.state.sortedMods) !==
-      JSON.stringify(this.props.loadOrder)
-    ) {
->>>>>>> v2.0.1
       this.updateSortedMods();
     }
   }
@@ -112,13 +85,7 @@ class MorrowindCollectionsDataView extends ComponentEx<
   }
 
   private updateSortedMods() {
-<<<<<<< HEAD
     const includedModIds = (this.props.collection?.rules || []).map((rule) => rule.reference.id);
-=======
-    const includedModIds = (this.props.collection?.rules || []).map(
-      (rule) => rule.reference.id,
-    );
->>>>>>> v2.0.1
     const mods = Object.keys(this.props.mods).reduce((accum, iter) => {
       if (includedModIds.includes(iter)) {
         accum[iter] = this.props.mods[iter];
@@ -127,12 +94,7 @@ class MorrowindCollectionsDataView extends ComponentEx<
     }, {});
     deserializeLoadOrder(this.props.api, mods).then((lo) => {
       const filtered = lo.filter(
-<<<<<<< HEAD
         (entry) => NATIVE_PLUGINS.includes(entry.id) || entry.modId !== undefined,
-=======
-        (entry) =>
-          NATIVE_PLUGINS.includes(entry.id) || entry.modId !== undefined,
->>>>>>> v2.0.1
       );
       this.nextState.sortedMods = filtered;
     });
@@ -185,13 +147,7 @@ class MorrowindCollectionsDataView extends ComponentEx<
     return (
       <EmptyPlaceholder
         icon="sort-none"
-<<<<<<< HEAD
         text={t("You have no load order entries (for the current mods in the collection)")}
-=======
-        text={t(
-          "You have no load order entries (for the current mods in the collection)",
-        )}
->>>>>>> v2.0.1
         subtext={this.renderOpenLOButton()}
       />
     );
@@ -219,15 +175,7 @@ function mapStateToProps(
   const profile = selectors.activeProfile(state) || undefined;
   let loadOrder: ILoadOrderEntry[] = [];
   if (!!profile?.gameId) {
-<<<<<<< HEAD
     loadOrder = util.getSafe(state, ["persistent", "loadOrder", profile.id], empty);
-=======
-    loadOrder = util.getSafe(
-      state,
-      ["persistent", "loadOrder", profile.id],
-      empty,
-    );
->>>>>>> v2.0.1
   }
 
   return {
@@ -243,12 +191,5 @@ function mapDispatchToProps(dispatch: any): IActionProps {
 }
 
 export default withTranslation(["common", NAMESPACE])(
-<<<<<<< HEAD
   connect(mapStateToProps, mapDispatchToProps)(MorrowindCollectionsDataView) as any,
-=======
-  connect(
-    mapStateToProps,
-    mapDispatchToProps,
-  )(MorrowindCollectionsDataView) as any,
->>>>>>> v2.0.1
 ) as React.ComponentClass<IBaseProps & IExtendedInterfaceProps>;
