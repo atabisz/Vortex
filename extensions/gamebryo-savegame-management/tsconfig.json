@@ -1,16 +1,6 @@
 {
   "$schema": "https://www.schemastore.org/tsconfig.json",
   "extends": "../tsconfig.extensions.json",
-<<<<<<< HEAD
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "src/**/*.test.ts",
-    "src/**/*.test.tsx",
-    "__mocks__"
-  ]
-=======
-  "include": ["src"]
->>>>>>> v2.0.1
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "__mocks__"]
 }
