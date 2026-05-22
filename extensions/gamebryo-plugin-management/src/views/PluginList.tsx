@@ -255,14 +255,7 @@ function PluginCount(props: IPluginCountProps) {
   );
 
   tooltipText += mediumGame
-<<<<<<< HEAD
     ? "\n" + t("In addition you can have up to 256 medium plugins, and 4096 light plugins.")
-=======
-    ? "\n" +
-      t(
-        "In addition you can have up to 256 medium plugins, and 4096 light plugins.",
-      )
->>>>>>> v2.0.1
     : "\n" + t("In addition you can have up to 4096 light plugins.");
 
   return (
@@ -801,7 +794,6 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
             pluginsIn[pluginName].filePath,
             esp.isMaster,
             this.props.gameMode,
-<<<<<<< HEAD
           ),
           isLight: this.props.isLight(
             pluginsIn[pluginName].filePath,
@@ -837,55 +829,6 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
           revision: 999,
         };
       }
-=======
-          );
-          pluginsParsed[pluginName] = {
-            isMaster: this.props.isMaster(
-              pluginsIn[pluginName].filePath,
-              esp.isMaster,
-              this.props.gameMode,
-            ),
-            isLight: this.props.isLight(
-              pluginsIn[pluginName].filePath,
-              esp.isLight,
-              this.props.gameMode,
-            ),
-            isMedium: this.props.isMediumMaster(
-              pluginsIn[pluginName].filePath,
-              esp.isMedium,
-              this.props.gameMode,
-            ),
-            isBlueprint: esp.isBlueprint,
-            parseFailed: false,
-            description: esp.description,
-            author: esp.author,
-            masterList: esp.masterList,
-            revision: (esp as any).revision,
-          };
-        } catch (err) {
-          // TODO: there is a time window where this is called on a file that
-          //   no longer exists. Since the error message reported from the native
-          //   lib isn't super informative we can't differentiate yet, so not
-          //   treating this as a big problem.
-          log("info", "failed to parse esp", {
-            path: pluginsIn[pluginName].filePath,
-            error: err.message,
-          });
-          pluginsParsed[pluginName] = {
-            isMaster: false,
-            isLight: false,
-            isMedium: false,
-            isBlueprint: false,
-            parseFailed: true,
-            description: "",
-            author: "",
-            masterList: [],
-            revision: 999,
-          };
-        }
-        resolve();
-      });
->>>>>>> v2.0.1
     })
       .then(
         () =>
@@ -1315,12 +1258,7 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
     const { onAddGroup, onAddGroupRule, onSetGroup, masterlist, userlist } = this.props;
     if (
       group !== undefined &&
-<<<<<<< HEAD
       (masterlist.groups || []).find((iter) => iter.name === group) === undefined &&
-=======
-      (masterlist.groups || []).find((iter) => iter.name === group) ===
-        undefined &&
->>>>>>> v2.0.1
       (userlist.groups || []).find((iter) => iter.name === group) === undefined
     ) {
       onAddGroup(group);
@@ -1629,13 +1567,7 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
                   : !isEsp
                     ? t("Only plugins with .esp extension can be converted")
                     : plugin.isLight
-<<<<<<< HEAD
                       ? t("This plugin already has the light flag set, you can unset it.")
-=======
-                      ? t(
-                          "This plugin already has the light flag set, you can unset it.",
-                        )
->>>>>>> v2.0.1
                       : t(
                           "This is a regular plugin that could be turned into a light one " +
                             "(also known as an ESPfe). " +
@@ -1652,41 +1584,18 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
 
                           // TODO: this was previously treated as a manual sort which caused the
                           // autosort setting to be ignored. Was there a reason for that?
-<<<<<<< HEAD
                           this.context.api.events.emit("autosort-plugins", false);
                         })
                         .catch((err) => {
                           const hasSubstring = (subString) => err.message.indexOf(subString) !== -1;
-=======
-                          this.context.api.events.emit(
-                            "autosort-plugins",
-                            false,
-                          );
-                        })
-                        .catch((err) => {
-                          const hasSubstring = (subString) =>
-                            err.message.indexOf(subString) !== -1;
->>>>>>> v2.0.1
                           // still haven't figured out why these error messages are localized
                           // but what we actually want to "suppress" reporting on is "Access denied"
                           // and "file not found" given that we can't stop the user or 3rd party
                           // applications from removing the file for whatever reason.
-<<<<<<< HEAD
                           this.context.api.showErrorNotification("Failed to convert plugin", err, {
                             allowReport:
                               !hasSubstring("rename:") && !hasSubstring("file not found"),
                           });
-=======
-                          this.context.api.showErrorNotification(
-                            "Failed to convert plugin",
-                            err,
-                            {
-                              allowReport:
-                                !hasSubstring("rename:") &&
-                                !hasSubstring("file not found"),
-                            },
-                          );
->>>>>>> v2.0.1
                         });
                     }
                   : nop
