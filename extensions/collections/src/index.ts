@@ -823,12 +823,7 @@ function register(context: types.IExtensionContext, collectionsCB: ICallbackMap)
 
   const collectionsMap = () =>
     collectionsMapFunc(
-<<<<<<< HEAD
       stateFunc().persistent.mods[selectors.activeGameId(stateFunc())] ?? emptyObj,
-=======
-      stateFunc().persistent.mods[selectors.activeGameId(stateFunc())] ??
-        emptyObj,
->>>>>>> v2.0.1
     );
   const collectionOptions = memoize(generateCollectionOptions);
 
@@ -876,15 +871,7 @@ function register(context: types.IExtensionContext, collectionsCB: ICallbackMap)
     ),
     isGroupable: true,
     groupName: (modId: string) =>
-<<<<<<< HEAD
       util.renderModName(stateFunc().persistent.mods[selectors.activeGameId(stateFunc())]?.[modId]),
-=======
-      util.renderModName(
-        stateFunc().persistent.mods[selectors.activeGameId(stateFunc())]?.[
-          modId
-        ],
-      ),
->>>>>>> v2.0.1
     isDefaultVisible: false,
   };
   context.registerTableAttribute("mods", collectionAttribute);
@@ -1104,7 +1091,6 @@ function register(context: types.IExtensionContext, collectionsCB: ICallbackMap)
     const notification: types.INotification = action["payload"];
     const ruleMatches = (rule) => rule.reference.tag === notification.replace?.tag;
 
-<<<<<<< HEAD
     let collection: types.IMod;
     if (driver?.collection !== undefined && notification.id.startsWith("multiple-plugins-")) {
       // reference tags may be updated during installation, so we need to get the
@@ -1114,23 +1100,6 @@ function register(context: types.IExtensionContext, collectionsCB: ICallbackMap)
           state.persistent.mods[driver.profile.gameId]?.[driver.collection.id] ?? driver.collection;
       } else {
         collection = driver.collection;
-=======
-      let collection: types.IMod;
-      if (
-        driver?.collection !== undefined &&
-        notification.id.startsWith("multiple-plugins-")
-      ) {
-        // reference tags may be updated during installation, so we need to get the
-        // updated collection if necessary
-        if (driver.profile !== undefined) {
-          collection =
-            state.persistent.mods[driver.profile.gameId]?.[
-              driver.collection.id
-            ] ?? driver.collection;
-        } else {
-          collection = driver.collection;
-        }
->>>>>>> v2.0.1
       }
     }
 
