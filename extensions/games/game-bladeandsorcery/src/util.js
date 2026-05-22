@@ -25,13 +25,7 @@ async function getJSONElement(filePath, element) {
       const elementData = util.getSafe(modData, [element], undefined);
       return elementData !== undefined
         ? Promise.resolve(elementData)
-<<<<<<< HEAD
         : Promise.reject(new util.DataInvalid(`"${element}" JSON element is missing`));
-=======
-        : Promise.reject(
-            new util.DataInvalid(`"${element}" JSON element is missing`),
-          );
->>>>>>> v2.0.1
     } catch (err) {
       return err.message.indexOf("Unexpected end of JSON input") !== -1 ||
         err.name.indexOf("SyntaxError") !== -1
@@ -94,13 +88,7 @@ async function findGameConfig(discoveryPath) {
       })
       .then((entries) => {
         const configFile = entries.find(
-<<<<<<< HEAD
           (file) => file.toLowerCase() === GAME_FILE || file.toLowerCase() === GLOBAL_FILE,
-=======
-          (file) =>
-            file.toLowerCase() === GAME_FILE ||
-            file.toLowerCase() === GLOBAL_FILE,
->>>>>>> v2.0.1
         );
         return configFile !== undefined
           ? Promise.resolve(path.join(searchPath, configFile))
@@ -112,13 +100,7 @@ async function findGameConfig(discoveryPath) {
     return findConfig(configPath);
   } catch (err) {
     // Backwards compatibility for pre U10
-<<<<<<< HEAD
     return findConfig(path.join(basePath, "Bas")).catch((err) => findConfig(basePath));
-=======
-    return findConfig(path.join(basePath, "Bas")).catch((err) =>
-      findConfig(basePath),
-    );
->>>>>>> v2.0.1
   }
 }
 
@@ -175,20 +157,9 @@ async function getMinModVersion(discoveryPath, execFile) {
 
 async function checkModGameVersion(destination, minModVersion, modFile) {
   const coercedMin = semver.coerce(minModVersion.version);
-<<<<<<< HEAD
   const minVersion = minModVersion.majorOnly ? coercedMin.major + ".x" : `>=${coercedMin.version}`;
   try {
     let modVersion = await getJSONElement(path.join(destination, modFile), "GameVersion");
-=======
-  const minVersion = minModVersion.majorOnly
-    ? coercedMin.major + ".x"
-    : `>=${coercedMin.version}`;
-  try {
-    let modVersion = await getJSONElement(
-      path.join(destination, modFile),
-      "GameVersion",
-    );
->>>>>>> v2.0.1
     modVersion = modVersion.toString().replace(",", ".");
     const coercedMod = semver.coerce(modVersion.toString());
     if (coercedMod === null) {
@@ -210,15 +181,7 @@ async function checkModGameVersion(destination, minModVersion, modFile) {
 function getDiscoveryPath(api) {
   const store = api.store;
   const state = store.getState();
-<<<<<<< HEAD
   const discovery = util.getSafe(state, ["settings", "gameMode", "discovered", GAME_ID], undefined);
-=======
-  const discovery = util.getSafe(
-    state,
-    ["settings", "gameMode", "discovered", GAME_ID],
-    undefined,
-  );
->>>>>>> v2.0.1
   if (discovery === undefined || discovery.path === undefined) {
     // should never happen and if it does it will cause errors elsewhere as well
     log("debug", "bladeandsorcery was not discovered");
