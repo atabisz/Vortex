@@ -1,12 +1,7 @@
 const Promise = require("bluebird");
-<<<<<<< HEAD
 const { remote } = require("electron");
 const path = require("path");
 const { fs } = require("vortex-api");
-=======
-const path = require("path");
-const { fs, util } = require("vortex-api");
->>>>>>> v2.0.1
 const winapi = require("winapi-bindings");
 
 function findGame() {
@@ -48,11 +43,7 @@ function prepareForModding() {
 
 function modPath() {
   return path.join(
-<<<<<<< HEAD
     remote.app.getPath("documents"),
-=======
-    util.getVortexPath("documents"),
->>>>>>> v2.0.1
     "Electronic Arts",
     "The Sims 3",
     "Mods",
