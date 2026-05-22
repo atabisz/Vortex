@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v8.1
 milestone_name: Upstream v2.0.1 Sync
-status: planning
-last_updated: "2026-05-22T10:17:30.000Z"
-last_activity: 2026-05-22
+status: completed
+stopped_at: Phase 32 context gathered
+last_updated: "2026-05-22T10:29:41.572Z"
+last_activity: 2026-05-22 — Phase 31 config-bucket complete + pushed to fork (`v8.1/config-bucket`, 13 commits ahead)
 progress:
-    total_phases: 7
-    completed_phases: 1
-    total_plans: 8
+    total_phases: 8
+    completed_phases: 0
+    total_plans: 0
     completed_plans: 8
-    percent: 14
+    percent: 0
 ---
 
 # Project State
@@ -221,6 +222,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-17T00:50:42.935Z
-Stopped at: Completed 23-02-PLAN.md
-Resume file: None
+Last session: 2026-05-22T10:29:41.560Z
+Stopped at: Phase 32 context gathered
+Resume file: .planning/phases/32-mod-management-hot-zone-v2-0-1/32-CONTEXT.md
