@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 import * as path from "path";
 
-=======
->>>>>>> v2.0.1
 import type {
   IDownloadURL,
   IFileInfo,
@@ -15,7 +12,6 @@ import type {
   IValidateKeyResponse,
 } from "@nexusmods/nexus-api";
 import type NexusT from "@nexusmods/nexus-api";
-<<<<<<< HEAD
 import { NexusError, RateLimitError, TimeoutError } from "@nexusmods/nexus-api";
 import { getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
 import { DownloadIsHTML } from "@vortex/shared/errors";
@@ -28,56 +24,21 @@ import type { Action } from "redux";
 import {} from "uuid";
 
 import { setDownloadModInfo, setForcedLogout, setModAttribute } from "../../actions";
+import { setDownloadModInfo, setForcedLogout, setModAttribute } from "../../actions";
 import type { IDialogResult } from "../../actions/notifications";
+import { showDialog } from "../../actions/notifications";
 import { showDialog } from "../../actions/notifications";
 import FlexLayout from "../../controls/FlexLayout";
-import Image from "../../controls/Image";
-import LazyComponent from "../../controls/LazyComponent";
-import type { IComponentContext } from "../../types/IComponentContext";
-import type { IExtensionApi, IExtensionContext } from "../../types/IExtensionContext";
-=======
-import type { TFunction } from "i18next";
-import type { Action } from "redux";
-
-import { NexusError, RateLimitError, TimeoutError } from "@nexusmods/nexus-api";
-import { getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
-import PromiseBB from "bluebird";
-import { app } from "electron";
-import * as fuzz from "fuzzball";
-import * as path from "path";
-import * as React from "react";
-import { Button } from "react-bootstrap";
-import { toast } from "react-hot-toast";
-import {} from "uuid";
-
-import type { IDialogResult } from "../../actions/notifications";
-import type { IComponentContext } from "../../types/IComponentContext";
-import type {
-  IExtensionApi,
-  IExtensionContext,
-} from "../../types/IExtensionContext";
->>>>>>> v2.0.1
-import type { IModLookupResult } from "../../types/IModLookupResult";
-import type { IState } from "../../types/IState";
-import type { LogLevel } from "../../util/log";
-import type { ICategoryDictionary } from "../category_management/types/ICategoryDictionary";
-import type { IDownload } from "../download_management/types/IDownload";
-import type { IResolvedURL } from "../download_management/types/ProtocolHandlers";
-import type { IGameStored } from "../gamemode_management/types/IGameStored";
-import type { IMod, IModRepoId } from "../mod_management/types/IMod";
-import type { INexusAPIExtension } from "./types/INexusAPIExtension";
-import type { IRemoteInfo } from "./util";
-
-import {
-  setDownloadModInfo,
-  setForcedLogout,
-  setModAttribute,
-} from "../../actions";
-import { showDialog } from "../../actions/notifications";
 import FlexLayout from "../../controls/FlexLayout";
 import Icon from "../../controls/Icon";
 import Image from "../../controls/Image";
+import Image from "../../controls/Image";
 import LazyComponent from "../../controls/LazyComponent";
+import LazyComponent from "../../controls/LazyComponent";
+import type { IComponentContext } from "../../types/IComponentContext";
+import type { IExtensionApi, IExtensionContext } from "../../types/IExtensionContext";
+import type { IModLookupResult } from "../../types/IModLookupResult";
+import type { IState } from "../../types/IState";
 import { getApplication } from "../../util/application";
 import {
   DataInvalid,
@@ -89,10 +50,8 @@ import {
 import Debouncer from "../../util/Debouncer";
 import * as fs from "../../util/fs";
 import getVortexPath from "../../util/getVortexPath";
-<<<<<<< HEAD
 import type { LogLevel } from "../../util/log";
-=======
->>>>>>> v2.0.1
+import type { LogLevel } from "../../util/log";
 import { log } from "../../util/log";
 import { showError } from "../../util/message";
 import opn from "../../util/opn";
@@ -108,7 +67,6 @@ import {
   Campaign,
 } from "../../util/util";
 import { MainContext } from "../../views/MainWindow";
-<<<<<<< HEAD
 import type { ICategoryDictionary } from "../category_management/types/ICategoryDictionary";
 import type { IDownload } from "../download_management/types/IDownload";
 import type { IResolvedURL } from "../download_management/types/ProtocolHandlers";
@@ -119,21 +77,6 @@ import type { IMod, IModRepoId } from "../mod_management/types/IMod";
 import { isDownloadIdValid, isIdValid } from "../mod_management/util/modUpdateState";
 import { setNewestVersion } from "./actions/persistent";
 import { addFreeUserDLItem, removeFreeUserDLItem } from "./actions/session";
-=======
-import { DownloadIsHTML } from "../download_management/DownloadManager";
-import { SITE_ID } from "../gamemode_management/constants";
-import { getGame } from "../gamemode_management/util/getGame";
-import {
-  isDownloadIdValid,
-  isIdValid,
-} from "../mod_management/util/modUpdateState";
-import { setNewestVersion, setUserInfo } from "./actions/persistent";
-import {
-  addFreeUserDLItem,
-  removeFreeUserDLItem,
-  setOauthPending,
-} from "./actions/session";
->>>>>>> v2.0.1
 import { setAssociatedWithNXMURLs } from "./actions/settings";
 import {
   genCollectionIdAttribute,
@@ -155,11 +98,8 @@ import { persistentReducer } from "./reducers/persistent";
 import { sessionReducer } from "./reducers/session";
 import { settingsReducer } from "./reducers/settings";
 import * as sel from "./selectors";
-<<<<<<< HEAD
 import type { INexusAPIExtension } from "./types/INexusAPIExtension";
 import type { IRemoteInfo } from "./util";
-=======
->>>>>>> v2.0.1
 import {
   bringToFront,
   endorseThing,
@@ -179,15 +119,7 @@ import {
 } from "./util";
 import { checkModVersion } from "./util/checkModsVersion";
 import { convertNXMIdReverse, nexusGameId } from "./util/convertGameId";
-<<<<<<< HEAD
 import { fillNexusIdByMD5, guessFromFileName, queryResetSource } from "./util/guessModID";
-=======
-import {
-  fillNexusIdByMD5,
-  guessFromFileName,
-  queryResetSource,
-} from "./util/guessModID";
->>>>>>> v2.0.1
 import retrieveCategoryList from "./util/retrieveCategories";
 import Tracking from "./util/tracking";
 import { makeFileUID } from "./util/UIDs";
@@ -742,12 +674,7 @@ function processAttributes(state: IState, input: any, quick: boolean): PromiseBB
       modVersion: nexusModInfo?.version ?? nexusCollectionInfo?.revisionNumber?.toString?.(),
       allowRating: input?.download?.modInfo?.nexus?.modInfo?.allow_rating,
       customFileName: fuzzRatio < 50 ? `${modName} - ${fileName}` : undefined,
-<<<<<<< HEAD
       newestFileId: nexusCollectionInfo?.collection?.latestPublishedRevision?.id,
-=======
-      newestFileId:
-        nexusCollectionInfo?.collection?.latestPublishedRevision?.id,
->>>>>>> v2.0.1
       newestVersion:
         nexusCollectionInfo?.collection?.latestPublishedRevision?.revisionNumber?.toString?.(),
       rating: nexusCollectionInfo?.rating,
