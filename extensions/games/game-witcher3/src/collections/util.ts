@@ -1,17 +1,11 @@
 /** eslint-disable */
 import path from "path";
-<<<<<<< HEAD
 
 import { generate } from "shortid";
 import turbowalk, { IEntry } from "turbowalk";
 import { fs, log, types, util } from "vortex-api";
 
-=======
-import { generate } from "shortid";
-import turbowalk, { IEntry } from "turbowalk";
-import { fs, log, types, util } from "vortex-api";
 
->>>>>>> v2.0.1
 import { LOCKED_PREFIX, W3_TEMP_DATA_DIR } from "../common";
 
 export class CollectionGenerateError extends Error {
@@ -23,13 +17,7 @@ export class CollectionGenerateError extends Error {
 
 export class CollectionParseError extends Error {
   constructor(collectionName: string, why: string) {
-<<<<<<< HEAD
     super(`Failed to parse game specific data for collection ${collectionName}: ${why}`);
-=======
-    super(
-      `Failed to parse game specific data for collection ${collectionName}: ${why}`,
-    );
->>>>>>> v2.0.1
     this.name = "CollectionGenerateError";
   }
 }
@@ -44,13 +32,7 @@ export function isModInCollection(collectionMod: types.IMod, mod: types.IMod) {
   }
 
   return (
-<<<<<<< HEAD
     collectionMod.rules.find((rule) => util.testModReference(mod, rule.reference)) !== undefined
-=======
-    collectionMod.rules.find((rule) =>
-      util.testModReference(mod, rule.reference),
-    ) !== undefined
->>>>>>> v2.0.1
   );
 }
 
@@ -65,12 +47,7 @@ export function genCollectionLoadOrder(
       return (
         isLocked ||
         (collection !== undefined
-<<<<<<< HEAD
           ? isValidMod(mods[entry.modId]) && isModInCollection(collection, mods[entry.modId])
-=======
-          ? isValidMod(mods[entry.modId]) &&
-            isModInCollection(collection, mods[entry.modId])
->>>>>>> v2.0.1
           : isValidMod(mods[entry.modId]))
       );
     })
@@ -89,13 +66,7 @@ export async function walkDirPath(dirPath: string): Promise<IEntry[]> {
   })
     .catch({ systemCode: 3 }, () => Promise.resolve())
     .catch((err) =>
-<<<<<<< HEAD
       ["ENOTFOUND", "ENOENT"].includes(err.code) ? Promise.resolve() : Promise.reject(err),
-=======
-      ["ENOTFOUND", "ENOENT"].includes(err.code)
-        ? Promise.resolve()
-        : Promise.reject(err),
->>>>>>> v2.0.1
     );
 
   return fileEntries;
@@ -143,14 +114,7 @@ export async function restoreFileData(
     await fs.ensureDirWritableAsync(W3_TEMP_DATA_DIR);
     archivePath = path.join(W3_TEMP_DATA_DIR, generate() + ".zip");
     await fs.writeFileAsync(archivePath, fileData);
-<<<<<<< HEAD
     const targetDirPath = path.join(W3_TEMP_DATA_DIR, path.basename(archivePath, ".zip"));
-=======
-    const targetDirPath = path.join(
-      W3_TEMP_DATA_DIR,
-      path.basename(archivePath, ".zip"),
-    );
->>>>>>> v2.0.1
     await sevenZip.extractFull(archivePath, targetDirPath);
     fileEntries = await walkDirPath(targetDirPath);
     for (const entry of fileEntries) {
