@@ -85,7 +85,7 @@
 - [x] **Phase 26: Mod-management hot zone** (complete 2026-05-15) — resolve 8 files in `mod_management/` with playbook re-grep checkpoint per file
 - [x] **Phase 27: Gamebryo + per-game extensions** (complete 2026-05-21) — resolve gamebryo plugin/savegame, collections, bepinex, BG3/Morrowind/Witcher 3
 - [x] **Phase 28: Renderer + main spine** — resolve renderer infra, main/preload/shared, nexus_integration, scripts, fingerprints (pick-theirs)
-- [ ] **Phase 29: Build verification** — typecheck, build, tests, AppImage + .deb produced, Linux smoke test passes
+- [x] **Phase 29: Build verification** (complete 2026-05-22) — typecheck, build, tests, AppImage + .deb produced, Linux smoke test passes
 - [ ] **Phase 30: Land + tag** — Windows CI green, FF-merge PR #4, tag `v2.0.0-linux-rebased`, cherry-pick to `linux-port`, close PR #4
 
 ## Phase Details
@@ -289,5 +289,5 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 | 26. Mod-management hot zone                               | v8.0      | 10/10          | Complete    | 2026-05-15 |
 | 27. Gamebryo + per-game extensions                        | v8.0      | 9/9            | Complete    | 2026-05-21 |
 | 28. Renderer + main spine                                 | v8.0      | 0/0            | Not started | -          |
-| 29. Build verification                                    | v8.0      | 0/0            | Not started | -          |
+| 29. Build verification                                    | v8.0      | 11/11          | Complete    | 2026-05-22 |
 | 30. Land + tag                                            | v8.0      | 0/0            | Not started | -          |

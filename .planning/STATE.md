@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Upstream v2.0.0 Sync
 status: executing
-stopped_at: Phase 28 complete; ready for Phase 29 plan
-last_updated: "2026-05-22T00:00:00Z"
+stopped_at: Phase 29 complete; ready for Phase 30 land + tag
+last_updated: "2026-05-22T10:10:00Z"
 last_activity: 2026-05-22
 progress:
     total_phases: 8
-    completed_phases: 5
-    total_plans: 48
-    completed_plans: 48
-    percent: 62
+    completed_phases: 6
+    total_plans: 59
+    completed_plans: 59
+    percent: 75
 ---
 
 # Project State
@@ -21,16 +21,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16 after v7.0 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** Phase 29 — build verification + AppImage/.deb smoke (next)
+**Current focus:** Phase 30 — land + tag, FF-merge PR #4, cherry-pick to linux-port, RC cleanup (next)
 
 ## Current Position
 
-Phase: 28 (renderer-main-spine) — COMPLETE 2026-05-22
-Plan: 12 of 12 (28-00..28-11 complete; 63/63 conflict files resolved; force-with-lease push c418a4889..3cc93b988 landed on fork/sync/upstream-v2.0.0)
-Status: Phase 28 complete; ready for Phase 29 plan
+Phase: 29 (build-verification) — COMPLETE 2026-05-22
+Plan: 11 of 11 (29-00..29-10 complete; SYNC-01/21/28/29/30/31/32/33/34 all PASS; SYNC-33 part C + SYNC-34 four-screenshot walkthrough deferred to Phase 30 against canonical tag)
+Status: Phase 29 complete; ready for Phase 30 land + tag
 Last activity: 2026-05-22
 
-Progress: [██████████] 100% (Phase 28 complete)
+Progress: [██████████] 100% (Phase 29 complete)
+
+RC tag `v2.0.0-linux-rebased-rc1` published (run [26259632336](https://github.com/atabisz/Vortex/actions/runs/26259632336)) — AppImage + .deb artefacts pinned in `29-SMOKE-EVIDENCE.md`. Done-gate at `7103a8003` on `fork/sync/upstream-v2.0.0`. Working tree clean.
 
 ## Performance Metrics
 
@@ -261,6 +263,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-21T02:53:47Z
-Stopped at: Phase 27 complete; ready for Phase 28 plan
+Last session: 2026-05-22T10:10:00Z
+Stopped at: Phase 29 complete; ready for Phase 30 plan
 Resume file: None
