@@ -1,17 +1,11 @@
-<<<<<<< HEAD
 const { app, remote } = require("electron");
-=======
->>>>>>> v2.0.1
 const path = require("path");
 const { fs, util } = require("vortex-api");
 const { Builder, parseStringPromise } = require("xml2js");
 const winapi = require("winapi-bindings");
 
-<<<<<<< HEAD
 const appUni = app || remote.app;
 
-=======
->>>>>>> v2.0.1
 const ADDINS_FILE = "AddIns.xml";
 const STEAM_ID = 17450;
 const STEAM_ID_ULTIMATE_EDITION = 47810;
@@ -52,11 +46,7 @@ function findGame() {
 function queryModPath() {
   if (_MODS_PATH === undefined) {
     _MODS_PATH = path.join(
-<<<<<<< HEAD
       appUni.getPath("documents"),
-=======
-      util.getVortexPath("documents"),
->>>>>>> v2.0.1
       "BioWare",
       "Dragon Age",
       "packages",
@@ -71,11 +61,7 @@ function queryModPath() {
 function addinsPath() {
   if (_ADDINS_PATH === undefined) {
     _ADDINS_PATH = path.join(
-<<<<<<< HEAD
       appUni.getPath("documents"),
-=======
-      util.getVortexPath("documents"),
->>>>>>> v2.0.1
       "Bioware",
       "Dragon Age",
       "Settings",
@@ -90,13 +76,7 @@ function prepareForModding() {
   return fs
     .ensureDirWritableAsync(queryModPath())
     .then(() =>
-<<<<<<< HEAD
       fs.ensureDirAsync(path.join(appUni.getPath("documents"), "BioWare", "Dragon Age", "AddIns")),
-=======
-      fs.ensureDirAsync(
-        path.join(util.getVortexPath("documents"), "BioWare", "Dragon Age", "AddIns"),
-      ),
->>>>>>> v2.0.1
     )
     .then(() => fs.ensureDirAsync(path.dirname(addinsPath())));
 }
@@ -195,13 +175,7 @@ function merge(filePath, mergeDir) {
       return fs.ensureDirWritableAsync(destPath).then(async () => {
         const builder = new Builder();
         const xml = builder.buildObject(addinsData);
-<<<<<<< HEAD
         return fs.writeFileAsync(path.join(destPath, ADDINS_FILE), xml, { encoding: "utf-8" });
-=======
-        return fs.writeFileAsync(path.join(destPath, ADDINS_FILE), xml, {
-          encoding: "utf-8",
-        });
->>>>>>> v2.0.1
       });
     });
 }
