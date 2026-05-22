@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import * as path from "path";
 
 /* eslint-disable */
@@ -6,14 +5,6 @@ import getVersion from "exe-version";
 import * as semver from "semver";
 import { types } from "vortex-api";
 
-=======
-/* eslint-disable */
-import getVersion from "exe-version";
-import * as path from "path";
-import * as semver from "semver";
-import { types } from "vortex-api";
-
->>>>>>> v2.0.1
 import { LSLIB_FILES, GAME_ID } from "./common";
 import { logDebug } from "./util";
 
@@ -24,13 +15,7 @@ export async function testLSLib(
   if (gameId !== GAME_ID) {
     return Promise.resolve({ supported: false, requiredFiles: [] });
   }
-<<<<<<< HEAD
   const matchedFiles = files.filter((file) => LSLIB_FILES.has(path.basename(file).toLowerCase()));
-=======
-  const matchedFiles = files.filter((file) =>
-    LSLIB_FILES.has(path.basename(file).toLowerCase()),
-  );
->>>>>>> v2.0.1
 
   return Promise.resolve({
     supported: matchedFiles.length >= 2,
@@ -53,12 +38,7 @@ export async function testModFixer(
   //const binFolder = lowered.find(file => file.split(path.sep).indexOf('bin') !== -1);
 
   const hasModFixerPak =
-<<<<<<< HEAD
     lowered.find((file) => path.basename(file) === "modfixer.pak") !== undefined;
-=======
-    lowered.find((file) => path.basename(file) === "modfixer.pak") !==
-    undefined;
->>>>>>> v2.0.1
 
   if (!hasModFixerPak) {
     // there's no modfixer.pak folder.
@@ -85,12 +65,7 @@ export async function testEngineInjector(
   const lowered = files.map((file) => file.toLowerCase());
   //const binFolder = lowered.find(file => file.split(path.sep).indexOf('bin') !== -1);
 
-<<<<<<< HEAD
   const hasBinFolder = lowered.find((file) => file.indexOf("bin" + path.sep) !== -1) !== undefined;
-=======
-  const hasBinFolder =
-    lowered.find((file) => file.indexOf("bin" + path.sep) !== -1) !== undefined;
->>>>>>> v2.0.1
 
   if (!hasBinFolder) {
     // there's no bin folder.
@@ -103,13 +78,7 @@ export async function testEngineInjector(
   });
 }
 
-<<<<<<< HEAD
 export async function installBG3SE(files: string[]): Promise<types.IInstallResult> {
-=======
-export async function installBG3SE(
-  files: string[],
-): Promise<types.IInstallResult> {
->>>>>>> v2.0.1
   logDebug("installBG3SE files:", files);
 
   // Filter out folders as this breaks the installer.
@@ -135,13 +104,7 @@ export async function installBG3SE(
   return Promise.resolve({ instructions });
 }
 
-<<<<<<< HEAD
 export async function installModFixer(files: string[]): Promise<types.IInstallResult> {
-=======
-export async function installModFixer(
-  files: string[],
-): Promise<types.IInstallResult> {
->>>>>>> v2.0.1
   logDebug("installModFixer files:", files);
 
   // Filter out folders as this breaks the installer.
@@ -150,15 +113,7 @@ export async function installModFixer(
   // Filter only pak files.
   files = files.filter((f) => path.extname(f) === ".pak");
 
-<<<<<<< HEAD
   const modFixerAttribute: types.IInstruction = { type: "attribute", key: "modFixer", value: true };
-=======
-  const modFixerAttribute: types.IInstruction = {
-    type: "attribute",
-    key: "modFixer",
-    value: true,
-  };
->>>>>>> v2.0.1
 
   const instructions: types.IInstruction[] = files.reduce(
     (accum: types.IInstruction[], filePath: string) => {
@@ -177,26 +132,13 @@ export async function installModFixer(
   return Promise.resolve({ instructions });
 }
 
-<<<<<<< HEAD
 export async function installEngineInjector(files: string[]): Promise<types.IInstallResult> {
-=======
-export async function installEngineInjector(
-  files: string[],
-): Promise<types.IInstallResult> {
->>>>>>> v2.0.1
   logDebug("installEngineInjector files:", files);
 
   // Filter out folders as this breaks the installer.
   files = files.filter((f) => path.extname(f) !== "" && !f.endsWith(path.sep));
 
-<<<<<<< HEAD
   const modtypeAttr: types.IInstruction = { type: "setmodtype", value: "dinput" };
-=======
-  const modtypeAttr: types.IInstruction = {
-    type: "setmodtype",
-    value: "dinput",
-  };
->>>>>>> v2.0.1
 
   const instructions: types.IInstruction[] = files.reduce(
     (accum: types.IInstruction[], filePath: string) => {
@@ -228,13 +170,7 @@ export async function installLSLib(
   files: string[],
   destinationPath: string,
 ): Promise<types.IInstallResult> {
-<<<<<<< HEAD
   const exe = files.find((file) => path.basename(file.toLowerCase()) === "divine.exe");
-=======
-  const exe = files.find(
-    (file) => path.basename(file.toLowerCase()) === "divine.exe",
-  );
->>>>>>> v2.0.1
   const exePath = path.join(destinationPath, exe);
   let ver: string = await getVersion(exePath);
   ver = ver.split(".").slice(0, 3).join(".");
@@ -243,33 +179,14 @@ export async function installLSLib(
   //  file versions - the executable attribute might have an older version
   //  value than the one specified by the filename - we're going to use
   //  the filename as the point of truth *ugh*
-<<<<<<< HEAD
   const fileName = path.basename(destinationPath, path.extname(destinationPath));
-=======
-  const fileName = path.basename(
-    destinationPath,
-    path.extname(destinationPath),
-  );
->>>>>>> v2.0.1
   const idx = fileName.indexOf("-v");
   const fileNameVer = fileName.slice(idx + 2);
   if (semver.valid(fileNameVer) && ver !== fileNameVer) {
     ver = fileNameVer;
   }
-<<<<<<< HEAD
   const versionAttr: types.IInstruction = { type: "attribute", key: "version", value: ver };
   const modtypeAttr: types.IInstruction = { type: "setmodtype", value: "bg3-lslib-divine-tool" };
-=======
-  const versionAttr: types.IInstruction = {
-    type: "attribute",
-    key: "version",
-    value: ver,
-  };
-  const modtypeAttr: types.IInstruction = {
-    type: "setmodtype",
-    value: "bg3-lslib-divine-tool",
-  };
->>>>>>> v2.0.1
   const instructions: types.IInstruction[] = files.reduce(
     (accum: types.IInstruction[], filePath: string) => {
       if (
@@ -290,25 +207,13 @@ export async function installLSLib(
   return Promise.resolve({ instructions });
 }
 
-<<<<<<< HEAD
 export async function testBG3SE(files: string[], gameId: string): Promise<types.ISupportedResult> {
-=======
-export async function testBG3SE(
-  files: string[],
-  gameId: string,
-): Promise<types.ISupportedResult> {
->>>>>>> v2.0.1
   if (gameId !== GAME_ID) {
     return Promise.resolve({ supported: false, requiredFiles: [] });
   }
 
   const hasDWriteDll =
-<<<<<<< HEAD
     files.find((file) => path.basename(file).toLowerCase() === "dwrite.dll") !== undefined;
-=======
-    files.find((file) => path.basename(file).toLowerCase() === "dwrite.dll") !==
-    undefined;
->>>>>>> v2.0.1
 
   return Promise.resolve({
     supported: hasDWriteDll,
@@ -323,23 +228,11 @@ export function testReplacer(
   if (gameId !== GAME_ID) {
     return Promise.resolve({ supported: false, requiredFiles: [] });
   }
-<<<<<<< HEAD
   const paks = files.filter((file) => path.extname(file).toLowerCase() === ".pak");
   // do we have a public or generated folder?
   const hasGenOrPublicFolder: boolean = ["generated", "public"].some(
     (segment) =>
       files.find((file) => file.toLowerCase().indexOf(segment + path.sep) !== -1) !== undefined,
-=======
-  const paks = files.filter(
-    (file) => path.extname(file).toLowerCase() === ".pak",
-  );
-  // do we have a public or generated folder?
-  const hasGenOrPublicFolder: boolean = ["generated", "public"].some(
-    (segment) =>
-      files.find(
-        (file) => file.toLowerCase().indexOf(segment + path.sep) !== -1,
-      ) !== undefined,
->>>>>>> v2.0.1
   );
 
   return Promise.resolve({
@@ -348,17 +241,8 @@ export function testReplacer(
   });
 }
 
-<<<<<<< HEAD
 export async function installReplacer(files: string[]): Promise<types.IInstallResult> {
   const directories = Array.from(new Set(files.map((file) => path.dirname(file).toUpperCase())));
-=======
-export async function installReplacer(
-  files: string[],
-): Promise<types.IInstallResult> {
-  const directories = Array.from(
-    new Set(files.map((file) => path.dirname(file).toUpperCase())),
-  );
->>>>>>> v2.0.1
   let dataPath = undefined;
   const genOrPublic = directories.find((dir) =>
     ["PUBLIC", "GENERATED"].includes(path.basename(dir)),
