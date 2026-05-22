@@ -61,13 +61,7 @@ export const NoResults = ({
             leftIconPath={mdiOpenInNew}
             size="sm"
             onClick={() =>
-<<<<<<< HEAD
               window.api.shell.openUrl("https://help.nexusmods.com/article/125-contact-us")
-=======
-              window.api.shell.openUrl(
-                "https://help.nexusmods.com/article/125-contact-us",
-              )
->>>>>>> v2.0.1
             }
           >
             Contact support
