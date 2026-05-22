@@ -1,23 +1,13 @@
 const Promise = require("bluebird");
 const path = require("path");
 const { util } = require("vortex-api");
-<<<<<<< HEAD
-=======
-const winapi = require("winapi-bindings");
->>>>>>> v2.0.1
 
 /*
 Ignore the Meshes\AnimTextData\AnimationOffsets\PersistantSubgraphInfoAndOffsetData.txt file as a conflict. 
 It's present in a lot of weapon mods but doesn't matter if it's overwritten. 
 This issue is compounded by users extracting all their BA2s. 
 */
-<<<<<<< HEAD
 const IGNORED_FILES = [path.join("**", "PersistantSubgraphInfoAndOffsetData.txt")];
-=======
-const IGNORED_FILES = [
-  path.join("**", "PersistantSubgraphInfoAndOffsetData.txt"),
-];
->>>>>>> v2.0.1
 
 const MS_ID = "BethesdaSoftworks.Fallout4-PC";
 const GOG_ID = "1998527297";
@@ -52,16 +42,8 @@ let tools = [
   {
     id: "bodyslide",
     name: "BodySlide",
-<<<<<<< HEAD
     executable: () => path.join("Data", "Tools", "BodySlide", "BodySlide x64.exe"),
     requiredFiles: [path.join("Data", "Tools", "BodySlide", "BodySlide x64.exe")],
-=======
-    executable: () =>
-      path.join("Data", "Tools", "BodySlide", "BodySlide x64.exe"),
-    requiredFiles: [
-      path.join("Data", "Tools", "BodySlide", "BodySlide x64.exe"),
-    ],
->>>>>>> v2.0.1
     relative: true,
     logo: "auto",
   },
