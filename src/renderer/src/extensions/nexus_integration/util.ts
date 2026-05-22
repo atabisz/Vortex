@@ -21,44 +21,19 @@ import type {
   IModFileQuery,
 } from "@nexusmods/nexus-api";
 import type Nexus from "@nexusmods/nexus-api";
-<<<<<<< HEAD
 import { GraphError, NexusError, RateLimitError, TimeoutError } from "@nexusmods/nexus-api";
-import { getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
-import { AlreadyDownloaded, DownloadIsHTML } from "@vortex/shared/errors";
-import BluebirdPromise from "bluebird";
-=======
->>>>>>> v2.0.1
-import type { TFunction } from "i18next";
-import type * as Redux from "redux";
-
-import {
-  GraphError,
-  NexusError,
-  RateLimitError,
-  TimeoutError,
-} from "@nexusmods/nexus-api";
 import {
   getErrorCode,
   getErrorMessage,
   getErrorMessageOrDefault,
   unknownToError,
 } from "@vortex/shared";
+import { AlreadyDownloaded, DownloadIsHTML } from "@vortex/shared/errors";
 import BluebirdPromise from "bluebird";
+import type { TFunction } from "i18next";
 import jwt from "jsonwebtoken";
 import * as _ from "lodash";
-<<<<<<< HEAD
 import type * as Redux from "redux";
-=======
-import * as path from "path";
-import * as util from "util";
-
-import type { IExtensionApi, ThunkStore } from "../../types/IExtensionContext";
-import type { IMod, IState } from "../../types/IState";
-import type { RedownloadMode } from "../download_management/DownloadManager";
-import type { IJWTAccessToken } from "./types/IJWTAccessToken";
-import type { IValidateKeyDataV2 } from "./types/IValidateKeyData";
-import type { ITokenReply } from "./util/oauth";
->>>>>>> v2.0.1
 
 import {
   addNotification,
@@ -69,11 +44,8 @@ import {
   setOAuthCredentials,
 } from "../../actions";
 import { log } from "../../logging";
-<<<<<<< HEAD
 import type { IExtensionApi, ThunkStore } from "../../types/IExtensionContext";
 import type { IMod, IState } from "../../types/IState";
-=======
->>>>>>> v2.0.1
 import {
   DataInvalid,
   HTTPError,
@@ -92,14 +64,7 @@ import { getPreloadApi, getWindowId } from "../../util/preloadAccess";
 import { activeGameId } from "../../util/selectors";
 import { getSafe } from "../../util/storeHelper";
 import { batchDispatch, toPromise, truthy } from "../../util/util";
-<<<<<<< HEAD
 import type { RedownloadMode } from "../download_management/types/IDownload";
-=======
-import {
-  AlreadyDownloaded,
-  DownloadIsHTML,
-} from "../download_management/DownloadManager";
->>>>>>> v2.0.1
 import { SITE_ID } from "../gamemode_management/constants";
 import { gameById, knownGames } from "../gamemode_management/selectors";
 import modName from "../mod_management/util/modName";
@@ -108,28 +73,14 @@ import { setLoginId, setOauthPending } from "./actions/session";
 import { OAUTH_CLIENT_ID, OAUTH_REDIRECT_URL, OAUTH_URL, getOAuthRedirectUrl } from "./constants";
 import NXMUrl from "./NXMUrl";
 import { isLoggedIn } from "./selectors";
-<<<<<<< HEAD
 import type { IJWTAccessToken } from "./types/IJWTAccessToken";
 import type { IValidateKeyDataV2 } from "./types/IValidateKeyData";
 import { IAccountStatus } from "./types/IValidateKeyData";
 import { checkModVersion, fetchRecentUpdates, ONE_DAY, ONE_MINUTE } from "./util/checkModsVersion";
 import { convertGameIdReverse, convertNXMIdReverse, nexusGameId } from "./util/convertGameId";
-=======
-import { IAccountStatus } from "./types/IValidateKeyData";
-import {
-  checkModVersion,
-  fetchRecentUpdates,
-  ONE_DAY,
-  ONE_MINUTE,
-} from "./util/checkModsVersion";
-import {
-  convertGameIdReverse,
-  convertNXMIdReverse,
-  nexusGameId,
-} from "./util/convertGameId";
->>>>>>> v2.0.1
 import { endorseCollection, endorseMod } from "./util/endorseMod";
 import { FULL_REVISION_INFO, MOD_FILE_INFO } from "./util/graphQueries";
+import type { ITokenReply } from "./util/oauth";
 import OAuth from "./util/oauth";
 import { makeFileUID } from "./util/UIDs";
 
@@ -1123,9 +1074,6 @@ export function graphErrorContext(err: unknown): Record<string, unknown> {
   return ctx;
 }
 
-<<<<<<< HEAD
-export function resolveGraphError(t: TFunction, isLoggedIn: boolean, err: Error): string {
-=======
 export interface IHandleGraphErrorOptions<T> {
   // Notification title shown to the user when the error isn't skipped.
   title: string;
@@ -1165,8 +1113,7 @@ export function handleGraphError<T>(
   if (code !== undefined && (opts.skipCodes?.includes(code) ?? false)) {
     return opts.fallback;
   }
-  const noReport =
-    code !== undefined && (opts.noReportCodes?.includes(code) ?? false);
+  const noReport = code !== undefined && (opts.noReportCodes?.includes(code) ?? false);
   const allowReport = (opts.allowReport ?? true) && !noReport;
   if (Object.keys(ctx).length > 0) {
     log("warn", opts.title, ctx);
@@ -1179,12 +1126,7 @@ export function handleGraphError<T>(
   return opts.fallback;
 }
 
-export function resolveGraphError(
-  t: TFunction,
-  isLoggedIn: boolean,
-  err: Error,
-): string {
->>>>>>> v2.0.1
+export function resolveGraphError(t: TFunction, isLoggedIn: boolean, err: Error): string {
   if (err.message === "You must provide a version") {
     // is this still reported in this way?
     return t("You can't endorse a mod that has no version set.");
