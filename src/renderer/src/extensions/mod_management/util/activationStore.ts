@@ -100,14 +100,7 @@ function readManifest(data: string | Buffer): IDeploymentManifest {
   return repairManifest(parsed);
 }
 
-<<<<<<< HEAD
 export function purgeDeployedFiles(basePath: string, files: IDeployedFile[]): Promise<void> {
-=======
-export function purgeDeployedFiles(
-  basePath: string,
-  files: IDeployedFile[],
-): Promise<void> {
->>>>>>> v2.0.1
   return Promise.all(
     files.map((file) => {
       const fullPath = path.join(basePath, file.relPath);
@@ -189,7 +182,6 @@ function queryPurge(
       return Promise.reject(new UserCanceled());
     }
   });
-<<<<<<< HEAD
 }
 
 /**
@@ -222,10 +214,10 @@ function queryPurgeWineEra(
         {
           text: t(
             "A previous Wine or Proton-based Vortex deployment was found for this game. " +
-            "Mods deployed through Wine/Proton must be purged before the native Linux " +
-            "version of Vortex can manage this game. " +
-            "The purge will remove deployed mod files from the game directory using the " +
-            "existing manifest. Unmodified files will be removed; changed files will be kept.",
+              "Mods deployed through Wine/Proton must be purged before the native Linux " +
+              "version of Vortex can manage this game. " +
+              "The purge will remove deployed mod files from the game directory using the " +
+              "existing manifest. Unmodified files will be removed; changed files will be kept.",
           ),
         },
         [{ label: "Cancel" }, { label: "Purge" }],
@@ -237,32 +229,24 @@ function queryPurgeWineEra(
         ...file,
         relPath: file.relPath.replace(/\\/g, "/"),
       }));
-      return purgeDeployedFiles(basePath, normalizedFiles).catch(
-        (err: unknown) => {
-          api.showErrorNotification("Purging failed", err, {
-            allowReport: false,
-          });
-          return Promise.reject(new UserCanceled());
-        },
-      );
+      return purgeDeployedFiles(basePath, normalizedFiles).catch((err: unknown) => {
+        api.showErrorNotification("Purging failed", err, {
+          allowReport: false,
+        });
+        return Promise.reject(new UserCanceled());
+      });
     } else {
       return Promise.reject(new UserCanceled());
     }
   });
-=======
->>>>>>> v2.0.1
 }
 
 function readManifestFile(filePath: string): Promise<any> {
-  return Promise.resolve(fs.readFileAsync(filePath, "utf8")).then((data) =>
-    readManifest(data),
-  );
+  return Promise.resolve(fs.readFileAsync(filePath, "utf8")).then((data) => readManifest(data));
 }
 
 function readManifestFileBinary(filePath: string): Promise<any> {
-  return Promise.resolve(fs.readFileAsync(filePath)).then((data) =>
-    readManifest(data),
-  );
+  return Promise.resolve(fs.readFileAsync(filePath)).then((data) => readManifest(data));
 }
 
 function getManifestImpl(
@@ -284,18 +268,17 @@ function getManifestImpl(
         // This handles Wine/Proton-era deployments where the primary JSON was
         // never written to the game directory but the msgpack backup exists in
         // the staging folder.
-        return readManifestFileBinary(backup2Path)
-          .catch((inner: unknown) => {
-            if (getErrorCode(inner) === "ENOENT") {
-              return readManifestFile(backupPath).catch((backupErr: unknown) => {
-                if (getErrorCode(backupErr) === "ENOENT") {
-                  return emptyManifest(instanceId);
-                }
-                throw backupErr;
-              });
-            }
-            throw inner;
-          });
+        return readManifestFileBinary(backup2Path).catch((inner: unknown) => {
+          if (getErrorCode(inner) === "ENOENT") {
+            return readManifestFile(backupPath).catch((backupErr: unknown) => {
+              if (getErrorCode(backupErr) === "ENOENT") {
+                return emptyManifest(instanceId);
+              }
+              throw backupErr;
+            });
+          }
+          throw inner;
+        });
       }
       if (code === "EPERM") {
         errObj.message =
@@ -348,8 +331,7 @@ function getManifestImpl(
             }),
         )
         .catch((backupErr: unknown) => {
-          errObj.message +=
-            "\nBackup couldn't be read: " + unknownToError(backupErr).message;
+          errObj.message += "\nBackup couldn't be read: " + unknownToError(backupErr).message;
           return Promise.reject(errObj);
         });
     })
@@ -608,22 +590,11 @@ export function saveActivation(
   return activation.length === 0
     ? fs.removeAsync(tagFilePath).catch(() => undefined)
     : writeFileAtomic(tagFilePath, dataJSON).then(() =>
-<<<<<<< HEAD
         fs.removeAsync(path.join(stagingPath, tagFileName)).catch((err: unknown) => {
           if (getErrorCode(err) === "ENOENT") {
             return null;
           }
           throw err;
         }),
-=======
-        fs
-          .removeAsync(path.join(stagingPath, tagFileName))
-          .catch((err: unknown) => {
-            if (getErrorCode(err) === "ENOENT") {
-              return null;
-            }
-            throw err;
-          }),
->>>>>>> v2.0.1
       );
 }
