@@ -55,20 +55,10 @@ export const GameButton: FC<GameButtonProps> = ({
 
   return (
     <button
-<<<<<<< HEAD
       className={joinClasses("group relative size-12 shrink-0 overflow-hidden rounded-lg", {
         "outline-2 outline-offset-2 outline-neutral-strong focus-visible:outline-info-subdued":
           isActive,
       })}
-=======
-      className={joinClasses(
-        "group relative size-12 shrink-0 overflow-hidden rounded-lg",
-        {
-          "outline-2 outline-offset-2 outline-neutral-strong focus-visible:outline-info-subdued":
-            isActive,
-        },
-      )}
->>>>>>> v2.0.1
       title={title}
       {...props}
     >
