@@ -34,14 +34,7 @@ import { log, setupLogging, changeLogPath } from "./logging";
 import MainWindow from "./MainWindow";
 import SplashScreen from "./SplashScreen";
 import DuckDBSingleton from "./store/DuckDBSingleton";
-<<<<<<< HEAD
 import LevelPersist, { DatabaseLocked, DatabaseOpenError } from "./store/LevelPersist";
-=======
-import LevelPersist, {
-  DatabaseLocked,
-  DatabaseOpenError,
-} from "./store/LevelPersist";
->>>>>>> v2.0.1
 import {
   initMainPersistence,
   readPersistedValue,
@@ -120,13 +113,7 @@ class Application {
   private mLevelPersistors: LevelPersist[] = [];
   private mArgs: IParameters;
   private mMainWindow: MainWindow | undefined;
-<<<<<<< HEAD
   private mMainWindowReady: Promise<Electron.WebContents | undefined> | undefined;
-=======
-  private mMainWindowReady:
-    | Promise<Electron.WebContents | undefined>
-    | undefined;
->>>>>>> v2.0.1
   private mTray: TrayIcon;
   private mAppMetadata: AppInitMetadata;
   private mFirstStart: boolean = false;
@@ -187,13 +174,7 @@ class Application {
   }
 
   private async initMainWindow(): Promise<void> {
-<<<<<<< HEAD
     const windowSettings = await readPersistedValue<IWindow>("settings", ["window"]);
-=======
-    const windowSettings = await readPersistedValue<IWindow>("settings", [
-      "window",
-    ]);
->>>>>>> v2.0.1
 
     this.mMainWindow = new MainWindow(this.mArgs.inspector, windowSettings);
     log("debug", "creating main window");
@@ -213,13 +194,7 @@ class Application {
     log("debug", "window ready");
   }
 
-<<<<<<< HEAD
   private showDialog(options: Electron.MessageBoxOptions): Promise<Electron.MessageBoxReturnValue> {
-=======
-  private showDialog(
-    options: Electron.MessageBoxOptions,
-  ): Promise<Electron.MessageBoxReturnValue> {
->>>>>>> v2.0.1
     const parent = this.mMainWindow?.getHandle();
     if (parent) {
       return dialog.showMessageBox(parent, options);
@@ -271,14 +246,8 @@ class Application {
 
     app.on("second-instance", (_event: Event, secondaryArgv: string[]) => {
       log("debug", "getting arguments from second instance", secondaryArgv);
-<<<<<<< HEAD
       this.applyArguments(parseCommandline(secondaryArgv, true)).catch((err: unknown) =>
         log("error", "error applying arguments", unknownToError(err)),
-=======
-      this.applyArguments(parseCommandline(secondaryArgv, true)).catch(
-        (err: unknown) =>
-          log("error", "error applying arguments", unknownToError(err)),
->>>>>>> v2.0.1
       );
     });
 
@@ -329,13 +298,7 @@ class Application {
     app
       .whenReady()
       .then(onReady)
-<<<<<<< HEAD
       .catch((err: unknown) => log("error", "error starting application", unknownToError(err)));
-=======
-      .catch((err: unknown) =>
-        log("error", "error starting application", unknownToError(err)),
-      );
->>>>>>> v2.0.1
 
     app.on("web-contents-created", (_event: Electron.Event, contents: Electron.WebContents) => {
       contents.on("will-attach-webview", this.attachWebView);
@@ -539,7 +502,6 @@ class Application {
 
     log("debug", "waiting for user interface");
     await this.awaitMainWindowReady();
-<<<<<<< HEAD
 
     // Apply buffered cold-start NXM URL now that renderer is ready (PROT-01)
     if (this.mPendingDownload !== undefined) {
@@ -549,8 +511,6 @@ class Application {
         log("warn", "failed to apply pending download", err),
       );
     }
-=======
->>>>>>> v2.0.1
 
     log("debug", "setting up tray icon");
     this.createTray();
@@ -795,47 +755,10 @@ class Application {
 
     let backupData: Record<string, unknown>;
     try {
-<<<<<<< HEAD
       backupData = JSON.parse(await readFile(backupPath, "utf-8")) as Record<string, unknown>;
     } catch (err) {
       log("error", "failed to parse state backup", { backupPath, error: err });
       throw new DataInvalid(`The state backup file is invalid: ${getErrorMessageOrDefault(err)}`);
-    }
-
-    // Wrap all operations in a single transaction to avoid concurrent
-    // BEGIN TRANSACTION calls from individual setItem/removeItem calls.
-    await persistor.beginTransaction();
-    try {
-      for (const [hive, hiveData] of Object.entries(backupData)) {
-        const sub = new SubPersistor(persistor, hive);
-
-        if (replace) {
-          const existingKeys = await sub.getAllKeys();
-          for (const key of existingKeys) {
-            await sub.removeItem(key);
-          }
-        }
-
-        const leaves = this.flattenState(hiveData, []);
-        for (const { key, value } of leaves) {
-          await sub.setItem(key, JSON.stringify(value));
-        }
-      }
-      await persistor.commitTransaction();
-    } catch (err) {
-      await persistor.rollbackTransaction();
-      throw err;
-=======
-      backupData = JSON.parse(await readFile(backupPath, "utf-8")) as Record<
-        string,
-        unknown
-      >;
-    } catch (err) {
-      log("error", "failed to parse state backup", { backupPath, error: err });
-      throw new DataInvalid(
-        `The state backup file is invalid: ${getErrorMessageOrDefault(err)}`,
-      );
->>>>>>> v2.0.1
     }
 
     // Wrap all operations in a single transaction so the import is atomic;
@@ -976,35 +899,15 @@ class Application {
         const sharedPath = this.multiUserPath();
         const sharedStatePath = path.join(sharedPath, currentStatePath);
         try {
-<<<<<<< HEAD
           const tempPersistor = await LevelPersist.create(sharedStatePath, undefined, false);
-=======
-          const tempPersistor = await LevelPersist.create(
-            sharedStatePath,
-            undefined,
-            false,
-          );
->>>>>>> v2.0.1
           try {
             const sharedSub = new SubPersistor(tempPersistor, "user");
             const val = await sharedSub.getItem(["multiUser"]);
             if (!JSON.parse(val)) {
               // User toggled back to per-user while in shared mode
-<<<<<<< HEAD
               log("info", "shared database has multiUser disabled, reverting to per-user");
               multiUser = false;
               await baseSubPersistor.setItem(["multiUser"], JSON.stringify(false));
-=======
-              log(
-                "info",
-                "shared database has multiUser disabled, reverting to per-user",
-              );
-              multiUser = false;
-              await baseSubPersistor.setItem(
-                ["multiUser"],
-                JSON.stringify(false),
-              );
->>>>>>> v2.0.1
               // Remove the stale flag from the shared DB so it doesn't
               // block future switches back to shared mode
               await sharedSub.removeItem(["multiUser"]);
@@ -1207,14 +1110,7 @@ class Application {
     if (isRunning(pid)) {
       log("warn", "renderer process did not exit in time", { pid });
     } else {
-<<<<<<< HEAD
       log("debug", "renderer process exited", { pid, elapsed: Date.now() - start });
-=======
-      log("debug", "renderer process exited", {
-        pid,
-        elapsed: Date.now() - start,
-      });
->>>>>>> v2.0.1
     }
   }
 
