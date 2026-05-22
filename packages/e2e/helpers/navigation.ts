@@ -18,13 +18,7 @@ export async function navigateToGames(page: Page): Promise<void> {
   const navbar = new NavBar(page);
   if (await navbar.gamesLink.isVisible().catch(() => false)) {
     await navbar.gamesLink.click();
-<<<<<<< HEAD
-  } else if (await navbar.homeLink.isVisible().catch(() => false)) {
-=======
-  } else if (
-    await navbar.homeLink.isVisible({ timeout: 3000 }).catch(() => false)
-  ) {
->>>>>>> v2.0.1
+  } else if (await navbar.homeLink.isVisible({ timeout: 3000 }).catch(() => false)) {
     await navbar.homeLink.click();
   }
   await page.waitForTimeout(1000);
