@@ -347,6 +347,67 @@
 
 ---
 
+## Milestone: v8.0 — Upstream v2.0.0 Sync
+
+**Shipped:** 2026-05-22
+**Phases:** 7 (24–30) | **Plans:** 63
+
+**Tag:** `v2.0.0-linux-rebased` SSH-signed at `f570149ea` (annotated tag object `634a5cc1a`)
+**Master HEAD:** `b241b56c5`. **linux-port HEAD:** `6a28945d1` (75 cherry-picks landed; 91 dropped as superseded).
+
+### What Was Built
+
+- Resolved 109 conflicts across 7 buckets (config, dropped scaffolding, mod-management hot zone, gamebryo + per-game extensions, renderer + main spine, build verification, land + tag)
+- Restored `packages/paths`, `packages/paths-node`, `extensions/gamebryo-ba2-support`, `chunking.ts`; deliberately dropped Jest scaffolding with documented divergence
+- Preserved every Linux fix from playbook §1–§10 across the rebase (re-grep clean post-merge)
+- Master FF-merged from PR #4; canonical Linux release published via `release-linux.yml` (run `26270905415`); AppImage + .deb produced and SHA256 captured
+- linux-port branch progressed via 75 SSH-signed cherry-picks, baseline drift (SYNC-39) acknowledged for v8.1
+- Playbook post-mortem captured 5 D-30-04 deltas in single signed commit `2474c3d0d`
+
+### What Worked
+
+- **Bucket-by-bucket conflict resolution** — 7 phases (config → dropped scaffolding → mod-management hot zone → gamebryo + per-game extensions → renderer + main spine → build verification → land + tag) gave natural per-phase done-gates and parseable trees at each boundary
+- **Lease-pinned force-push idiom** — `LIVE=$(git ls-remote ...); git push --force-with-lease=ref:$LIVE` against fork remote was reliable across 30+ pushes without a single overwrite incident
+- **`scripts/grep-checkpoint.sh` extended in place** — Phase 26 created the harness; Phase 27 added 5 gates (12 total). Reusable for future v8.1/v9.0 syncs
+- **Bluebird-Promise trap pre-checked per file** — discovered in Phase 27-02 (TS1064 on async return-type annotation); recorded as D-27-04 footnote and pre-checked in 27-03 / 27-05 / 27-06 / 27-07 plans
+- **DEFERRED-not-skipped pattern** — SYNC-33-C (local-boot evidence), SYNC-34 (Skyrim SE walkthrough), SYNC-39 (linux-port baseline drift) tracked into v8.1 with explicit pointers; nothing dropped silently
+- **3-source REQ traceability** — VERIFICATION.md + SUMMARY.md frontmatter + REQUIREMENTS.md table cross-checked at audit; surfaced TD-1 (stale REQUIREMENTS.md statuses) before tag
+
+### What Was Inefficient
+
+- **Pre-commit oxfmt + lint-staged churn on `.planning/`** — gitignored paths trigger advisory `[FAILED] paths ignored by .gitignore: .planning` on every commit. Standing `git add -f` workaround works but the noise is constant
+- **`gsd-sdk milestone.complete` accomplishment auto-extraction** — pattern-matched summary bullets indiscriminately, capturing blocker headings (`1. [Rule 3 - Blocking]...`) and bare strings (`Conflict:`, `SHA:`, `File 1 — ...`) instead of clean accomplishments. Required full manual rewrite of the v8.0 MILESTONES.md block
+- **STATE.md velocity stats not updated by CLI** — `gsd-sdk milestone.complete` left `progress.completed_phases: 5` / `percent: 63` despite 7/7 phases shipped; manual frontmatter fix required
+- **TS1064 bluebird-Promise trap surfaced mid-plan** — Phase 27-02 hit it during typecheck after the resolution commit; cost a re-resolution. Pre-flight grep for `import Promise from "bluebird"` in conflict files would have caught it earlier
+- **Per-extension typecheck routing inconsistent** — game-baldursgate3, game-witcher3, game-morrowind each lacked `tsconfig.json` and/or `typecheck` script; routed to `pnpm run build` (rolldown) or `node --check` per file. Worth a unified per-extension test convention in v8.1
+- **`pnpm run typecheck` repo-wide blocked on cross-phase markers** — Phase 26 + 27 done-gates couldn't satisfy SYNC-28 alone because Phase 28 spine files still had conflict markers. Acceptable per Rule 3 deviation but means SYNC-28 only became green at Phase 29
+
+### Patterns Established
+
+- **Lease-pinned force-push** — never `--force` to a shared remote; always `git ls-remote` to capture LIVE SHA, then `--force-with-lease=ref:$LIVE`. Tag pushes are additive (no lease needed)
+- **`grep-checkpoint.sh` durable harness** — 12-gate playbook re-grep script lives at `scripts/grep-checkpoint.sh`; reused across Phases 26 / 27 / 28 done-gates and earmarked for v8.1
+- **Bluebird-Promise trap pre-flight** — for any TS file resolving conflicts, pre-check `import Promise from "bluebird"`; if present, do NOT propagate upstream `: Promise<T>` annotations on async functions (TS1064)
+- **Per-file atomic conflict-resolve commits** — one resolved file per commit, with `[Rule 1/2/3]` deviation tags inline in the commit body; produces a clean cherry-pickable history for linux-port
+- **Always `--draft` on auto-PRs in fork CI** — reaffirmed v6.0 D-11; auto-rebase PRs are draft-only on both clean and conflict states (upstream changes always require human review)
+- **DEFERRED-not-skipped checkpoint** — when a SYNC requirement can't fully complete inside its planned phase but has acceptable partial evidence, mark it `Complete (parts X+Y; part Z carry-forward DEFERRED → v8.1)` in REQUIREMENTS.md table — never `Pending` indefinitely
+
+### Key Lessons
+
+1. **gsd-sdk milestone.complete auto-extraction is unreliable** — always manually curate the `Key accomplishments` block in MILESTONES.md after CLI runs; the pattern-matcher pulls in too much noise
+2. **Bluebird-Promise trap is a per-file precondition** — add `grep -l 'import Promise from "bluebird"'` to conflict-resolution pre-flight; saves a re-resolve cycle
+3. **Per-extension build/test conventions diverge** — extensions without `tsconfig.json` or `typecheck` script (BG3, witcher3, morrowind) need an explicit fallback ladder (`pnpm run build` → `node --check`); standardise this in v8.1 housekeeping
+4. **Audit-first close lifecycle** — `audit-milestone` BEFORE `complete-milestone` catches stale REQUIREMENTS.md statuses, missing done-gate evidence, and traceability mismatches while there's still time to fix them in-milestone (vs. carrying as tech debt)
+5. **Carry-forward over carry-over** — DEFERRED-with-pointer beats Pending-without-pointer; future milestones must inherit explicit follow-ups, not silent gaps
+6. **`.planning/` gitignored standing memory works** — `git add -f` for any `.planning/` path is now reflex; lint-staged advisory failure is expected and ignorable
+
+### Cost Observations
+
+- Model mix: Sonnet 4.6 (primary execution); occasional Opus 4.7 for tricky conflict regions
+- Sessions: ~10–12 sessions across 8 days (2026-05-15 to 2026-05-22)
+- Notable: Phase 26 (mod-management hot zone) and Phase 28 (renderer + main spine) were the densest — 22 + 12 commits respectively. Phase 25 (dropped scaffolding restore) was the fastest because the restore set was determined cleanly via `^A`-only filter against `8b5a9f675`
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -360,6 +421,7 @@
 | v5.0 | 1 | 1 | Smallest milestone; pre-existing confirmations reduced scope; v4.0 lesson (regenerate .d.ts) applied immediately |
 | v6.0 | 2 | 2 | Two independent infrastructure tracks; injectable seam pattern carried forward; gh GraphQL→REST fork pivot; daily upstream rebase CI operational |
 | v7.0 | 3–4 | 6 | Grep-first requirement verification; Nyquist RED stubs before implementation; CSS-only Steam Deck fix; fastest phases were research-driven minimal scope |
+| v8.0 | ~10–12 | 7 | Bucket-by-bucket conflict resolution; lease-pinned force-push idiom; durable `grep-checkpoint.sh` 12-gate harness; bluebird-Promise trap pre-flight; DEFERRED-with-pointer pattern over silent skip |
 
 ### Cumulative Quality
 
@@ -372,6 +434,7 @@
 | v5.0 | 0 new (fomod-installer C# only; verify-warning.spec.ts pre-existing) | 1 phase, 0 Windows regressions | ubuntu-latest + windows-latest |
 | v6.0 | 13 (fs.test.ts chattr+F) | 2 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
 | v7.0 | ~8 (hardlink_activator, stagingDirectory, discovery, raiseUACDialog, openUrlFailed) | 6 phases, 0 Windows regressions | ubuntu-latest + windows-latest |
+| v8.0 | 0 net new (rebase preserves existing); Vitest scaffolding upstream-Jest divergence documented | 7 phases, 0 Windows regressions (Win CI green on FF-merge SHA) | ubuntu-latest + windows-latest |
 
 ### Top Lessons (Verified Across Milestones)
 
@@ -387,3 +450,7 @@
 10. **gh API for fork PR ops must use REST** — GraphQL rejects fork GITHUB_TOKEN for createPullRequest mutations; always use `gh api repos/{owner}/{repo}/pulls` in fork CI workflows
 11. **git rebase leaves detached HEAD** — always push with `git push origin HEAD:refs/heads/$BRANCH` after a rebase in CI; never rely on `git push origin HEAD`
 12. **Submodule-aware git add** — use `git add -u` not `git add -A` in repos with submodules to avoid fatal errors on uninitialized submodule index entries
+13. **Audit-before-complete is mandatory at milestone close** — `audit-milestone` surfaces stale REQUIREMENTS.md, missing done-gates, and traceability mismatches while still in-milestone; running `complete-milestone` first locks them in as tech debt
+14. **Lease-pinned force-push, never bare `--force`** — capture `LIVE=$(git ls-remote ...)` then `git push --force-with-lease=ref:$LIVE`; survived 30+ pushes across v8.0 conflict-resolution waves with zero overwrite incidents
+15. **DEFERRED-with-pointer beats silent Pending** — when a SYNC requirement has acceptable partial evidence but a part C carry-forward, mark it `Complete (parts X+Y; part Z DEFERRED → v8.1)`; future milestones inherit explicit follow-ups instead of orphaned `[ ]` checkboxes
+16. **gsd-sdk milestone.complete auto-extraction must be manually curated** — the CLI pattern-matches summary bullets indiscriminately; always rewrite the `Key accomplishments` block in MILESTONES.md by hand after CLI runs

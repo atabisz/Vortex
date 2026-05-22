@@ -1,5 +1,32 @@
 # Milestones
 
+## v8.0 Upstream v2.0.0 Sync (Shipped: 2026-05-22)
+
+**Phases completed:** 7 phases (24–30), 63 plans
+
+**Tag:** `v2.0.0-linux-rebased` SSH-signed at `f570149ea` (annotated tag object `634a5cc1a`)
+**Master HEAD:** `b241b56c5` post-audit. **linux-port HEAD:** `6a28945d1` (75 cherry-picks).
+**Audit:** [milestones/v8.0-MILESTONE-AUDIT.md](milestones/v8.0-MILESTONE-AUDIT.md) — PASSED with tech debt.
+
+**Key accomplishments:**
+
+- Resolved 109 merge conflicts across 7 buckets (config, dropped scaffolding, mod-management hot zone, gamebryo + per-game extensions, renderer + main spine, build verification, land + tag).
+- Restored `packages/paths`, `packages/paths-node`, `gamebryo-ba2-support`, `chunking.ts`; deliberately dropped Jest scaffolding with documented divergence.
+- Preserved every Linux fix from playbook §1–§10 across the rebase.
+- Master FF-merged from PR #4; canonical Linux release published via `release-linux.yml` (run `26270905415`).
+- linux-port progressed via 75 cherry-picks (91 dropped as superseded); SYNC-39 baseline drift → v8.1.
+- Playbook post-mortem captured 5 D-30-04 deltas in single signed commit `2474c3d0d`.
+
+**Carry-forward to v8.1 (deferred-not-skipped):**
+
+- SYNC-33-C local-boot evidence
+- SYNC-34 4-screenshot Skyrim SE walkthrough
+- SYNC-39 linux-port baseline drift catch-up
+
+**Known deferred items at close:** 20 (see STATE.md Deferred Items — pre-v8.0 backlog)
+
+---
+
 ## v7.0 First-Run Onboarding Wizard (Shipped: 2026-04-17)
 
 **Phases completed:** 6 phases, 12 plans, 21 tasks
