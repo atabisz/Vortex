@@ -1,20 +1,9 @@
 import * as path from "path";
 import { inspect } from "util";
 
-<<<<<<< HEAD
 import { type Span, context, ROOT_CONTEXT, SpanStatusCode, trace } from "@opentelemetry/api";
-import { unknownToError } from "@vortex/shared";
-=======
-import {
-  type Span,
-  context,
-  ROOT_CONTEXT,
-  SpanStatusCode,
-  trace,
-} from "@opentelemetry/api";
 import { isEnvironmentalError, unknownToError } from "@vortex/shared";
 import { isUserCanceled } from "@vortex/shared/errors";
->>>>>>> v2.0.1
 import { recordErrorOnSpan } from "@vortex/shared/telemetry";
 import type PromiseBB from "bluebird";
 import type { BrowserWindow } from "electron";
