@@ -11,8 +11,8 @@ packages:
   - ./extensions/games/*
 
 allowBuilds:
-  "@nexusmods/fomod-installer-native": true
   "@electron/rebuild": true
+  "@nexusmods/fomod-installer-native": true
   "@parcel/watcher": true
   ba2tk: true
   bsatk: true
@@ -89,8 +89,6 @@ catalog:
   "@types/js-yaml": ^4.0.9
   "@types/json-socket": ~0.1.21
   "@types/jsonwebtoken": ~9.0.10
-  "@types/leveldown": ~4.0.6
-  "@types/levelup": ~5.1.5
   "@types/libxmljs": ^0.18.4
   "@types/lodash": ~4.17.24
   "@types/minimatch": ^2.0.29
@@ -203,10 +201,10 @@ catalog:
   json-loader: ^0.5.7
   json-socket: git+https://github.com/foi/node-json-socket#d56c8e2938fa4284c4001b815d9b6e4a92b5c07b
   jsonwebtoken: ^9.0.0
-  limiter: ^3.0.0
-  lodash: ^4.17.21
   leveldown: 5.6.0
   levelup: 4.4.0
+  limiter: ^3.0.0
+  lodash: ^4.17.21
   loot: git+https://github.com/Nexus-Mods/node-loot#7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d
   lru-cache: ^11.2.6
   markdown-ast: ^0.2.1
@@ -311,5 +309,5 @@ overrides:
 patchedDependencies:
   exe-version@2.3.0: patches/exe-version@2.3.0.patch
   gamebryo-savegame@2.1.2: patches/gamebryo-savegame@2.1.2.patch
-  playwright-core@1.58.2: patches/playwright-core@1.58.2.patch
   loot@6.2.2: patches/loot@6.2.2.patch
+  playwright-core@1.58.2: patches/playwright-core@1.58.2.patch
