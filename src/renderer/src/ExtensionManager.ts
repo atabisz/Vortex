@@ -17,8 +17,6 @@ import type { IHashResult, ILookupResult, IModInfo } from "modmeta-db";
 import type * as modmetaT from "modmeta-db";
 import type { ToastOptions } from "react-hot-toast";
 import { toast } from "react-hot-toast";
-
-import { getIPCPath } from "./util/ipc";
 import * as semver from "semver";
 import { generate as shortid } from "shortid";
 import stringFormat from "string-template";
@@ -94,6 +92,7 @@ import * as fsVortex from "./util/fs";
 import getVortexPath from "./util/getVortexPath";
 import type { i18n } from "./util/i18n";
 import { TString } from "./util/i18n";
+import { getIPCPath } from "./util/ipc";
 import lazyRequire from "./util/lazyRequire";
 import { showError } from "./util/message";
 import { deregisterProtocolHandler, registerProtocolHandler } from "./util/protocolRegistration";
@@ -866,18 +865,10 @@ class ExtensionManager {
           // file handles yet despite waitForRendererExit in the main process.
           // Log and continue — the remove flag stays in state so it retries on
           // next startup.
-<<<<<<< HEAD
           log("warn", "failed to remove extension, will retry on next startup", {
             extId,
             error: getErrorMessageOrDefault(err),
           });
-=======
-          log(
-            "warn",
-            "failed to remove extension, will retry on next startup",
-            { extId, error: getErrorMessageOrDefault(err) },
-          );
->>>>>>> v2.0.1
         }
       });
 
@@ -907,18 +898,10 @@ class ExtensionManager {
           // On Windows the previous renderer's file handles may not be
           // released yet. Subsequent relaunches will retry; a few failed
           // removes converging is preferable to silently looping forever.
-<<<<<<< HEAD
           log("warn", "failed to remove outdated extension, will retry on next startup", {
             name: ext,
             error: getErrorMessageOrDefault(err),
           });
-=======
-          log(
-            "warn",
-            "failed to remove outdated extension, will retry on next startup",
-            { name: ext, error: getErrorMessageOrDefault(err) },
-          );
->>>>>>> v2.0.1
         }
         // Mark the extension state for removal so the next boot's
         // state-flagged-remove path (above) dispatches forgetExtension via
@@ -2858,12 +2841,7 @@ class ExtensionManager {
 
     const res = fs
       .readdirSync(extension.path)
-<<<<<<< HEAD
       .filter((name) => fs.statSync(path.join(extension.path, name)).isDirectory())
-=======
-      .filter((name) =>
-        fs.statSync(path.join(extension.path, name)).isDirectory(),
-      )
       .filter((name) => {
         // Skip transient directories left behind by the extension installer/updater:
         // `*.installing` / `*.7z.installing` are in-progress installs, `*.bak-*` are
@@ -2875,7 +2853,6 @@ class ExtensionManager {
         }
         return true;
       })
->>>>>>> v2.0.1
       .reduce((prev: { [id: string]: IRegisteredExtension }, name: string) => {
         if (!getSafe(this.mExtensionState, [name, "enabled"], true)) {
           log("debug", "extension disabled", { name });
