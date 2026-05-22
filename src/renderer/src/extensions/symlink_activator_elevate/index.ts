@@ -1,17 +1,3 @@
-<<<<<<< HEAD
-=======
-import type { TFunction } from "i18next";
-import type * as os from "os";
-
-import {
-  getErrorCode,
-  getErrorMessageOrDefault,
-  getErrorNativeCode,
-  unknownToError,
-} from "@vortex/shared";
-import PromiseBB from "bluebird";
-import JsonSocket from "json-socket";
->>>>>>> v2.0.1
 import * as net from "net";
 import type * as os from "os";
 import * as path from "path";
@@ -38,8 +24,8 @@ import { ProcessCanceled, UserCanceled } from "../../util/CustomErrors";
 import { runElevated } from "../../util/elevated";
 import * as fs from "../../util/fs";
 import type { Normalize } from "../../util/getNormalizeFunc";
-import { getIPCPath } from "../../util/ipc";
 import getVortexPath from "../../util/getVortexPath";
+import { getIPCPath } from "../../util/ipc";
 import makeReactive from "../../util/makeReactive";
 import { activeGameId, gameName } from "../../util/selectors";
 import { getSafe } from "../../util/storeHelper";
@@ -542,14 +528,10 @@ class DeploymentMethod extends LinkingDeployment {
           if (elevating) {
             // this is called if consent.exe disappeared but none of our "regular" code paths ran
             // which would have cancelled this timeout
-            log(
-              "warn",
-              "[elevation-trace] watchdog fired, no initialised IPC",
-              {
-                elapsedMs: Date.now() - tStart,
-                ipcPath,
-              },
-            );
+            log("warn", "[elevation-trace] watchdog fired, no initialised IPC", {
+              elapsedMs: Date.now() - tStart,
+              ipcPath,
+            });
             this.api.store.dispatch(clearUIBlocker("elevating"));
             this.endIPC("no init");
             /*
