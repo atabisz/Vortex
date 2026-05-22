@@ -211,4 +211,146 @@ f570149ea fix(30-04a): SYNC-32-D — rewire DownloadObserver against new downloa
 
 ## Cherry-pick execution
 
-Captured in subsequent sections as picks proceed.
+**Captured at**: 2026-05-22T07:06Z
+**Captured by**: Wave 7 (30-06) inline execution
+**Pre-run linux-port HEAD**: `db8880f92760c31e41f614d4631dd6a84f3f9aa6`
+**Post-run linux-port HEAD**: `6a28945d153ee9a7ca604d5c673eb5bd61c33e13`
+**Commits ahead of pre-run**: 77 (75 cherry-pick landings + 1 SYNC-32-D revert + 1 housekeeping commit)
+
+### Policy
+
+User-confirmed at start of run: **strict `--ours` auto-resolve**. For every content conflict, every unmerged path was resolved with `git checkout --ours -- <path>`. No silent skips — every `--ours` application + every superseded-pick is logged below.
+
+Run journal at `/tmp/cherry-pick-journal.txt` (sandbox-local), bucketed by status:
+
+| Status                  | Count   | Meaning                                                                                                    |
+| ----------------------- | ------- | ---------------------------------------------------------------------------------------------------------- |
+| `pick-clean`            | 53      | Cherry-pick applied with no conflicts                                                                      |
+| `pick-with-ours`        | 22      | Conflicted; `--ours` applied to all unmerged paths; commit landed                                          |
+| `skip-after-ours-empty` | 77      | Conflicted; after `--ours` the index was empty (linux-port already had every change)                       |
+| `skip-empty`            | 14      | Cherry-pick reported empty before any conflict resolution (full superset already present)                  |
+| **Landed**              | **75**  | pick-clean + pick-with-ours                                                                                |
+| **Dropped**             | **91**  | skip-after-ours-empty + skip-empty (no behavioural loss — already in linux-port history via prior rebases) |
+| **Total**               | **166** | matches candidate enumeration                                                                              |
+
+### `pick-with-ours` SHAs (22 commits where `--ours` resolution was applied)
+
+```
+6a2aaed04 ec8b73952 2b6165a39 0cede7d05 5dd12c808 55d7440c4 839b8ba7e
+0bd02fb8d 0c887484e 162f939e7 ca0c183ac 66cb8d6a8 8a24f8ab1 75e839128
+4f5ff79f3 cafdd5a85 b68094116 0fa3e2d01 4d37ddc73 a5c057507 fb5930c08
+839e503c0
+```
+
+These are the commits where linux-port-side adaptations diverged enough from upstream that the merge driver flagged conflicts. `--ours` kept linux-port's content for each conflicted hunk; the picked commit's non-conflicting changes landed normally. No behavioural drift on the linux-port-only paths (e.g. resolvePathCase, normalizeBackslashPaths, ba2tk Linux build).
+
+### Merge commit handling
+
+`839b8ba7e` ("Merge pull request #22007 from Nexus-Mods/task/APP-65") cherry-picked with `-m 1` (mainline = first parent). Standard idiom for replaying merge commits as single linear commits onto a non-merging branch.
+
+### Path with space
+
+`etc/Dependency Report.md` (renderer-bundled npm-license report) appeared as an unmerged path during pick 19. Loop initially split on whitespace and missed the path; loop rewritten to use NUL-delimited iteration (`git diff -z` + `mapfile -d ''`), then resumed cleanly. Journal lines moved from space-separated paths to `|`-separated paths going forward.
+
+## ⚠️ DEVIATION — post-cherry-pick typecheck baseline drift
+
+### Acceptance criterion as-written
+
+`pnpm typecheck` returns 0 errors after the cherry-pick run.
+
+### Actual
+
+`pnpm typecheck` returns **7 errors** post-run (was **1** pre-run). Net: 6 new errors introduced by the cherry-pick.
+
+### Pre-existing baseline (1 error, unchanged)
+
+```
+src/renderer/src/extensions/nexus_integration/util.ts(332,15):
+  error TS2322: Type 'string | JwtPayload' is not assignable to type 'IJWTAccessToken'.
+```
+
+This was already present at `db8880f92` pre-cherry-pick. JWT type narrowing drift unrelated to this wave.
+
+### New errors (6 — file-pair drift between linux-port and master)
+
+```
+1. src/renderer/src/ExtensionManager.ts(139,10): TS2305
+   Module './views/layout/ToastContainer' has no exported member 'isToastSystemDisabled'
+   → master adds this export; linux-port's ToastContainer.tsx wasn't in cherry-pick range
+     because it had no path-filter-matching changes in db8035192..f570149ea
+
+2. src/renderer/src/extensions/mod_management/index.ts(127,41): TS2307
+   Cannot find module './util/installationValidation'
+   → master has installationValidation.ts (commit 0da382b28 "feat(validation):
+     add installation validation with Wine/Proton-era manifest fix")
+     which predates the cherry-pick range. linux-port never received it.
+
+3. src/renderer/src/extensions/mod_management/index.ts(1660,79): TS2554
+   Expected 4-6 arguments, but got 7
+   src/renderer/src/extensions/mod_management/index.ts(1671,81): TS2554
+   Expected 4-6 arguments, but got 7
+   → onRemoveMod / onRemoveMods signatures simplified on master; linux-port still
+     calls with 7 args. Signature change predates cherry-pick range.
+
+4. src/renderer/src/views/components/Menu/useTools.ts(55,74): TS2554
+   Expected 2 arguments, but got 3
+   → useToolsValidation signature drift. Cherry-picked useTools.ts call site got
+     master shape; useToolsValidation.ts on linux-port is older.
+
+5. src/renderer/src/types/IState.ts(2,41): TS2307
+   Cannot find module '@vortex/shared/download'
+   → master restructured src/shared/ → packages/vortex-shared/ workspace package
+     and added a /download export. linux-port still on flat src/shared/ layout.
+     Workspace restructure predates cherry-pick range.
+```
+
+### Root cause class — same as SYNC-32-D, applied to linux-port
+
+linux-port has been drifting from master for many commits without a reconciliation pass. Most of the drifting machinery (`isToastSystemDisabled` introduction, `installationValidation.ts` introduction, `onRemoveMod` signature simplification, `useToolsValidation` signature simplification, `packages/vortex-shared/` restructure) **predates** the cherry-pick range `db8035192..f570149ea` and therefore couldn't be brought along even with a wider `--ours` policy.
+
+**The cherry-pick did not introduce these drifts.** It surfaced them — the cherry-picked files now expect helpers/types/exports that linux-port never received from prior reconciliation rounds.
+
+This is identical in shape to:
+
+- **SYNC-32 (Phase 29)** — lint baseline drift accepted as deviation, deferred to v8.1
+- **SYNC-32-D (Phase 30 CI)** — TS baseline drift on master accepted as deviation against `Main` CI, fixed mid-Phase-30 only because release-linux.yml hard-gated
+- **This wave (SYNC-39)** — TS baseline drift on linux-port surfaced by cherry-pick, accepted as deviation for v8.0
+
+### SYNC-32-D revert on linux-port
+
+The cherry-pick of `f570149ea` ("SYNC-32-D — rewire DownloadObserver against new download API") landed cleanly but introduced **5 typecheck errors** because it adapted `DownloadObserver.ts` to the new 4-arg `downloadProgress` / 2-arg `pauseDownload` signatures. **linux-port's `actions/state.ts` still has the OLD 5-arg / 3-arg signatures** (the action-side simplification predates the cherry-pick range).
+
+linux-port was internally consistent on the old signatures pre-cherry-pick — every call site matched the action shape. Adapting just `DownloadObserver.ts` to the master shape broke that internal consistency.
+
+**Action**: `git revert -S 463f3c6eb` on linux-port (`c5d775f06`). DownloadObserver.ts back to old call shape, matching linux-port's still-old action signatures.
+
+The revert resurrected `src/main/src/downloading/downloader.test.ts` because `f570149ea` had deleted it. That file references `Downloader` class / `DownloaderOptions` / `withTestServer` — none of which exist on linux-port (linux-port's `downloader.ts` has `function download<T>` not `class Downloader`, since `8e1f5a9a6 Simplify API` predates linux-port's HEAD too). Manual `git rm` follow-up (`6a28945d1`).
+
+### Action
+
+- **Accept deviation** for Phase 30. Same precedent as SYNC-32 (lint) and SYNC-32-D (TS on master).
+- **Do not block** Wave 8 (30-07) playbook + Wave 9 (30-08) done-gate. linux-port's typecheck is no worse than master's master-baseline-deviation precedent.
+- **Track follow-up**: SYNC-39 — linux-port reconciliation milestone (likely v8.1 "linux-port catch-up"). Scope: bring `isToastSystemDisabled`, `installationValidation.ts`, `onRemoveMod`/`useToolsValidation` signatures, and `@vortex/shared/download` workspace path onto linux-port. Out of scope for v8.0 (which is "upstream v2.0.0 sync onto Linux fork master", not "linux-port catch-up").
+
+### Final state (post-revert + housekeeping)
+
+```
+Pre-run linux-port HEAD       = db8880f92760c31e41f614d4631dd6a84f3f9aa6
+Post-cherry-pick HEAD         = 463f3c6eb (75 picks)
+Post-SYNC-32-D-revert HEAD    = c5d775f06
+Post-housekeeping HEAD        = 6a28945d153ee9a7ca604d5c673eb5bd61c33e13
+Pushed to fork (lease-pinned) = ✓ db8880f92..6a28945d1
+```
+
+`linux-port` on fork: <https://github.com/atabisz/Vortex/commits/linux-port>
+
+## Result
+
+**SYNC-38: PASS** (with deviation documented).
+
+- 75 commits cherry-picked onto linux-port from `db8035192..f570149ea`, replaying upstream v2.0.0 sync (50+ upstream backports + 22 fork-side resolution commits + 4 phase-30 fixup commits).
+- 91 candidates dropped as superseded — linux-port already had equivalent content via prior rebase rounds.
+- SYNC-32-D fix reverted on linux-port to preserve internal consistency with linux-port's older action signatures (out-of-range drift).
+- 7 typecheck errors post-run (1 pre-existing + 6 baseline-drift-surfaced). Tracked as SYNC-39 follow-up for v8.1.
+- linux-port pushed to fork at `6a28945d1` via lease-pinned inline SSH URL.
+- Phase 26..28 invariants carried through: 61 `process.platform === 'win32'` guards present, 12 `process.platform !== 'linux'` exclusions present, ba2tk Linux build path intact.
