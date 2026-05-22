@@ -152,18 +152,8 @@ export async function checkModRequirements(
         mod.attributes?.source === "nexus",
     );
 
-<<<<<<< HEAD
-    if (enabledMods.length === 0) {
-      return createResult(startTime, "passed", HealthCheckSeverity.Info, "No Nexus mods installed");
-=======
     if (checkableMods.length === 0) {
-      return createResult(
-        startTime,
-        "passed",
-        HealthCheckSeverity.Info,
-        "No Nexus mods installed",
-      );
->>>>>>> v2.0.1
+      return createResult(startTime, "passed", HealthCheckSeverity.Info, "No Nexus mods installed");
     }
 
     // Build lookup structures from ALL enabled mods so that mods installed
@@ -313,31 +303,11 @@ export async function checkModRequirements(
           if (req.externalRequirement) {
             getModEntry().missingMods.push({
               ...req,
-<<<<<<< HEAD
               modId: 0,
               gameId,
               uid: `external-${req.id}`,
               requiredBy,
               modUrl: req.url,
-=======
-              modId: requiredModId,
-              gameId: gameIdForStorage,
-              uid: makeModUID({
-                modId: req.modId,
-                fileId: "0",
-                gameId: gameIdForStorage,
-              }),
-              requiredBy: {
-                modId,
-                modName: getModName(),
-                // The nexus mods URL of the mod that requires this dependency
-                modUrl: `https://www.nexusmods.com/${requiringModNexusDomain}/mods/${modId}`,
-              },
-              // The URL of the required dependency mod
-              modUrl:
-                (req.url && req.url.trim()) ||
-                `https://www.nexusmods.com/${gameIdForStorage}/mods/${requiredModId}`,
->>>>>>> v2.0.1
             });
             continue;
           }
