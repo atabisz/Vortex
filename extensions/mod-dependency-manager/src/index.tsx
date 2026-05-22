@@ -47,58 +47,6 @@ import ModNameWrapper from "./views/ModNameWrapper";
 import OverrideEditor, { IPathTools } from "./views/OverrideEditor";
 import Settings from "./views/Settings";
 
-<<<<<<< HEAD
-=======
-import {
-  setConflictDialog,
-  setConflictInfo,
-  setEditCycle,
-  setFileOverrideDialog,
-  setHasUnsolvedConflicts,
-  setModTypeConflictsSetting,
-} from "./actions";
-import {
-  sessionReducer as connectionReducer,
-  settingsReducer,
-} from "./reducers";
-import {
-  enabledModKeys,
-  enabledModsWithOverrides,
-  modsWithOverrides,
-} from "./selectors";
-import unsolvedConflictsCheck from "./unsolvedConflictsCheck";
-
-import { disableModTypeConflictsDialog } from "./util/disableModTypeConflicts";
-
-import Bluebird from "bluebird";
-import I18next, { WithT } from "i18next";
-import * as _ from "lodash";
-import {
-  ILookupResult,
-  IModInfo,
-  IReference,
-  IRule,
-  RuleType,
-} from "modmeta-db";
-import * as path from "path";
-import * as React from "react";
-import { withTranslation } from "react-i18next";
-import { connect } from "react-redux";
-import * as Redux from "redux";
-import {} from "redux-thunk";
-import shortid from "shortid";
-import {
-  actions,
-  fs,
-  log,
-  PureComponentEx,
-  selectors,
-  ToolbarIcon,
-  types,
-  util,
-} from "vortex-api";
-
->>>>>>> v2.0.1
 const CONFLICT_NOTIFICATION_ID = "mod-file-conflict";
 const UNFULFILLED_NOTIFICATION_ID = "mod-rule-unfulfilled";
 
@@ -373,13 +321,7 @@ async function updateOverrides(
         // Check if the file is being deployed by any of the other mods in the conflict.
         const isDeploying =
           conflicting.length > 1
-<<<<<<< HEAD
             ? conflicting.find((c) => (c.fileOverrides ?? []).includes(fileName)) === undefined
-=======
-            ? conflicting.find((c) =>
-                (c.fileOverrides ?? []).includes(fileName),
-              ) === undefined
->>>>>>> v2.0.1
             : true;
 
         if (conflicting.length === 1 && !isDeploying) {
@@ -770,16 +712,8 @@ const shouldSuppressUpdate = (api: types.IExtensionApi) => {
   const state = api.getState();
   const suppressOnActivities = ["conflicts", "installing_dependencies", "deployment", "purging"];
   const isActivityRunning = (activity: string) =>
-<<<<<<< HEAD
     util.getSafe(state, ["session", "base", "activity", "mods"], []).includes(activity) || // purge/deploy
     util.getSafe(state, ["session", "base", "activity", activity], []).length > 0; // installing_dependencies
-=======
-    util
-      .getSafe(state, ["session", "base", "activity", "mods"], [])
-      .includes(activity) || // purge/deploy
-    util.getSafe(state, ["session", "base", "activity", activity], []).length >
-      0; // installing_dependencies
->>>>>>> v2.0.1
   const suppressingActivities = suppressOnActivities.filter((activity) =>
     isActivityRunning(activity),
   );
@@ -1533,12 +1467,7 @@ function once(api: types.IExtensionApi) {
     if (oldState[gameMode] !== newState[gameMode]) {
       const relevantChange = Object.keys(newState[gameMode]).find(
         (modId) =>
-<<<<<<< HEAD
           util.getSafe(oldState, [gameMode, modId], undefined) !== newState[gameMode][modId] &&
-=======
-          util.getSafe(oldState, [gameMode, modId], undefined) !==
-            newState[gameMode][modId] &&
->>>>>>> v2.0.1
           changeMayAffectRules(
             util.getSafe(oldState, [gameMode, modId], undefined),
             newState[gameMode][modId],
