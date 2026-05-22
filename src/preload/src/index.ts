@@ -43,9 +43,7 @@ try {
       openUrl: (url) => betterIpcRenderer.send("shell:openUrl", url),
       openFile: (filePath) => betterIpcRenderer.send("shell:openFile", filePath),
       onOpenUrlFailed: (callback: (url: string) => void) =>
-        betterIpcRenderer.on("shell:openUrlFailed", (_, url) =>
-          callback(url),
-        ),
+        betterIpcRenderer.on("shell:openUrlFailed", (_, url) => callback(url)),
     },
 
     persist: {
@@ -147,12 +145,7 @@ try {
       isFocused: (windowId: number) => betterIpcRenderer.invoke("window:isFocused", windowId),
       setAlwaysOnTop: (windowId: number, flag: boolean) =>
         betterIpcRenderer.invoke("window:setAlwaysOnTop", windowId, flag),
-<<<<<<< HEAD
       moveTop: (windowId: number) => betterIpcRenderer.invoke("window:moveTop", windowId),
-=======
-      moveTop: (windowId: number) =>
-        betterIpcRenderer.invoke("window:moveTop", windowId),
->>>>>>> v2.0.1
       onClose: (callback) => {
         const listener = () => callback();
         ipcRenderer.on("window:event:close", listener);
