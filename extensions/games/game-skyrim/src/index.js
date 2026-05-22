@@ -15,13 +15,7 @@ function findGame() {
     }
     return Promise.resolve(instPath.value);
   } catch (err) {
-<<<<<<< HEAD
     return util.steam.findByName("The Elder Scrolls V: Skyrim").then((game) => game.gamePath);
-=======
-    return util.steam
-      .findByName("The Elder Scrolls V: Skyrim")
-      .then((game) => game.gamePath);
->>>>>>> v2.0.1
   }
 }
 
@@ -62,16 +56,8 @@ let tools = [
   {
     id: "bodyslide",
     name: "BodySlide",
-<<<<<<< HEAD
     executable: () => path.join("Data", "CalienteTools", "BodySlide", "BodySlide x64.exe"),
     requiredFiles: [path.join("Data", "CalienteTools", "BodySlide", "BodySlide x64.exe")],
-=======
-    executable: () =>
-      path.join("Data", "CalienteTools", "BodySlide", "BodySlide x64.exe"),
-    requiredFiles: [
-      path.join("Data", "CalienteTools", "BodySlide", "BodySlide x64.exe"),
-    ],
->>>>>>> v2.0.1
     relative: true,
     logo: "auto",
   },
