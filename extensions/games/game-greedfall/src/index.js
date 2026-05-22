@@ -40,16 +40,8 @@ function testMod(files, gameId) {
 function installMod(files, destinationPath) {
   const instructions = files.map((file) => {
     const segments = file.split(path.sep);
-<<<<<<< HEAD
     const offset = segments.findIndex((seg) => seg.toLowerCase() === "datalocal");
     const outPath = offset !== -1 ? segments.slice(offset + 1).join(path.sep) : file;
-=======
-    const offset = segments.findIndex(
-      (seg) => seg.toLowerCase() === "datalocal",
-    );
-    const outPath =
-      offset !== -1 ? segments.slice(offset + 1).join(path.sep) : file;
->>>>>>> v2.0.1
 
     if (file.endsWith(path.sep)) {
       return {
@@ -116,17 +108,9 @@ function main(context) {
       return Promise.map(deployment[""], (file) =>
         fs.utimesAsync(path.join(modDeployPath, file.relPath), now, now),
       ).catch((err) =>
-<<<<<<< HEAD
         context.api.showErrorNotification("Failed to change file access/modified time", err, {
           allowReport: false,
         }),
-=======
-        context.api.showErrorNotification(
-          "Failed to change file access/modified time",
-          err,
-          { allowReport: false },
-        ),
->>>>>>> v2.0.1
       );
     });
   });
