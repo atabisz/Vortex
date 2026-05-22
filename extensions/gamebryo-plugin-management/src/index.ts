@@ -234,14 +234,7 @@ function updatePluginListImpl(
                 blueprintIds = new Set<string>();
                 for (const pluginId of Object.keys(pluginStates)) {
                   try {
-<<<<<<< HEAD
                     const esp = await ESPFile.open(pluginStates[pluginId].filePath, gameId);
-=======
-                    const esp = new ESPFile(
-                      pluginStates[pluginId].filePath,
-                      gameId,
-                    );
->>>>>>> v2.0.1
                     if (esp.isBlueprint) {
                       blueprintIds.add(pluginId);
                     }
@@ -686,12 +679,7 @@ function register(
   const pluginInfoCache = new PluginInfoCache(context.api);
 
   // Cross-extension API: lets other extensions (e.g. game-starfield) query
-<<<<<<< HEAD
   // Blueprint-plugin status without depending on the ESP parser directly.
-=======
-  // Blueprint-plugin status without having to take a native-addon dependency
-  // on esptk themselves.
->>>>>>> v2.0.1
   //
   // Takes an absolute plugin file path so the lookup is self-contained — the
   // API never depends on Vortex's pluginList Redux state being populated, and
@@ -703,21 +691,13 @@ function register(
   // as a no-op and not assume anything about blueprint-ness.
   context.registerAPI(
     "isBlueprintPlugin",
-<<<<<<< HEAD
     async (pluginFilePath: string) => {
-=======
-    (pluginFilePath: string): boolean => {
->>>>>>> v2.0.1
       const gameMode = selectors.activeGameId(context.api.getState());
       if (!supportsBlueprintPlugins(gameMode)) {
         return false;
       }
       try {
-<<<<<<< HEAD
         return (await pluginInfoCache.getInfo(pluginFilePath)).isBlueprint;
-=======
-        return pluginInfoCache.getInfo(pluginFilePath).isBlueprint;
->>>>>>> v2.0.1
       } catch (err) {
         log("warn", "isBlueprintPlugin parse failed", {
           pluginFilePath,
@@ -820,11 +800,7 @@ function updateCurrentProfile(api: types.IExtensionApi): Promise<void> {
 async function swapUserlistForProfile(
   oldProfile: types.IProfile | undefined,
   newProfile: types.IProfile | undefined,
-<<<<<<< HEAD
 ) {
-=======
-): Promise<void> {
->>>>>>> v2.0.1
   const oldHasLocal = oldProfile?.features?.local_loot_rules === true;
   const newHasLocal = newProfile?.features?.local_loot_rules === true;
 
@@ -877,13 +853,7 @@ async function swapUserlistForProfile(
     try {
       await fs.statAsync(getProfileFile(newProfile));
       // profile has a saved copy — restore it
-<<<<<<< HEAD
       await fs.copyAsync(getProfileFile(newProfile), activeFile, { noSelfCopy: true });
-=======
-      await fs.copyAsync(getProfileFile(newProfile), activeFile, {
-        noSelfCopy: true,
-      });
->>>>>>> v2.0.1
     } catch (err) {
       if (err.code === "ENOENT") {
         // first time: seed the profile dir from the current file
@@ -1332,12 +1302,7 @@ class PluginInfoCache {
         lastINO: ino,
         info: {
           isLight: info.isLight,
-<<<<<<< HEAD
           isBlueprint: supportsBlueprintPlugins(activeGameMode) && info.isBlueprint,
-=======
-          isBlueprint:
-            supportsBlueprintPlugins(activeGameMode) && info.isBlueprint,
->>>>>>> v2.0.1
           masterList: info.masterList,
         },
       };
@@ -1467,138 +1432,7 @@ async function testMissingMasters(
  * plugin as a master. The game strips Blueprint masters from non-Blueprint
  * plugins in memory, which destroys references and produces unresolved FormIDs.
  */
-<<<<<<< HEAD
 async function testBlueprintMasters(
-=======
-function testBlueprintMasters(
-  api: types.IExtensionApi,
-  infoCache: PluginInfoCache,
-): Promise<types.ITestResult> {
-  const { translate, store } = api;
-  const state = store.getState();
-  const gameMode = selectors.activeGameId(state);
-  if (!gameSupported(gameMode) || !supportsBlueprintPlugins(gameMode)) {
-    return Promise.resolve(undefined);
-  }
-
-  const pluginList = state.session.plugins.pluginList ?? {};
-  const natives = new Set<string>(nativePlugins(gameMode));
-  const loadOrder: { [plugin: string]: ILoadOrder } = state.loadOrder;
-  const enabledPlugins = Object.keys(loadOrder).filter(
-    (plugin: string) => loadOrder[plugin].enabled || natives.has(plugin),
-  );
-
-  interface IParsedPlugin {
-    name: string;
-    isBlueprint: boolean;
-    masterList: string[];
-  }
-
-  const pluginDetails: IParsedPlugin[] = enabledPlugins
-    .filter((name: string) => pluginList[name] !== undefined)
-    .map((plugin) => {
-      try {
-        const info = infoCache.getInfo(pluginList[plugin].filePath);
-        return {
-          name: plugin,
-          isBlueprint: info.isBlueprint,
-          masterList: info.masterList,
-        };
-      } catch (err) {
-        log("warn", "failed to parse esp file", {
-          name: pluginList[plugin].filePath,
-          err: err.message,
-        });
-        return { name: plugin, isBlueprint: false, masterList: [] };
-      }
-    });
-
-  const blueprintPlugins = new Set<string>(
-    pluginDetails
-      .filter((plugin) => plugin.isBlueprint)
-      .map((plugin) => plugin.name),
-  );
-
-  if (blueprintPlugins.size === 0) {
-    return Promise.resolve(undefined);
-  }
-
-  const broken = pluginDetails.reduce(
-    (prev, plugin) => {
-      if (plugin.isBlueprint) {
-        return prev;
-      }
-      const offendingMasters = plugin.masterList.filter((master) =>
-        blueprintPlugins.has(master.toLowerCase()),
-      );
-      if (offendingMasters.length > 0) {
-        prev[plugin.name] = offendingMasters;
-      }
-      return prev;
-    },
-    {} as { [pluginName: string]: string[] },
-  );
-
-  if (Object.keys(broken).length === 0) {
-    return Promise.resolve(undefined);
-  }
-
-  const link = (pluginName: string) =>
-    `[link="cb://showplugin/${pluginName}"]${pluginName}[/link]`;
-
-  return Promise.resolve({
-    description: {
-      short: translate("Blueprint plugin used as master"),
-      long:
-        translate(
-          "The following enabled plugins declare a Blueprint plugin as a master. " +
-            "Starfield strips Blueprint masters from non-Blueprint plugins at load, " +
-            "which will break references and corrupt your save. These plugins must " +
-            "be disabled or rebuilt against a non-Blueprint master:",
-        ) +
-        "[table][tbody]" +
-        Object.keys(broken)
-          .map((plugin) => {
-            const offending = broken[plugin].map(link).join("[br][/br]");
-            const detail = pluginList[plugin];
-            const name =
-              detail !== undefined ? path.basename(detail.filePath) : plugin;
-            return (
-              "[tr]" +
-              [link(name), translate("has Blueprint master"), offending]
-                .map((iter) => `[td]${iter}[/td]`)
-                .join() +
-              "[/tr]" +
-              "[tr][/tr]"
-            );
-          })
-          .join("\n") +
-        "[/tbody][/table]",
-      context: {
-        callbacks: {
-          showplugin: (pluginName: string) => {
-            const stateNow: types.IState = store.getState();
-            const gameModeNow = selectors.activeGameId(stateNow);
-            if (gameSupported(gameModeNow)) {
-              api.events.emit("show-main-page", "gamebryo-plugins");
-              store.dispatch(
-                actions.setAttributeFilter(
-                  "gamebryo-plugins",
-                  "name",
-                  pluginName,
-                ),
-              );
-            }
-          },
-        },
-      },
-    },
-    severity: "error" as types.ProblemSeverity,
-  });
-}
-
-function testRulesUnfulfilled(
->>>>>>> v2.0.1
   api: types.IExtensionApi,
   infoCache: PluginInfoCache,
 ) {
@@ -1974,13 +1808,8 @@ function init(context: IExtensionContextExt) {
       return;
     }
 
-<<<<<<< HEAD
     const esp = await ESPFile.open(plugin.filePath, profile.gameId);
     await esp.setLightFlag(enable);
-=======
-    const esp = new ESPFile(plugin.filePath, profile.gameId);
-    esp.setLightFlag(enable);
->>>>>>> v2.0.1
 
     context.api.ext.addToHistory("plugins", {
       type: "plugin-eslified",
@@ -2201,7 +2030,6 @@ function init(context: IExtensionContextExt) {
             }
           };
 
-<<<<<<< HEAD
           if (currFeature && !prevFeature) {
             // toggled ON: back up global and seed profile copy
             (async () => {
@@ -2240,110 +2068,6 @@ function init(context: IExtensionContextExt) {
         context.api.events.on(
           "profile-will-change",
           (nextProfileId: string, enqueue: (cb: () => Promise<void>) => void) => {
-=======
-        // when the user toggles local_loot_rules on the active profile,
-        // immediately back up the global userlist and seed the profile copy
-        context.api.onStateChange(
-          ["persistent", "profiles"],
-          (previous, current) => {
-            const activeProfileId = util.getSafe(
-              context.api.store.getState(),
-              ["settings", "profiles", "activeProfileId"],
-              undefined,
-            );
-            if (activeProfileId === undefined) {
-              return;
-            }
-            const prevFeature =
-              previous[activeProfileId]?.features?.local_loot_rules;
-            const currFeature =
-              current[activeProfileId]?.features?.local_loot_rules;
-            if (prevFeature === currFeature) {
-              return;
-            }
-            const profile = current[activeProfileId];
-            if (profile === undefined || !gameSupported(profile.gameId)) {
-              return;
-            }
-            const userDataPath = util.getVortexPath("userData");
-            const activeFile = path.join(
-              userDataPath,
-              profile.gameId,
-              "userlist.yaml",
-            );
-            const globalBackup = path.join(
-              userDataPath,
-              profile.gameId,
-              "userlist.yaml.global",
-            );
-            const profDir = path.join(
-              userDataPath,
-              profile.gameId,
-              "profiles",
-              profile.id,
-            );
-            const profFile = path.join(profDir, "userlist.yaml");
-
-            const copyIgnoringMissing = async (src: string, dest: string) => {
-              try {
-                await fs.copyAsync(src, dest, { noSelfCopy: true });
-              } catch (err) {
-                if (err.code !== "ENOENT") {
-                  throw err;
-                }
-              }
-            };
-
-            if (currFeature && !prevFeature) {
-              // toggled ON: back up global and seed profile copy
-              (async () => {
-                await copyIgnoringMissing(activeFile, globalBackup);
-                await fs.ensureDirAsync(profDir);
-                await copyIgnoringMissing(activeFile, profFile);
-              })().catch((err) => {
-                log(
-                  "warn",
-                  "failed to initialize per-profile userlist",
-                  err.message,
-                );
-              });
-            } else if (!currFeature && prevFeature) {
-              // toggled OFF: save profile state, restore global backup
-              (async () => {
-                await fs.ensureDirAsync(profDir);
-                await copyIgnoringMissing(activeFile, profFile);
-                await copyIgnoringMissing(globalBackup, activeFile);
-                if (userlistPersistor !== undefined) {
-                  await userlistPersistor.loadFiles(profile.gameId);
-                }
-              })().catch((err) => {
-                log("warn", "failed to restore global userlist", err.message);
-              });
-            }
-          },
-        );
-
-        context.api.events.on(
-          "set-plugin-list",
-          (newPlugins: string[], setEnabled?: boolean) => {
-            const state = context.api.store.getState();
-            store.dispatch(
-              updatePluginOrder(
-                newPlugins.map((name) => name.toLowerCase()),
-                setEnabled !== false,
-                state.settings.plugins.autoEnable,
-              ),
-            );
-          },
-        );
-
-        context.api.events.on(
-          "profile-will-change",
-          (
-            nextProfileId: string,
-            enqueue: (cb: () => Promise<void>) => void,
-          ) => {
->>>>>>> v2.0.1
             const state = context.api.store.getState();
             const oldProfileId = util.getSafe(
               state,
@@ -2352,13 +2076,7 @@ function init(context: IExtensionContextExt) {
             );
             const oldProfile = state.persistent.profiles[oldProfileId];
             const nextProfile =
-<<<<<<< HEAD
               nextProfileId !== undefined ? selectors.profileById(state, nextProfileId) : undefined;
-=======
-              nextProfileId !== undefined
-                ? selectors.profileById(state, nextProfileId)
-                : undefined;
->>>>>>> v2.0.1
 
             if (nextProfileId === undefined) {
               context.api.store.dispatch(setPluginList(undefined));
@@ -2379,14 +2097,7 @@ function init(context: IExtensionContextExt) {
                     .then(() => swapUserlistForProfile(oldProfile, undefined))
                     .then(() => loot.wait())
                     .catch((err) => {
-<<<<<<< HEAD
                       context.api.showErrorNotification("Failed to change profile", err);
-=======
-                      context.api.showErrorNotification(
-                        "Failed to change profile",
-                        err,
-                      );
->>>>>>> v2.0.1
                       return Promise.resolve();
                     }),
                 );
