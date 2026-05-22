@@ -80,6 +80,8 @@ grep -n "UnsupportedOperatingSystem\|platform !== \"win32\"" src/renderer/src/ut
 
 `testPathTransfer` must not reject non-Windows. `winapi.GetVolumePathName` is shimmed on Linux; `statfsSync` is POSIX; `turbowalk` has a Linux JS fallback. If the guard is back, users can't change their mod staging folder (symptom: "Unsupported operating system" alert plus staging-folder change silently failing).
 
+Encoded as gate 13 in `.planning/milestones/v8.0/scripts/grep-checkpoint.sh` — the first NEGATIVE gate in the milestone (count must be 0). Proves the Windows-only reject in `transferPath.ts` was not re-introduced through any phase resolution.
+
 ### 5. Bundled plugins populated
 
 ```bash
@@ -328,6 +330,30 @@ Vortex caches extensions at startup. Editing source + rebuilding the renderer + 
 
 The bell alerts hang around across Vortex restarts — dismiss them manually after a fix, otherwise you're debugging a notification from two runs ago. "No deployment method available" on the page body is live; the same message in the bell might be stale. Check the log timestamp when in doubt.
 
+### Bluebird Promise shadow — don't take upstream `:Promise<T>` annotations on async fns
+
+In any file with `import Promise from "bluebird"` at the top, the `Promise` symbol is the bluebird Promise class — not the global. Async return-type annotations like `:Promise<void>` then resolve to the bluebird type, and TypeScript can't reconcile that with `async`'s required global Promise return — you get TS1064 "the return type of an async function or method must be the global Promise<T> type".
+
+This bites every upstream merge: upstream's source has `:Promise<T>` on an async fn that they themselves added, but it compiles cleanly upstream because their type annotation matches their import shape, and we get the wider expression on the fork side via merge-driver. Going forward, scan each conflict file for the bluebird Promise import before accepting the upstream-side annotation. Either drop the annotation (TypeScript infers from `async`) or alias the bluebird import (`import { Promise as BluebirdPromise } from "bluebird"`) and only ever use the global `Promise` in type positions. Phase 27 hit this on at least four files; memory `feedback_bluebird_promise_trap.md` captures the rule.
+
+### DEFERRED, not skipped — explicit deferral with Phase-N+1 acceptance text
+
+When an acceptance gate can't physically run in its native phase (RC tag artefacts available, but the canonical tag they're supposed to validate doesn't exist yet), don't silently omit it. Mark **DEFERRED** in the evidence file with the acceptance text intact and an explicit Phase-N+1 cite for where it'll close. That keeps the chain of custody traceable — anyone reading the evidence trail later can see the gate, see why it didn't run in-phase, and see exactly where it ran instead.
+
+Phase 29 SYNC-33-C (`.deb` install + desktop-entry launch on canonical artefacts) and SYNC-34 (4-screenshot Skyrim walkthrough on canonical AppImage) are the precedent — both deferred against the canonical tag's artefacts and closed in Phase 30 against the actual `v2.0.0-linux-rebased` build. As a bonus rule: real-usage evidence from the daily-driver's actual workflow beats a contrived walkthrough for daily-driver titles. The canonical AppImage running through a real Skyrim session is stronger evidence than a freshly-staged minimal repro.
+
+### Force-with-lease over inline SSH URL needs an explicit lease pin
+
+`git push --force-with-lease=<ref>:<verified-pre-push-sha> git@github.com:<user>/<repo>.git <local>:<remote>` is the only form that works when pushing via inline SSH URL. The implicit form (no value after `--force-with-lease`) compares against the remote-tracking branch — and an inline URL has no remote-tracking branch, so git defaults to "stale info" and rejects the push. The explicit lease pin tells git exactly what SHA to expect on the remote.
+
+Verify the lease SHA via `git ls-remote git@github.com:<user>/<repo>.git refs/heads/<branch>` immediately before pushing. Drift between research-time and push-time SHAs is the single most common cause of force-with-lease failures — the upstream tip moved while you were preparing the push, and your stored lease points at a SHA that's now one commit back. Phases 28 + 29 + 30 all used this idiom uniformly; capturing the lease in a shell variable right before the push (`LIVE=$(git ls-remote ... | cut -f1)`) keeps the window between verification and push under a second.
+
+### Lint deltas vs branch lineage
+
+A negative lint count delta vs master means our branch has FEWER errors than master — that's not regression, that's the branch having less of something. Before treating any negative delta as a problem, check whether the missing errors are explained by branch-lineage (a file is absent on our side because v8.0 branched before master added it, not because we fixed it). If lineage explains it, **PASS** is the right call.
+
+Restate: PASS condition for cross-branch lint comparison is **exit-0 + sane count comparison**, not zero-delta. A clean explanation for the count difference is part of "sane". Phase 29 SYNC-32 is the precedent — `downloader.test.ts` was −10 lint errors on v8.0 vs master because the file restoration came via master's Phase 25 SYNC-14 commit which post-dated the v8.0 branch point. We didn't fix anything; we just hadn't received the file yet. Same shape applies to TypeScript baseline drift, which is what made SYNC-32-D and SYNC-39 acceptable as documented deviations rather than blockers.
+
 ---
 
 ## Past gotchas by subsystem
@@ -415,26 +441,29 @@ Both forms now have named-script equivalents: `skip-on-windows.mjs` (`&&`, `exit
 
 Durable references to the fork-local Linux fixes this file depends on. If any of these commits are missing from either branch after a merge, something got reverted.
 
-| Fix                                                                                                       | master        | linux-port    |
-| --------------------------------------------------------------------------------------------------------- | ------------- | ------------- |
-| ~~Three gamebryo extensions use `skip-on-linux.mjs`~~ — **superseded** by native CI rebuild               | `c408173b9`   | _pending_     |
-| Remove skip-on-linux from gamebryo-plugin-management + platform-aware native copy                         | `ba23aee71`   | _pending_     |
-| Remove skip-on-linux from bsa-support + archive-support; CI rebuilds bsatk                                | `833f02db0`   | _pending_     |
-| Remove win32 guard from `testPathTransfer`                                                                | `7cfe61602`   | `8e8b13284`   |
-| Allowlist `winapi-bindings` from `nodeExternals`                                                          | `e69401abf`   | `0cccf116b`   |
-| Pass real plugin filenames to LOOT + filter ghosts                                                        | `324da1814`   | `72641450c`   |
-| `resolvePathCase` in `externalChanges` (stops spurious "mods are redundant")                              | `140a57217`   | _pending_     |
-| Heal stale empty staging dirs across install attempts                                                     | `7e2c40e94`   | `be30e0c05`   |
-| Named `skip-on-linux.mjs` sibling guard (gamestore-xbox)                                                  | `5acb3d098`   | `a41403030`   |
-| `src/main` packaging points at `build/` (not `dist/`) after upstream rename                               | `4d1ea811b`   | _master-only_ |
-| `chmod +x` pnpm-bundled `gyp_main.py` before `pnpm install` in CI                                         | `f0a0d2178`   | _master-only_ |
-| Gate `fingerprint-*.yml` workflows to `Nexus-Mods/Vortex` repo only                                       | `7fd37ff71`   | _master-only_ |
-| Direct Proton launch + Snap IPC symlinks + path-boundary matching                                         | `096b6376c`   | _pending_     |
-| Phase 25 / SYNC-13: restore `packages/paths` + `packages/paths-node` from upstream v2.0.0                 | `f9d305d7d`   | _master-only_ |
-| Phase 25 / SYNC-12: restore `gamebryo-ba2-support` + ba2tk catalog + CI rebuild step                      | `b28d37e31`   | _master-only_ |
-| Phase 25 / SYNC-14: restore chunking + download_management spine + bsdiff-node test                       | `9a17907b6`   | _master-only_ |
-| Phase 25 / SYNC-15 + SYNC-16: restore four upstream CI workflows (deny-list provenance in body — see §11) | `83995b611`   | _master-only_ |
-| Phase 25 / SYNC-15 + SYNC-16: restore docs (flatpak + AGENTS-DEBUGGING + structure) + add Playbook §11    | _this commit_ | _master-only_ |
+| Fix                                                                                                          | master                                   | linux-port     |
+| ------------------------------------------------------------------------------------------------------------ | ---------------------------------------- | -------------- |
+| ~~Three gamebryo extensions use `skip-on-linux.mjs`~~ — **superseded** by native CI rebuild                  | `c408173b9`                              | _SYNC-39 v8.1_ |
+| Remove skip-on-linux from gamebryo-plugin-management + platform-aware native copy                            | `ba23aee71`                              | _SYNC-39 v8.1_ |
+| Remove skip-on-linux from bsa-support + archive-support; CI rebuilds bsatk                                   | `833f02db0`                              | _SYNC-39 v8.1_ |
+| Remove win32 guard from `testPathTransfer`                                                                   | `7cfe61602`                              | `8e8b13284`    |
+| Allowlist `winapi-bindings` from `nodeExternals`                                                             | `e69401abf`                              | `0cccf116b`    |
+| Pass real plugin filenames to LOOT + filter ghosts                                                           | `324da1814`                              | `72641450c`    |
+| `resolvePathCase` in `externalChanges` (stops spurious "mods are redundant")                                 | `140a57217`                              | _SYNC-39 v8.1_ |
+| Heal stale empty staging dirs across install attempts                                                        | `7e2c40e94`                              | `be30e0c05`    |
+| Named `skip-on-linux.mjs` sibling guard (gamestore-xbox)                                                     | `5acb3d098`                              | `a41403030`    |
+| `src/main` packaging points at `build/` (not `dist/`) after upstream rename                                  | `4d1ea811b`                              | _master-only_  |
+| `chmod +x` pnpm-bundled `gyp_main.py` before `pnpm install` in CI                                            | `f0a0d2178`                              | _master-only_  |
+| Gate `fingerprint-*.yml` workflows to `Nexus-Mods/Vortex` repo only                                          | `7fd37ff71`                              | _master-only_  |
+| Direct Proton launch + Snap IPC symlinks + path-boundary matching                                            | `096b6376c`                              | _SYNC-39 v8.1_ |
+| Phase 25 / SYNC-13: restore `packages/paths` + `packages/paths-node` from upstream v2.0.0                    | `f9d305d7d`                              | _master-only_  |
+| Phase 25 / SYNC-12: restore `gamebryo-ba2-support` + ba2tk catalog + CI rebuild step                         | `b28d37e31`                              | _master-only_  |
+| Phase 25 / SYNC-14: restore chunking + download_management spine + bsdiff-node test                          | `9a17907b6`                              | _master-only_  |
+| Phase 25 / SYNC-15 + SYNC-16: restore four upstream CI workflows (deny-list provenance in body — see §11)    | `83995b611`                              | _master-only_  |
+| Phase 25 / SYNC-15 + SYNC-16: restore docs (flatpak + AGENTS-DEBUGGING + structure) + add Playbook §11       | `83995b611`                              | _master-only_  |
+| **Phase 30 (v2.0.0-linux-rebased) milestone closure** — FF-merge PR #4 + canonical tag + linux-port catch-up | `f570149ea` (tag `v2.0.0-linux-rebased`) | `6a28945d1`    |
+
+The `_SYNC-39 v8.1_` rows above are commits that exist on master but not on linux-port. They pre-date the Phase 30 cherry-pick range (`db8035192..f570149ea`) so the `--ours` cherry-pick policy couldn't carry them. Tracked as SYNC-39 — linux-port catch-up scoped for the v8.1 milestone, not Phase 30.
 
 Earlier-era fixes that were reverted by upstream merges (kept for archaeology):
 
