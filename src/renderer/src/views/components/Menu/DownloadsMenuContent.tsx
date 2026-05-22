@@ -9,15 +9,7 @@ import { Typography } from "../../../ui/components/typography/Typography";
 import { joinClasses } from "../../../ui/utils/joinClasses";
 import { discovered as discoveredGamesSelector } from "../../../util/selectors";
 import { useSpineContext } from "../Spine/SpineContext";
-<<<<<<< HEAD
 import { formatGameDisplayName, getGameImageUrls, useGameImage } from "../Spine/utils";
-=======
-import {
-  formatGameDisplayName,
-  getGameImageUrls,
-  useGameImage,
-} from "../Spine/utils";
->>>>>>> v2.0.1
 import { MenuButton } from "./MenuButton";
 
 /** Deterministic hue from a string, for the letter-avatar background. */
