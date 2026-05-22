@@ -151,14 +151,7 @@ export function isErrorWithSystemCode(err: unknown): err is ErrorWithSystemCode 
  *   "at f (chrome-extension://id/page.js:1:2)" → unchanged
  */
 export const sanitizeFramePath = (frame: string): string =>
-<<<<<<< HEAD
   frame.replace(INSTALL_PATH_RE, "").replace(/\\/g, "/").replace(USER_HOME_RE, "$1<USER>");
-=======
-  frame
-    .replace(INSTALL_PATH_RE, "")
-    .replace(/\\/g, "/")
-    .replace(USER_HOME_RE, "$1<USER>");
->>>>>>> v2.0.1
 
 const _SEP = String.raw`[/\\]`;
 const _WIN = String.raw`[A-Za-z]:${_SEP}`; // C:\ or C:/
