@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v8.1
 milestone_name: Upstream v2.0.1 Sync
-status: executing
-stopped_at: Phase 34 CLOSED — plan 34-09 complete
-last_updated: "2026-05-23T24:30:00.000Z"
-last_activity: 2026-05-23 -- Phase 34 CLOSED. Wave 9 done-gate executed: D-34-14 7-criterion gate evaluated GREEN (markers=0, harness 13/13 GREEN skip-mode, bucket typechecks shared/preload/main/fingerprints/e2e all 0, renderer-bucket=9 errors all confined to extensions/download_management/ deferred-to-Phase-35 scope (filtered=0), commit accounting 131 commits in v8.1/config-bucket~131..HEAD with 114 work + 7 docs(phase-34) + 9 chore(state) + 1 misc, SYNC-34b [x] verified, STATE+ROADMAP updated this wave); D-34-09 no-verify count = 0; SSH-sign audit 131/131 commits signed (gpgsig SSH-SIGNATURE block present on every commit); all 21 D-34-* decisions honored; D-34-12 dist/index.js regenerated via ncc 0.38.4 (NOT hand-merged); D-34-13 R2 dropped (23 files via git rm -r); D-34-17 trigger HEAD-empty (nativeErr import dropped at v2.0.1 surface — no catalog re-add, no lockfile regen); D-34-20 full pnpm test/lint/build deferred to Phase 35; carry-over to Phase 35: 9 download_management/ typecheck errors (FileAssembler + SpeedCalculator missing modules + IDownload signature/type drift) — pre-existing v2.0.1 merge fallout, NOT a Phase 34 blocker.
+status: completed
+stopped_at: Phase 35 context gathered
+last_updated: "2026-05-22T22:56:52.074Z"
+last_activity: 2026-05-23 -- Phase 34 CLOSED on v8.1/config-bucket. 131 SSH-signed commits in Phase 34 range; D-34-14 done-gate 7/7 GREEN with documented renderer-bucket scope adjustment (renderer=9 errors all in deferred download_management/, filtered=0); harness 13/13 GREEN; ready for Phase 35 (full build verification + download_management reconciliation) per D-34-20, then Phase 36 (push + FF-merge + tag) per project memory.
 progress:
     total_phases: 8
     completed_phases: 3
@@ -226,9 +226,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-22T18:43:35.219Z
-Stopped at: Phase 34 context gathered
-Resume file: None
+Last session: 2026-05-22T22:56:52.062Z
+Stopped at: Phase 35 context gathered
+Resume file: .planning/phases/35-build-verification-v2-0-1/35-CONTEXT.md
 
 ### Phase 33 close-out summary
 
