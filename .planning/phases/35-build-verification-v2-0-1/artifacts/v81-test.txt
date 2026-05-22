@@ -1,0 +1,426 @@
+
+> @vortex/monorepo@1.16.8 test /home/alex/src/Vortex
+> pnpm vitest run --coverage
+
+
+ RUN  v4.1.2 /home/alex/src/Vortex
+      Coverage enabled with v8
+
+ ✓ |@nexusmods/adaptor-api| src/fs/paths.ts (10 tests) 7ms
+ ✓ |@nexusmods/adaptor-api| src/fs/paths.test.ts (69 tests) 22ms
+ ✓ |@nexusmods/adaptor-api| src/contracts/glob.test.ts (17 tests) 16ms
+ ✓ |@nexusmods/adaptor-api| src/fs/matcher.ts (1 test) 6ms
+ ✓ |@nexusmods/adaptor-api| src/fs/matcher.test.ts (32 tests) 10ms
+ ✓ |@nexusmods/adaptor-api| src/types/store-ids.test.ts (20 tests) 11ms
+ ✓ |@nexusmods/adaptor-api| src/types/branded.test.ts (17 tests) 36ms
+ ✓ |@nexusmods/adaptor-api| src/contracts/game-paths.test.ts (7 tests) 8ms
+ ✓ |@nexusmods/adaptor-api| src/stores/snapshot.test.ts (10 tests) 16ms
+ ✓ |@nexusmods/adaptor-api| src/contracts/game-installer.test.ts (17 tests) 24ms
+ ✓ |@vortex/main| src/open.test.ts (3 tests) 117ms
+ ✓ |@vortex/main| src/store/ReduxPersistorIPC.test.ts (15 tests) 44ms
+ ✓ |@vortex/main| src/store/SubPersistor.test.ts (10 tests) 20ms
+ ✓ |@vortex/main| src/store/View.test.ts (8 tests) 14ms
+ ✓ |@vortex/main| src/node-adaptor-host/transport.test.ts (10 tests) 74ms
+ ✓ |@vortex/main| src/store/Table.test.ts (7 tests) 21ms
+ ✓ |@vortex/main| src/store/Database.test.ts (7 tests) 24ms
+ ✓ |@vortex/main| src/downloading/progress.test.ts (25 tests) 12ms
+ ✓ |@vortex/main| src/store/queryParser.test.ts (3 tests) 17ms
+ ✓ |@vortex/main| src/getVortexPath.test.ts (3 tests) 689ms
+     ✓ returns XDG_DATA_HOME on Linux when set  672ms
+ ✓ |@vortex/main| src/filesystem/client.test.ts (13 tests) 33ms
+ ✓ |@vortex/main| src/node-adaptor-host/registry.test.ts (9 tests) 14ms
+ ✓ |@vortex/main| src/node-adaptor-host/runtime.test.ts (5 tests) 12ms
+(node:1517771) Warning: Closing directory handle on garbage collection
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1517771) Warning: Closing directory handle on garbage collection
+ ✓ |@vortex/main| src/filesystem/filesystem-impl.test.ts (8 tests) 44ms
+ ✓ |@vortex/main| src/filesystem/fs-service.test.ts (10 tests) 57ms
+ ✓ |@vortex/main| src/filesystem/paths-registry.test.ts (5 tests) 11ms
+ ✓ |@vortex/main| src/filesystem/paths.windows.test.ts (11 tests | 3 skipped) 18ms
+ ✓ |@vortex/main| src/store/LevelPersist.test.ts (28 tests) 36ms
+ ✓ |@vortex/shared| src/errors.test.ts (52 tests) 24ms
+ ✓ |@vortex/shared| src/Debouncer.test.ts (22 tests) 36ms
+ ✓ |@vortex/shared| src/chunking.test.ts (18 tests) 21ms
+ ↓ |exe-version| src/index.test.ts (12 tests | 12 skipped)
+ ✓ |feedback| src/actions/session.test.ts (3 tests) 9ms
+(node:1517985) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/alex/src/Vortex/extensions/collections/src/util/bsdiffWorker.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/alex/src/Vortex/extensions/collections/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ |game-baldursgate3| src/divineCore.test.ts (15 tests | 11 skipped) 12ms
+ ✓ |feedback| src/reducers/session.test.ts (7 tests) 8ms
+ ✓ |gamebryo-archive-support| src/ba2.test.ts (9 tests) 21ms
+ ✓ |gamebryo-archive-support| src/bsa.test.ts (21 tests) 84ms
+ ✓ |game-stardewvalley| src/installers/smapi/install.macos.test.ts (1 test) 10ms
+ ✓ |game-stardewvalley| src/installers/smapi/install.windows.test.ts (2 tests) 22ms
+ ✓ |game-stardewvalley| src/installers/smapi/index.test.ts (7 tests) 15ms
+ ✓ |game-stardewvalley| src/installers/smapi/install.linux.test.ts (2 tests) 22ms
+ ✓ |@vortex/paths-node| src/NodeFilesystem.test.ts (28 tests) 59ms
+ ✓ |gamebryo-savegame-management| src/util/gameSupport.test.ts (5 tests) 14ms
+ ✓ |gamebryo-savegame-management| src/actions/session.test.ts (6 tests) 13ms
+ ✓ |gamebryo-savegame-management| src/reducers/session.test.ts (8 tests) 14ms
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > downloads a file and resolves the handle promise
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+
+ ✓ |gamebryo-plugin-management| src/esp/__tests__/corpus-validation.test.ts (562 tests) 167ms
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > downloads a file and resolves the handle promise
+BROKEN LOGGING: debug download completed
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > serializes downloads when concurrency is 1
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug queuing download
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > serializes downloads when concurrency is 1
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug download completed
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > serializes downloads when concurrency is 1
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug download completed
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > serializes downloads when concurrency is 1
+BROKEN LOGGING: debug download completed
+
+ ✓ |scripts| check-package-build-setup.test.ts (28 tests) 13ms
+ ✓ |scripts| download-duckdb-extensions.test.ts (6 tests) 10ms
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > runs multiple downloads concurrently when concurrency allows
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug queuing download
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > runs multiple downloads concurrently when concurrency allows
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug download completed
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > runs multiple downloads concurrently when concurrency allows
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug download completed
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > runs multiple downloads concurrently when concurrency allows
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug download completed
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > runs multiple downloads concurrently when concurrency allows
+BROKEN LOGGING: debug download completed
+
+ ✓ |nmm-import-tool| src/util/nmmVirtualConfigParser.test.ts (4 tests) 18ms
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > runs multiple downloads concurrently when concurrency allows
+BROKEN LOGGING: debug download completed
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > runs multiple downloads concurrently when concurrency allows
+BROKEN LOGGING: debug download completed
+
+ ✓ |gamebryo-savegame-management| test/savegame-parser.test.ts (36 tests) 950ms
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > reports zero progress before the download starts
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > reports zero progress before the download starts
+BROKEN LOGGING: debug download completed
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > reports bytesReceived equal to file size on completion
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > reports bytesReceived equal to file size on completion
+BROKEN LOGGING: debug download completed
+
+stdout | src/util/bsdiff.test.ts > bsdiff WASM worker - performance
+
+=== bsdiff Performance: Native vs WASM (worker_threads) ===
+| Test Case    | Native Diff | WASM Diff | Native Patch | WASM Patch | Patch Size |
+|--------------|-------------|-----------|--------------|------------|------------|
+| 1kb-5pct     |      8.08ms |    1.73ms |       3.56ms |     0.58ms |        164 |
+| 10kb-5pct    |      6.76ms |    3.22ms |       3.44ms |      0.7ms |        256 |
+| 100kb-5pct   |     37.54ms |   36.63ms |        3.9ms |     2.04ms |        866 |
+| 1mb-5pct     |    129.58ms |  614.03ms |       7.29ms |    10.53ms |       2940 |
+| 10kb-1byte   |      4.98ms |     3.1ms |       3.61ms |     0.89ms |        149 |
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > reflects numPending and numRunning correctly
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug queuing download
+
+ ✓ |collections| src/util/bsdiff.test.ts (17 tests) 1868ms
+     ✓ round-trips 1mb-5pct  881ms
+     ✓ benchmarks 1mb-5pct  647ms
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > reflects numPending and numRunning correctly
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug download completed
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > reflects numPending and numRunning correctly
+BROKEN LOGGING: debug download completed
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > resume > skips already-downloaded chunks on resume
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > resume > skips already-downloaded chunks on resume
+BROKEN LOGGING: debug pausing download
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > resume > skips already-downloaded chunks on resume
+BROKEN LOGGING: debug download paused
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > resume > skips already-downloaded chunks on resume
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > resume > skips already-downloaded chunks on resume
+BROKEN LOGGING: debug download completed
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > resume > throws when resuming with checkpoint for non-existent dest
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > resume > throws when resuming with checkpoint for non-existent dest
+BROKEN LOGGING: warn download failed
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > resume > decrements numRunning after resume settles on pause
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > resume > decrements numRunning after resume settles on pause
+BROKEN LOGGING: debug pausing download
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > resume > decrements numRunning after resume settles on pause
+BROKEN LOGGING: debug download paused
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > resume > decrements numRunning after resume settles on pause
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug pausing download
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > resume > decrements numRunning after resume settles on pause
+BROKEN LOGGING: debug download paused
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > resolves the handle promise without throwing after pause
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug pausing download
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > resolves the handle promise without throwing after pause
+BROKEN LOGGING: debug download paused
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > returns a checkpoint whose resource and dest match the original arguments
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug pausing download
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > returns a checkpoint whose resource and dest match the original arguments
+BROKEN LOGGING: debug download paused
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > returns completedRanges covering [0, bytesWritten) for a non-chunked download paused mid-transfer
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > returns completedRanges covering [0, bytesWritten) for a non-chunked download paused mid-transfer
+BROKEN LOGGING: debug pausing download
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > returns completedRanges covering [0, bytesWritten) for a non-chunked download paused mid-transfer
+BROKEN LOGGING: debug download paused
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > returns one completedRange per finished chunk for a chunked download
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug pausing download
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > returns one completedRange per finished chunk for a chunked download
+BROKEN LOGGING: debug download paused
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > returns an empty completedRanges when paused before the download starts
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug queuing download
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > returns an empty completedRanges when paused before the download starts
+BROKEN LOGGING: debug cancelling download
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > returns an empty completedRanges when paused before the download starts
+BROKEN LOGGING: debug download starting
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > returns an empty completedRanges when paused before the download starts
+BROKEN LOGGING: debug cancelling download
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > does not throw when pause is called after the download has already completed
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > does not throw when pause is called after the download has already completed
+BROKEN LOGGING: debug download completed
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > decrements numRunning after pause settles
+BROKEN LOGGING: debug queuing download
+BROKEN LOGGING: debug download starting
+BROKEN LOGGING: debug pausing download
+
+stdout | src/downloading/manager.test.integration.ts > DownloadManager > pause > decrements numRunning after pause settles
+BROKEN LOGGING: debug download paused
+
+ ✓ |@vortex/main (downloader)| src/downloading/manager.test.integration.ts (16 tests) 3920ms
+     ✓ runs multiple downloads concurrently when concurrency allows  813ms
+     ✓ reflects numPending and numRunning correctly  528ms
+       ✓ skips already-downloaded chunks on resume  2159ms
+(node:1517948) TimeoutNegativeWarning: -7 is a negative number.
+Timeout duration was set to 1.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ |@vortex/main (downloader)| src/downloading/downloader.test.integration.ts (63 tests) 6118ms
+       ✓ fast-forwards progress to the checkpoint offset before streaming  737ms
+       ✓ respects cancellation while waiting on the rate limiter  1008ms
+
+ Test Files  52 passed | 1 skipped (53)
+      Tests  1304 passed | 26 skipped (1330)
+   Start at  09:38:39
+   Duration  9.63s (transform 13.49s, setup 0ms, import 18.55s, tests 14.86s, environment 669ms)
+
+JUNIT report written to /home/alex/src/Vortex/test-results/junit.xml
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   55.94 |    47.05 |   54.27 |   56.82 |                   
+ ...tions/src/util |    82.6 |    58.33 |    90.9 |   84.09 |                   
+  bsdiff.ts        |    82.6 |    58.33 |    90.9 |   84.09 | 20,30,62,70-74    
+ ...back/__mocks__ |     100 |      100 |     100 |     100 |                   
+  vortex-api.ts    |     100 |      100 |     100 |     100 |                   
+ ...ck/src/actions |   69.23 |      100 |   33.33 |   72.72 |                   
+  session.ts       |   69.23 |      100 |   33.33 |   72.72 | 8,16,21           
+ ...k/src/reducers |      60 |      100 |   42.85 |      60 |                   
+  session.ts       |      60 |      100 |   42.85 |      60 | 11-21             
+ ...ve-support/src |   59.76 |    50.98 |   62.96 |   59.87 |                   
+  ba2.ts           |   55.03 |    26.19 |   55.55 |   55.24 | 120-192,343-380   
+  bsa.ts           |    61.7 |    60.36 |   66.66 |   61.86 | ...82,501,518-698 
+ ...gement/src/esp |   77.96 |     65.9 |   82.35 |   77.96 |                   
+  ESPFile.ts       |   82.85 |     65.9 |   93.33 |   82.85 | ...36,143,151,215 
+  constants.ts     |     100 |      100 |     100 |     100 |                   
+  errors.ts        |       0 |      100 |       0 |       0 | 7-24              
+ ...ment/__mocks__ |   89.47 |       70 |     100 |   88.88 |                   
+  vortex-api.ts    |   89.47 |       70 |     100 |   88.88 | 16,23             
+ ...nt/src/actions |    92.3 |      100 |   83.33 |    92.3 |                   
+  session.ts       |    92.3 |      100 |   83.33 |    92.3 | 34                
+ ...t/src/reducers |   81.81 |      100 |   71.42 |   81.81 |                   
+  session.ts       |   81.81 |      100 |   71.42 |   81.81 | 16,28             
+ ...t/src/savegame |   91.23 |    68.85 |     100 |   94.13 |                   
+  BinaryReader.ts  |   85.23 |    68.05 |     100 |   89.47 | ...80,290-291,303 
+  ...yoSaveGame.ts |   96.85 |       70 |     100 |   98.08 | 76,344,353        
+ ...ement/src/util |   51.11 |       75 |   31.81 |   51.16 |                   
+  gameSupport.ts   |   51.11 |       75 |   31.81 |   51.16 | ...87,197,244-252 
+ ...ldursgate3/src |   38.75 |    36.92 |   21.42 |   38.75 |                   
+  divineCore.ts    |   38.75 |    36.92 |   21.42 |   38.75 | ...31,134,147-221 
+ ...rdewvalley/src |     100 |      100 |     100 |     100 |                   
+  common.ts        |     100 |      100 |     100 |     100 |                   
+ ...src/installers |    12.5 |        0 |       0 |   13.33 |                   
+  ...Classifier.ts |    12.5 |        0 |       0 |   13.33 | 20-67             
+ ...stallers/smapi |   93.75 |    87.87 |   94.11 |   93.33 |                   
+  index.ts         |   93.44 |    87.87 |   94.11 |   92.98 | 73-75,118         
+  linux.ts         |     100 |      100 |     100 |     100 |                   
+  macos.ts         |     100 |      100 |     100 |     100 |                   
+  windows.ts       |     100 |      100 |     100 |     100 |                   
+ ...smapi/fixtures |     100 |      100 |     100 |     100 |                   
+  ...veListings.ts |     100 |      100 |     100 |     100 |                   
+  ...exApi.mock.ts |     100 |      100 |     100 |     100 |                   
+ ...tool/__mocks__ |     100 |      100 |     100 |     100 |                   
+  modmeta-db.ts    |     100 |      100 |     100 |     100 |                   
+  vortex-api.ts    |     100 |      100 |     100 |     100 |                   
+ ...tool/src/types |     100 |      100 |     100 |     100 |                   
+  nmmEntries.ts    |     100 |      100 |     100 |     100 |                   
+ ...-tool/src/util |   67.64 |    72.22 |   38.88 |   71.87 |                   
+  ...nfigParser.ts |   67.64 |    72.22 |   38.88 |   71.87 | 40-60,104         
+ ...daptor-api/src |    7.14 |        0 |       0 |    7.14 |                   
+  builder.ts       |   16.66 |      100 |       0 |   16.66 | 24-38             
+  lib.ts           |       0 |        0 |       0 |       0 |                   
+  ...-container.ts |       0 |        0 |       0 |       0 | 12-24             
+ .../src/contracts |   92.04 |    82.35 |     100 |   91.86 |                   
+  ...-installer.ts |     100 |       75 |     100 |     100 | 151,194-206       
+  game-paths.ts    |      90 |       75 |     100 |      90 | 87                
+  glob.ts          |   87.23 |    87.09 |     100 |   87.23 | 64-66,74-76       
+ ...tor-api/src/fs |   96.96 |    91.66 |      96 |    97.9 |                   
+  filesystem.ts    |     100 |      100 |     100 |     100 |                   
+  lib.ts           |       0 |        0 |       0 |       0 |                   
+  matcher.ts       |   96.72 |    94.44 |     100 |     100 | 69,78             
+  paths.linux.ts   |     100 |      100 |     100 |     100 |                   
+  paths.ts         |   96.93 |    90.36 |      95 |    96.7 | 382,427-428       
+  paths.windows.ts |     100 |      100 |     100 |     100 |                   
+ ...api/src/stores |      96 |     90.9 |     100 |   95.83 |                   
+  providers.ts     |     100 |      100 |     100 |     100 |                   
+  snapshot.ts      |   95.45 |     90.9 |     100 |   95.23 | 82                
+ ...-api/src/types |     100 |      100 |     100 |     100 |                   
+  branded.ts       |     100 |      100 |     100 |     100 |                   
+  store-ids.ts     |     100 |      100 |     100 |     100 |                   
+ ...xe-version/src |    2.67 |        0 |       0 |    3.18 |                   
+  index.ts         |       0 |        0 |       0 |       0 | 11-35             
+  peVersion.ts     |    3.06 |        0 |       0 |    3.54 | 72-365            
+ ...paths-node/src |   93.87 |    79.41 |     100 |     100 |                   
+  ...Filesystem.ts |   93.87 |    79.41 |     100 |     100 | 19-25,65,135-153  
+ ...ages/paths/src |    9.59 |     4.95 |      18 |    10.9 |                   
+  FilePath.ts      |       0 |        0 |       0 |       0 | 34-363            
+  IFilesystem.ts   |      70 |      100 |   57.14 |      70 | 102-137           
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  pathUtils.ts     |    0.72 |        0 |       0 |     0.9 | ...24-492,522-542 
+  types.ts         |   32.38 |    25.92 |   31.81 |   33.67 | ...55-460,492-525 
+ .../src/resolvers |    0.78 |        0 |       0 |    0.79 |                   
+  BaseResolver.ts  |       0 |        0 |       0 |       0 | 46-367            
+  ...ngResolver.ts |       0 |        0 |       0 |       0 | 76-246            
+  UnixResolver.ts  |       0 |        0 |       0 |       0 | 39-74             
+  ...wsResolver.ts |      10 |        0 |       0 |      10 | 99-136            
+ scripts           |   20.89 |       50 |   18.18 |   20.89 |                   
+  ...extensions.ts |   20.89 |       50 |   18.18 |   20.89 | 69-172,180-182    
+ src/main/src      |   18.47 |    16.66 |   20.45 |      20 |                   
+  getVortexPath.ts |   28.07 |    26.08 |   22.22 |   28.07 | ...49-153,157-185 
+  ipc.ts           |    2.98 |        0 |       0 |    3.38 | 29-177            
+  logging.ts       |   22.44 |        8 |   33.33 |      25 | ...99-106,114-134 
+  open.ts          |   45.45 |    33.33 |      40 |      50 | 25-38             
+ ...rc/downloading |   75.08 |    70.27 |   70.42 |   76.42 |                   
+  downloader.ts    |   86.26 |    81.74 |    90.9 |   87.42 | ...31,541-550,558 
+  errors.ts        |   93.33 |    93.75 |     100 |    92.3 | 37                
+  manager.ts       |   85.05 |    73.68 |   77.27 |   86.41 | ...16-144,244,288 
+  progress.ts      |   97.14 |      100 |    87.5 |   96.96 | 29                
+  resolver.ts      |     100 |      100 |     100 |     100 |                   
+  retry.ts         |   62.85 |    68.75 |   66.66 |    60.6 | 61,78,95-115      
+  test-server.ts   |   56.86 |    49.51 |   58.66 |   58.28 | ...37-643,651-664 
+ ...src/filesystem |      53 |    41.92 |   67.41 |      53 |                   
+  backend.ts       |      31 |    25.54 |   58.82 |   30.72 | ...77,500,519-527 
+  client.ts        |   87.14 |       80 |    82.6 |   89.39 | ...19,154-155,178 
+  ...ystem-impl.ts |   60.46 |       75 |      50 |   64.86 | ...60,191-192,217 
+  fs-service.ts    |   78.94 |    71.79 |   81.81 |    80.3 | 70-77,85-92,130   
+  ...r-registry.ts |     100 |      100 |     100 |     100 |                   
+  paths.linux.ts   |   14.28 |      3.7 |      20 |   15.15 | 23-70,75          
+  paths.windows.ts |   66.66 |    56.25 |   66.66 |    64.7 | ...,80,82,128,138 
+  testing.ts       |   41.66 |       30 |     100 |   41.66 | 39-45             
+ ...e-adaptor-host |   83.04 |    71.77 |   84.61 |   84.93 |                   
+  registry.ts      |     100 |      100 |     100 |     100 |                   
+  runtime.ts       |    42.3 |     23.8 |   58.33 |   38.09 | 48-91             
+  transport.ts     |    89.7 |    81.55 |      95 |   92.24 | ...61,269,276,317 
+ ...main/src/store |   60.12 |    49.68 |   62.29 |   59.82 |                   
+  Database.ts      |   94.73 |      100 |    87.5 |   94.73 | 46                
+  ...BSingleton.ts |       0 |        0 |    9.09 |       0 | 13-187            
+  LevelPersist.ts  |   47.78 |    38.46 |   47.05 |   49.05 | ...69-224,356-360 
+  ...rsistorIPC.ts |   57.93 |    48.93 |   59.25 |   57.85 | ...56,363,369-376 
+  SubPersistor.ts  |   79.31 |     87.5 |    64.7 |   83.33 | 49-53,65-67       
+  Table.ts         |     100 |    83.33 |     100 |     100 | 38                
+  View.ts          |   94.28 |       70 |     100 |   93.54 | 7,18              
+  queryParser.ts   |   89.85 |    70.58 |     100 |   89.85 | ...97,120,132,162 
+ ...derer/src/util |   16.05 |    13.86 |   11.11 |   16.54 |                   
+  storeHelper.ts   |   16.05 |    13.86 |   11.11 |   16.54 | ...87-188,207-393 
+ src/shared/src    |   83.12 |    64.22 |   89.28 |   82.58 |                   
+  Debouncer.ts     |    97.7 |    87.09 |     100 |   97.64 | 207,227           
+  constants.ts     |     100 |      100 |     100 |     100 |                   
+  errors.ts        |   64.28 |    34.04 |   76.92 |   62.68 | ...,62-80,116-126 
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ ...shared/src/api |       0 |        0 |       0 |       0 |                   
+  download.ts      |       0 |        0 |       0 |       0 |                   
+  errors.ts        |       0 |        0 |       0 |       0 |                   
+ ...ared/src/types |   16.12 |    42.85 |   11.62 |   15.38 |                   
+  download.ts      |   91.66 |      100 |      75 |     100 |                   
+  errors.ts        |    4.93 |        0 |    5.12 |    4.93 | 44-299            
+  logging.ts       |       0 |        0 |       0 |       0 |                   
+-------------------|---------|----------|---------|---------|-------------------
+test exit=0

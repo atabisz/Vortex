@@ -10,7 +10,7 @@
 - ✅ **v6.0 Infrastructure** — Phases 16–17 (shipped 2026-04-15) — [archive](milestones/v6.0-ROADMAP.md)
 - ✅ **v7.0 First-Run Onboarding Wizard** — Phases 18–23 (shipped 2026-04-17) — [archive](milestones/v7.0-ROADMAP.md)
 - ✅ **v8.0 Upstream v2.0.0 Sync** — Phases 24–30 (shipped 2026-05-22) — [scope](milestones/v8.0-SCOPE-PROPOSAL.md)
-- 🚧 **v8.1 Upstream v2.0.1 Sync** — Phases 31–37 (in progress; Phases 31–34 complete; 4/7 phases done)
+- 🚧 **v8.1 Upstream v2.0.1 Sync** — Phases 31–37 (in progress; Phases 31–35 complete; 5/7 phases done)
 
 ## Phases
 
@@ -208,14 +208,29 @@ Plans:
 
 ### Phase 35: Build verification (v2.0.1)
 
+**Status:** ✅ Complete 2026-05-23 (8/8 plans; 5 SSH-signed commits in `e2127cecb^..HEAD` on `v8.1/config-bucket`; D-35-10 7-criterion done-gate GREEN)
 **Goal:** typecheck/lint/test/build all green; reconcile orphan `electron-builder.config.json` (R3 carry-forward from 31-01).
-**Requirements:** SYNC-35a, SYNC-35b, SYNC-35c, SYNC-35d, SYNC-35e
+**Requirements:** SYNC-35a ✅, SYNC-35b ✅, SYNC-35c ✅, SYNC-35d ✅, SYNC-35e ✅
 **Canonical refs:** .planning/milestones/v8.0-phases/29-build-verification
+**Result:** Wave 1 dropped dead DownloadManager + DownloadObserver (`git rm`, −4154 LOC; renderer-bucket 9 → 0). Wave 2 restored `packages/paths{,-node}/src/` from master (contingency-fix; aggregate typecheck 130 → 0). Wave 3 confirmed `pnpm lint:ci` exit 0 (v8.1 errors 0 vs master 18). Wave 4 confirmed `pnpm test` exit 0 (Vitest 52 files / 1304 tests pass; Jest documented ORPHAN). Wave 5 confirmed `pnpm build` + `pnpm build:extensions` exit 0 (bundledPlugins=132). Wave 6 deleted orphan `electron-builder.config.json`. Wave 7 closed with D-35-10 7/7 GREEN.
 **Success criteria:**
 
-1. `pnpm run typecheck`, `pnpm run lint`, `pnpm run test`, `pnpm run build` all exit 0
-2. Lint baseline-parity with `fork/master` (no new errors)
-3. Orphan `electron-builder.config.json` removed or reconciled
+1. ✅ `pnpm run typecheck`, `pnpm run lint`, `pnpm run test`, `pnpm run build` all exit 0
+2. ✅ Lint baseline-parity with `fork/master` (no new errors; v8.1 errors 0 vs master 18 on lint:ci)
+3. ✅ Orphan `electron-builder.config.json` removed (`.cjs` is the live consumer)
+
+**Plans:** 8/8 complete
+
+Plans:
+
+- [x] 35-01-WAVE-0-readiness.md — Wave 0: readiness check + baseline capture
+- [x] 35-02-WAVE-1-delete-dead-code.md — Wave 1: drop DownloadManager + DownloadObserver (D-35-01 branch A); renderer-bucket 9 → 0
+- [x] 35-03-WAVE-2-typecheck.md — Wave 2: aggregate typecheck SYNC-35a; CONTINGENCY-FIX restored `packages/paths{,-node}/src/` from master
+- [x] 35-04-WAVE-3-lint.md — Wave 3: SYNC-35b lint baseline-parity (`pnpm lint:ci` exit 0; Δ −18 vs master)
+- [x] 35-05-WAVE-4-test.md — Wave 4: SYNC-35c Vitest exit 0; Jest documented ORPHAN
+- [x] 35-06-WAVE-5-build.md — Wave 5: SYNC-35d build chain exit 0; bundledPlugins=132
+- [x] 35-07-WAVE-6-orphan.md — Wave 6: SYNC-35e orphan `electron-builder.config.json` deleted
+- [x] 35-08-WAVE-7-closeout.md — Wave 7: D-35-10 7-criterion done-gate + STATE + ROADMAP + REQUIREMENTS + master closeout SUMMARY
 
 ### Phase 36: Land + tag + cherry-pick (v2.0.1)
 
@@ -299,6 +314,6 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 | 32. Mod-management hot zone (v2.0.1)                      | v8.1      | 7/6            | Complete | 2026-05-22 |
 | 33. Gamebryo + per-game extensions (v2.0.1)               | v8.1      | 10/10          | Complete | 2026-05-23 |
 | 34. Renderer + main spine (v2.0.1)                        | v8.1      | 10/10          | Complete | 2026-05-23 |
-| 35. Build verification (v2.0.1)                           | v8.1      | TBD            | Pending  | —          |
+| 35. Build verification (v2.0.1)                           | v8.1      | 8/8            | Complete | 2026-05-23 |
 | 36. Land + tag (v2.0.1-linux-rebased)                     | v8.1      | TBD            | Pending  | —          |
 | 37. Carry-forward UAT (v2.0.1)                            | v8.1      | TBD            | Pending  | —          |

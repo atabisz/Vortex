@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v8.1
 milestone_name: Upstream v2.0.1 Sync
 status: completed
-stopped_at: Phase 35 context gathered
-last_updated: "2026-05-22T22:56:52.074Z"
-last_activity: 2026-05-23 -- Phase 34 CLOSED on v8.1/config-bucket. 131 SSH-signed commits in Phase 34 range; D-34-14 done-gate 7/7 GREEN with documented renderer-bucket scope adjustment (renderer=9 errors all in deferred download_management/, filtered=0); harness 13/13 GREEN; ready for Phase 35 (full build verification + download_management reconciliation) per D-34-20, then Phase 36 (push + FF-merge + tag) per project memory.
+stopped_at: Phase 35 closed; Phase 36 unblocked (push + FF-merge + tag)
+last_updated: "2026-05-23T00:00:00.000Z"
+last_activity: 2026-05-23 -- Phase 35 CLOSED on v8.1/config-bucket. 5 SSH-signed commits in Phase 35 range (e2127cecb..closeout); D-35-10 done-gate 7/7 GREEN; SYNC-35a..e all [x]; renderer-bucket flipped 9 → 0 via Wave 1 download_management drop; aggregate typecheck flipped 130 → 0 via Wave 2 packages/paths restore contingency-fix; orphan electron-builder.config.json removed Wave 6; per-bucket typecheck all 0; markers outside .planning/ = 0. Phase 36 owns push + FF-merge + tag (v2.0.1-linux-rebased) + cherry-pick to linux-port + release-linux.yml AppImage + .deb.
 progress:
     total_phases: 8
-    completed_phases: 3
-    total_plans: 26
-    completed_plans: 35
-    percent: 38
+    completed_phases: 5
+    total_plans: 34
+    completed_plans: 43
+    percent: 63
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-05-22 after v8.0 ship + v8.1 milestone s
 
 ## Current Position
 
-Phase: 34 — COMPLETE
-Plan: 34-09 — COMPLETE (Wave 9 done-gate; STATE + ROADMAP + master closeout SUMMARY)
-Status: Phase 35 unblocked (full pnpm test/lint/build/CI green + download_management/ reconciliation)
-Last activity: 2026-05-23 -- Phase 34 CLOSED on v8.1/config-bucket. 131 SSH-signed commits in Phase 34 range; D-34-14 done-gate 7/7 GREEN with documented renderer-bucket scope adjustment (renderer=9 errors all in deferred download_management/, filtered=0); harness 13/13 GREEN; ready for Phase 35 (full build verification + download_management reconciliation) per D-34-20, then Phase 36 (push + FF-merge + tag) per project memory.
+Phase: 35 — COMPLETE
+Plan: 35-08 — COMPLETE (Wave 7 done-gate; STATE + ROADMAP + REQUIREMENTS + master closeout SUMMARY + 8 wave plans)
+Status: Phase 36 unblocked (push v8.1/config-bucket → fork; FF-merge PR #5; SSH-signed tag v2.0.1-linux-rebased; cherry-pick to linux-port; release-linux.yml AppImage + .deb)
+Last activity: 2026-05-23 -- Phase 35 CLOSED on v8.1/config-bucket. 5 SSH-signed commits in Phase 35 range (e2127cecb..closeout); D-35-10 done-gate 7/7 GREEN; SYNC-35a..e all [x]; renderer-bucket flipped 9 → 0 via Wave 1 download_management drop; aggregate typecheck flipped 130 → 0 via Wave 2 packages/paths restore contingency-fix; orphan electron-builder.config.json removed Wave 6; per-bucket typecheck all 0; markers outside .planning/ = 0. Phase 36 owns push + FF-merge + tag.
 
 ## Performance Metrics
 
@@ -226,9 +226,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-22T22:56:52.062Z
-Stopped at: Phase 35 context gathered
-Resume file: .planning/phases/35-build-verification-v2-0-1/35-CONTEXT.md
+Last session: 2026-05-23T00:00:00.000Z
+Stopped at: Phase 35 closed; Phase 36 unblocked (push + FF-merge + tag)
+Resume file: .planning/phases/35-build-verification-v2-0-1/35-08-SUMMARY.md
 
 ### Phase 33 close-out summary
 
@@ -305,3 +305,55 @@ Resume file: .planning/phases/35-build-verification-v2-0-1/35-CONTEXT.md
 **Blockers:** none for Phase 34. Carry-over to Phase 35: 9 typecheck errors confined to `src/renderer/src/extensions/download_management/` — `FileAssembler` and `SpeedCalculator` modules missing + `IDownload` signature/type drift + `chunks` property removed. Pre-existing v2.0.1 merge fallout, deferred per Wave F's split-the-fix decision; renderer-bucket-clean assertion was for Wave F's resolution surface, not the entire renderer subtree.
 
 **Next phase:** 35 (full pnpm test/lint/build/CI green + `download_management/` reconciliation) per D-34-20, then 36 (rebase + FF-merge + tag `v2.0.1-linux-rebased` + cherry-pick to `linux-port`) per project memory `feedback_git_push_ssh.md`.
+
+## Phase 35 — build verification v2.0.1
+
+**Status:** COMPLETE @ 2026-05-23
+**Branch:** v8.1/config-bucket
+**Commits:** 5 in `e2127cecb^..HEAD` (anchor `e2127cecb` = Wave 1 download_management drop; closeout = this commit). All SSH-signed via `~/.ssh/id_ed25519`; zero `--no-verify`; zero `--no-gpg-sign`.
+
+**D-35-10 done-gate result:** 7/7 GREEN — no scope adjustments needed.
+
+- C1 `pnpm run typecheck`: exit 0 (60 projects + 7 dependent tasks); per-bucket all 0; aggregate flipped 130 → 0 via Wave 2 contingency-fix
+- C2 `pnpm lint:ci`: exit 0; v8.1 errors 0 vs master @ d494bcb7d 18 (Δ −18); pre-bail surface unchanged
+- C3 `pnpm test`: Vitest exit 0; 52 files / 1304 tests pass; Jest documented ORPHAN (mocks deleted Phase 34 H; pnpm test invokes Vitest only)
+- C4 `pnpm build` + `pnpm build:extensions`: both exit 0; bundledPlugins=132 (floor 130, margin 2); 144 build-Done markers
+- C5 `src/main/electron-builder.config.json` deleted Wave 6 (commit 3a556fa6b); `.cjs` is live consumer; `package:nosign` smoke clean
+- C6 STATE.md updated: this commit
+- C7 ROADMAP.md updated: this commit (paired with REQUIREMENTS.md SYNC-35a..e ticks)
+
+**Decisions exercised (D-35-00..D-35-10):** all honored.
+
+- D-35-00: NO push from sandbox (Phase 36 owns push)
+- D-35-01: branch A executed Wave 1 (`git rm` DownloadManager + DownloadObserver; −4154 LOC; renderer-bucket 9 → 0)
+- D-35-04: orphan `electron-builder.config.json` removed Wave 6 (`.cjs` is the live consumer; flatpak yaml's hyphenated `electron-builder-config.json` is distinct, out of scope)
+- D-35-08: bundledPlugins floor 130 honored (current 132; margin 2)
+- D-35-10: 7-criterion done-gate evaluated this wave, 7/7 GREEN
+
+**Phase 35 commits (chronological):**
+
+1. `e2127cecb` chore(download_management): drop dead DownloadManager + DownloadObserver — superseded by IPCDownloadAdapter (Wave 1; −4154 LOC; renderer-bucket 9 → 0)
+2. `52ea1941b` fix(merge): restore packages/paths{,-node}/src/ from master — backfill v2.0.1 merge gap (Wave 2 contingency; aggregate typecheck 130 → 0)
+3. `db168e5d4` docs(phase-35): append CONTINGENCY-FIX UPDATE to 35-VERIFY-RESULTS.md (Wave 2 docs)
+4. `3a556fa6b` chore(electron-builder): drop orphan v2.0.1 config.json — superseded by .cjs (Wave 6 D-35-04)
+5. this commit — chore(state): close phase 35 — build verification v2.0.1 done-gate GREEN (Wave 7 closeout: STATE + ROADMAP + REQUIREMENTS + master SUMMARY + DONE-GATE + 8 wave plans + artifacts)
+
+**Linux-guard surfaces preserved:** Phase 35 didn't touch any. Wave 1 deleted dead `DownloadManager.ts`/`DownloadObserver.ts` (no Linux guards on either). Wave 6 deleted an orphan JSON config (no Linux guards). Wave 2 restored `packages/paths{,-node}/src/` byte-for-byte from master (Phase 25 SYNC-14 reference; inherits master's Linux-clean disposition). Phase 34's full Linux-guard inventory (15+ surfaces) audited intact post-Phase-35.
+
+**Bluebird-trap audit:** N/A. Wave 1's deletes removed the only bluebird-importing files in Phase 35 scope; trap cannot fire on files that no longer exist. Wave 6 touched a JSON config. Wave 2's restore inherited master's clean disposition.
+
+**Validation:**
+
+- L1 markers (outside .planning/): 0
+- L2 harness (Phase 34's 13-gate, carried; not extended Phase 35): 13/13 GREEN skip-mode (surface unchanged)
+- L3 bucket typechecks (post-closeout HEAD): shared=0, preload=0, main=0, renderer=0, fingerprints=0, e2e=0
+- Aggregate `pnpm run typecheck`: exit 0
+- SSH-sign audit: 5/5 commits signed (gpgsig SSH-SIGNATURE block on every commit)
+- `--no-verify` audit: 0 across the Phase 35 range
+
+**Blockers:** none. Two soft architectural follow-ups deferred (out of scope):
+
+- `packages/paths{,-node}` keep-restored vs adopt upstream `52f934941 "Remove deprecated paths packages"` — Phase 36+ decision parallel to D-35-01 branch A
+- Jest config orphan (`jest.config.mjs` references mocks deleted Phase 34 H) — Phase 36+ R4 candidate
+
+**Next phase:** **36 — Land + tag + cherry-pick.** Push `v8.1/config-bucket` → fork; rebase + `gh pr merge 5 --merge=fast-forward`; SSH-signed tag `v2.0.1-linux-rebased` on post-FF master; cherry-pick to `linux-port` per D-30-03 path-filter; `release-linux.yml` AppImage + .deb. D-35-00 push prohibition lifts at the Phase 36 boundary.

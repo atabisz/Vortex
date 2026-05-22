@@ -20,11 +20,11 @@ This milestone is the brownfield repeat of v8.0 (which folded `v2.0.0`). Phase n
 
 ### Build verification
 
-- [ ] **SYNC-35a**: `pnpm run typecheck` exits 0 across all workspaces — Phase 35
-- [ ] **SYNC-35b**: `pnpm run lint` baseline-parity with `fork/master` (no new errors introduced by sync) — Phase 35
-- [ ] **SYNC-35c**: `pnpm run test` exits 0 (Vitest + Jest) — Phase 35
-- [ ] **SYNC-35d**: `pnpm run build` exits 0 (renderer webpack + main rolldown + extensions) — Phase 35
-- [ ] **SYNC-35e**: R3 carry-forward — orphan `electron-builder.config.json` reconciled or removed — Phase 35
+- [x] **SYNC-35a**: `pnpm run typecheck` exits 0 across all workspaces — Phase 35 — done 2026-05-23 (Wave 2 contingency-fix `52ea1941b` restored `packages/paths{,-node}/src/` from master; aggregate exit 0; six-bucket all 0)
+- [x] **SYNC-35b**: `pnpm run lint` baseline-parity with `fork/master` (no new errors introduced by sync) — Phase 35 — done 2026-05-23 (Wave 3 — `pnpm lint:ci` exit 0; v8.1 errors 0 vs master @ d494bcb7d 18, Δ −18; pre-bail surface unchanged)
+- [x] **SYNC-35c**: `pnpm run test` exits 0 (Vitest + Jest) — Phase 35 — done 2026-05-23 (Wave 4 — Vitest exit 0, 52 files / 1304 tests pass; Jest documented ORPHAN — mocks deleted Phase 34 H, `pnpm test` invokes Vitest only)
+- [x] **SYNC-35d**: `pnpm run build` exits 0 (renderer webpack + main rolldown + extensions) — Phase 35 — done 2026-05-23 (Wave 5 — `pnpm build` + `pnpm build:extensions` both exit 0; bundledPlugins=132, floor 130)
+- [x] **SYNC-35e**: R3 carry-forward — orphan `electron-builder.config.json` reconciled or removed — Phase 35 — done 2026-05-23 (Wave 6 commit `3a556fa6b` — `git rm src/main/electron-builder.config.json`; `.cjs` is the live consumer; `package:nosign` smoke clean)
 
 ### Land + tag + cherry-pick
 
@@ -55,6 +55,6 @@ This milestone is the brownfield repeat of v8.0 (which folded `v2.0.0`). Phase n
 | SYNC-32a           | 32 (mod-management hot zone)  | TBD by plan-phase               | —                                            |
 | SYNC-33a, SYNC-33b | 33 (gamebryo + per-game)      | TBD by plan-phase               | —                                            |
 | SYNC-34a, SYNC-34b | 34 (renderer + main spine)    | TBD by plan-phase               | —                                            |
-| SYNC-35a–e         | 35 (build verification)       | TBD by plan-phase               | —                                            |
+| SYNC-35a–e         | 35 (build verification)       | 8 wave plans + 5 atomic commits | ✓ closed on `v8.1/config-bucket` 2026-05-23  |
 | SYNC-36a–d         | 36 (land + tag + cherry-pick) | TBD by plan-phase               | —                                            |
 | SYNC-37a, SYNC-37b | 37 (carry-forward UAT)        | TBD by plan-phase               | —                                            |

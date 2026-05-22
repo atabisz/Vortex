@@ -1,0 +1,68 @@
+
+> @vortex/monorepo@1.16.8 lint /tmp/vortex-master
+> pnpm -r run lint
+
+Scope: 146 of 147 workspace projects
+packages/adaptor-api lint$ pnpm eslint --concurrency auto .
+src/shared lint$ pnpm eslint --concurrency auto .
+packages/adaptor-api lint: /tmp/vortex-master/packages/adaptor-api/src/builder.ts
+packages/adaptor-api lint:   2:1  warning  Missed spacing between "./types/branded" and "./types/branded"  perfectionist/sort-imports
+packages/adaptor-api lint: /tmp/vortex-master/packages/adaptor-api/src/contracts/game-info.ts
+packages/adaptor-api lint:   10:1  warning  Missed spacing between "../types/store-ids.js" and "../types/store-ids.js"  perfectionist/sort-imports
+packages/adaptor-api lint: /tmp/vortex-master/packages/adaptor-api/src/contracts/game-installer.test.ts
+packages/adaptor-api lint:   4:1  warning  Missed spacing between "../fs/paths" and "../fs/paths"                                          perfectionist/sort-imports
+packages/adaptor-api lint:   5:1  warning  Expected "../stores/providers" (type-parent) to come before "../fs/paths" (value-parent)        perfectionist/sort-imports
+packages/adaptor-api lint:   6:1  warning  Missed spacing between "../stores/providers" and "../stores/providers"                          perfectionist/sort-imports
+packages/adaptor-api lint:   7:1  warning  Expected "./game-installer" (type-sibling) to come before "../stores/providers" (value-parent)  perfectionist/sort-imports
+packages/adaptor-api lint:   8:1  warning  Missed spacing between "./game-installer" and "./game-installer"                                perfectionist/sort-imports
+packages/adaptor-api lint:   9:1  warning  Expected "./game-paths" (type-sibling) to come before "./game-installer" (value-sibling)        perfectionist/sort-imports
+packages/adaptor-api lint: /tmp/vortex-master/packages/adaptor-api/src/contracts/game-installer.ts
+packages/adaptor-api lint:   2:1  warning  Missed spacing between "../fs/paths" and "../fs/paths"                                    perfectionist/sort-imports
+packages/adaptor-api lint:   3:1  warning  Expected "../stores/providers" (type-parent) to come before "../fs/paths" (value-parent)  perfectionist/sort-imports
+packages/adaptor-api lint:   5:1  warning  Missed spacing between "./game-paths" and "./glob"                                        perfectionist/sort-imports
+packages/adaptor-api lint: /tmp/vortex-master/packages/adaptor-api/src/contracts/game-paths.test.ts
+packages/adaptor-api lint:   4:1  warning  Expected "../stores/providers" (type-parent) to come before "../fs/paths" (value-parent)  perfectionist/sort-imports
+packages/adaptor-api lint:   6:1  warning  Missed spacing between "./game-paths" and "./game-paths"                                  perfectionist/sort-imports
+packages/adaptor-api lint: /tmp/vortex-master/packages/adaptor-api/src/contracts/game-paths.ts
+packages/adaptor-api lint:   2:1  warning  Expected "../stores/providers" (type-parent) to come before "../fs/paths" (value-parent)  perfectionist/sort-imports
+packages/adaptor-api lint: /tmp/vortex-master/packages/adaptor-api/src/contracts/game-tools.ts
+packages/adaptor-api lint:   2:1  warning  Expected "./game-paths" (type-sibling) to come before "../fs/paths" (value-parent)  perfectionist/sort-imports
+packages/adaptor-api lint: /tmp/vortex-master/packages/adaptor-api/src/lib.ts
+packages/adaptor-api lint:   41:1  warning  Expected "./fs/filesystem" to come before "./types/store-ids"  perfectionist/sort-exports
+packages/adaptor-api lint: /tmp/vortex-master/packages/adaptor-api/src/stores/snapshot.ts
+packages/adaptor-api lint:   2:1  warning  Expected "./providers" (type-sibling) to come before "../fs/paths" (value-parent)  perfectionist/sort-imports
+packages/adaptor-api lint:   9:1  warning  Missed spacing between "./providers" and "./providers"                             perfectionist/sort-imports
+packages/adaptor-api lint: ✖ 18 problems (0 errors, 18 warnings)
+packages/adaptor-api lint:   0 errors and 18 warnings potentially fixable with the `--fix` option.
+packages/adaptor-api lint: Done
+src/shared lint: /tmp/vortex-master/src/shared/src/Debouncer.test.ts
+src/shared lint:   20:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+src/shared lint: /tmp/vortex-master/src/shared/src/Debouncer.ts
+src/shared lint:    19:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+src/shared lint:    26:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+src/shared lint:    51:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+src/shared lint:    72:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+src/shared lint:   110:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+src/shared lint:   173:25  warning  Unsafe spread of an `any[]` array type    @typescript-eslint/no-unsafe-argument
+src/shared lint: /tmp/vortex-master/src/shared/src/telemetry/spans.ts
+src/shared lint:   2:1  warning  Missed spacing between "@opentelemetry/api" and "@opentelemetry/api"  perfectionist/sort-imports
+src/shared lint: /tmp/vortex-master/src/shared/src/telemetry/types.ts
+src/shared lint:   2:1  warning  Missed spacing between "@opentelemetry/api" and "@opentelemetry/resources"                                         perfectionist/sort-imports
+src/shared lint:   3:1  warning  Expected "@opentelemetry/sdk-trace-base" (type-import) to come before "@opentelemetry/resources" (value-external)  perfectionist/sort-imports
+src/shared lint: /tmp/vortex-master/src/shared/src/types/errors.ts
+src/shared lint:   116:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+src/shared lint: ✖ 11 problems (0 errors, 11 warnings)
+src/shared lint:   0 errors and 3 warnings potentially fixable with the `--fix` option.
+src/shared lint: Done
+packages/adaptors/cyberpunk2077 lint$ pnpm eslint --concurrency auto --quiet .
+src/preload lint$ pnpm eslint --concurrency auto .
+src/renderer lint$ pnpm eslint --concurrency auto .
+packages/adaptors/cyberpunk2077 lint: /tmp/vortex-master/packages/adaptors/cyberpunk2077/src/index.ts
+packages/adaptors/cyberpunk2077 lint:   78:3  error  Async method 'getVersionSource' has no 'await' expression  @typescript-eslint/require-await
+packages/adaptors/cyberpunk2077 lint: ✖ 1 problem (1 error, 0 warnings)
+packages/adaptors/cyberpunk2077 lint: Failed
+/tmp/vortex-master/packages/adaptors/cyberpunk2077:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @vortex/adaptor-cyberpunk2077@1.0.0 lint: `pnpm eslint --concurrency auto --quiet .`
+Exit status 1
+ ELIFECYCLE  Command failed with exit code 1.
+lint exit=1
