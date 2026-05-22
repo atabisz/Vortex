@@ -193,13 +193,7 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
             return false;
           }
           return typeof instanceId === "string"
-<<<<<<< HEAD
             ? ["downloaded", "installed"].includes(this.state.modsEx[instanceId].state)
-=======
-            ? ["downloaded", "installed"].includes(
-                this.state.modsEx[instanceId].state,
-              )
->>>>>>> v2.0.1
             : true;
         },
         hotKey: { code: 46 },
@@ -458,14 +452,7 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
       }
       const currentMods = state.persistent.mods[gameId] ?? {};
       const currentDownloads = state.persistent.downloads.files;
-<<<<<<< HEAD
       if (currentMods !== this.props.mods || currentDownloads !== this.props.downloads) {
-=======
-      if (
-        currentMods !== this.props.mods ||
-        currentDownloads !== this.props.downloads
-      ) {
->>>>>>> v2.0.1
         this.nextState.modsEx = this.updateModsEx(this.props, {
           ...this.props,
           mods: currentMods,
@@ -954,14 +941,7 @@ class CollectionPage extends ComponentEx<IProps, IComponentState> {
     const modNames = filteredIds.map((modId) =>
       modsEx[modId].state !== null
         ? util.renderModName(modsEx[modId], { version: true })
-<<<<<<< HEAD
         : util.renderModReference(modsEx[modId].collectionRule.reference, undefined),
-=======
-        : util.renderModReference(
-            modsEx[modId].collectionRule.reference,
-            undefined,
-          ),
->>>>>>> v2.0.1
     );
 
     const checkboxes = [
