@@ -12,12 +12,6 @@ import { NoDeployment } from "../extensions/mod_management/util/exceptions";
 import type { IErrorOptions } from "../types/IExtensionContext";
 import type { IState } from "../types/IState";
 import type { HTTPError } from "./CustomErrors";
-<<<<<<< HEAD
-=======
-
-import { addNotification, showDialog } from "../actions/notifications";
-import { NoDeployment } from "../extensions/mod_management/util/exceptions";
->>>>>>> v2.0.1
 import {
   StalledError,
   TemporaryError,
