@@ -40,11 +40,6 @@ import semver from "semver";
 import { actions, fs, log, selectors, types, util } from "vortex-api";
 
 import { getDownload, getSupportMap, MODTYPE_BIX_INJECTOR } from "./common";
-<<<<<<< HEAD
-=======
-import { IBepInExGameConfig, INexusDownloadInfo } from "./types";
-
->>>>>>> v2.0.1
 import { checkForUpdates, downloadFromGithub } from "./githubDownloader";
 import { IBepInExGameConfig, INexusDownloadInfo } from "./types";
 
@@ -70,17 +65,8 @@ function updateSupportedGames(api: types.IExtensionApi, downloadId: string) {
     throw new util.NotFound(`bepinex download is missing: ${downloadId}`);
   }
 
-<<<<<<< HEAD
   const supportedGames = new Set<string>(download.game.concat(Object.keys(getSupportMap())));
   api.store.dispatch(actions.setCompatibleGames(downloadId, Array.from(supportedGames)));
-=======
-  const supportedGames = new Set<string>(
-    download.game.concat(Object.keys(getSupportMap())),
-  );
-  api.store.dispatch(
-    actions.setCompatibleGames(downloadId, Array.from(supportedGames)),
-  );
->>>>>>> v2.0.1
 }
 
 async function install(
@@ -98,13 +84,7 @@ async function install(
     );
     const isInjectorInstalled = force
       ? false
-<<<<<<< HEAD
       : Object.keys(mods).find((id) => mods[id].type === MODTYPE_BIX_INJECTOR) !== undefined;
-=======
-      : Object.keys(mods).find(
-          (id) => mods[id].type === MODTYPE_BIX_INJECTOR,
-        ) !== undefined;
->>>>>>> v2.0.1
     if (!isInjectorInstalled) {
       return new Promise<string>((resolve, reject) => {
         api.events.emit("start-install-download", downloadId, true, (err, modId) => {
@@ -152,21 +132,9 @@ async function startNxmDownload(
 
   try {
     return await util.toPromise<string>((cb) =>
-<<<<<<< HEAD
       api.events.emit("start-download", [nxmUrl], dlInfo, undefined, cb, undefined, {
         allowInstall: false,
       }),
-=======
-      api.events.emit(
-        "start-download",
-        [nxmUrl],
-        dlInfo,
-        undefined,
-        cb,
-        undefined,
-        { allowInstall: false },
-      ),
->>>>>>> v2.0.1
     );
   } catch (err) {
     if (err instanceof util.UserCanceled) {
@@ -203,7 +171,6 @@ async function download(
     return install(api, downloadInfo, dlId, force);
   } catch (err) {
     return Promise.reject(err);
-<<<<<<< HEAD
   }
 }
 
@@ -261,76 +228,6 @@ async function runCustomPackDownloader(
   }
 }
 
-=======
-  }
-}
-
-// Extracts the first MAJOR.MINOR.PATCH triple from a version string and
-// ignores anything else (leading "v", trailing ".0" cosmetic padding, "-pre"
-// suffixes, BIX 4 segment revisions, etc).
-const SEMVER_RE = /(\d+\.\d+\.\d+)/;
-
-function extractSemver(version: string | undefined): string {
-  return version?.match(SEMVER_RE)?.[1] ?? "0.0.0";
-}
-
-function hasPinnedVersionInstalled(
-  mods: { [modId: string]: types.IMod },
-  injectorModIds: string[],
-  pinnedVersion: string,
-): boolean {
-  const target = extractSemver(pinnedVersion);
-  return injectorModIds.some(
-    (id) => extractSemver(mods[id]?.attributes?.version) === target,
-  );
-}
-
-function getLatestInstalledVersion(
-  mods: { [modId: string]: types.IMod },
-  injectorModIds: string[],
-): string {
-  return injectorModIds.reduce((prev, id) => {
-    const version = extractSemver(mods[id]?.attributes?.version);
-    return semver.gt(version, prev) ? version : prev;
-  }, "0.0.0");
-}
-
-async function runCustomPackDownloader(
-  api: types.IExtensionApi,
-  state: types.IState,
-  gameId: string,
-  gameConf: IBepInExGameConfig,
-  force?: boolean,
-): Promise<void> {
-  let downloadRes: string | INexusDownloadInfo;
-  try {
-    downloadRes = await gameConf.customPackDownloader!(
-      util.getVortexPath("temp"),
-    );
-    if ((downloadRes as INexusDownloadInfo) !== undefined) {
-      await download(api, downloadRes as INexusDownloadInfo, force);
-    } else if (typeof downloadRes === "string") {
-      if (!path.isAbsolute(downloadRes)) {
-        log(
-          "error",
-          "failed to download custom pack",
-          "expected absolute path",
-        );
-      }
-      const downloadsPath = selectors.downloadPathForGame(state, gameId);
-      await fs.copyAsync(
-        downloadRes,
-        path.join(downloadsPath, path.basename(downloadRes)),
-      );
-    } else {
-      log("error", "failed to download custom pack", { downloadRes });
-    }
-  } catch (err) {
-    log("error", "failed to download custom pack", err);
-  }
-}
-
->>>>>>> v2.0.1
 async function downloadDefaultOrFallback(
   api: types.IExtensionApi,
   gameConf: IBepInExGameConfig,
@@ -338,14 +235,7 @@ async function downloadDefaultOrFallback(
 ): Promise<void> {
   const defaultDownload = getDownload(gameConf);
   try {
-<<<<<<< HEAD
     if (gameConf.bepinexVersion != null && gameConf.bepinexVersion !== defaultDownload.version) {
-=======
-    if (
-      gameConf.bepinexVersion != null &&
-      gameConf.bepinexVersion !== defaultDownload.version
-    ) {
->>>>>>> v2.0.1
       // Pinned to a version we don't bundle for Nexus - go to Github instead.
       throw new util.ProcessCanceled("BepInEx version mismatch");
     }
@@ -369,13 +259,7 @@ export async function ensureBepInExPack(
   }
 
   const mods: Record<string, types.IMod> = state.persistent.mods[gameId] ?? {};
-<<<<<<< HEAD
   const injectorModIds = Object.keys(mods).filter((id) => mods[id]?.type === MODTYPE_BIX_INJECTOR);
-=======
-  const injectorModIds = Object.keys(mods).filter(
-    (id) => mods[id]?.type === MODTYPE_BIX_INJECTOR,
-  );
->>>>>>> v2.0.1
 
   // Pinned-version mode: force a reinstall if no installed injector matches.
   // Skipped when a customPackDownloader is in play - that resolver owns
