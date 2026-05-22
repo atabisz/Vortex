@@ -3,22 +3,11 @@
  * Covers test cases: #1.4A, #2.8A
  */
 import { test, expect } from "../fixtures/vortex-app";
-<<<<<<< HEAD
 import { navigateToSettings, navigateToGames } from "../helpers/navigation";
 import { NavBar } from "../selectors/navbar";
 
 test.describe("App Launch", () => {
   test("Vortex launches and shows a window @smoke", async ({ vortexApp, vortexWindow }) => {
-=======
-import { NavBar } from "../selectors/navbar";
-import { navigateToSettings, navigateToGames } from "../helpers/navigation";
-
-test.describe("App Launch", () => {
-  test("Vortex launches and shows a window @smoke", async ({
-    vortexApp,
-    vortexWindow,
-  }) => {
->>>>>>> v2.0.1
     await test.step("Verify window exists", async () => {
       const windows = vortexApp.windows();
       expect(windows.length).toBeGreaterThanOrEqual(1);
@@ -30,13 +19,7 @@ test.describe("App Launch", () => {
     });
   });
 
-<<<<<<< HEAD
   test("main window has no critical console errors on startup @smoke", async ({ vortexWindow }) => {
-=======
-  test("main window has no critical console errors on startup @smoke", async ({
-    vortexWindow,
-  }) => {
->>>>>>> v2.0.1
     const errors: string[] = [];
 
     vortexWindow.on("console", (msg) => {
@@ -50,25 +33,13 @@ test.describe("App Launch", () => {
     await test.step("Check for critical errors", async () => {
       const criticalErrors = errors.filter(
         (e) =>
-<<<<<<< HEAD
           !e.includes("DevTools") && !e.includes("electron/js2c") && !e.includes("Autofill.enable"),
-=======
-          !e.includes("DevTools") &&
-          !e.includes("electron/js2c") &&
-          !e.includes("Autofill.enable"),
->>>>>>> v2.0.1
       );
       expect(criticalErrors).toEqual([]);
     });
   });
 
-<<<<<<< HEAD
   test("app process is running and responsive @smoke", async ({ vortexWindow }) => {
-=======
-  test("app process is running and responsive @smoke", async ({
-    vortexWindow,
-  }) => {
->>>>>>> v2.0.1
     await test.step("Verify process is responsive", async () => {
       expect(vortexWindow).toBeTruthy();
       const title = await vortexWindow.title();
@@ -91,13 +62,7 @@ test.describe("Navigation", () => {
     });
   });
 
-<<<<<<< HEAD
   test("can navigate to Settings/Preferences page", async ({ vortexWindow }) => {
-=======
-  test("can navigate to Settings/Preferences page", async ({
-    vortexWindow,
-  }) => {
->>>>>>> v2.0.1
     const navbar = new NavBar(vortexWindow);
 
     await test.step("Verify settings link is visible", async () => {
