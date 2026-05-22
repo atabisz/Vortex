@@ -12,9 +12,8 @@
  */
 
 import type { IResolverBase } from "./IResolver";
-import type { Anchor, RelativePath, ResolvedPath } from "./types";
-
 import { forPlatform, trimTrailingSeparator } from "./pathUtils";
+import type { Anchor, RelativePath, ResolvedPath } from "./types";
 import { fnv1a, RelativePath as RelativePathNS, Anchor as AnchorNS } from "./types";
 
 /**
@@ -38,9 +37,7 @@ export class FilePath {
   ) {
     // Validate that the resolver can handle this anchor
     if (!resolver.canResolve(anchor)) {
-      throw new Error(
-        `Resolver "${resolver.name}" cannot handle anchor: ${AnchorNS.name(anchor)}`,
-      );
+      throw new Error(`Resolver "${resolver.name}" cannot handle anchor: ${AnchorNS.name(anchor)}`);
     }
   }
 
@@ -260,9 +257,7 @@ export class FilePath {
     const resolverCmp = this.resolver.name.localeCompare(other.resolver.name);
     if (resolverCmp !== 0) return resolverCmp;
 
-    const anchorCmp = AnchorNS.name(this.anchor).localeCompare(
-      AnchorNS.name(other.anchor),
-    );
+    const anchorCmp = AnchorNS.name(this.anchor).localeCompare(AnchorNS.name(other.anchor));
     if (anchorCmp !== 0) return anchorCmp;
 
     return RelativePathNS.compare(this.relative, other.relative);
@@ -290,9 +285,7 @@ export class FilePath {
    * const reconstructed = parent.join(relative);
    * ```
    */
-  async relativeTo(
-    basePath: string | ResolvedPath,
-  ): Promise<RelativePath | null> {
+  async relativeTo(basePath: string | ResolvedPath): Promise<RelativePath | null> {
     // Resolve this FilePath to get the child OS path
     const childPath = await this.resolve();
 
@@ -308,9 +301,8 @@ export class FilePath {
     // Check if child is under base (case-insensitive on Windows)
     const baseNorm = trimTrailingSeparator(fs.normalizePath(resolvedBase), sepCode);
     const childNorm = trimTrailingSeparator(fs.normalizePath(resolvedChild), sepCode);
-    const baseWithSep = baseNorm.charCodeAt(baseNorm.length - 1) === sepCode
-      ? baseNorm
-      : baseNorm + fs.sep;
+    const baseWithSep =
+      baseNorm.charCodeAt(baseNorm.length - 1) === sepCode ? baseNorm : baseNorm + fs.sep;
 
     if (!childNorm.startsWith(baseWithSep) && childNorm !== baseNorm) {
       return null; // This path is not under basePath
@@ -320,9 +312,7 @@ export class FilePath {
     const relative = pathMod.relative(resolvedBase, resolvedChild);
     const normalized = relative.replace(/\\/g, "/"); // Forward slashes
 
-    return normalized === ""
-      ? RelativePathNS.EMPTY
-      : RelativePathNS.make(normalized);
+    return normalized === "" ? RelativePathNS.EMPTY : RelativePathNS.make(normalized);
   }
 
   /**
@@ -341,10 +331,7 @@ export class FilePath {
    */
   withBase(newBase: FilePath): FilePath {
     // Combine new base's relative path with this path's relative path
-    const combinedRelative = RelativePathNS.join(
-      newBase.relative,
-      this.relative,
-    );
+    const combinedRelative = RelativePathNS.join(newBase.relative, this.relative);
 
     return new FilePath(combinedRelative, newBase.anchor, newBase.resolver);
   }
@@ -369,17 +356,10 @@ export class FilePath {
     const sepCode = fs.sep.charCodeAt(0);
     const resolvedParent = pathMod.normalize(parentPath as string);
     const resolvedChild = pathMod.normalize(childPath as string);
-    const parentNorm = trimTrailingSeparator(
-      fs.normalizePath(resolvedParent),
-      sepCode,
-    );
-    const childNorm = trimTrailingSeparator(
-      fs.normalizePath(resolvedChild),
-      sepCode,
-    );
-    const parentWithSep = parentNorm.charCodeAt(parentNorm.length - 1) === sepCode
-      ? parentNorm
-      : parentNorm + fs.sep;
+    const parentNorm = trimTrailingSeparator(fs.normalizePath(resolvedParent), sepCode);
+    const childNorm = trimTrailingSeparator(fs.normalizePath(resolvedChild), sepCode);
+    const parentWithSep =
+      parentNorm.charCodeAt(parentNorm.length - 1) === sepCode ? parentNorm : parentNorm + fs.sep;
     return childNorm.startsWith(parentWithSep) || childNorm === parentNorm;
   }
 }

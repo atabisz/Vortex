@@ -415,25 +415,25 @@ Both forms now have named-script equivalents: `skip-on-windows.mjs` (`&&`, `exit
 
 Durable references to the fork-local Linux fixes this file depends on. If any of these commits are missing from either branch after a merge, something got reverted.
 
-| Fix                                                                                         | master      | linux-port    |
-| ------------------------------------------------------------------------------------------- | ----------- | ------------- |
-| ~~Three gamebryo extensions use `skip-on-linux.mjs`~~ — **superseded** by native CI rebuild | `c408173b9` | _pending_     |
-| Remove skip-on-linux from gamebryo-plugin-management + platform-aware native copy           | `ba23aee71` | _pending_     |
-| Remove skip-on-linux from bsa-support + archive-support; CI rebuilds bsatk                  | `833f02db0` | _pending_     |
-| Remove win32 guard from `testPathTransfer`                                                  | `7cfe61602` | `8e8b13284`   |
-| Allowlist `winapi-bindings` from `nodeExternals`                                            | `e69401abf` | `0cccf116b`   |
-| Pass real plugin filenames to LOOT + filter ghosts                                          | `324da1814` | `72641450c`   |
-| `resolvePathCase` in `externalChanges` (stops spurious "mods are redundant")                | `140a57217` | _pending_     |
-| Heal stale empty staging dirs across install attempts                                       | `7e2c40e94` | `be30e0c05`   |
-| Named `skip-on-linux.mjs` sibling guard (gamestore-xbox)                                    | `5acb3d098` | `a41403030`   |
-| `src/main` packaging points at `build/` (not `dist/`) after upstream rename                 | `4d1ea811b` | _master-only_ |
-| `chmod +x` pnpm-bundled `gyp_main.py` before `pnpm install` in CI                           | `f0a0d2178` | _master-only_ |
-| Gate `fingerprint-*.yml` workflows to `Nexus-Mods/Vortex` repo only                         | `7fd37ff71` | _master-only_ |
-| Direct Proton launch + Snap IPC symlinks + path-boundary matching                           | `096b6376c` | _pending_     |
-| Phase 25 / SYNC-13: restore `packages/paths` + `packages/paths-node` from upstream v2.0.0   | `f9d305d7d` | _master-only_ |
-| Phase 25 / SYNC-12: restore `gamebryo-ba2-support` + ba2tk catalog + CI rebuild step        | `b28d37e31` | _master-only_ |
-| Phase 25 / SYNC-14: restore chunking + download_management spine + bsdiff-node test         | `9a17907b6` | _master-only_ |
-| Phase 25 / SYNC-15 + SYNC-16: restore four upstream CI workflows (deny-list provenance in body — see §11) | `83995b611` | _master-only_ |
+| Fix                                                                                                       | master        | linux-port    |
+| --------------------------------------------------------------------------------------------------------- | ------------- | ------------- |
+| ~~Three gamebryo extensions use `skip-on-linux.mjs`~~ — **superseded** by native CI rebuild               | `c408173b9`   | _pending_     |
+| Remove skip-on-linux from gamebryo-plugin-management + platform-aware native copy                         | `ba23aee71`   | _pending_     |
+| Remove skip-on-linux from bsa-support + archive-support; CI rebuilds bsatk                                | `833f02db0`   | _pending_     |
+| Remove win32 guard from `testPathTransfer`                                                                | `7cfe61602`   | `8e8b13284`   |
+| Allowlist `winapi-bindings` from `nodeExternals`                                                          | `e69401abf`   | `0cccf116b`   |
+| Pass real plugin filenames to LOOT + filter ghosts                                                        | `324da1814`   | `72641450c`   |
+| `resolvePathCase` in `externalChanges` (stops spurious "mods are redundant")                              | `140a57217`   | _pending_     |
+| Heal stale empty staging dirs across install attempts                                                     | `7e2c40e94`   | `be30e0c05`   |
+| Named `skip-on-linux.mjs` sibling guard (gamestore-xbox)                                                  | `5acb3d098`   | `a41403030`   |
+| `src/main` packaging points at `build/` (not `dist/`) after upstream rename                               | `4d1ea811b`   | _master-only_ |
+| `chmod +x` pnpm-bundled `gyp_main.py` before `pnpm install` in CI                                         | `f0a0d2178`   | _master-only_ |
+| Gate `fingerprint-*.yml` workflows to `Nexus-Mods/Vortex` repo only                                       | `7fd37ff71`   | _master-only_ |
+| Direct Proton launch + Snap IPC symlinks + path-boundary matching                                         | `096b6376c`   | _pending_     |
+| Phase 25 / SYNC-13: restore `packages/paths` + `packages/paths-node` from upstream v2.0.0                 | `f9d305d7d`   | _master-only_ |
+| Phase 25 / SYNC-12: restore `gamebryo-ba2-support` + ba2tk catalog + CI rebuild step                      | `b28d37e31`   | _master-only_ |
+| Phase 25 / SYNC-14: restore chunking + download_management spine + bsdiff-node test                       | `9a17907b6`   | _master-only_ |
+| Phase 25 / SYNC-15 + SYNC-16: restore four upstream CI workflows (deny-list provenance in body — see §11) | `83995b611`   | _master-only_ |
 | Phase 25 / SYNC-15 + SYNC-16: restore docs (flatpak + AGENTS-DEBUGGING + structure) + add Playbook §11    | _this commit_ | _master-only_ |
 
 Earlier-era fixes that were reverted by upstream merges (kept for archaeology):
