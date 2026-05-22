@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v8.1
 milestone_name: Upstream v2.0.1 Sync
 status: executing
-stopped_at: Phase 34 Wave G complete
-last_updated: "2026-05-23T22:35:00.000Z"
-last_activity: 2026-05-23 -- Phase 34 Wave G complete (35 atomic SSH-signed commits e32e79de3→ed7780661 + SUMMARY 53187ec2c on v8.1/config-bucket; G1 docs/etc 6 (CHANGELOG/CLAUDE/CONTRIBUTE/README/etc/Dependency Report.md + etc/vortex.api.md) + G2 install prep (no commits, fingerprints separate pnpm install) + G3 fingerprints 10 (9 srcs §7 smaller-diff + dist/index.js regen via canonical pnpm build, ncc 0.38.4) + G4 packages/e2e 11+1 (Rule-1 typecheck fix 1e8d0c756 — vortex-app.ts arrow→string TS2584 + game-management.spec.ts !-assertion TS18048) + G5 misc 7 (download_management.test.js HEAD-paths + flatpak/maintenance.md fork-wins + native-node-module-management.md upstream-wins esptk+bsdiff-node + flatpak/generated-sources.json fork-wins-empty + duckdb scripts §7 + addicons HTML §7); 0 conflict markers in Wave G scope; fingerprints + e2e typechecks 0 errors each; harness 12/12 GREEN skip-mode; vitest duckdb 6/6 + dist node --check + json validate all green; Wave H (download_management) unblocked)
+stopped_at: Phase 34 Wave H complete
+last_updated: "2026-05-23T23:00:00.000Z"
+last_activity: 2026-05-23 -- Phase 34 Wave H complete (1 atomic SSH-signed R2 DROP commit 6c41da31b + SUMMARY 4aa006699 on v8.1/config-bucket; git rm -r src/renderer/src/__mocks__/ — 23 dead Jest mock files removed per D-34-15 DROP + D-34-16 post-Wave-G ordering; pre-deletion grep for live __mocks__/ refs returned 1 comment-only hit in util/winapi-shim.ts header — updated in same commit, no code references; pre-deletion renderer typecheck 9 errors / post-deletion 9 errors — IDENTICAL — confirms no live references; all 9 errors confined to extensions/download_management/ deferred-to-Phase-35 scope; non-download_management filtered count 0; SYNC-34b flipped to [x] with H1 SHA evidence; harness 13/13 GREEN skip-mode; Phase 34 wave 9 done-gate unblocked)
 progress:
     total_phases: 8
     completed_phases: 2
     total_plans: 26
-    completed_plans: 33
-    percent: 28
+    completed_plans: 34
+    percent: 29
 ---
 
 # Project State
