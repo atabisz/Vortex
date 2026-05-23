@@ -679,9 +679,6 @@ function manageGame(api: IExtensionApi, gameId: string): PromiseLike<void> {
   const state = api.store.getState() as IState;
   const profiles = state.persistent.profiles || {};
 
-<<<<<<< HEAD
-  if (getSafe(discoveredGames, [gameId, "path"], undefined) !== undefined) {
-=======
   // Discovery state outlives the registering extension. If the extension
   // didn't load (missing dependency, exception, disabled) getGame is
   // undefined and activating would create an orphan profile.
@@ -689,7 +686,6 @@ function manageGame(api: IExtensionApi, gameId: string): PromiseLike<void> {
     state.settings.gameMode?.discovered?.[gameId]?.path !== undefined &&
     getGame(gameId) !== undefined
   ) {
->>>>>>> v2.0.2
     const profile = Object.values(profiles).find((prof) => prof.gameId === gameId);
     if (profile !== undefined) {
       return activateGame(api.store, gameId);
@@ -1019,9 +1015,6 @@ function init(context: IExtensionContext): boolean {
 
   context.registerActionCheck("SET_NEXT_PROFILE", (state: IState, action: any) => {
     const { profileId } = action.payload;
-<<<<<<< HEAD
-    context.api.dismissAllNotifications();
-=======
     // Only clear notifications on a real transition between two
     // different profiles. Startup restores SET_NEXT_PROFILE from
     // undefined, and re-activation targets the current profile; both
@@ -1030,7 +1023,6 @@ function init(context: IExtensionContext): boolean {
     if (profileId !== undefined && activeProfileId !== undefined && activeProfileId !== profileId) {
       context.api.dismissAllNotifications();
     }
->>>>>>> v2.0.2
     if (profileId === undefined) {
       // resetting must always work
       return undefined;
@@ -1133,9 +1125,6 @@ function init(context: IExtensionContext): boolean {
           );
 
           if (game !== undefined) {
-<<<<<<< HEAD
-            manageGame(context.api, game.id);
-=======
             // Wait for discovery to populate before deciding undiscovered vs
             // discovered; otherwise this races the fire-and-forget
             // startQuickDiscovery in gamemode_management.once() and pops the
@@ -1144,7 +1133,6 @@ function init(context: IExtensionContext): boolean {
             context.api
               .emitAndAwait("discover-game", game.id)
               .then(() => manageGame(context.api, game.id));
->>>>>>> v2.0.2
           } else {
             log("warn", "game specified on command line not found", {
               game: commandLine.game,
