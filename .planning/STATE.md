@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v8.2
 milestone_name: Upstream v2.0.2 Sync
-status: shipped-pending-uat
-stopped_at: Phase 38 traditional + phases 39–43 collapsed into thin-patch series (PR #6 → merged `c4bd2afb7` → tagged `v2.0.2-linux-rebased` `ec12890c3` → AppImage + .deb published); Phase 44 UAT pending; linux-port catch-up deferred (structural divergence)
-last_updated: "2026-05-24T03:00:00.000Z"
+status: shipped
+stopped_at: v8.2 closed 2026-05-24. Phase 38 traditional + phases 39–43 thin-patch (PR #6 → `c4bd2afb7` → tag `v2.0.2-linux-rebased` `ec12890c3` → AppImage + .deb published). Phase 44 hardware UAT moved to backlog (playbook deltas already shipped in `e79ba71db`). linux-port catch-up deferred (structural divergence). Doctrine shift: GSD is now opt-in for authoring motion; routine syncs use the receiving motion (rebase-upstream.yml + linux-smoke.sh).
+last_updated: "2026-05-24T04:00:00.000Z"
 last_activity: 2026-05-24
 progress:
-    total_phases: 8
-    completed_phases: 6
+    total_phases: 7
+    completed_phases: 7
     total_plans: 8
     completed_plans: 8
-    percent: 75
+    percent: 100
 ---
 
 # Project State
@@ -21,11 +21,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23 after v8.1 ship + v8.2 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** v8.2 SHIPPED. Phase 44 UAT (canonical AppImage + .deb local-boot + Skyrim SE walkthrough) pending.
+**Current focus:** v8.2 SHIPPED. No active milestone. Future upstream syncs use the receiving motion by default (no GSD ceremony).
 
 ## Current Position
 
-Milestone: v8.2 — SHIPPED via thin-patch series (Phase 38 traditional; phases 39–43 collapsed; Phase 44 UAT pending)
+Milestone: v8.2 — SHIPPED + CLOSED (Phase 38 traditional; phases 39–43 thin-patch; Phase 44 hardware UAT moved to backlog)
 Tag: `v2.0.2-linux-rebased` = `ec12890c3` (annotated, SSH-signed, points at merge `c4bd2afb7`)
 Release: AppImage + .deb published via release-linux.yml on master after merge
 Branch policy: `master` advancing; `linux-port` catch-up DEFERRED (structurally diverged — 2378 files differ; v8.2 fix-ups have no equivalent context). Decision on linux-port future is a separate concern (see CLAUDE.md branch strategy).

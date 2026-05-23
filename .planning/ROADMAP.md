@@ -11,7 +11,7 @@
 - ✅ **v7.0 First-Run Onboarding Wizard** — Phases 18–23 (shipped 2026-04-17) — [archive](milestones/v7.0-ROADMAP.md)
 - ✅ **v8.0 Upstream v2.0.0 Sync** — Phases 24–30 (shipped 2026-05-22) — [scope](milestones/v8.0-SCOPE-PROPOSAL.md)
 - ✅ **v8.1 Upstream v2.0.1 Sync** — Phases 31–37 (shipped 2026-05-23; tag `v2.0.1-linux-rebased`)
-- ⏳ **v8.2 Upstream v2.0.2 Sync** — Phases 38–44 (Phase 38 traditional; 39–43 collapsed into thin-patch series via PR #6; tag `v2.0.2-linux-rebased` shipped 2026-05-24; Phase 44 UAT pending)
+- ✅ **v8.2 Upstream v2.0.2 Sync** — Phases 38–43 (Phase 38 traditional; 39–43 collapsed into thin-patch series via PR #6; tag `v2.0.2-linux-rebased` shipped 2026-05-24; Phase 44 hardware UAT moved to backlog)
 
 ## Phases
 
@@ -108,7 +108,7 @@ Detail archived: [milestones/v8.1-ROADMAP.md](milestones/v8.1-ROADMAP.md)
 
 </details>
 
-## Active Milestone — v8.2 Upstream v2.0.2 Sync
+## v8.2 Upstream v2.0.2 Sync — SHIPPED 2026-05-24
 
 **Milestone goal:** Fold upstream v2.0.2 (PR #6 `sync/upstream-v2.0.2`, 41 upstream commits) into the fork on top of `v2.0.1-linux-rebased`. Every Linux fix preserved. `pnpm run build` and `pnpm run test` pass on master with the merged tree. Closing artifact is FF-merge of `sync/upstream-v2.0.2` tagged `v2.0.2-linux-rebased`.
 
@@ -168,13 +168,14 @@ After Phase 38 closed clean, the GSD wave/plan model was retired for this milest
 
 **v8.2-spec phases 39–43 closed without GSD ceremony.** Phase 38 closeout artifacts (CONTEXT.md, PLAN, etc.) remain canonical for that phase. Future v8.x sync milestones default to the receiving motion (rebase-upstream.yml ritual) per CLAUDE.md, escalating to a GSD phase only when the smoke gate fails or conflict count exceeds the renderer/main hot zones.
 
-### Phase 44: Carry-forward UAT (v2.0.2)
-
-**Goal:** Canonical AppImage + .deb local-boot + Skyrim SE walkthrough on `linux-port` HEAD; `VORTEX-LINUX-MERGE-PLAYBOOK.md` updated with any new playbook entries discovered during v8.2 conflict resolution.
-**Requirements:** SYNC-44a, SYNC-44b
-**Canonical refs:** VORTEX-LINUX-MERGE-PLAYBOOK.md, .planning/milestones/v8.1-phases/37-carry-forward-uat
-
 ## Backlog
+
+### Phase 999.2: v8.2 carry-forward UAT (BACKLOG, hardware-gated)
+
+**Goal:** Canonical AppImage + .deb local-boot + Skyrim SE walkthrough on a real Linux desktop. Confirms the merged tree behaves end-to-end on hardware.
+**Status:** Code-complete; playbook deltas already captured in commit `e79ba71db` (§1 ba2 entry, §2.5 rolldown alias, duplicate-import gotcha). Hardware run pending. Bundle into the next ELEV/onboarding UAT pass to amortize hardware setup cost.
+**Requirements:** SYNC-44a, SYNC-44b
+**Canonical refs:** VORTEX-LINUX-MERGE-PLAYBOOK.md
 
 ### Phase 999.1: Manual UAT — ELEV-05/ELEV-06 Desktop Linux + Steam Deck Elevation (BACKLOG)
 
@@ -243,4 +244,4 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 | 41. Renderer + main spine + nexus + e2e (v2.0.2)          | v8.2      | thin-patch     | Shipped  | 2026-05-24 |
 | 42. Build verification (v2.0.2)                           | v8.2      | thin-patch     | Shipped  | 2026-05-24 |
 | 43. Land + tag (v2.0.2-linux-rebased)                     | v8.2      | thin-patch     | Shipped  | 2026-05-24 |
-| 44. Carry-forward UAT (v2.0.2)                            | v8.2      | —              | Pending  | —          |
+| 44. Carry-forward UAT (v2.0.2)                            | v8.2      | —              | Backlog  | —          |

@@ -431,17 +431,23 @@ Open the draft PR. Read the smoke-test status in the PR body:
 
 [`VORTEX-LINUX-MERGE-PLAYBOOK.md`](VORTEX-LINUX-MERGE-PLAYBOOK.md) is the canonical document for the Linux delta. It enumerates every Linux-specific patch as a numbered, named, grep-probeable invariant. The playbook is also the smoke-test spec — `scripts/linux-smoke.sh` executes its probes. Keep them in sync: when a new Linux fix lands, add a playbook entry AND a probe to the smoke script in the same commit.
 
-## GSD Workflow Enforcement
+## When to use GSD
 
-Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
+GSD is a tool, not a gate. Reach for it when ceremony pays for itself; skip it when it doesn't.
 
-Use these entry points:
+**Skip GSD (the receiving motion + everyday work):**
 
-- `/gsd:quick` for small fixes, doc updates, and ad-hoc tasks
-- `/gsd:debug` for investigation and bug fixing
-- `/gsd:execute-phase` for planned phase work
+- Routine upstream syncs — `rebase-upstream.yml` + `scripts/linux-smoke.sh` + draft PR is the audit trail
+- Single-file fixes, typos, doc tweaks, casual cleanups
+- Anything where the diff and commit message tell the whole story
 
-Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
+**Use GSD (the authoring motion):**
+
+- New Linux capability with multi-file blast radius (platform guard touching N modules, new native addon, packaging overhaul)
+- Work that benefits from explicit phase/plan decomposition because it spans days or hands off across sessions
+- Anything where future-you will want a `.planning/` artifact to recover state
+
+When in doubt, start without GSD. Escalate to a phase only if the work outgrows a single commit's worth of context. The shipped milestones in `.planning/milestones/` are the historical record; new work doesn't need to feed that pipeline by default.
 
 <!-- GSD:workflow-end -->
 
