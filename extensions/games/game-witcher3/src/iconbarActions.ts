@@ -1,9 +1,6 @@
 /* eslint-disable */
-<<<<<<< HEAD
-=======
 import path from "path";
 
->>>>>>> v2.0.2
 import { actions, selectors, types, util } from "vortex-api";
 
 import { GAME_ID, I18N_NAMESPACE, LOCKED_PREFIX } from "./common";
