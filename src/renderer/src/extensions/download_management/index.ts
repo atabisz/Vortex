@@ -898,10 +898,7 @@ function processInterruptedDownloads(
         api.store.dispatch(removeDownloadSilent(id));
       }
     } else {
-      let realSize =
-        downloads[id].size !== 0
-          ? downloads[id].size - sum((downloads[id].chunks || []).map((chunk) => chunk.size))
-          : 0;
+      let realSize = downloads[id].received ?? 0;
       if (isNaN(realSize)) {
         realSize = 0;
       }

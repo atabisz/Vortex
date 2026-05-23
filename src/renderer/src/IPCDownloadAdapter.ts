@@ -245,6 +245,7 @@ export class IPCDownloadAdapter {
           nexusIds.numericGameId,
           modUID,
           fileUID,
+          null,
         ),
       );
       return;
@@ -280,6 +281,7 @@ export class IPCDownloadAdapter {
             fileUID,
             file_size,
             duration_ms,
+            null,
           ),
         );
       }
@@ -310,6 +312,7 @@ export class IPCDownloadAdapter {
             nexusIds.numericGameId,
             modUID,
             fileUID,
+            null,
           ),
         );
       }
@@ -345,6 +348,7 @@ export class IPCDownloadAdapter {
             fileUID,
             "",
             message,
+            null,
           ),
         );
       }
@@ -648,7 +652,7 @@ export class IPCDownloadAdapter {
         // Update received/total bytes. The reducer transitions state from
         // "init" to "started" on first non-zero received, driving the progress bar.
         this.#api.store.dispatch(
-          downloadProgress(downloadId, state.bytesReceived, state.size ?? 0, []),
+          downloadProgress(downloadId, state.bytesReceived, state.size ?? 0, [], []),
         );
       }
 

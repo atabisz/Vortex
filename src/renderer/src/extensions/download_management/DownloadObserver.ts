@@ -77,7 +77,7 @@ function progressUpdate(
     if (received < 0) {
       log("warn", "invalid download progress", { received, total });
     }
-    updates.push(downloadProgress(dlId, received, total, urls));
+    updates.push(downloadProgress(dlId, received, total, chunks ?? [], urls));
   }
   if (filePath !== undefined && path.basename(filePath) !== download.localPath) {
     updates.push(setDownloadFilePath(dlId, path.basename(filePath)));
@@ -548,7 +548,7 @@ export class DownloadObserver {
       return onceFinished();
     } else if (res.filePath.toLowerCase().endsWith(".html")) {
       const batched = [
-        downloadProgress(id, res.size, res.size, []),
+        downloadProgress(id, res.size, res.size, [], []),
         finishDownload(id, "redirect", { htmlFile: res.filePath }),
       ];
       batchDispatch(this.mApi.store.dispatch, batched);
@@ -882,7 +882,7 @@ export class DownloadObserver {
           tag: download.modInfo?.referenceTag,
         });
       }
-      this.mApi.store.dispatch(pauseDownload(downloadId, true, unfinishedChunks));
+      this.mApi.store.dispatch(pauseDownload(downloadId, true));
       callback?.(null);
     }
   }
