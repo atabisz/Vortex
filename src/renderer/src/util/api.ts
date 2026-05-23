@@ -68,10 +68,7 @@ import {
 } from "./errorHandling";
 import extractExeIcon from "./exeIcon";
 import GameStoreHelper from "./GameStoreHelper";
-<<<<<<< HEAD
 import { resolvePathCase } from "./resolvePathCase";
-=======
->>>>>>> v2.0.2
 
 /**
  * @deprecated Use window.api for IPC communication from renderer to main process.
