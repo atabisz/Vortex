@@ -27,13 +27,41 @@
 
 `git tag -v` initially errored with `gpg.ssh.allowedSignersFile needs to be configured`. Wave 0's signing-config check verified `gpg.format=ssh` + `tag.gpgsign=true` + `user.signingkey`, but didn't assert the verifier-side allowed_signers file. Created `~/.config/git/allowed_signers` with `alex@tabisz.org ssh-ed25519 ...` line; set `git config --global gpg.ssh.allowedSignersFile ~/.config/git/allowed_signers`. Sig now verifies. The tag itself was correctly signed throughout — only the verifier setup was missing.
 
+## SYNC-36d — release-linux.yml smoke
+
+- **Run URL:** [https://github.com/atabisz/Vortex/actions/runs/26323706583](https://github.com/atabisz/Vortex/actions/runs/26323706583)
+- **Run conclusion:** success
+- **Run duration:** 11m 37s (697 s) — within v8.0 RC baseline band (10m 58s)
+- **Retries:** 0 — clean first-run; pnpm node-gyp chmod step (Pitfall 9) executed without flake
+- **All 26 build steps:** success (24 ran, 2 skipped: `Update latest-linux tag`, `Create GitHub Release (master rolling)` — version-tag path took the alternate `Create GitHub Release (version tag)` step)
+- **Release page:** [https://github.com/atabisz/Vortex/releases/tag/v2.0.1-linux-rebased](https://github.com/atabisz/Vortex/releases/tag/v2.0.1-linux-rebased)
+- **Release name:** Linux Beta v2.0.1-linux-rebased
+- **Published at:** 2026-05-23T04:52:29Z
+
+### Assets
+
+| Name                    | Size          | SHA256                                                             | SHA512 source      |
+| ----------------------- | ------------- | ------------------------------------------------------------------ | ------------------ |
+| `vortex-setup.AppImage` | 258 768 724 B | `13aa29288e8936a4dd7cdc3c9f3f669d15c7c65d3d416efee8ab2ba957059c9b` | `latest-linux.yml` |
+| `vortex_amd64.deb`      | 158 044 146 B | `3d82353963d3625865bcd9281862172ede2a6f860812cc52579f1c1d7b22f3a6` | `latest-linux.yml` |
+| `latest-linux.yml`      | 559 B         | (electron-updater manifest)                                        | self               |
+
+**SHA source:** local-hash (D-36-09 boundary path — release exposes SHA512 via electron-updater `latest-linux.yml`; SHA256 obtained by `sha256sum` on downloaded artifacts; D-36-09 prohibits _running_ binaries, not hashing them).
+
+**SHA512 cross-check (from `latest-linux.yml`, base64-encoded):**
+
+- AppImage: `dmhP/kbpH42h8WV0V0LPGERUS577qvW9GeRY+6Ee4Yhbs+Nxd0BO/gH+JfJr7Hb3v5n70CpnEaBVN4G7p0LFTg==`
+- .deb: `VVbfUJpA1UH99sZH+tlh8yLv9p5w9IN6MsTgHVNGhzA2aDO15RKrpxpyRlnQof1/0StS68OdQqvjE0l20s6fDg==`
+
+**electron-builder version path:** internal version `1.16.202605230443` (electron-builder timestamp scheme); release tag `v2.0.1-linux-rebased` is the canonical user-visible identifier.
+
+### Phase 37 carry-forward
+
+Local-boot AppImage + .deb verification and 4-screenshot Skyrim walkthrough explicitly deferred to Phase 37 SYNC-37a per D-36-09. Phase 36 closes on CI-smoke evidence only (build + asset publish + manifests + SHA256). Operator UAT happens in Phase 37.
+
 ## SYNC-36c — Cherry-pick to linux-port
 
 > Wave 5 fills.
-
-## SYNC-36d — release-linux.yml smoke
-
-> Wave 4 fills.
 
 ## Done-criteria roll-up
 
