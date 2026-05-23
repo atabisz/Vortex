@@ -3,8 +3,6 @@ import { join, dirname } from "node:path";
 
 import { glob } from "glob";
 
-import { glob } from "glob";
-
 import data from "./InstallAssets.json" with { type: "json" };
 
 /** @type (import("glob").GlobOptionsWithFileTypesUnset) */
