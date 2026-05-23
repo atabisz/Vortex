@@ -35,8 +35,8 @@ This milestone is the brownfield repeat of v8.0 (which folded `v2.0.0`). Phase n
 
 ### Carry-forward UAT
 
-- [ ] **SYNC-37a**: SYNC-33-C, SYNC-34, SYNC-39 deferred items from v8.0 documented in Phase 999.1 backlog or resolved — Phase 37
-- [ ] **SYNC-37b**: `VORTEX-LINUX-MERGE-PLAYBOOK.md` updated with any new playbook entries discovered during v8.1 conflict resolution — Phase 37
+- [x] **SYNC-37a**: SYNC-33-C, SYNC-34, SYNC-39 deferred items from v8.0 documented in Phase 999.1 backlog or resolved — Phase 37 — done 2026-05-23 (37-CANONICAL-SMOKE-EVIDENCE.md PASS for AppImage + .deb + Skyrim walkthrough; SHA256 cross-check verbatim against 36-DONE-GATE.md SYNC-36d — AppImage `13aa29288...` + .deb `3d82353963...` bit-identical; real-usage roll-up per D-37-02 default)
+- [x] **SYNC-37b**: `VORTEX-LINUX-MERGE-PLAYBOOK.md` updated with any new playbook entries discovered during v8.1 conflict resolution — Phase 37 — done 2026-05-23 (commit `b0037bf1e` on master; 5 D-37-06 deltas + commit-index refresh; lint:ci exit 0; SSH-signed; pushed to fork/master)
 
 ### Out of scope (v8.1)
 
@@ -49,12 +49,12 @@ This milestone is the brownfield repeat of v8.0 (which folded `v2.0.0`). Phase n
 
 ## Traceability
 
-| Requirement        | Phase                         | Plans                           | Status                                       |
-| ------------------ | ----------------------------- | ------------------------------- | -------------------------------------------- |
-| SYNC-31a           | 31 (config-bucket)            | 11 atomic resolutions + 8 plans | ✓ shipped to `v8.1/config-bucket` 2026-05-22 |
-| SYNC-32a           | 32 (mod-management hot zone)  | TBD by plan-phase               | —                                            |
-| SYNC-33a, SYNC-33b | 33 (gamebryo + per-game)      | TBD by plan-phase               | —                                            |
-| SYNC-34a, SYNC-34b | 34 (renderer + main spine)    | TBD by plan-phase               | —                                            |
-| SYNC-35a–e         | 35 (build verification)       | 8 wave plans + 5 atomic commits | ✓ closed on `v8.1/config-bucket` 2026-05-23  |
-| SYNC-36a–d         | 36 (land + tag + cherry-pick) | TBD by plan-phase               | —                                            |
-| SYNC-37a, SYNC-37b | 37 (carry-forward UAT)        | TBD by plan-phase               | —                                            |
+| Requirement        | Phase                         | Plans                               | Status                                       |
+| ------------------ | ----------------------------- | ----------------------------------- | -------------------------------------------- |
+| SYNC-31a           | 31 (config-bucket)            | 11 atomic resolutions + 8 plans     | ✓ shipped to `v8.1/config-bucket` 2026-05-22 |
+| SYNC-32a           | 32 (mod-management hot zone)  | TBD by plan-phase                   | —                                            |
+| SYNC-33a, SYNC-33b | 33 (gamebryo + per-game)      | TBD by plan-phase                   | —                                            |
+| SYNC-34a, SYNC-34b | 34 (renderer + main spine)    | TBD by plan-phase                   | —                                            |
+| SYNC-35a–e         | 35 (build verification)       | 8 wave plans + 5 atomic commits     | ✓ closed on `v8.1/config-bucket` 2026-05-23  |
+| SYNC-36a–d         | 36 (land + tag + cherry-pick) | TBD by plan-phase                   | —                                            |
+| SYNC-37a, SYNC-37b | 37 (carry-forward UAT)        | 4 wave plans + 4 SSH-signed commits | ✓ shipped to fork/master 2026-05-23          |

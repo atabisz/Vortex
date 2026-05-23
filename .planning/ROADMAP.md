@@ -10,7 +10,7 @@
 - ✅ **v6.0 Infrastructure** — Phases 16–17 (shipped 2026-04-15) — [archive](milestones/v6.0-ROADMAP.md)
 - ✅ **v7.0 First-Run Onboarding Wizard** — Phases 18–23 (shipped 2026-04-17) — [archive](milestones/v7.0-ROADMAP.md)
 - ✅ **v8.0 Upstream v2.0.0 Sync** — Phases 24–30 (shipped 2026-05-22) — [scope](milestones/v8.0-SCOPE-PROPOSAL.md)
-- 🚧 **v8.1 Upstream v2.0.1 Sync** — Phases 31–37 (in progress; Phases 31–35 complete; 5/7 phases done)
+- ✅ **v8.1 Upstream v2.0.1 Sync** — Phases 31–37 (shipped 2026-05-23; tag `v2.0.1-linux-rebased`)
 
 ## Phases
 
@@ -246,13 +246,24 @@ Plans:
 
 ### Phase 37: Carry-forward UAT (v2.0.1)
 
+**Status:** ✅ Complete 2026-05-23 (4/4 plans; 4 SSH-signed commits on `master` — Wave 2 evidence `7e5a59b6f` + Wave 3 playbook `b0037bf1e` + Wave 4 Commit A done-gate + Wave 4 Commit B metadata flips; D-37-10 5-criterion done-gate GREEN)
 **Goal:** Document carry-forward of SYNC-33-C, SYNC-34, SYNC-39 from v8.0; update `VORTEX-LINUX-MERGE-PLAYBOOK.md` with new entries discovered during v8.1 conflict resolution.
-**Requirements:** SYNC-37a, SYNC-37b
-**Canonical refs:** VORTEX-LINUX-MERGE-PLAYBOOK.md
+**Requirements:** SYNC-37a ✅, SYNC-37b ✅
+**Canonical refs:** VORTEX-LINUX-MERGE-PLAYBOOK.md, .planning/milestones/v8.0-phases/30-land-tag (v8.0 SYNC-33-C/SYNC-34/SYNC-39 precedent)
+**Result:** Wave 1 captured readiness baseline. Wave 2 SYNC-37a UAT against canonical artefacts: AppImage SHA `13aa29288...` + .deb SHA `3d82353963...` both bit-identical to Phase 36 SYNC-36d manifest; real-usage roll-up per D-37-02 default — operator's daily-driver Skyrim SE workflow on `linux-port` HEAD via Vortex through Steam/Proton covered all 4 D-37-02 checkpoints. Wave 3 SYNC-37b playbook update: single SSH-signed commit `b0037bf1e` lands all 5 D-37-06 deltas (Path C forward-sync 3-way merge pattern + `packages/paths` master-restore contingency-fix + bundledPlugins ≥ 130 floor invariant + per-bucket typecheck idiom + cherry-pick `--no-merges` filter + cherry-induced-regression fix-ups) + commit-index table refresh. Wave 4 closed with D-37-10 5/5 GREEN via two-commit landing (Commit A done-gate+summary, Commit B metadata flips with Phase 36 STATE/ROADMAP carry-forward catch-up).
 **Success criteria:**
 
-1. v8.0 carry-forward items (SYNC-33-C, SYNC-34, SYNC-39) closed or moved to Phase 999.1 backlog
-2. Playbook updated with new conflict-resolution patterns from v8.1
+1. ✅ v8.0 carry-forward items (SYNC-33-C, SYNC-34, SYNC-39) closed via SYNC-37a real-usage roll-up + SYNC-37b playbook update (no new Phase 999.1 backlog entries needed beyond pre-existing ELEV-05/ELEV-06/ONBRD-04)
+2. ✅ Playbook updated with new conflict-resolution patterns from v8.1 (5 D-37-06 deltas in `b0037bf1e`)
+
+**Plans:** 4/4 complete
+
+Plans:
+
+- [x] 37-01-PLAN.md — Wave 1: readiness check + canonical artefact baseline + tooling confirmation
+- [x] 37-02-PLAN.md — Wave 2: SYNC-37a UAT (AppImage + .deb local-boot + Skyrim SE walkthrough); evidence file `37-CANONICAL-SMOKE-EVIDENCE.md` committed at `7e5a59b6f`
+- [x] 37-03-PLAN.md — Wave 3: SYNC-37b playbook update (5 D-37-06 deltas + commit-index refresh) committed at `b0037bf1e`; lint:ci exit 0; pushed to fork/master via inline SSH URL
+- [x] 37-04-PLAN.md — Wave 4: D-37-10 5-criterion done-gate + 37-DONE-GATE.md + 37-DONE-SUMMARY.md + STATE/ROADMAP/REQUIREMENTS flips (with Phase 36 carry-forward catch-up); two-commit landing
 
 ## Backlog
 
@@ -315,5 +326,5 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 | 33. Gamebryo + per-game extensions (v2.0.1)               | v8.1      | 10/10          | Complete | 2026-05-23 |
 | 34. Renderer + main spine (v2.0.1)                        | v8.1      | 10/10          | Complete | 2026-05-23 |
 | 35. Build verification (v2.0.1)                           | v8.1      | 8/8            | Complete | 2026-05-23 |
-| 36. Land + tag (v2.0.1-linux-rebased)                     | v8.1      | TBD            | Pending  | —          |
-| 37. Carry-forward UAT (v2.0.1)                            | v8.1      | TBD            | Pending  | —          |
+| 36. Land + tag (v2.0.1-linux-rebased)                     | v8.1      | 4/4            | Complete | 2026-05-23 |
+| 37. Carry-forward UAT (v2.0.1)                            | v8.1      | 4/4            | Complete | 2026-05-23 |
