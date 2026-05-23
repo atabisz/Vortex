@@ -3,11 +3,8 @@ import path from "path";
 import PromiseBB from "bluebird";
 import memoize from "memoize-one";
 
-<<<<<<< HEAD
-=======
 import type { IState } from "@/types/api";
 
->>>>>>> v2.0.2
 import type { IExtensionApi, IExtensionContext } from "../../types/IExtensionContext";
 import type { ITestResult } from "../../types/ITestResult";
 import * as fs from "../../util/fs";
