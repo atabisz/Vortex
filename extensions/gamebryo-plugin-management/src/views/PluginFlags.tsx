@@ -124,25 +124,6 @@ const PluginFlags = (props: IProps): JSX.Element => {
   if (plugin.isMaster) {
     const key = `ico-master-${plugin.id}`;
     flags.push(<tooltip.Icon id={key} key={key} name="plugin-master" tooltip={t("Master")} />);
-<<<<<<< HEAD
-  }
-
-  if (plugin.isBlueprint) {
-    const key = `ico-blueprint-${plugin.id}`;
-    flags.push(
-      <tooltip.Icon
-        id={key}
-        key={key}
-        name="locked"
-        tooltip={t(
-          "Blueprint plugin - force-loaded by the game and pinned to the end " +
-            "of the load order. Managed by the game, not Vortex.",
-          { ns: NAMESPACE },
-        )}
-      />,
-    );
-=======
->>>>>>> v2.0.2
   }
 
   if (plugin.isBlueprint) {
