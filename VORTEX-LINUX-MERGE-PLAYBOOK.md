@@ -94,6 +94,14 @@ If this is 0, upstream renamed the output path (`out` → `build` or the other w
 pnpm run build:extensions
 ```
 
+**Numerical floor:** ≥ 130. Phase 35 Wave 5 confirmed 132 against the v2.0.1 tree. If the count drops below floor on a fresh merge, an extension was silently lost from the build and `pnpm build:extensions` will succeed but the deb/AppImage will ship with missing UI. Capture command:
+
+```bash
+node -p 'require("./src/main/build/main.js").bundledPlugins?.length || "n/a"'
+```
+
+Run after `pnpm build`.
+
 ### 6. Staging-integrity guard in `doDownload`
 
 ```bash
@@ -231,6 +239,40 @@ Decided: Phase 25 (restore-dropped-scaffolding), 2026-05-15.
 
 ---
 
+## §12 Path C forward-sync 3-way merge
+
+When a long-lived feature branch's base SHA predates downstream work that already absorbed an upstream parent, `git rebase --rebase-merges` is the wrong tool — it halts with hundreds of conflicts at the central upstream-merge commit. The Phase 36 v8.1/config-bucket carry-forward hit this twice (rebase with 403-conflict halt at upstream-merge `aa3faf7e5`; surgical squash Stage A5 with the same mismatch) before settling on a forward-sync merge from `master` tip.
+
+**Trigger condition.** "Branch base predates downstream work" anti-pattern. The feature branch was cut before `master` absorbed merge X; somewhere along the way `master` merged X. The feature branch never saw it. Memory `project_v8_1_base_mismatch.md` captures the v8.1 instance verbatim — `v8.1/config-bucket` branched from a commit pre-dating `v2.0.0-linux-rebased`, so the Phase 36 FF-to-master assumption never held.
+
+**Symptoms.**
+
+- `git rebase --rebase-merges <feature-branch>` halts with hundreds of conflicts at the central upstream-merge commit (the one whose 1st-parent ancestry differs between master and the feature branch).
+- Surgical squash attempts ("just collapse the divergent range to a single commit and re-base") hit the same mismatch — the divergence is structural, not commit-shape.
+- `git merge-base <feature-branch> master` returns a SHA that's NOT an ancestor of the upstream-merge commit on master.
+
+**Diagnostic.**
+
+```bash
+git merge-base --is-ancestor <upstream-merge-1st-parent> master
+echo $?   # 1 means the ancestry relationship is missing — Path C territory
+```
+
+**Resolution: 3-way merge.** From the `master` tip, `git merge --no-ff <feature-branch>`. Produces a merge commit with two parents — 1st parent = `master` tip, 2nd parent = feature-branch tip — and the post-divergence-resolution tree comes out byte-equivalent to what a clean rebase would have produced if the ancestry had matched. Both ancestries stay reachable; cherry-picking later uses `--no-merges` to filter (see §"Cherry-pick filter for forward-sync merges" below).
+
+**Concrete example.** Phase 36 merge `c4d1b4555` — 1st parent `d494bcb7d` master, 2nd parent `f1425a5c8` v8.1/config-bucket. Two prior attempts failed (rebase 403-conflict halt at central upstream-merge `aa3faf7e5`; surgical squash Stage A5 same mismatch). The 3-way merge resolved the divergence cleanly with conflict count proportional to the actual cross-branch delta (not the inflated rebase view).
+
+**Rollback-tag pattern (mandatory).** Before running the merge, snapshot both sides:
+
+```bash
+git tag phase{N}/master-pre-merge master
+git tag phase{N}/pre-surgical-snapshot <feature-branch>
+```
+
+If anything goes sideways during conflict resolution, `git reset --hard phase{N}/master-pre-merge` puts master back where it was. The `pre-surgical-snapshot` tag preserves the feature-branch tip in case the merge is abandoned and the branch needs to be re-attempted from a different angle.
+
+---
+
 ## What we've learned the hard way
 
 These are the non-obvious things that cost real time during the 2026-05-08 merge, written down so they don't cost the same time twice.
@@ -354,6 +396,26 @@ A negative lint count delta vs master means our branch has FEWER errors than mas
 
 Restate: PASS condition for cross-branch lint comparison is **exit-0 + sane count comparison**, not zero-delta. A clean explanation for the count difference is part of "sane". Phase 29 SYNC-32 is the precedent — `downloader.test.ts` was −10 lint errors on v8.0 vs master because the file restoration came via master's Phase 25 SYNC-14 commit which post-dated the v8.0 branch point. We didn't fix anything; we just hadn't received the file yet. Same shape applies to TypeScript baseline drift, which is what made SYNC-32-D and SYNC-39 acceptable as documented deviations rather than blockers.
 
+### Per-bucket typecheck gates — accept "5/6 buckets clean modulo deferred bucket N"
+
+When aggregate `pnpm typecheck` exit-status is dominated by a single deferrable bucket, accept "5/6 buckets clean modulo deferred bucket N" as a pass shape with explicit Phase-N+1 close-out — rather than blocking the whole phase on the deferral. Phase 34's renderer-bucket carried 9 errors all in `extensions/download_management/`; Phase 35 Wave 1 closed them by dropping the dead `download_management/DownloadManager.ts` + `DownloadObserver.ts` files. Both phases shipped on-time because the gate was per-bucket, not aggregate.
+
+Rule: per-bucket gates first, aggregate gate last, each bucket failure tied to a named scope. The named scope is what makes the deferral safe — anyone reading the gate output later can see exactly which bucket was deferred, why it was deferred, and which Phase-N+1 closed it. A bucket-anonymous deferral is a future archaeology problem.
+
+### Cherry-pick filter for forward-sync merges — add `--no-merges`
+
+After a Path C merge (see §12), cherry-picking the path-filtered Linux subset onto `linux-port` requires `--no-merges` to exclude the Wave 1 forward-sync merge AND any v8.x PR-merges in the 2nd-parent ancestry. Without `--no-merges`, the cherry candidates list inflates with merge commits whose payload is already represented by the underlying parents, and the loop wastes time on commits that produce empty cherries (or worse, duplicate the same payload).
+
+Phase 36 numbers: 119 v8.1 PR-merges + Wave 1 forward-sync merge excluded by `--no-merges`; 407 candidates remained after `--no-merges` + `git cherry`/patch-id dedup. Of those: 52 clean cherries + 12 auto-resolved + 324 skipped (no-op or already on linux-port) + 2 fix-ups = 66 commits added to linux-port. Filter range: `merge-base(linux-port, master) = 538aef374..c4d1b4555`.
+
+**Two cherry-induced fix-up patterns to recognise.**
+
+(a) **Cherry-induced orphan.** A delete-cherry removes a file that a prior cherry preserved via `--ours`. Phase 36 hit this on `extensions/download_management/src/DownloadManager.ts` — a delete-cherry took out the file but a prior formatter cherry had already preserved its sibling `DownloadObserver.ts` via `--ours`, leaving `DownloadObserver.ts` referencing a deleted module. Fix: revert the delete-cherry, restore both files. Commit `31c8ad3e4` (master-only).
+
+(b) **Cherry-induced dropped-hunk.** A cherry whose payload spans `pnpm-workspace.yaml` + `pnpm-lock.yaml` drops the lockfile hunks during the loop (often because the lockfile diff doesn't apply cleanly against an interim cherry-loop state). Symptom: `pnpm install` fails post-loop with version-mismatch errors against the workspace catalog. Fix: a manual workspace + lockfile bump in a follow-up commit. Phase 36's nexus-api 1.6.0 bump landed as commit `799ad300f` (master-only).
+
+Both fix-up shapes ride atop the cherry-loop end SHA, both SSH-signed, both atomic — one file change per fix-up commit so the delta is obvious in `git log -p`.
+
 ---
 
 ## Past gotchas by subsystem
@@ -366,6 +428,14 @@ Each entry is a real bug we hit at least once — written down so the next merge
 - **bundledPlugins extensions can't `require()` into `app.asar`.** They run from `app.asar.unpacked/bundledPlugins/` and resolution only walks up to `app.asar.unpacked/node_modules/`. If a dep is inside the asar, the extension fails to load (`Cannot find module modmeta-db` in `mo-import` / `nmm-import-tool`). Same fix as above — unpack.
 - **Adding something to `asarUnpack` that's already a direct dep causes `EEXIST` hardlink errors** in electron-builder (e.g. `bluebird`, picked up once by the direct-dep scan, again by `asarUnpack`). Workaround: `beforePack` hook copies `bluebird` into `dist/node_modules/modmeta-db/node_modules/bluebird/`, which rides along under the existing `modmeta-db/**` glob. Commit `90b8de750`.
 - **`winapi-bindings` as a transitive native dep causes EEXIST on Linux packaging.** Pulled in by `exe-version`, `permissions`, `turbowalk`, `wholocks`, `vortex-parse-ini`. The Linux shim replaces the JS at build time, but the `.node` binary still ships unless we explicitly exclude it. Fix: `electron-builder.config.cjs` with a platform-conditional `files` array — `!**/winapi-bindings/**` on Linux. Commit `0ccaff0ed`.
+
+### packages/paths exports missing — check master before reaching for new code
+
+- **Aggregate typecheck surfaces a wave of "exports missing" errors from `@vortex/paths` (e.g. `pathLengthBucketRoot`, `BucketKey`, `getBucketKeyForPath`).** First instinct is to re-implement the missing exports against whatever the calling sites expect — that's wrong. The likely cause is the upstream feature branch dropped `packages/paths/src/` and `packages/paths-node/src/` inadvertently, while master still has them. Restore from master rather than re-implementing:
+    ```bash
+    git checkout master -- packages/paths/src/ packages/paths-node/src/
+    ```
+    Phase 35 Wave 2 cut the typecheck count 130 → 0 with this single restore. Commit `52ea1941b`. Rule: when the symptom is "exports missing" against a packages/\* export, check `git log master -- packages/<name>/src/` before reaching for a re-implementation — the file probably exists on master and the feature branch dropped it.
 
 ### native addon loading (loot, esptk, bsatk)
 
@@ -441,27 +511,34 @@ Both forms now have named-script equivalents: `skip-on-windows.mjs` (`&&`, `exit
 
 Durable references to the fork-local Linux fixes this file depends on. If any of these commits are missing from either branch after a merge, something got reverted.
 
-| Fix                                                                                                          | master                                   | linux-port     |
-| ------------------------------------------------------------------------------------------------------------ | ---------------------------------------- | -------------- |
-| ~~Three gamebryo extensions use `skip-on-linux.mjs`~~ — **superseded** by native CI rebuild                  | `c408173b9`                              | _SYNC-39 v8.1_ |
-| Remove skip-on-linux from gamebryo-plugin-management + platform-aware native copy                            | `ba23aee71`                              | _SYNC-39 v8.1_ |
-| Remove skip-on-linux from bsa-support + archive-support; CI rebuilds bsatk                                   | `833f02db0`                              | _SYNC-39 v8.1_ |
-| Remove win32 guard from `testPathTransfer`                                                                   | `7cfe61602`                              | `8e8b13284`    |
-| Allowlist `winapi-bindings` from `nodeExternals`                                                             | `e69401abf`                              | `0cccf116b`    |
-| Pass real plugin filenames to LOOT + filter ghosts                                                           | `324da1814`                              | `72641450c`    |
-| `resolvePathCase` in `externalChanges` (stops spurious "mods are redundant")                                 | `140a57217`                              | _SYNC-39 v8.1_ |
-| Heal stale empty staging dirs across install attempts                                                        | `7e2c40e94`                              | `be30e0c05`    |
-| Named `skip-on-linux.mjs` sibling guard (gamestore-xbox)                                                     | `5acb3d098`                              | `a41403030`    |
-| `src/main` packaging points at `build/` (not `dist/`) after upstream rename                                  | `4d1ea811b`                              | _master-only_  |
-| `chmod +x` pnpm-bundled `gyp_main.py` before `pnpm install` in CI                                            | `f0a0d2178`                              | _master-only_  |
-| Gate `fingerprint-*.yml` workflows to `Nexus-Mods/Vortex` repo only                                          | `7fd37ff71`                              | _master-only_  |
-| Direct Proton launch + Snap IPC symlinks + path-boundary matching                                            | `096b6376c`                              | _SYNC-39 v8.1_ |
-| Phase 25 / SYNC-13: restore `packages/paths` + `packages/paths-node` from upstream v2.0.0                    | `f9d305d7d`                              | _master-only_  |
-| Phase 25 / SYNC-12: restore `gamebryo-ba2-support` + ba2tk catalog + CI rebuild step                         | `b28d37e31`                              | _master-only_  |
-| Phase 25 / SYNC-14: restore chunking + download_management spine + bsdiff-node test                          | `9a17907b6`                              | _master-only_  |
-| Phase 25 / SYNC-15 + SYNC-16: restore four upstream CI workflows (deny-list provenance in body — see §11)    | `83995b611`                              | _master-only_  |
-| Phase 25 / SYNC-15 + SYNC-16: restore docs (flatpak + AGENTS-DEBUGGING + structure) + add Playbook §11       | `83995b611`                              | _master-only_  |
-| **Phase 30 (v2.0.0-linux-rebased) milestone closure** — FF-merge PR #4 + canonical tag + linux-port catch-up | `f570149ea` (tag `v2.0.0-linux-rebased`) | `6a28945d1`    |
+| Fix                                                                                                          | master                                   | linux-port       |
+| ------------------------------------------------------------------------------------------------------------ | ---------------------------------------- | ---------------- |
+| ~~Three gamebryo extensions use `skip-on-linux.mjs`~~ — **superseded** by native CI rebuild                  | `c408173b9`                              | _SYNC-39 v8.1_   |
+| Remove skip-on-linux from gamebryo-plugin-management + platform-aware native copy                            | `ba23aee71`                              | _SYNC-39 v8.1_   |
+| Remove skip-on-linux from bsa-support + archive-support; CI rebuilds bsatk                                   | `833f02db0`                              | _SYNC-39 v8.1_   |
+| Remove win32 guard from `testPathTransfer`                                                                   | `7cfe61602`                              | `8e8b13284`      |
+| Allowlist `winapi-bindings` from `nodeExternals`                                                             | `e69401abf`                              | `0cccf116b`      |
+| Pass real plugin filenames to LOOT + filter ghosts                                                           | `324da1814`                              | `72641450c`      |
+| `resolvePathCase` in `externalChanges` (stops spurious "mods are redundant")                                 | `140a57217`                              | _SYNC-39 v8.1_   |
+| Heal stale empty staging dirs across install attempts                                                        | `7e2c40e94`                              | `be30e0c05`      |
+| Named `skip-on-linux.mjs` sibling guard (gamestore-xbox)                                                     | `5acb3d098`                              | `a41403030`      |
+| `src/main` packaging points at `build/` (not `dist/`) after upstream rename                                  | `4d1ea811b`                              | _master-only_    |
+| `chmod +x` pnpm-bundled `gyp_main.py` before `pnpm install` in CI                                            | `f0a0d2178`                              | _master-only_    |
+| Gate `fingerprint-*.yml` workflows to `Nexus-Mods/Vortex` repo only                                          | `7fd37ff71`                              | _master-only_    |
+| Direct Proton launch + Snap IPC symlinks + path-boundary matching                                            | `096b6376c`                              | _SYNC-39 v8.1_   |
+| Phase 25 / SYNC-13: restore `packages/paths` + `packages/paths-node` from upstream v2.0.0                    | `f9d305d7d`                              | _master-only_    |
+| Phase 25 / SYNC-12: restore `gamebryo-ba2-support` + ba2tk catalog + CI rebuild step                         | `b28d37e31`                              | _master-only_    |
+| Phase 25 / SYNC-14: restore chunking + download_management spine + bsdiff-node test                          | `9a17907b6`                              | _master-only_    |
+| Phase 25 / SYNC-15 + SYNC-16: restore four upstream CI workflows (deny-list provenance in body — see §11)    | `83995b611`                              | _master-only_    |
+| Phase 25 / SYNC-15 + SYNC-16: restore docs (flatpak + AGENTS-DEBUGGING + structure) + add Playbook §11       | `83995b611`                              | _master-only_    |
+| **Phase 30 (v2.0.0-linux-rebased) milestone closure** — FF-merge PR #4 + canonical tag + linux-port catch-up | `f570149ea` (tag `v2.0.0-linux-rebased`) | `6a28945d1`      |
+| Phase 35 Wave 2: restore `packages/paths{,-node}/src/` from master (typecheck 130 → 0)                       | `52ea1941b`                              | _master-only_    |
+| Phase 36 Path C forward-sync 3-way merge (1st parent `d494bcb7d` master / 2nd parent `f1425a5c8`)            | `c4d1b4555`                              | _via 2nd-parent_ |
+| Phase 36 Wave 5 fix-up: revert orphan delete-cherry (DownloadManager.ts restore)                             | `31c8ad3e4`                              | _master-only_    |
+| Phase 36 Wave 5 fix-up: bump @nexusmods/nexus-api 1.6.0 (cherry-dropped lockfile hunks)                      | `799ad300f`                              | _master-only_    |
+| **Phase 37 (v2.0.1-linux-rebased) milestone closure** — Path C merge + canonical tag + cherry-pick           | `c4d1b4555` (tag `v2.0.1-linux-rebased`) | `799ad300f`      |
+
+Phase 36 cherry-pick filter range: `merge-base(linux-port, master) = 538aef374..c4d1b4555` with `--no-merges` + patch-id dedup → 407 candidates → 52 clean + 12 auto-resolved + 324 skipped + 2 fix-ups = 66 commits added to linux-port.
 
 The `_SYNC-39 v8.1_` rows above are commits that exist on master but not on linux-port. They pre-date the Phase 30 cherry-pick range (`db8035192..f570149ea`) so the `--ours` cherry-pick policy couldn't carry them. Tracked as SYNC-39 — linux-port catch-up scoped for the v8.1 milestone, not Phase 30.
 

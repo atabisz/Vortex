@@ -133,16 +133,6 @@ Detail archived: [milestones/v8.1-ROADMAP.md](milestones/v8.1-ROADMAP.md)
 
 **Plans:** 7/7 complete
 
-Plans:
-
-- [x] 38-01-PLAN.md — Pre-flight + branch cut + planning-artifacts setup commit (`4d5822adb`)
-- [x] 38-05-PLAN.md — pnpm-workspace.yaml resolve (`1d832f34a`) + playwright catalog pin follow-up (`28f40bf60`)
-- [x] 38-02-PLAN.md — .vscode/launch.json (`6ff58e2d4`) + src/renderer/tsconfig.json (`2e51cea2d`)
-- [x] 38-03-PLAN.md — 4× eslint.config.mjs preload/main/renderer/shared (`d6e7e3f62`, `383015781`, `449272c75`, `34b3d1007`)
-- [x] 38-04-PLAN.md — src/main/prepare-dist-package.mjs (`944336d39`)
-- [x] 38-06-PLAN.md — Lockfile regen + Phase 38 done-gate (`84c3310a4`)
-- [x] 38-07-PLAN.md — Force-with-lease push to PR #6 (no rebase fallback; race not detected)
-
 ### Phase 39: Mod-management + download-management hot zone (v2.0.2)
 
 **Goal:** Resolve bucket D — `InstallManager.ts`, `LinkingDeployment.ts`, `externalChanges.ts`, `mod_management/{index,eventHandlers}.ts`, `stagingDirectory.ts`, `util/deploy.ts`, `views/ModList.tsx`, plus `download_management/` modules currently in fork — with playbook §6/§7/externalChanges sites preserved.
@@ -243,7 +233,7 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 | 36. Land + tag (v2.0.1-linux-rebased)                     | v8.1      | 4/4            | Complete    | 2026-05-23 |
 | 37. Carry-forward UAT (v2.0.1)                            | v8.1      | 4/4            | Complete    | 2026-05-23 |
 | 38. Config bucket (v2.0.2)                                | v8.2      | 7/7            | Complete    | 2026-05-23 |
-| 39. Mod-management + download-management (v2.0.2)         | v8.2      | 1/16           | In Progress |            |
+| 39. Mod-management + download-management (v2.0.2)         | v8.2      | 13/13          | In Progress |            |
 | 40. Gamebryo + per-game extensions (v2.0.2)               | v8.2      | —              | Pending     | —          |
 | 41. Renderer + main spine + nexus + e2e (v2.0.2)          | v8.2      | —              | Pending     | —          |
 | 42. Build verification (v2.0.2)                           | v8.2      | —              | Pending     | —          |
