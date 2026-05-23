@@ -1,9 +1,6 @@
 import * as path from "path";
 
-<<<<<<< HEAD
 import { DownloadIsHTML } from "@vortex/shared/errors";
-=======
->>>>>>> v2.0.2
 import type PromiseBB from "bluebird";
 import type { TFunction } from "i18next";
 import _ from "lodash";
@@ -54,7 +51,6 @@ import type { IInstallOptions } from "../../mod_management/types/IInstallOptions
 import { convertGameIdReverse } from "../../nexus_integration/util/convertGameId";
 import { setShowDLDropzone, setShowDLGraph } from "../actions/settings";
 import { finishDownload, setDownloadTime } from "../actions/state";
-import { DownloadIsHTML } from "../DownloadManager";
 import type { IDownload } from "../types/IDownload";
 import getDownloadGames from "../util/getDownloadGames";
 import DownloadGraph from "./DownloadGraph";
