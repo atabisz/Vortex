@@ -7,7 +7,6 @@
     "../../typings.custom/*.d.ts",
     "src/typings.custom/*.d.ts"
   ],
-<<<<<<< HEAD
   "exclude": [
     "src/__mocks__/",
     "src/__tests__/",
@@ -18,9 +17,6 @@
     "./lib",
     "node_modules"
   ],
-=======
-  "exclude": ["src/__mocks__/", "src/__tests__/", "./dist", "./temp", "./lib", "node_modules"],
->>>>>>> v2.0.2
   "compilerOptions": {
     "composite": true,
     "noEmit": true,
