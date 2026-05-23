@@ -33,7 +33,11 @@ async function externalFilesWarning(api: types.IExtensionApi, externalMods: stri
             "Alternatively, Vortex can try to import these files into its mods list which will " +
             "allow Vortex to take control over them and display them inside the load ordering page. " +
             "Vortex's load ordering functionality will not display external mod entries unless imported!",
-          { replace: { files: externalMods.map((mod) => `"${mod}"`).join("[br][/br]") } },
+          {
+            replace: {
+              files: externalMods.map((mod) => `"${mod}"`).join("[br][/br]"),
+            },
+          },
         ),
       },
       [

@@ -2,28 +2,17 @@
 
 ## v8.0 Upstream v2.0.0 Sync (Shipped: 2026-05-22)
 
-**Phases completed:** 7 phases (24–30), 63 plans
-
-**Tag:** `v2.0.0-linux-rebased` SSH-signed at `f570149ea` (annotated tag object `634a5cc1a`)
-**Master HEAD:** `b241b56c5` post-audit. **linux-port HEAD:** `6a28945d1` (75 cherry-picks).
-**Audit:** [milestones/v8.0-MILESTONE-AUDIT.md](milestones/v8.0-MILESTONE-AUDIT.md) — PASSED with tech debt.
+**Phases completed:** 7 phases (24–30), ~50 plans
 
 **Key accomplishments:**
 
-- Resolved 109 merge conflicts across 7 buckets (config, dropped scaffolding, mod-management hot zone, gamebryo + per-game extensions, renderer + main spine, build verification, land + tag).
-- Restored `packages/paths`, `packages/paths-node`, `gamebryo-ba2-support`, `chunking.ts`; deliberately dropped Jest scaffolding with documented divergence.
-- Preserved every Linux fix from playbook §1–§10 across the rebase.
-- Master FF-merged from PR #4; canonical Linux release published via `release-linux.yml` (run `26270905415`).
-- linux-port progressed via 75 cherry-picks (91 dropped as superseded); SYNC-39 baseline drift → v8.1.
-- Playbook post-mortem captured 5 D-30-04 deltas in single signed commit `2474c3d0d`.
-
-**Carry-forward to v8.1 (deferred-not-skipped):**
-
-- SYNC-33-C local-boot evidence
-- SYNC-34 4-screenshot Skyrim SE walkthrough
-- SYNC-39 linux-port baseline drift catch-up
-
-**Known deferred items at close:** 20 (see STATE.md Deferred Items — pre-v8.0 backlog)
+- 109 files / 365 conflict regions from PR #4 hand-resolved bucket-by-bucket: config (24), restore-dropped (25), mod-mgmt hot zone (26), gamebryo + per-game (27), renderer + main spine (28)
+- All `VORTEX-LINUX-MERGE-PLAYBOOK.md` items preserved across resolution: §1 platform guards, §3 LOOT casing, §6 mod-management, §7a-d external changes, §10 native binaries
+- Restored dropped scaffolding: `packages/paths/`, `packages/paths-node/`, `gamebryo-ba2-support/`, `chunking{,.test}.ts`, missing CI workflows
+- Jest renderer scaffolding (`__mocks__/`, `__tests__/`) deliberately dropped — fork is on Vitest
+- Build verification (Phase 29): typecheck/lint/test all green; RC tag `v2.0.0-linux-rebased-rc1` SSH-signed; CI green; AppImage + .deb published with SHA256 manifest
+- Land (Phase 30): rebase 380→264 commits with cascading `--theirs` drift fixes; FF-merge PR #4; SSH-signed `v2.0.0-linux-rebased` tag; 75 Linux-only commits cherry-picked to `linux-port` branch
+- Closing artifact: master at `f570149ea`; tag `v2.0.0-linux-rebased` at `622c99b49`; `linux-port` updated to `6a28945d1`
 
 ---
 

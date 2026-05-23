@@ -552,7 +552,11 @@ class ModsEditPage extends ComponentEx<IProps, IModsPageState> {
         isSortable: true,
         isGroupable: true,
         filter: new OptionsFilter(
-          () => Object.values(SOURCES).map((name) => ({ value: name, label: name })),
+          () =>
+            Object.values(SOURCES).map((name) => ({
+              value: name,
+              label: name,
+            })),
           false,
           false,
         ),

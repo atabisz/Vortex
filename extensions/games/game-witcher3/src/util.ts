@@ -268,7 +268,10 @@ export async function getManuallyAddedMods(api: types.IExtensionApi) {
     // Ok, we know the folder is there - lets ensure that
     //  it actually contains files.
     try {
-      const entries = await walkPath(modFolder, { skipHidden: true, skipLinks: true });
+      const entries = await walkPath(modFolder, {
+        skipHidden: true,
+        skipLinks: true,
+      });
       if (entries.length > 0) {
         const files = entries.filter(
           (entry) =>
@@ -326,9 +329,18 @@ export function forceRefresh(api: types.IExtensionApi) {
 }
 
 export async function walkPath(dirPath: string, walkOptions?: IWalkOptions): Promise<IEntry[]> {
-  walkOptions = walkOptions || { skipLinks: true, skipHidden: true, skipInaccessible: true };
+  walkOptions = walkOptions || {
+    skipLinks: true,
+    skipHidden: true,
+    skipInaccessible: true,
+  };
   // We REALLY don't care for hidden or inaccessible files.
-  walkOptions = { ...walkOptions, skipHidden: true, skipInaccessible: true, skipLinks: true };
+  walkOptions = {
+    ...walkOptions,
+    skipHidden: true,
+    skipInaccessible: true,
+    skipLinks: true,
+  };
   const walkResults: IEntry[] = [];
   return new Promise<IEntry[]>(async (resolve, reject) => {
     await turbowalk(

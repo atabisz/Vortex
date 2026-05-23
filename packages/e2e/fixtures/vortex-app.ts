@@ -204,7 +204,7 @@ export const test = base.extend<VortexTestFixtures, VortexWorkerFixtures>({
 
       // Wait for the app to actually render — domcontentloaded fires before
       // React renders anything. On CI with multiple workers this can be slow.
-      await mainWindow.waitForFunction(() => (document.body?.innerText?.length ?? 0) > 0, {
+      await mainWindow.waitForFunction("(document.body?.innerText?.length ?? 0) > 0", {
         timeout: 60_000,
       });
 

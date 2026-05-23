@@ -22,7 +22,12 @@ import type {
 } from "@nexusmods/nexus-api";
 import type Nexus from "@nexusmods/nexus-api";
 import { GraphError, NexusError, RateLimitError, TimeoutError } from "@nexusmods/nexus-api";
-import { getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
+import {
+  getErrorCode,
+  getErrorMessage,
+  getErrorMessageOrDefault,
+  unknownToError,
+} from "@vortex/shared";
 import { AlreadyDownloaded, DownloadIsHTML } from "@vortex/shared/errors";
 import BluebirdPromise from "bluebird";
 import type { TFunction } from "i18next";
@@ -1068,12 +1073,65 @@ export function graphErrorContext(err: unknown): Record<string, unknown> {
   return ctx;
 }
 
+export interface IHandleGraphErrorOptions<T> {
+  // Notification title shown to the user when the error isn't skipped.
+  title: string;
+  // Value returned when an error is handled, so callers can `return handleGraphError(...)`.
+  fallback: T;
+  // Some errors are expected and shouldn't notify the user at all.
+  doNotReport?: boolean;
+  // Codes that should be silently ignored (no notification, no report).
+  skipCodes?: readonly string[];
+  // Codes that should still notify but suppress the report button.
+  noReportCodes?: readonly string[];
+  // Default report behavior when no code-specific override applies. Defaults to true.
+  allowReport?: boolean;
+  // Notification id, e.g. to collapse repeated failures into a single toast.
+  notificationId?: string;
+}
+
+/**
+ * Shared catch-handler for endpoints that hit the Nexus GraphQL API.
+ * Pulls the error code and diagnostic context out via graphErrorContext,
+ * decides whether to surface a notification (and whether that notification
+ * permits a bug report), and returns the caller-supplied fallback so the
+ * chain recovers with a sensible default. Graph diagnostics are also logged
+ * so bug reports carry the failing call / query / path locations.
+ */
+export function handleGraphError<T>(
+  api: IExtensionApi,
+  err: unknown,
+  opts: IHandleGraphErrorOptions<T>,
+): T {
+  const ctx = graphErrorContext(err);
+  if (opts.doNotReport) {
+    log("warn", opts.title, { ...ctx, message: getErrorMessage(err) });
+    return opts.fallback;
+  }
+  const code = ctx.graphCode as string | undefined;
+  if (code !== undefined && (opts.skipCodes?.includes(code) ?? false)) {
+    return opts.fallback;
+  }
+  const noReport = code !== undefined && (opts.noReportCodes?.includes(code) ?? false);
+  const allowReport = (opts.allowReport ?? true) && !noReport;
+  if (Object.keys(ctx).length > 0) {
+    log("warn", opts.title, ctx);
+  }
+  const notifyOpts: { allowReport: boolean; id?: string } = { allowReport };
+  if (opts.notificationId !== undefined) {
+    notifyOpts.id = opts.notificationId;
+  }
+  api.showErrorNotification(opts.title, unknownToError(err), notifyOpts);
+  return opts.fallback;
+}
+
 export function resolveGraphError(t: TFunction, isLoggedIn: boolean, err: Error): string {
   if (err.message === "You must provide a version") {
     // is this still reported in this way?
     return t("You can't endorse a mod that has no version set.");
   }
 
+  const errCode = getErrorCode(err);
   const msg = {
     NOT_DOWNLOADED_MOD: "You have not downloaded this mod from Nexus Mods yet.",
     TOO_SOON_AFTER_DOWNLOAD:
@@ -1083,7 +1141,7 @@ export function resolveGraphError(t: TFunction, isLoggedIn: boolean, err: Error)
     UNAUTHORIZED: isLoggedIn
       ? "You cannot interact with this collection because you have been blocked by the curator."
       : "You have to be logged in to vote.",
-  }[err["code"]];
+  }[errCode];
 
   return msg;
 }

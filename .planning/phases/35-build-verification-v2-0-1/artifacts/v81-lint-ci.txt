@@ -1,0 +1,20 @@
+
+> @vortex/monorepo@1.16.8 lint:ci /home/alex/src/Vortex
+> pnpm run lint:quiet
+
+
+> @vortex/monorepo@1.16.8 lint:quiet /home/alex/src/Vortex
+> pnpm -r run lint:quiet
+
+Scope: 146 of 147 workspace projects
+packages/adaptor-api lint:quiet$ pnpm eslint --concurrency auto --quiet .
+src/shared lint:quiet$ pnpm eslint --concurrency auto --quiet .
+packages/adaptor-api lint:quiet: Done
+src/shared lint:quiet: Done
+src/preload lint:quiet$ pnpm eslint --concurrency auto --quiet .
+src/renderer lint:quiet$ pnpm eslint --concurrency auto --quiet .
+src/preload lint:quiet: Done
+src/renderer lint:quiet: Done
+src/main lint:quiet$ pnpm eslint --concurrency auto --quiet .
+src/main lint:quiet: Done
+lint:ci exit=0

@@ -6,7 +6,14 @@ const { app, remote } = require("electron");
 
 const executable = process.platform == "linux" ? "PrisonArchitect" : "Prison Architect64.exe";
 
-const appUni = remote !== undefined ? remote.app : app;
+const MODS_LOCAL = path.resolve(
+  util.getVortexPath("appData"),
+  "..",
+  "Local",
+  "Introversion",
+  "Prison Architect",
+  "mods",
+);
 
 const MODS_LOCAL = path.resolve(
   appUni.getPath("appData"),

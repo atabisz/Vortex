@@ -24,7 +24,6 @@
 - `.npmrc`: native module build defaults (electron headers/msvs settings)
 - `BuildSubprojects.json`: bundled extension build descriptors
 - `InstallAssets.json`: static asset copy/build manifest
-- `src/main/electron-builder.config.json`: electron-builder packaging config
 - `versions.json`: minimum Vortex version accepted for feedback
 
 # Utility scripts

@@ -1,0 +1,42 @@
+
+> @vortex/monorepo@1.16.8 lint:ci /tmp/vortex-master
+> pnpm run lint:quiet
+
+
+> @vortex/monorepo@1.16.8 lint:quiet /tmp/vortex-master
+> pnpm -r run lint:quiet
+
+Scope: 146 of 147 workspace projects
+packages/adaptor-api lint:quiet$ pnpm eslint --concurrency auto --quiet .
+src/shared lint:quiet$ pnpm eslint --concurrency auto --quiet .
+packages/adaptor-api lint:quiet: Done
+src/shared lint:quiet: Done
+src/preload lint:quiet$ pnpm eslint --concurrency auto --quiet .
+src/renderer lint:quiet$ pnpm eslint --concurrency auto --quiet .
+src/preload lint:quiet: /tmp/vortex-master/src/preload/src/index.ts
+src/preload lint:quiet:    46:74  error  Unsafe argument of type error typed assigned to a parameter of type `string`  @typescript-eslint/no-unsafe-argument
+src/preload lint:quiet:    58:71  error  Unsafe return of a value of type `any`                                        @typescript-eslint/no-unsafe-return
+src/preload lint:quiet:    58:71  error  Unsafe call of a(n) `any` typed value                                         @typescript-eslint/no-unsafe-call
+src/preload lint:quiet:   150:32  error  Unsafe return of a value of type `any`                                        @typescript-eslint/no-unsafe-return
+src/preload lint:quiet:   150:32  error  Unsafe call of a(n) `any` typed value                                         @typescript-eslint/no-unsafe-call
+src/preload lint:quiet:   155:32  error  Unsafe return of a value of type `any`                                        @typescript-eslint/no-unsafe-return
+src/preload lint:quiet:   155:32  error  Unsafe call of a(n) `any` typed value                                         @typescript-eslint/no-unsafe-call
+src/preload lint:quiet:   160:32  error  Unsafe return of a value of type `any`                                        @typescript-eslint/no-unsafe-return
+src/preload lint:quiet:   160:32  error  Unsafe call of a(n) `any` typed value                                         @typescript-eslint/no-unsafe-call
+src/preload lint:quiet:   232:11  error  Unsafe call of a(n) `any` typed value                                         @typescript-eslint/no-unsafe-call
+src/preload lint:quiet:   232:11  error  Unsafe call of a(n) `any` typed value                                         @typescript-eslint/no-unsafe-call
+src/preload lint:quiet:   232:11  error  Unsafe call of a(n) `any` typed value                                         @typescript-eslint/no-unsafe-call
+src/preload lint:quiet:   233:14  error  Unsafe member access .then on an `any` value                                  @typescript-eslint/no-unsafe-member-access
+src/preload lint:quiet:   236:14  error  Unsafe member access .catch on an `any` value                                 @typescript-eslint/no-unsafe-member-access
+src/preload lint:quiet:   254:5   error  Unsafe assignment of an error typed value                                     @typescript-eslint/no-unsafe-assignment
+src/preload lint:quiet:   254:42  error  Unsafe member access [key] on an `error` typed value                          @typescript-eslint/no-unsafe-member-access
+src/preload lint:quiet:   262:38  error  Unsafe spread of an error typed type                                          @typescript-eslint/no-unsafe-argument
+src/preload lint:quiet:   269:29  error  Unsafe spread of an error typed type                                          @typescript-eslint/no-unsafe-argument
+src/preload lint:quiet: ✖ 18 problems (18 errors, 0 warnings)
+src/preload lint:quiet: Failed
+/tmp/vortex-master/src/preload:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @vortex/preload@1.0.0 lint:quiet: `pnpm eslint --concurrency auto --quiet .`
+Exit status 1
+ ELIFECYCLE  Command failed with exit code 1.
+ ELIFECYCLE  Command failed with exit code 1.
+lint:ci exit=1

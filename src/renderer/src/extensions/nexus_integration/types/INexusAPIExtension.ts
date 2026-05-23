@@ -35,7 +35,7 @@ export interface INexusAPIExtension {
     allowInstall?: boolean,
   ) => PromiseLike<string>;
   nexusGetCollection?: (slug: string) => PromiseLike<ICollection>;
-  nexusGetCollections?: (gameId: string) => PromiseLike<ICollection[]>;
+  nexusGetCollections?: (gameId: string) => PromiseLike<Partial<ICollection>[] | undefined>;
   nexusSearchCollections?: (
     options: ICollectionSearchOptions,
   ) => PromiseLike<ICollectionSearchResult>;

@@ -2572,7 +2572,7 @@
         const Utils = __importStar(__nccwpck_require__(8399));
         // octokit + plugins
         const core_1 = __nccwpck_require__(1772);
-        const plugin_rest_endpoint_methods_1 = __nccwpck_require__(6363);
+        const plugin_rest_endpoint_methods_1 = __nccwpck_require__(6316);
         const plugin_paginate_rest_1 = __nccwpck_require__(8633);
         exports.context = new Context.Context();
         const baseUrl = Utils.getApiBaseUrl();
@@ -10259,7 +10259,7 @@
         /***/
       },
 
-    /***/ 6363:
+    /***/ 6316:
       /***/ (module) => {
         "use strict";
 

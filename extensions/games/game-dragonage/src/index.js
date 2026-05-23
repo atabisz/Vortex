@@ -12,7 +12,7 @@ const STEAM_ID_ULTIMATE_EDITION = 47810;
 
 const VDF_EXT = ".vdf";
 
-// Static variables to store paths we resolve using appUni.
+// Static variables to store paths we resolve using util.getVortexPath.
 let _ADDINS_PATH = undefined;
 let _MODS_PATH = undefined;
 

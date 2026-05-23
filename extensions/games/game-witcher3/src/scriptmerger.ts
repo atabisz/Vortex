@@ -519,7 +519,10 @@ export async function setMergerConfig(gameRootPath, scriptMergerPath) {
     const replaceElement = (id, replacement) => {
       const idx = findIndex(config?.configuration?.appSettings?.[0]?.add, id);
       if (idx !== undefined) {
-        config.configuration.appSettings[0].add[idx].$ = { key: id, value: replacement };
+        config.configuration.appSettings[0].add[idx].$ = {
+          key: id,
+          value: replacement,
+        };
       }
     };
 

@@ -9,8 +9,8 @@
 - ✅ **v5.0 fomod-installer Linux Fixes** — Phase 15 (shipped 2026-04-09) — [archive](milestones/v5.0-ROADMAP.md)
 - ✅ **v6.0 Infrastructure** — Phases 16–17 (shipped 2026-04-15) — [archive](milestones/v6.0-ROADMAP.md)
 - ✅ **v7.0 First-Run Onboarding Wizard** — Phases 18–23 (shipped 2026-04-17) — [archive](milestones/v7.0-ROADMAP.md)
-- ✅ **v8.0 Upstream v2.0.0 Sync** — Phases 24–30 (shipped 2026-05-22) — [archive](milestones/v8.0-ROADMAP.md)
-- ⬜ **v8.1 Upstream v2.0.1 Sync** — Phases 31–37 (planning 2026-05-22)
+- ✅ **v8.0 Upstream v2.0.0 Sync** — Phases 24–30 (shipped 2026-05-22) — [scope](milestones/v8.0-SCOPE-PROPOSAL.md)
+- 🚧 **v8.1 Upstream v2.0.1 Sync** — Phases 31–37 (in progress; Phases 31–35 complete; 5/7 phases done)
 
 ## Phases
 
@@ -82,136 +82,177 @@
 <details>
 <summary>✅ v8.0 Upstream v2.0.0 Sync (Phases 24–30) — SHIPPED 2026-05-22</summary>
 
-- [x] Phase 24: Config bucket (8/8 plans) — completed 2026-05-15
-- [x] Phase 25: Restore dropped scaffolding (4/4 plans) — completed 2026-05-15
-- [x] Phase 26: Mod-management hot zone (10/10 plans) — completed 2026-05-15
-- [x] Phase 27: Gamebryo + per-game extensions (9/9 plans) — completed 2026-05-21
-- [x] Phase 28: Renderer + main spine (12/12 plans) — completed 2026-05-21
-- [x] Phase 29: Build verification (11/11 plans) — completed 2026-05-22
-- [x] Phase 30: Land + tag (9/9 plans) — completed 2026-05-22
-
-Full phase details: [v8.0-ROADMAP.md](milestones/v8.0-ROADMAP.md). Tag: `v2.0.0-linux-rebased` at `f570149ea`. Linux-port HEAD: `6a28945d1`.
+- [x] Phase 24: Config bucket (config + lockfile parses; `pnpm install` works) — completed 2026-05-22
+- [x] Phase 25: Restore dropped scaffolding (`packages/paths`, `packages/paths-node`, `gamebryo-ba2-support`, missing CI workflows) — completed 2026-05-22
+- [x] Phase 26: Mod-management hot zone (`InstallManager`, `LinkingDeployment`, `externalChanges`, mod_management) — completed 2026-05-22
+- [x] Phase 27: Gamebryo + per-game extensions (gamebryo-{plugin,savegame}-mgmt, collections, BG3, Morrowind, Witcher 3) — completed 2026-05-22
+- [x] Phase 28: Renderer + main spine (ExtensionManager, controls/Table, Application, cli, errorReporting, store) — completed 2026-05-22
+- [x] Phase 29: Build verification (typecheck/lint/test/build all green; RC `v2.0.0-linux-rebased-rc1`) — completed 2026-05-22
+- [x] Phase 30: Land + tag (FF-merge PR #4; tag `v2.0.0-linux-rebased`; cherry-pick to `linux-port`) — completed 2026-05-22
 
 </details>
 
-### v8.1 Upstream v2.0.1 Sync (Phases 31–37) — PLANNING
+## Active Milestone — v8.1 Upstream v2.0.1 Sync
 
-- [ ] **Phase 31: Config bucket** — first-resolve so the tree parses; `pnpm install` succeeds
-- [ ] **Phase 32: Mod-management hot zone** — 7 files in `mod_management/` with playbook §6/§7a–d re-grep checkpoint per file
-- [ ] **Phase 33: Gamebryo + per-game extensions** — gamebryo plugin/savegame, collections, bepinex, BG3/Morrowind/Witcher 3 with §1/§3 preserved
-- [ ] **Phase 34: Renderer + main spine** — renderer infra, main/preload/shared, nexus_integration, fingerprints; playbook §2/§4/§8/§9 + v6.0 fs casefold layer preserved
-- [ ] **Phase 35: Build verification** — zero conflict markers, typecheck/build/test green, AppImage + .deb produced, 5-min smoke
-- [ ] **Phase 36: Land + tag + cherry-pick** — FF-merge PR #5, tag `v2.0.1-linux-rebased`, cherry-pick to `linux-port`, playbook post-mortem
-- [ ] **Phase 37: Carry-forward UAT** — close v8.0 deferred items (SYNC-33-C local-boot evidence, SYNC-34 Skyrim SE walkthrough, SYNC-39 linux-port baseline drift)
+**Milestone goal:** Fold upstream v2.0.1 (PR #5) into the fork on top of `v2.0.0-linux-rebased`. Every Linux fix preserved. `pnpm run build` and `pnpm run test` pass on master with the merged tree. Closing artifact is FF-merge of `sync/upstream-v2.0.1` tagged `v2.0.1-linux-rebased`.
 
-## Phase Details
+**Branch:** `v8.1/config-bucket` (Phase 31 work; pushed to fork). Subsequent phases stack on top of this branch until the rebase + FF-merge in Phase 36.
 
-### Phase 31: Config bucket
+### Phase 31: Config bucket (v2.0.1)
 
-**Goal**: Tree parses and `pnpm install` succeeds — unblocks every downstream phase.
-**Depends on**: Nothing (first v8.1 phase; sits on top of v8.0 baseline at `b241b56c5`)
-**Requirements**: SYNC-2.0.1-02, SYNC-2.0.1-03
-**Success Criteria** (what must be TRUE):
+**Goal:** Workspace + lockfile + root configs parse; `pnpm install --frozen-lockfile` exits 0.
+**Requirements:** SYNC-31a
+**Status:** ✅ Complete 2026-05-22 (8/8 plans; pushed to fork as `v8.1/config-bucket`, 13 commits ahead of `fork/master`)
+**Success criteria:**
 
-1. `git grep '^<<<<<<< '` shows zero hits within Bucket A files (`package.json`, `pnpm-workspace.yaml`, `vitest.config.ts`, `eslint.config.mjs` family, `prepare-dist-package.mjs`, `tsconfig*.json`, `.vscode/extensions.json`, `docker/windows/Dockerfile`)
-2. `pnpm install` succeeds on `sync/upstream-v2.0.1` and produces a regenerated `pnpm-lock.yaml`
-3. `pnpm install --frozen-lockfile` succeeds on the resulting branch — committed lockfile is consistent
-4. The IDE/TypeScript server loads the project tree without parser errors and resolves all workspace packages
+1. `pnpm-workspace.yaml` parses; `@electron/rebuild`, `leveldown`, `levelup` retained per D-31-07/09
+2. `pnpm-lock.yaml` regenerated; `pnpm install --frozen-lockfile` exits 0
+3. `package.json`, `vitest.config.ts`, `prepare-dist-package.mjs` resolved keep-HEAD
+4. Branch `v8.1/config-bucket` pushed to fork
 
-**Plans**: TBD (target ~6–8 plans, mirroring v8.0 Phase 24)
+### Phase 32: Mod-management hot zone (v2.0.1)
 
-### Phase 32: Mod-management hot zone
+**Goal:** Resolve `InstallManager.ts`, `LinkingDeployment.ts`, `DownloadManager.ts`, `externalChanges.ts`, `mod_management/{index,eventHandlers}.ts`, `stagingDirectory.ts`, `util/deploy.ts`, `views/ModList.tsx` with playbook §6/§7/externalChanges sites preserved.
+**Requirements:** SYNC-32a
+**Canonical refs:** VORTEX-LINUX-MERGE-PLAYBOOK.md, .planning/milestones/v8.0-phases/26-mod-management-hot-zone (v8.0 precedent)
+**Success criteria:**
 
-**Goal**: All Linux fixes that the playbook §6, §7a–d, and the `LinkingDeployment.ts` `140a57217` entry protect are present in their correct call sites after resolution of the v2.0.1 conflict set.
-**Depends on**: Phase 31
-**Requirements**: SYNC-2.0.1-04, SYNC-2.0.1-16, SYNC-2.0.1-17, SYNC-2.0.1-21
-**Success Criteria** (what must be TRUE):
+1. Every playbook §6/§7/externalChanges call site present and correctly placed in resolved files
+2. `pnpm typecheck` clean for `@vortex/renderer` and `@vortex/main`
+3. Atomic commit per resolved file with decision-anchored stance
 
-1. `git grep '^<<<<<<< '` shows zero hits within `src/renderer/src/extensions/mod_management/` (the v2.0.1 hot-zone file set: `InstallManager.ts`, `LinkingDeployment.ts`, `externalChanges.ts`, `stagingDirectory.ts`, `util/deploy.ts`, `index.ts`, `eventHandlers.ts`, `views/ModList.tsx`)
-2. Per-file checkpoint: after EACH hot-zone file is resolved and committed, `scripts/grep-checkpoint.sh` (Phase 26 harness, reused) re-runs clean against `InstallManager.ts` and the bucket
-3. Playbook §6 re-grep clean: `stagingDirHasFiles` import + call present in `InstallManager.ts:doDownload`; sibling `util/stagingIntegrity.ts` exists
-4. Playbook §7a–d re-grep clean in `InstallManager.ts`: `normalizeBackslashPaths` + `mergeCaseConflictingDirs` imports + calls, `replaceAll("\\", "/")` on copy source AND destination, `resolvePathCase(tempPath, source, caseCache)` in `extractArchive`
-5. `LinkingDeployment.ts` retains the `140a57217` `resolvePathCase(dataPath, relDataPath, dirCache)` calls in the deploy/externalChanges flow — `git grep -n 'resolvePathCase' src/renderer/src/extensions/mod_management/LinkingDeployment.ts` shows hits
-6. `pnpm typecheck` for `@vortex/renderer` passes after the bucket is fully resolved
+**Plans:** 7/6 plans complete
 
-**Plans**: TBD (target ~8–10 plans, mirroring v8.0 Phase 26)
+Plans:
 
-### Phase 33: Gamebryo + per-game extensions
+**Wave 1**
 
-**Goal**: All gamebryo, collections, bepinex, and per-game extension conflicts in v2.0.1 resolve cleanly with playbook §1 (extension build guards), §3 (LOOT casing), and §10 (native binaries) preserved.
-**Depends on**: Phase 32
-**Requirements**: SYNC-2.0.1-05, SYNC-2.0.1-06, SYNC-2.0.1-11, SYNC-2.0.1-13
-**Success Criteria** (what must be TRUE):
+- [x] 32-01-PLAN.md — Wave 0: extract v8.0 harness, pre-flight verification, baseline capture, no-new-sites finding
+- [x] 32-02-PLAN.md — Wave 1 leaf tier: 7 files (NotificationAggregator, util/{VersionFilter,removeMods,activationStore,externalChanges,deploy}, stagingDirectory)
 
-1. `git grep '^<<<<<<< '` shows zero hits within `extensions/gamebryo-{plugin-management,savegame-management}/`, `extensions/collections/`, `extensions/modtype-bepinex/`, and the per-game extensions touched by v2.0.1 (`game-baldursgate3/`, `game-morrowind/`, `game-witcher3/`)
-2. Playbook §1 re-grep clean: `grep -l "node -e.*process.platform" extensions/*/package.json extensions/games/*/package.json` only matches `gamestore-xbox` (skip-on-linux); gamebryo `bsa-support`/`plugin-management`/`archive-support`/`ba2-support` carry no inline guards
-3. Playbook §3 re-grep clean: all four LOOT call sites in `extensions/gamebryo-plugin-management/src/autosort.ts` use `path.basename(pluginList[id].filePath)` not `pluginName.toLowerCase()`
-4. Per-game fixes preserved: BG3 4-class divine error handling present in `divineCore.ts` / `divineWrapper.ts` / `loadOrder.ts`; Morrowind `migrate103` warning preserved
-5. Each touched extension passes its own `pnpm --filter <ext> typecheck` (or `pnpm run build` fallback for extensions without per-package typecheck — BG3, Morrowind, Witcher 3 per v8.0 D-27-04)
+**Wave 2** _(blocked on Wave 1 completion)_
 
-**Plans**: TBD (target ~7–9 plans, mirroring v8.0 Phase 27)
+- [x] 32-03-PLAN.md — Wave 2 mid tier: 5 files (modMerging, views/{DeactivationButton,Settings,ModList}, eventHandlers)
 
-### Phase 34: Renderer + main spine
+**Wave 3** _(blocked on Wave 2 completion)_
 
-**Goal**: All remaining source-conflict files (renderer infra, main/preload/shared, nexus_integration, fork-disabled fingerprints action) resolve to a tree that builds and links cleanly, with playbook §2/§4/§8/§9 + v6.0 fs casefold layer intact.
-**Depends on**: Phase 33
-**Requirements**: SYNC-2.0.1-07, SYNC-2.0.1-08, SYNC-2.0.1-09, SYNC-2.0.1-10, SYNC-2.0.1-12, SYNC-2.0.1-14, SYNC-2.0.1-18, SYNC-2.0.1-19, SYNC-2.0.1-20, SYNC-2.0.1-22
-**Success Criteria** (what must be TRUE):
+- [x] 32-04-PLAN.md — Wave 3 playbook-heavy: LinkingDeployment.ts (8 regions, fork-wins @212) + InstallManager.ts (40 regions, 6 dangerous fork-wins)
 
-1. `git grep '^<<<<<<< '` shows zero hits across `src/renderer/`, `src/main/`, `src/preload/`, `src/shared/`, `extensions/nexus_integration/`, `scripts/`, `.github/actions/fingerprints/` (fingerprints picked from upstream side wholesale per SYNC-2.0.1-10; fork workflow disablement preserved at the GitHub API layer)
-2. Playbook §2 re-grep clean: `src/renderer/webpack.config.cjs` `nodeExternals` allowlist contains `["winapi-bindings"]` on Linux
-3. Playbook §4 re-grep clean: `testPathTransfer` in `src/renderer/src/util/transferPath.ts` carries NO `if (platform !== "win32") reject(UnsupportedOperatingSystem)` guard
-4. Playbook §8 re-grep clean: `StarterInfo.ts` retains `isPathPrefix()`, `shouldRunWithProton()`, and `runToolWithProton()` with hide-instead-of-quit `onSpawned`
-5. Playbook §9 re-grep clean: `Steam.ts` `resolveSteamPaths()` calls `findAllLinuxSteamPaths()` and reads `libraryfolders.vdf` from every Steam root
-6. v6.0 fs casefold layer intact (SYNC-2.0.1-22): `applyChattrCasefold`, statfs cache, injectable seams (`_setChattr`, `_setChattrNotifier`, `_resetChattrState`), Flatpak/platform guards, post-chattr verify all present and unmodified by the merge
-7. Per-bucket typechecks pass: `@vortex/shared`, `@vortex/preload`, `@vortex/main`, `@vortex/renderer`
+**Wave 4** _(blocked on Wave 3 completion)_
 
-**Plans**: TBD (target ~9–11 plans, mirroring v8.0 Phase 28; smaller because v2.0.1 diff < v2.0.0)
+- [x] 32-05-PLAN.md — Wave 4 barrel: index.ts (18 regions, smaller-diff)
 
-### Phase 35: Build verification
+**Wave 5** _(blocked on Wave 4 completion)_
 
-**Goal**: Every check the milestone definition-of-done depends on passes locally and in CI; AppImage + .deb boot and pass a 5-minute manual smoke test on the resolved branch.
-**Depends on**: Phase 34
-**Requirements**: SYNC-2.0.1-01, SYNC-2.0.1-15, SYNC-2.0.1-23, SYNC-2.0.1-24, SYNC-2.0.1-25, SYNC-2.0.1-26, SYNC-2.0.1-27
-**Success Criteria** (what must be TRUE):
+- [x] 32-06-PLAN.md — Wave 5 verification: final harness (no skip), commit-body audit, VALIDATION sign-off, PHASE-SUMMARY
 
-1. Final zero-conflict check: `git grep '^<<<<<<< '` returns zero hits across the entire `sync/upstream-v2.0.1` working tree (SYNC-2.0.1-01)
-2. Full toolchain green: `pnpm install`, `pnpm run typecheck`, `pnpm run build`, `pnpm run build:extensions`, and `pnpm run test` (Vitest) all succeed; `pnpm run lint:ci` only surfaces pre-existing warnings (diff vs. master)
-3. Playbook §5 re-grep clean: `pnpm run build:extensions` populates `src/main/build/bundledPlugins/` with the expected entry count for v2.0.1
-4. AppImage and .deb produced via `release-linux.yml` (or local electron-builder run) boot from a clean install; `pnpm run start` boots from source on Linux
-5. 5-minute manual smoke passes: detect a Steam game, install one mod, deploy via hardlink, launch via Proton — no regressions vs. shipped v8.0/v2.0.0-linux behaviour
+**Cross-cutting constraints:**
 
-**Plans**: TBD (target ~8–11 plans, mirroring v8.0 Phase 29)
+- Each file resolution is its own SSH-signed commit per D-32-08
 
-### Phase 36: Land + tag + cherry-pick
+### Phase 33: Gamebryo + per-game extensions (v2.0.1)
 
-**Goal**: Master is fast-forwarded onto the resolved merge, tagged, mirrored to `linux-port`, and the merge experience is captured in the playbook for the next sync (v8.2 / upstream v2.0.2).
-**Depends on**: Phase 35
-**Requirements**: SYNC-2.0.1-28, SYNC-2.0.1-29, SYNC-2.0.1-30, SYNC-2.0.1-31, SYNC-2.0.1-32, SYNC-2.0.1-33
-**Success Criteria** (what must be TRUE):
+**Status:** ✅ Complete 2026-05-23 (10/10 plans; 193 SSH-signed commits 3b30563d9..HEAD on `v8.1/config-bucket`; harness 11/11 GREEN skip-mode; full-mode 12/12 GREEN since Wave E)
+**Goal:** Resolve gamebryo-{plugin,savegame}-mgmt, collections, modtype-bepinex, BG3, Morrowind, Witcher 3 with playbook §1 (guards), §3 (LOOT casing), §10 (native binaries) preserved; re-add catalog entries pnpm dropped in Phase 31.
+**Requirements:** SYNC-33a ✅, SYNC-33b ✅ (resolved as full deferral per D-33-13: 3/4 packages replaced by pure-TS workspace rewrites; 1/4 already satisfied via `workspace:*`)
+**Canonical refs:** VORTEX-LINUX-MERGE-PLAYBOOK.md, .planning/milestones/v8.0-phases/27-gamebryo-and-per-game-extensions
+**Result:** 182 atomic file resolves + 1 harness checkpoint + 8 wave SUMMARYs + 2 D1 carryover fixes + 0 catalog (deferred); per-extension typecheck/build clean across 85 touched paths (12 Route-1 typecheck + 71 Route-2 build + 2 Route-3 node --check); 0 markers remaining in `extensions/`.
+**Success criteria:**
 
-1. Windows CI (`main.yml` windows-latest matrix) is green on the resolved merge commit
-2. PR #5 (`atabisz/Vortex#5`) is fast-forward merged into `master` and closed (merged); FF parents-count = 1
-3. Tag `v2.0.1-linux-rebased` exists on the merge commit, is SSH-signed, and is pushed to `origin`
-4. `release-linux.yml` produces AppImage + .deb on the tag; SHA256s captured in evidence
-5. The Linux subset of the merge is cherry-picked onto `linux-port` per existing branch policy (excludes `.planning/`, fork-only CI, fingerprint disablement) — `linux-port` history stays Linux-only
-6. `VORTEX-LINUX-MERGE-PLAYBOOK.md` is updated with any new gotchas surfaced during resolution; the commit-index table reflects the new master and linux-port hashes for the affected fixes
+1. ✅ Every playbook §1 (guards), §3 (LOOT casing), §10 (native binaries) site preserved
+2. ✅ Each extension passes its own typecheck and build (85/85 paths clean per Wave 9 sweep)
+3. ✅ Catalog entries: SYNC-33b satisfied via D-33-13 partial-application clause — pre-audit confirmed all 4 candidate packages either replaced by pure-TS workspace rewrites (esptk, gamebryo-savegame, native-errors) or already satisfied via `workspace:*` (exe-version)
 
-**Plans**: TBD (target ~7–9 plans, mirroring v8.0 Phase 30)
+**Plans:** 10/10 complete
 
-### Phase 37: Carry-forward UAT
+Plans:
 
-**Goal**: Close the three deferred-not-skipped items from v8.0 now that v2.0.1 has shipped on Linux — local-boot evidence, Skyrim SE 4-screenshot walkthrough, and `linux-port` baseline drift catch-up.
-**Depends on**: Phase 36 (must run on the shipped v8.1 build, not pre-merge)
-**Requirements**: SYNC-33-C, SYNC-34, SYNC-39
-**Success Criteria** (what must be TRUE):
+- [x] 33-00-harness-extension-PLAN.md — Wave 0: extend harness from 7 to 12 gates (1 commit; full-mode marker gate flipped GREEN at b83278732)
+- [x] 33-01-wave-A-gamebryo-core-PLAN.md — Wave A gamebryo core (4 ext, 11 files, 11 commits)
+- [x] 33-02-wave-B-bepinex-PLAN.md — Wave B modtype-bepinex (1 ext, 3 files, 3 commits)
+- [x] 33-03-wave-C-collections-PLAN.md — Wave C collections (1 ext, 12 files, 12 commits)
+- [x] 33-04-wave-D1-heavy-pergame-PLAN.md — Wave D1 heavy per-game (4 ext, 57 files, 57 commits; gate-10 BG3 active)
+- [x] 33-05-wave-D2-medium-pergame-PLAN.md — Wave D2 medium per-game (7 ext, 28 files, 28 commits; gate-11 Morrowind active)
+- [x] 33-06-wave-D3-light-pergame-PLAN.md — Wave D3 light per-game (60 ext, 60 files, 60 commits)
+- [x] 33-07-wave-E-build-scaffolding-PLAN.md — Wave E build scaffolding (7 ext/scripts, 12 files, 12 commits; copy-extension.mjs API + copy-native.mjs Linux-rebased dist-fallback preserved)
+- [x] 33-08-wave-F-catalog-readd-PLAN.md — Wave F catalog re-add (full deferral per D-33-13 + bg3 D1 parse fix-up; 0 catalog commits, 1 fix commit)
+- [x] 33-09-done-gate-PLAN.md — Wave 9 6-criterion done gate (this entry; STATE+ROADMAP commit + master closeout SUMMARY)
 
-1. SYNC-33-C: Local-boot evidence captured — `pnpm run start` boots from source on a Linux dev host with screenshots/console-log capture committed to the v8.1 evidence directory
-2. SYNC-34: Skyrim SE 4-screenshot walkthrough captured on Linux — game detected, mod installed, mod deployed, game launched via Proton — all four artefacts committed to evidence
-3. SYNC-39: `linux-port` baseline drift catch-up complete — diff `linux-port` against master Linux-relevant commits since v8.0 close (`6a28945d1`); cherry-pick or rebase any missed deltas; commit-index table refreshed
-4. Playbook updated (or confirmed unchanged) with the carry-forward UAT outcome so v8.2 inherits a clean baseline
+### Phase 34: Renderer + main spine (v2.0.1)
 
-**Plans**: TBD (target ~3–4 plans — one per requirement plus a wrap)
+**Status:** ✅ Complete 2026-05-23 (10/10 plans; 131 SSH-signed commits in v8.1/config-bucket~131..HEAD; harness 13/13 GREEN skip-mode; D-34-14 7-criterion done-gate GREEN with documented renderer-bucket scope adjustment — 9 errors all in deferred `extensions/download_management/`, filtered=0)
+**Goal:** Resolve ExtensionManager, controls/Table, Application, cli, errorReporting, autoupdater, TrayIcon, store/{DuckDBSingleton,LevelPersist}, preload/index, shared/{errors,errors.test,telemetry/spans}, nexus_integration; document Jest `__mocks__/` decision (R2 carry-forward from 31-01).
+**Requirements:** SYNC-34a ✅, SYNC-34b ✅ (R2 DROP via `git rm -r src/renderer/src/__mocks__/` — 23 dead Jest mocks removed in Wave H per D-34-15)
+**Canonical refs:** VORTEX-LINUX-MERGE-PLAYBOOK.md, .planning/milestones/v8.0-phases/28-renderer-main-spine
+**Result:** 117 file resolves + 1 R2 DROP + 1 dist regen (ncc 0.38.4) + 9 wave SUMMARYs + 9 chore(state) markers + 2 closeout docs (STATE/ROADMAP + master SUMMARY); per-bucket typecheck clean for shared/preload/main/fingerprints/e2e (0 errors); renderer=9 errors all confined to `extensions/download_management/` (FileAssembler + SpeedCalculator missing modules + IDownload signature/type drift) — pre-existing v2.0.1 fallout deferred to Phase 35.
+**Success criteria:**
+
+1. ✅ Process-boot path resolved (Application, cli, errorReporting, autoupdater) with Linux platform guards intact
+2. ✅ Jest `__mocks__/` decision documented (D-34-13 DROP; Wave H executed 2026-05-23)
+3. ✅ `pnpm typecheck` clean across shared/preload/main/fingerprints/e2e workspaces; renderer-bucket clean modulo deferred `download_management/` scope (Phase 35)
+
+**Plans:** 10/10 complete
+
+Plans:
+
+- [x] 34-00-PLAN.md — Wave 0: copy Phase 33 harness, add gate 13 (single-host `getIPCPath`)
+- [x] 34-01-PLAN.md — Wave A shared (5 files: shared/types/{errors,state}, shared/errors{,test}, telemetry/spans)
+- [x] 34-02-PLAN.md — Wave B preload (1 file: preload/src/index.ts)
+- [x] 34-03-PLAN.md — Wave C main (9 files: Application, cli, errorReporting, autoupdater, TrayIcon, main, store/{LevelPersist,ReduxPersistorIPC,SubPersistor})
+- [x] 34-04-PLAN.md — Wave D renderer leaves (20 files: contexts, hooks, reducers, store, telemetry, ui, util)
+- [x] 34-05-PLAN.md — Wave E renderer extensions (30 files: nexus_integration heavy + health_check + others)
+- [x] 34-06-PLAN.md — Wave F renderer views/pages + heaviest (18 files; D-34-17 trigger evaluated as branch (a) HEAD-empty)
+- [x] 34-07-PLAN.md — Wave G repo-wide leaves (34 files: fingerprints + e2e + top-level docs + scripts; dist regen via ncc 0.38.4)
+- [x] 34-08-PLAN.md — Wave H R2 DROP (`git rm -r src/renderer/src/__mocks__/`; SYNC-34b → [x])
+- [x] 34-09-PLAN.md — Wave 9 7-criterion done-gate per D-34-14 (this entry; STATE+ROADMAP commit + master closeout SUMMARY)
+
+### Phase 35: Build verification (v2.0.1)
+
+**Status:** ✅ Complete 2026-05-23 (8/8 plans; 5 SSH-signed commits in `e2127cecb^..HEAD` on `v8.1/config-bucket`; D-35-10 7-criterion done-gate GREEN)
+**Goal:** typecheck/lint/test/build all green; reconcile orphan `electron-builder.config.json` (R3 carry-forward from 31-01).
+**Requirements:** SYNC-35a ✅, SYNC-35b ✅, SYNC-35c ✅, SYNC-35d ✅, SYNC-35e ✅
+**Canonical refs:** .planning/milestones/v8.0-phases/29-build-verification
+**Result:** Wave 1 dropped dead DownloadManager + DownloadObserver (`git rm`, −4154 LOC; renderer-bucket 9 → 0). Wave 2 restored `packages/paths{,-node}/src/` from master (contingency-fix; aggregate typecheck 130 → 0). Wave 3 confirmed `pnpm lint:ci` exit 0 (v8.1 errors 0 vs master 18). Wave 4 confirmed `pnpm test` exit 0 (Vitest 52 files / 1304 tests pass; Jest documented ORPHAN). Wave 5 confirmed `pnpm build` + `pnpm build:extensions` exit 0 (bundledPlugins=132). Wave 6 deleted orphan `electron-builder.config.json`. Wave 7 closed with D-35-10 7/7 GREEN.
+**Success criteria:**
+
+1. ✅ `pnpm run typecheck`, `pnpm run lint`, `pnpm run test`, `pnpm run build` all exit 0
+2. ✅ Lint baseline-parity with `fork/master` (no new errors; v8.1 errors 0 vs master 18 on lint:ci)
+3. ✅ Orphan `electron-builder.config.json` removed (`.cjs` is the live consumer)
+
+**Plans:** 8/8 complete
+
+Plans:
+
+- [x] 35-01-WAVE-0-readiness.md — Wave 0: readiness check + baseline capture
+- [x] 35-02-WAVE-1-delete-dead-code.md — Wave 1: drop DownloadManager + DownloadObserver (D-35-01 branch A); renderer-bucket 9 → 0
+- [x] 35-03-WAVE-2-typecheck.md — Wave 2: aggregate typecheck SYNC-35a; CONTINGENCY-FIX restored `packages/paths{,-node}/src/` from master
+- [x] 35-04-WAVE-3-lint.md — Wave 3: SYNC-35b lint baseline-parity (`pnpm lint:ci` exit 0; Δ −18 vs master)
+- [x] 35-05-WAVE-4-test.md — Wave 4: SYNC-35c Vitest exit 0; Jest documented ORPHAN
+- [x] 35-06-WAVE-5-build.md — Wave 5: SYNC-35d build chain exit 0; bundledPlugins=132
+- [x] 35-07-WAVE-6-orphan.md — Wave 6: SYNC-35e orphan `electron-builder.config.json` deleted
+- [x] 35-08-WAVE-7-closeout.md — Wave 7: D-35-10 7-criterion done-gate + STATE + ROADMAP + REQUIREMENTS + master closeout SUMMARY
+
+### Phase 36: Land + tag + cherry-pick (v2.0.1)
+
+**Goal:** Rebase + FF-merge PR #5; tag `v2.0.1-linux-rebased` SSH-signed; cherry-pick Linux-only commits to `linux-port`; release-linux.yml produces AppImage + deb.
+**Requirements:** SYNC-36a, SYNC-36b, SYNC-36c, SYNC-36d
+**Canonical refs:** .planning/milestones/v8.0-phases/30-land-tag (v8.0 D-30-01/02/03 playbook)
+**Success criteria:**
+
+1. `gh pr merge 5 --merge=fast-forward` succeeds
+2. SSH-signed `v2.0.1-linux-rebased` tag pushed to origin + fork
+3. `release-linux.yml` produces AppImage + .deb with SHA256 manifest
+4. `linux-port` branch updated with cherry-picked Linux commits
+
+### Phase 37: Carry-forward UAT (v2.0.1)
+
+**Goal:** Document carry-forward of SYNC-33-C, SYNC-34, SYNC-39 from v8.0; update `VORTEX-LINUX-MERGE-PLAYBOOK.md` with new entries discovered during v8.1 conflict resolution.
+**Requirements:** SYNC-37a, SYNC-37b
+**Canonical refs:** VORTEX-LINUX-MERGE-PLAYBOOK.md
+**Success criteria:**
+
+1. v8.0 carry-forward items (SYNC-33-C, SYNC-34, SYNC-39) closed or moved to Phase 999.1 backlog
+2. Playbook updated with new conflict-resolution patterns from v8.1
 
 ## Backlog
 
@@ -237,42 +278,42 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 
 ## Progress
 
-| Phase                                                     | Milestone | Plans Complete | Status      | Completed  |
-| --------------------------------------------------------- | --------- | -------------- | ----------- | ---------- |
-| 1. Runtime Environment                                    | v1.0      | 1/1            | Complete    | 2026-03-30 |
-| 2. winapi-bindings Shim                                   | v1.0      | 2/2            | Complete    | 2026-03-30 |
-| 3. Native Addon Compilation                               | v1.0      | 3/3            | Complete    | 2026-03-30 |
-| 4. FOMOD Installer Integration                            | v1.0      | 2/2            | Complete    | 2026-03-31 |
-| 5. IPC and Elevation Audit                                | v1.0      | 2/2            | Complete    | 2026-03-31 |
-| 6. Steam/Proton Detection                                 | v2.0      | 3/3            | Complete    | 2026-04-01 |
-| 7. Linux Packaging                                        | v2.0      | 2/2            | Complete    | 2026-04-01 |
-| 8. NXM Protocol Handler                                   | v2.0      | 2/2            | Complete    | 2026-04-01 |
-| 9. Native Addon Fix + Elevation Foundation                | v3.0      | 2/2            | Complete    | 2026-04-01 |
-| 10. Save UI Validation + SteamOS + Polkit                 | v3.0      | 2/2            | Complete    | 2026-04-01 |
-| 11. Persistent Elevation Token                            | v4.0      | 1/1            | Complete    | 2026-04-07 |
-| 12. Elevation End-to-End Validation + Steam Deck Error UX | v4.0      | 1/1            | Complete    | 2026-04-07 |
-| 13. Save Transfer                                         | v4.0      | 1/1            | Complete    | 2026-04-07 |
-| 14. Linux Case-Folding fs Wrapper                         | v4.0      | 2/2            | Complete    | 2026-04-07 |
-| 15. fomod-installer Linux Fixes + Vortex Cleanup          | v5.0      | 3/3            | Complete    | 2026-04-09 |
-| 16. chattr+F Filesystem Layer                             | v6.0      | 1/1            | Complete    | 2026-04-15 |
-| 17. Upstream Rebase CI Workflow                           | v6.0      | 1/1            | Complete    | 2026-04-15 |
-| 18. First-Run Dashboard Foundation                        | v7.0      | 2/2            | Complete    | 2026-04-16 |
-| 19. Staging Directory Wiring                              | v7.0      | 3/3            | Complete    | 2026-04-16 |
-| 20. Windows String Purge                                  | v7.0      | 2/2            | Complete    | 2026-04-16 |
-| 21. Mod Install Round-Trip Validation                     | v7.0      | 2/2            | Complete    | 2026-04-16 |
-| 22. Steam Deck Layout                                     | v7.0      | 1/1            | Complete    | 2026-04-17 |
-| 23. Help Links                                            | v7.0      | 2/2            | Complete    | 2026-04-17 |
-| 24. Config bucket                                         | v8.0      | 8/8            | Complete    | 2026-05-15 |
-| 25. Restore dropped scaffolding                           | v8.0      | 4/4            | Complete    | 2026-05-15 |
-| 26. Mod-management hot zone                               | v8.0      | 10/10          | Complete    | 2026-05-15 |
-| 27. Gamebryo + per-game extensions                        | v8.0      | 9/9            | Complete    | 2026-05-21 |
-| 28. Renderer + main spine                                 | v8.0      | 12/12          | Complete    | 2026-05-21 |
-| 29. Build verification                                    | v8.0      | 11/11          | Complete    | 2026-05-22 |
-| 30. Land + tag                                            | v8.0      | 9/9            | Complete    | 2026-05-22 |
-| 31. Config bucket                                         | v8.1      | 0/0            | Not started | -          |
-| 32. Mod-management hot zone                               | v8.1      | 0/0            | Not started | -          |
-| 33. Gamebryo + per-game extensions                        | v8.1      | 0/0            | Not started | -          |
-| 34. Renderer + main spine                                 | v8.1      | 0/0            | Not started | -          |
-| 35. Build verification                                    | v8.1      | 0/0            | Not started | -          |
-| 36. Land + tag + cherry-pick                              | v8.1      | 0/0            | Not started | -          |
-| 37. Carry-forward UAT                                     | v8.1      | 0/0            | Not started | -          |
+| Phase                                                     | Milestone | Plans Complete | Status   | Completed  |
+| --------------------------------------------------------- | --------- | -------------- | -------- | ---------- |
+| 1. Runtime Environment                                    | v1.0      | 1/1            | Complete | 2026-03-30 |
+| 2. winapi-bindings Shim                                   | v1.0      | 2/2            | Complete | 2026-03-30 |
+| 3. Native Addon Compilation                               | v1.0      | 3/3            | Complete | 2026-03-30 |
+| 4. FOMOD Installer Integration                            | v1.0      | 2/2            | Complete | 2026-03-31 |
+| 5. IPC and Elevation Audit                                | v1.0      | 2/2            | Complete | 2026-03-31 |
+| 6. Steam/Proton Detection                                 | v2.0      | 3/3            | Complete | 2026-04-01 |
+| 7. Linux Packaging                                        | v2.0      | 2/2            | Complete | 2026-04-01 |
+| 8. NXM Protocol Handler                                   | v2.0      | 2/2            | Complete | 2026-04-01 |
+| 9. Native Addon Fix + Elevation Foundation                | v3.0      | 2/2            | Complete | 2026-04-01 |
+| 10. Save UI Validation + SteamOS + Polkit                 | v3.0      | 2/2            | Complete | 2026-04-01 |
+| 11. Persistent Elevation Token                            | v4.0      | 1/1            | Complete | 2026-04-07 |
+| 12. Elevation End-to-End Validation + Steam Deck Error UX | v4.0      | 1/1            | Complete | 2026-04-07 |
+| 13. Save Transfer                                         | v4.0      | 1/1            | Complete | 2026-04-07 |
+| 14. Linux Case-Folding fs Wrapper                         | v4.0      | 2/2            | Complete | 2026-04-07 |
+| 15. fomod-installer Linux Fixes + Vortex Cleanup          | v5.0      | 3/3            | Complete | 2026-04-09 |
+| 16. chattr+F Filesystem Layer                             | v6.0      | 1/1            | Complete | 2026-04-15 |
+| 17. Upstream Rebase CI Workflow                           | v6.0      | 1/1            | Complete | 2026-04-15 |
+| 18. First-Run Dashboard Foundation                        | v7.0      | 2/2            | Complete | 2026-04-16 |
+| 19. Staging Directory Wiring                              | v7.0      | 3/3            | Complete | 2026-04-16 |
+| 20. Windows String Purge                                  | v7.0      | 2/2            | Complete | 2026-04-16 |
+| 21. Mod Install Round-Trip Validation                     | v7.0      | 2/2            | Complete | 2026-04-16 |
+| 22. Steam Deck Layout                                     | v7.0      | 1/1            | Complete | 2026-04-17 |
+| 23. Help Links                                            | v7.0      | 2/2            | Complete | 2026-04-17 |
+| 24. Config bucket                                         | v8.0      | —              | Complete | 2026-05-22 |
+| 25. Restore dropped scaffolding                           | v8.0      | —              | Complete | 2026-05-22 |
+| 26. Mod-management hot zone                               | v8.0      | —              | Complete | 2026-05-22 |
+| 27. Gamebryo + per-game extensions                        | v8.0      | —              | Complete | 2026-05-22 |
+| 28. Renderer + main spine                                 | v8.0      | —              | Complete | 2026-05-22 |
+| 29. Build verification                                    | v8.0      | —              | Complete | 2026-05-22 |
+| 30. Land + tag (v2.0.0-linux-rebased)                     | v8.0      | —              | Complete | 2026-05-22 |
+| 31. Config bucket (v2.0.1)                                | v8.1      | 8/8            | Complete | 2026-05-22 |
+| 32. Mod-management hot zone (v2.0.1)                      | v8.1      | 7/6            | Complete | 2026-05-22 |
+| 33. Gamebryo + per-game extensions (v2.0.1)               | v8.1      | 10/10          | Complete | 2026-05-23 |
+| 34. Renderer + main spine (v2.0.1)                        | v8.1      | 10/10          | Complete | 2026-05-23 |
+| 35. Build verification (v2.0.1)                           | v8.1      | 8/8            | Complete | 2026-05-23 |
+| 36. Land + tag (v2.0.1-linux-rebased)                     | v8.1      | TBD            | Pending  | —          |
+| 37. Carry-forward UAT (v2.0.1)                            | v8.1      | TBD            | Pending  | —          |

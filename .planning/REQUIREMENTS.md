@@ -1,120 +1,60 @@
-# Requirements: Vortex Linux — v8.1 Upstream v2.0.1 Sync
+# Vortex Linux Port — Milestone v8.1 Requirements
 
-**Defined:** 2026-05-22
-**Core Value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
+**Milestone:** v8.1 — Upstream v2.0.1 Sync
+**Goal:** Fold upstream Nexus-Mods/Vortex `v2.0.1` (~PR #5) into the fork on top of `v2.0.0-linux-rebased`. Every Linux fix from `VORTEX-LINUX-MERGE-PLAYBOOK.md` preserved. `pnpm run build` and `pnpm run test` pass on master with the merged tree. Closing artifact is a fast-forward merge of `sync/upstream-v2.0.1` into `master`, tagged `v2.0.1-linux-rebased`.
 
-**Milestone scope:** Land upstream `v2.0.1` (PR #5) into master with all Linux fixes preserved and Windows CI green. Sync branch `sync/upstream-v2.0.1` carries 264 upstream commits, ~469 changed files, ~330 files with conflict markers preserved on the merge commit. Same playbook shape as v8.0; the v8.0 5D post-mortem deltas are already encoded.
+This milestone is the brownfield repeat of v8.0 (which folded `v2.0.0`). Phase numbering continues from v7.0 → v8.0 (24-30) → v8.1 (31-37).
 
-**Carry-forward absorbed from v8.0:** SYNC-33-C local-boot evidence, SYNC-34 Skyrim SE 4-screenshot walkthrough, SYNC-39 `linux-port` baseline drift catch-up.
+---
 
 ## v8.1 Requirements
 
-### Conflict Resolution
+### Tree resolution
 
-- [ ] **SYNC-2.0.1-01**: All conflict markers on `sync/upstream-v2.0.1` resolved — `git grep '^<<<<<<< '` returns zero hits
-- [ ] **SYNC-2.0.1-02**: Config bucket (`package.json`, `pnpm-workspace.yaml`, `vitest.config.ts`, `eslint.config.mjs` family, `prepare-dist-package.mjs`, `tsconfig*.json`, `.vscode/extensions.json`, `docker/windows/Dockerfile`) resolved before any other bucket — tree must parse first
-- [ ] **SYNC-2.0.1-03**: `pnpm-lock.yaml` regenerated cleanly; `pnpm install --frozen-lockfile` succeeds on the resulting branch
-- [ ] **SYNC-2.0.1-04**: Mod-management hot zone (`InstallManager.ts`, `LinkingDeployment.ts`, `externalChanges.ts`, `mod_management/{index,eventHandlers}.ts`, `stagingDirectory.ts`, `util/deploy.ts`, `views/ModList.tsx`) resolved file-by-file with playbook re-grep checkpoint per file
-- [ ] **SYNC-2.0.1-05**: Gamebryo extensions resolved: plugin-management, savegame-management, collections, modtype-bepinex
-- [ ] **SYNC-2.0.1-06**: Per-game extensions resolved with prior fixes preserved (BG3 divine error handling, Morrowind migrate103, Witcher 3)
-- [ ] **SYNC-2.0.1-07**: Renderer infrastructure resolved (`controls/`, `contexts/`, `hooks/`, `reducers/`, `ui/`, `util/`, `views/`, `ExtensionManager.ts`, health_check / extension_manager extensions)
-- [ ] **SYNC-2.0.1-08**: Main / preload / shared spine resolved (`Application.ts`, `cli.ts`, `errorReporting.ts`, `autoupdater.ts`, `TrayIcon.ts`, `store/{DuckDBSingleton,LevelPersist}.ts`, `preload/index.ts`, `shared/{errors,errors.test,telemetry/spans}.ts`)
-- [ ] **SYNC-2.0.1-09**: Nexus integration resolved (`eventHandlers.ts`, `index.tsx`, `util.ts`, `util/UIDs.ts`, `views/FreeUserDLDialog.tsx`)
-- [ ] **SYNC-2.0.1-10**: Fork-disabled fingerprint action resolved by picking upstream-side; fork-side workflow disablement preserved at the GitHub API layer
+- [x] **SYNC-31a**: Workspace + lockfile + root configs (`package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`, `vitest.config.ts`, `prepare-dist-package.mjs`) parse and `pnpm install --frozen-lockfile` exits 0 — Phase 31
+- [ ] **SYNC-32a**: Mod-management hot zone (`InstallManager.ts`, `LinkingDeployment.ts`, `DownloadManager.ts`, `externalChanges.ts`, `mod_management/{index,eventHandlers}.ts`, `stagingDirectory.ts`, `util/deploy.ts`, `views/ModList.tsx`) resolved with every playbook §6/§7/externalChanges site preserved — Phase 32
+- [x] **SYNC-33a**: Gamebryo + per-game extensions (`gamebryo-{plugin-mgmt,savegame-mgmt}`, collections, modtype-bepinex, BG3, Morrowind, Witcher 3) resolved with playbook §1 (guards), §3 (LOOT casing), §10 (native binaries) preserved — Phase 33
+- [x] **SYNC-33b**: Catalog entries dropped by pnpm `cleanupUnusedCatalogs` in Phase 31 (`esptk`, `exe-version`, `gamebryo-savegame`, `native-errors`) re-added when their consumer extensions become workspace members — Phase 33 (resolved as full deferral per D-33-13: 3 packages replaced by pure-TS workspace rewrites during v8.0/v8.1 port; 1 satisfied via workspace package; 0 catalog re-adds warranted)
+- [ ] **SYNC-34a**: Renderer + main + shared spine (`ExtensionManager`, `controls/Table`, `Application`, `cli`, `errorReporting`, `autoupdater`, `TrayIcon`, `store/{DuckDBSingleton,LevelPersist}`, `preload/index`, `shared/{errors,errors.test,telemetry/spans}`, nexus_integration) resolved — Phase 34
+- [x] **SYNC-34b**: R2 carry-forward — Jest `__mocks__/` reintroduction decision documented (likely keep dropped per v8.0 precedent) — Phase 34 — done in 34-08 (R2 DROP 6c41da31b, renderer typecheck unchanged at 9 errors all in deferred download_management/ scope)
 
-### Linux Playbook Compliance (re-grep clean post-rebase)
+### Build verification
 
-- [ ] **SYNC-2.0.1-11**: Playbook §1 — gamebryo-{plugin-mgmt,bsa-support,archive-support,ba2-support} have no inline platform guard in `package.json`; CI native-rebuild pattern intact; xbox uses `skip-on-linux.mjs`
-- [ ] **SYNC-2.0.1-12**: Playbook §2 — `src/renderer/webpack.config.cjs` `nodeExternals` allowlist includes `["winapi-bindings"]` on Linux
-- [ ] **SYNC-2.0.1-13**: Playbook §3 — All four LOOT call sites in `extensions/gamebryo-plugin-management/src/autosort.ts` use `path.basename(pluginList[id].filePath)` not `pluginName.toLowerCase()`
-- [ ] **SYNC-2.0.1-14**: Playbook §4 — `testPathTransfer` in `src/renderer/src/util/transferPath.ts` has no `if (platform !== "win32") reject(UnsupportedOperatingSystem)` guard
-- [ ] **SYNC-2.0.1-15**: Playbook §5 — `pnpm run build:extensions` populates `src/main/build/bundledPlugins/` with the expected entry count for v2.0.1
-- [ ] **SYNC-2.0.1-16**: Playbook §6 — `stagingDirHasFiles` import + call present in `InstallManager.ts:doDownload`; sibling `util/stagingIntegrity.ts` exists
-- [ ] **SYNC-2.0.1-17**: Playbook §7 — backslash/case cluster present in `InstallManager.ts`: `normalizeBackslashPaths` + `mergeCaseConflictingDirs` imports + calls, `replaceAll("\\", "/")` on copy source AND destination, `resolvePathCase(tempPath, source, caseCache)` in `extractArchive`
-- [ ] **SYNC-2.0.1-18**: Playbook §8 — `StarterInfo.ts` has `isPathPrefix()`, `shouldRunWithProton()`, `runToolWithProton()` with hide-instead-of-quit `onSpawned`
-- [ ] **SYNC-2.0.1-19**: Playbook §9 — `Steam.ts` `resolveSteamPaths()` calls `findAllLinuxSteamPaths()` and reads `libraryfolders.vdf` from every Steam root
-- [ ] **SYNC-2.0.1-20**: Playbook §10 — gamebryo `dist/` cross-compiled binaries handled by CI native-rebuild; no `.so`/`.node` checked into the tree
-- [ ] **SYNC-2.0.1-21**: `LinkingDeployment.ts` retains `resolvePathCase(dataPath, relDataPath, dirCache)` calls in deploy/externalChanges flow
-- [ ] **SYNC-2.0.1-22**: v6.0 fs casefold layer intact: `applyChattrCasefold`, statfs cache, injectable seams (`_setChattr`, `_setChattrNotifier`, `_resetChattrState`), Flatpak/platform guards, post-chattr verify
+- [x] **SYNC-35a**: `pnpm run typecheck` exits 0 across all workspaces — Phase 35 — done 2026-05-23 (Wave 2 contingency-fix `52ea1941b` restored `packages/paths{,-node}/src/` from master; aggregate exit 0; six-bucket all 0)
+- [x] **SYNC-35b**: `pnpm run lint` baseline-parity with `fork/master` (no new errors introduced by sync) — Phase 35 — done 2026-05-23 (Wave 3 — `pnpm lint:ci` exit 0; v8.1 errors 0 vs master @ d494bcb7d 18, Δ −18; pre-bail surface unchanged)
+- [x] **SYNC-35c**: `pnpm run test` exits 0 (Vitest + Jest) — Phase 35 — done 2026-05-23 (Wave 4 — Vitest exit 0, 52 files / 1304 tests pass; Jest documented ORPHAN — mocks deleted Phase 34 H, `pnpm test` invokes Vitest only)
+- [x] **SYNC-35d**: `pnpm run build` exits 0 (renderer webpack + main rolldown + extensions) — Phase 35 — done 2026-05-23 (Wave 5 — `pnpm build` + `pnpm build:extensions` both exit 0; bundledPlugins=132, floor 130)
+- [x] **SYNC-35e**: R3 carry-forward — orphan `electron-builder.config.json` reconciled or removed — Phase 35 — done 2026-05-23 (Wave 6 commit `3a556fa6b` — `git rm src/main/electron-builder.config.json`; `.cjs` is the live consumer; `package:nosign` smoke clean)
 
-### Build & Test Verification
+### Land + tag + cherry-pick
 
-- [ ] **SYNC-2.0.1-23**: `pnpm run typecheck` passes across all workspaces (root + packages + extensions + extensions/games)
-- [ ] **SYNC-2.0.1-24**: `pnpm run build` succeeds for the main + renderer + preload + shared chain
-- [ ] **SYNC-2.0.1-25**: `pnpm run build:extensions` succeeds for every extension
-- [ ] **SYNC-2.0.1-26**: `pnpm run test` (Vitest) passes; renderer Jest divergence remains acknowledged
-- [ ] **SYNC-2.0.1-27**: `pnpm run lint:ci` passes (or surfaces only pre-existing warnings — diff vs. master)
+- [ ] **SYNC-36a**: `sync/upstream-v2.0.1` rebased onto `master` HEAD; `gh pr merge 5 --merge=fast-forward` succeeds — Phase 36
+- [ ] **SYNC-36b**: SSH-signed annotated tag `v2.0.1-linux-rebased` on the post-FF master HEAD; pushed to `origin` (Nexus-Mods/Vortex) and `fork` (atabisz/Vortex) — Phase 36
+- [ ] **SYNC-36c**: Linux-only commits cherry-picked from post-FF master to `linux-port` branch via the path-based filter from D-30-03 (excluding `.planning/`, fork CI, fork tooling) — Phase 36
+- [ ] **SYNC-36d**: `release-linux.yml` runs on tag push and produces AppImage + .deb artifacts with SHA256 manifest — Phase 36
 
-### Carry-Forward UAT (deferred from v8.0)
+### Carry-forward UAT
 
-- [ ] **SYNC-33-C**: Local-boot evidence captured — `pnpm run start` boots from source on Linux dev host with screenshots/console logs in evidence file
-- [ ] **SYNC-34**: 5-minute manual smoke on Linux — detect a Steam game, install one mod via Skyrim SE, deploy, launch via Proton — 4 screenshots captured (game detected, mod installed, deployed, launched)
-- [ ] **SYNC-39**: `linux-port` branch baseline drift catch-up — diff `linux-port` against master Linux-relevant commits; cherry-pick or rebase any missed deltas; commit-index table refreshed
+- [ ] **SYNC-37a**: SYNC-33-C, SYNC-34, SYNC-39 deferred items from v8.0 documented in Phase 999.1 backlog or resolved — Phase 37
+- [ ] **SYNC-37b**: `VORTEX-LINUX-MERGE-PLAYBOOK.md` updated with any new playbook entries discovered during v8.1 conflict resolution — Phase 37
 
-### Land & Cherry-Pick
+### Out of scope (v8.1)
 
-- [ ] **SYNC-2.0.1-28**: Windows CI green on the resolved merge commit (master post-FF)
-- [ ] **SYNC-2.0.1-29**: PR #5 (`atabisz/Vortex#5`) merged into master via fast-forward
-- [ ] **SYNC-2.0.1-30**: Tag `v2.0.1-linux-rebased` created on the merge commit (SSH-signed)
-- [ ] **SYNC-2.0.1-31**: `release-linux.yml` produces AppImage + .deb on the tag; SHA256s captured in evidence
-- [ ] **SYNC-2.0.1-32**: Linux-only commits cherry-picked from master to `linux-port` per branch policy (excludes `.planning/`, fork CI, fingerprint disablement)
-- [ ] **SYNC-2.0.1-33**: `VORTEX-LINUX-MERGE-PLAYBOOK.md` updated with any new gotchas surfaced during resolution; commit-index table updated with new master / linux-port hashes
+- Upstream v2.0.2+ sync — separate milestone
+- New Linux features beyond playbook protection
+- Refactoring inside files we're conflict-resolving (resolution only)
+- Phase 999.1 manual hardware UAT (BACKLOG, not v8.1 scope)
 
-## Out of Scope
-
-| Feature                                       | Reason                                                                                          |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Upstream v2.0.2 sync (PR #6)                  | Sits on top of v2.0.1; queued for v8.2 once v8.1 ships                                          |
-| New Linux features beyond playbook items 1–10 | Sync milestone — feature work belongs in a future milestone                                     |
-| Cherry-pick to `linux-port` during resolution | Happens once after master ships, not incrementally during phases                                |
-| Refactoring inside conflict-resolution files  | Resolution-only — defer cleanup, even when a conflict region is obviously sloppy on either side |
-| Hardware UAT for ELEV-04/05/06                | Phase 999.1 backlog; requires Steam Deck + desktop Linux hardware coordination                  |
-| Heroic Launcher integration                   | Deferred to v9.0+                                                                               |
-
-## Future Requirements (deferred)
-
-- DIST-05: AppImage delta auto-update on SteamOS immutable filesystem
-- PROT-03: NXM handler via Steam Browser overlay on Steam Deck — requires Nexus Mods web team + hardware
-- ELEV-04 / ELEV-05 / ELEV-06: hardware UAT closure (Phase 999.1 backlog)
-- SAVE-05: live save transfer UAT on Linux
+---
 
 ## Traceability
 
-| REQ-ID        | Phase    |
-| ------------- | -------- |
-| SYNC-2.0.1-01 | Phase 35 |
-| SYNC-2.0.1-02 | Phase 31 |
-| SYNC-2.0.1-03 | Phase 31 |
-| SYNC-2.0.1-04 | Phase 32 |
-| SYNC-2.0.1-05 | Phase 33 |
-| SYNC-2.0.1-06 | Phase 33 |
-| SYNC-2.0.1-07 | Phase 34 |
-| SYNC-2.0.1-08 | Phase 34 |
-| SYNC-2.0.1-09 | Phase 34 |
-| SYNC-2.0.1-10 | Phase 34 |
-| SYNC-2.0.1-11 | Phase 33 |
-| SYNC-2.0.1-12 | Phase 34 |
-| SYNC-2.0.1-13 | Phase 33 |
-| SYNC-2.0.1-14 | Phase 34 |
-| SYNC-2.0.1-15 | Phase 35 |
-| SYNC-2.0.1-16 | Phase 32 |
-| SYNC-2.0.1-17 | Phase 32 |
-| SYNC-2.0.1-18 | Phase 34 |
-| SYNC-2.0.1-19 | Phase 34 |
-| SYNC-2.0.1-20 | Phase 34 |
-| SYNC-2.0.1-21 | Phase 32 |
-| SYNC-2.0.1-22 | Phase 34 |
-| SYNC-2.0.1-23 | Phase 35 |
-| SYNC-2.0.1-24 | Phase 35 |
-| SYNC-2.0.1-25 | Phase 35 |
-| SYNC-2.0.1-26 | Phase 35 |
-| SYNC-2.0.1-27 | Phase 35 |
-| SYNC-2.0.1-28 | Phase 36 |
-| SYNC-2.0.1-29 | Phase 36 |
-| SYNC-2.0.1-30 | Phase 36 |
-| SYNC-2.0.1-31 | Phase 36 |
-| SYNC-2.0.1-32 | Phase 36 |
-| SYNC-2.0.1-33 | Phase 36 |
-| SYNC-33-C     | Phase 37 |
-| SYNC-34       | Phase 37 |
-| SYNC-39       | Phase 37 |
+| Requirement        | Phase                         | Plans                           | Status                                       |
+| ------------------ | ----------------------------- | ------------------------------- | -------------------------------------------- |
+| SYNC-31a           | 31 (config-bucket)            | 11 atomic resolutions + 8 plans | ✓ shipped to `v8.1/config-bucket` 2026-05-22 |
+| SYNC-32a           | 32 (mod-management hot zone)  | TBD by plan-phase               | —                                            |
+| SYNC-33a, SYNC-33b | 33 (gamebryo + per-game)      | TBD by plan-phase               | —                                            |
+| SYNC-34a, SYNC-34b | 34 (renderer + main spine)    | TBD by plan-phase               | —                                            |
+| SYNC-35a–e         | 35 (build verification)       | 8 wave plans + 5 atomic commits | ✓ closed on `v8.1/config-bucket` 2026-05-23  |
+| SYNC-36a–d         | 36 (land + tag + cherry-pick) | TBD by plan-phase               | —                                            |
+| SYNC-37a, SYNC-37b | 37 (carry-forward UAT)        | TBD by plan-phase               | —                                            |

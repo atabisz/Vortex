@@ -310,7 +310,11 @@ describe("verify", () => {
   it("replaces missing required field with default", () => {
     const input = { other: "val" };
     const verifiers: Record<string, IStateVerifier> = {
-      name: { description: desc("name required"), type: "string", required: true },
+      name: {
+        description: desc("name required"),
+        type: "string",
+        required: true,
+      },
     };
 
     const result = verify("test", verifiers, input, { name: "default" }, emitSpy());

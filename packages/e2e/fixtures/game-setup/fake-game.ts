@@ -89,7 +89,10 @@ export function createFakeGameInstallation(gameConfig: GameConfig, basePath: str
 }
 
 /** Creates a temp directory with a fake game installation. Returns both paths for cleanup. */
-export function setupFakeGame(configKey: string): { basePath: string; gamePath: string } {
+export function setupFakeGame(configKey: string): {
+  basePath: string;
+  gamePath: string;
+} {
   const config = GAME_CONFIGS[configKey];
   if (!config) throw new Error(`Unknown game config: ${configKey}`);
 

@@ -27,6 +27,7 @@ import { setDownloadModInfo, setForcedLogout, setModAttribute } from "../../acti
 import type { IDialogResult } from "../../actions/notifications";
 import { showDialog } from "../../actions/notifications";
 import FlexLayout from "../../controls/FlexLayout";
+import Icon from "../../controls/Icon";
 import Image from "../../controls/Image";
 import LazyComponent from "../../controls/LazyComponent";
 import type { IComponentContext } from "../../types/IComponentContext";

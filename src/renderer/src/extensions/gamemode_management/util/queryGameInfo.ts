@@ -34,7 +34,9 @@ function queryGameInfo(game: IGame & IDiscoveryResult): Promise<{ [key: string]:
       };
     })
     .catch((err) => {
-      log("error", "failed to query game info", { err: unknownToError(err).message });
+      log("error", "failed to query game info", {
+        err: unknownToError(err).message,
+      });
       return {};
     });
 }

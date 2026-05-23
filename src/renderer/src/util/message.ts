@@ -372,7 +372,7 @@ function prettifyNodeErrorMessageInner(
   if (decoded !== undefined) {
     return {
       message: decoded.message,
-      replace: { path: err.path ?? err.filename },
+      replace: { filePath: err.path ?? err.filename },
       allowReport: false,
     };
   }

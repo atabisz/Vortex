@@ -17,7 +17,7 @@ test.describe("Dashboard", () => {
     const dashboard = new DashboardPage(vortexWindow);
 
     await test.step("Verify What's New is visible", async () => {
-      if (await dashboard.whatsNew.isVisible().catch(() => false)) {
+      if (await dashboard.whatsNew.isVisible({ timeout: 5000 }).catch(() => false)) {
         await expect(dashboard.whatsNew).toBeVisible();
       }
     });
@@ -27,7 +27,7 @@ test.describe("Dashboard", () => {
     const dashboard = new DashboardPage(vortexWindow);
 
     await test.step("Verify Latest News is visible", async () => {
-      if (await dashboard.latestNews.isVisible().catch(() => false)) {
+      if (await dashboard.latestNews.isVisible({ timeout: 5000 }).catch(() => false)) {
         await expect(dashboard.latestNews).toBeVisible();
       }
     });
@@ -37,12 +37,12 @@ test.describe("Dashboard", () => {
     const dashboard = new DashboardPage(vortexWindow);
 
     await test.step("Click Customise button", async () => {
-      await expect(dashboard.customiseButton).toBeVisible();
+      await expect(dashboard.customiseButton).toBeVisible({ timeout: 5000 });
       await dashboard.customiseButton.click();
     });
 
     await test.step("Verify customise mode activated", async () => {
-      await expect(dashboard.doneButton).toBeVisible();
+      await expect(dashboard.doneButton).toBeVisible({ timeout: 5000 });
     });
   });
 });
@@ -52,14 +52,14 @@ test.describe("Dashboard - Getting Started Videos", () => {
     const dashboard = new DashboardPage(vortexWindow);
 
     await test.step("Verify getting started section exists", async () => {
-      await expect(dashboard.getStartedSection).toBeVisible();
+      await expect(dashboard.getStartedSection).toBeVisible({ timeout: 5000 });
     });
   });
 
   test("video player popup can be closed", async ({ vortexWindow }) => {
     const dashboard = new DashboardPage(vortexWindow);
 
-    if (await dashboard.introductionVideo.isVisible().catch(() => false)) {
+    if (await dashboard.introductionVideo.isVisible({ timeout: 5000 }).catch(() => false)) {
       await test.step("Open video", async () => {
         // A drag-handle overlay intercepts pointer events
         await dashboard.introductionVideo.click({ force: true });
@@ -67,7 +67,7 @@ test.describe("Dashboard - Getting Started Videos", () => {
       });
 
       await test.step("Close video", async () => {
-        if (await dashboard.videoCloseButton.isVisible().catch(() => false)) {
+        if (await dashboard.videoCloseButton.isVisible({ timeout: 3000 }).catch(() => false)) {
           await dashboard.videoCloseButton.click();
         }
       });

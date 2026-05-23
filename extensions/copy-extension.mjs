@@ -5,13 +5,12 @@ import path from "node:path";
 
 const EXTENSIONS_DIR = path.resolve(import.meta.dirname);
 const BASE_DIR = path.dirname(import.meta.dirname);
-const TARGET = "build";
 
-function copyExtension(extension) {
+function copyExtension(extension, target) {
   const outputDir = path.basename(extension);
 
   const sourceDir = path.join(EXTENSIONS_DIR, extension, "dist");
-  const destDir = path.join(BASE_DIR, "src", "main", TARGET, "bundledPlugins", outputDir);
+  const destDir = path.join(BASE_DIR, "src", "main", target, "bundledPlugins", outputDir);
 
   if (!fs.existsSync(sourceDir)) {
     console.error(`Error: Source directory does not exist: ${sourceDir}`);
@@ -34,9 +33,14 @@ function copyExtension(extension) {
 
 // Derive extension name from CWD if not provided as an argument
 const extensionArg = process.argv[2];
+// target signature came from v2.0.1 (runtime arg). Fork keeps "build" as the
+// default so existing `node ../copy-extension.mjs` callers stay green.
+const target =
+  process.argv[3] ?? (extensionArg === "out" || extensionArg === "dist" ? extensionArg : "build");
 
 let extension;
-if (extensionArg) {
+if (extensionArg && extensionArg !== "out" && extensionArg !== "dist") {
+  // Explicit extension name passed
   extension = extensionArg;
 } else {
   // Infer from CWD — expect CWD to be inside the extension folder
@@ -55,6 +59,12 @@ if (extensionArg) {
   extension = rel.split(path.sep).slice(0, 2).join(path.sep);
 }
 
+if (!target || (target !== "out" && target !== "dist" && target !== "build")) {
+  console.error("Error: target must be 'out', 'dist', or 'build'");
+  console.error("Usage: node copy-extension.mjs [extension] [target]");
+  process.exit(1);
+}
+
 const extDir = path.join(EXTENSIONS_DIR, extension);
 if (!fs.existsSync(extDir)) {
   console.error(`Error: Extension directory does not exist: ${extDir}`);
@@ -62,4 +72,4 @@ if (!fs.existsSync(extDir)) {
 }
 
 console.log(`Extension: ${extension}`);
-copyExtension(extension);
+copyExtension(extension, target);

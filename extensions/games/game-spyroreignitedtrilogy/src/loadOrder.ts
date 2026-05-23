@@ -30,7 +30,9 @@ export async function serialize(
 
   // Write the prefixed LO to file.
   await fs.removeAsync(loFilePath).catch({ code: "ENOENT" }, () => Promise.resolve());
-  await fs.writeFileAsync(loFilePath, JSON.stringify(prefixedLO), { encoding: "utf8" });
+  await fs.writeFileAsync(loFilePath, JSON.stringify(prefixedLO), {
+    encoding: "utf8",
+  });
   return Promise.resolve();
 }
 

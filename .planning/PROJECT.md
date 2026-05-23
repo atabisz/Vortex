@@ -2,15 +2,19 @@
 
 ## Current Milestone: v8.1 Upstream v2.0.1 Sync
 
-**Goal:** Merge PR #5 (`sync/upstream-v2.0.1` → `master`) into master — rebase, resolve conflicts, FF-merge, tag a canonical Linux release, and cherry-pick deltas onto `linux-port`.
+**Goal:** Fold upstream Nexus-Mods/Vortex `v2.0.1` into the fork on top of `v2.0.0-linux-rebased`. Every Linux fix from `VORTEX-LINUX-MERGE-PLAYBOOK.md` preserved. `pnpm run build` and `pnpm run test` pass on master. Closing artifact: FF-merge of `sync/upstream-v2.0.1` tagged `v2.0.1-linux-rebased`.
 
 **Target features:**
 
-- Rebase `sync/upstream-v2.0.1` cleanly onto current master, resolving the conflict set the v2.0.0 playbook anticipated
-- Preserve every Linux fix from playbook §1–§10 across the rebase — no regressions
-- FF-merge PR #5 to `master`; tag `v2.0.1-linux-rebased`; ship AppImage + .deb via `release-linux.yml`
-- Cherry-pick resulting Linux deltas onto `linux-port`
-- Absorb v8.0 carry-forward: SYNC-33-C local-boot evidence, SYNC-34 Skyrim SE 4-screenshot walkthrough, SYNC-39 `linux-port` baseline drift catch-up
+- Phase 31 ✅ Config bucket (workspace + lockfile + root configs parse)
+- Phase 32 — Mod-management hot zone resolution
+- Phase 33 — Gamebryo + per-game extensions resolution
+- Phase 34 — Renderer + main spine resolution
+- Phase 35 — Build verification (typecheck/lint/test/build green)
+- Phase 36 — Land + tag + cherry-pick to `linux-port`
+- Phase 37 — Carry-forward UAT and playbook updates
+
+**Branch:** `v8.1/config-bucket` (Phase 31 pushed to fork; subsequent phases stack here until the Phase 36 FF-merge).
 
 ## Previous Milestones
 
@@ -116,19 +120,9 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 - [ ] **ELEV-05**: All user-triggered elevation operations complete successfully on desktop Linux — code-complete (Phase 12); hardware UAT pending (Phase 999.1)
 - [ ] **ELEV-06**: Steam Deck elevation failure shows actionable error notification with recovery path — code-complete (Phase 12); hardware UAT pending (Phase 999.1)
 
-- ✓ **SYNC-01..39**: v8.0 Upstream v2.0.0 Sync complete — 109 conflicts resolved, dropped scaffolding restored, all 10 playbook items re-grep clean, FF-merged to master, tag `v2.0.0-linux-rebased` (`f570149ea`), 75 cherry-picks landed on `linux-port` (`6a28945d1`). Carry-forward to v8.1: SYNC-33-C, SYNC-34, SYNC-39 — v8.0
+### Active (v8.0)
 
-### Active (v8.1)
-
-- [ ] **SYNC-2.0.1-01**: `sync/upstream-v2.0.1` rebases cleanly onto current master with all conflicts resolved
-- [ ] **SYNC-2.0.1-02**: Every Linux fix from v8.0 playbook §1–§10 verified intact post-rebase (re-grep clean)
-- [ ] **SYNC-2.0.1-03**: PR #5 FF-merges to master; CI green
-- [ ] **SYNC-2.0.1-04**: Tag `v2.0.1-linux-rebased` (SSH-signed) at FF-merge HEAD
-- [ ] **SYNC-2.0.1-05**: `release-linux.yml` produces AppImage + .deb; SHA256s captured
-- [ ] **SYNC-2.0.1-06**: Linux deltas cherry-picked onto `linux-port`
-- [ ] **SYNC-33-C**: Local-boot evidence captured (carry-forward from v8.0)
-- [ ] **SYNC-34**: Skyrim SE 4-screenshot walkthrough captured (carry-forward from v8.0)
-- [ ] **SYNC-39**: `linux-port` baseline drift catch-up complete (carry-forward from v8.0)
+_(Define next milestone requirements via `/gsd-new-milestone`)_
 
 ### Deferred (v5.0+)
 
@@ -146,8 +140,6 @@ A Linux user can install Vortex, detect their Steam/Proton games, download mods 
 - Large codebase refactors — Windows code paths must remain untouched; all Linux support is additive
 
 ## Context
-
-**Shipped v8.0 on 2026-05-22.** 7 phases (24–30), 63 plans, 39/39 SYNC requirements satisfied. Master FF-merged from PR #4; canonical Linux release published via `release-linux.yml` (run `26270905415`); tag `v2.0.0-linux-rebased` SSH-signed at `f570149ea`. linux-port progressed via 75 cherry-picks (91 dropped as superseded). Carry-forward to v8.1: SYNC-33-C local-boot evidence, SYNC-34 Skyrim SE 4-screenshot walkthrough, SYNC-39 linux-port baseline drift catch-up.
 
 **Shipped v7.0 on 2026-04-17.** 6 phases, 12 plans, 18/18 v7.0 requirements satisfied (ONBRD-01 through ONBRD-06).
 
@@ -235,4 +227,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-_Last updated: 2026-05-22 — v8.1 Upstream v2.0.1 Sync milestone started. Continuing phase numbering from 30. Carry-forward absorbed: SYNC-33-C / SYNC-34 / SYNC-39._
+_Last updated: 2026-04-17 after v7.0 milestone — First-Run Onboarding Wizard shipped, all ONBRD requirements satisfied_

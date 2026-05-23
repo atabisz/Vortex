@@ -8,10 +8,6 @@
  *   - Safe no-op / empty-return stubs for registry, ACL, task scheduler, etc. (WAPI-05)
  *   - Both named exports and a default export object covering every function so
  *     `import winapi from "winapi-bindings"` and `import * as winapi from "..."` both work
- *
- * NOTE: The Jest mock at src/renderer/src/__mocks__/winapi-bindings.js is NOT modified
- * by this shim — it exists for existing renderer unit tests and deliberately diverges
- * (e.g. RegGetValue returns an object there).
  */
 
 import * as fs from "node:fs";

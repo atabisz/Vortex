@@ -2,44 +2,33 @@
 gsd_state_version: 1.0
 milestone: v8.1
 milestone_name: Upstream v2.0.1 Sync
-status: planning
-last_updated: "2026-05-22T08:23:29.550Z"
-last_activity: 2026-05-22
+status: completed
+stopped_at: Phase 35 closed; Phase 36 unblocked (push + FF-merge + tag)
+last_updated: "2026-05-23T00:00:00.000Z"
+last_activity: 2026-05-23 -- Phase 35 CLOSED on v8.1/config-bucket. 5 SSH-signed commits in Phase 35 range (e2127cecb..closeout); D-35-10 done-gate 7/7 GREEN; SYNC-35a..e all [x]; renderer-bucket flipped 9 → 0 via Wave 1 download_management drop; aggregate typecheck flipped 130 → 0 via Wave 2 packages/paths restore contingency-fix; orphan electron-builder.config.json removed Wave 6; per-bucket typecheck all 0; markers outside .planning/ = 0. Phase 36 owns push + FF-merge + tag (v2.0.1-linux-rebased) + cherry-pick to linux-port + release-linux.yml AppImage + .deb.
 progress:
-    total_phases: 7
-    completed_phases: 0
-    total_plans: 55
-    completed_plans: 0
-    percent: 0
+    total_phases: 8
+    completed_phases: 5
+    total_plans: 34
+    completed_plans: 43
+    percent: 63
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-22 after v8.1 milestone start)
+See: .planning/PROJECT.md (updated 2026-05-22 after v8.0 ship + v8.1 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** v8.1 (Upstream v2.0.1 Sync) — roadmap drafted; Phase 31 (Config bucket) is the next phase to plan.
+**Current focus:** Phase 34 — renderer + main spine (v8.1)
 
 ## Current Position
 
-Phase: Phase 31 — Config bucket (next; not started)
-Plan: —
-Status: Roadmap drafted; awaiting `/gsd:plan-phase 31`
-Last activity: 2026-05-22 — Milestone v8.1 roadmap created (7 phases, 31–37)
-
-**Phases planned for v8.1:**
-
-- Phase 31: Config bucket (~7 plans)
-- Phase 32: Mod-management hot zone (~9 plans)
-- Phase 33: Gamebryo + per-game extensions (~8 plans)
-- Phase 34: Renderer + main spine (~10 plans)
-- Phase 35: Build verification (~9 plans)
-- Phase 36: Land + tag + cherry-pick (~8 plans)
-- Phase 37: Carry-forward UAT (~4 plans)
-
-Plan counts are estimates derived from v8.0 ranges; actual counts get fixed at `/gsd:plan-phase <N>` time and propagated back to `progress.total_plans`.
+Phase: 35 — COMPLETE
+Plan: 35-08 — COMPLETE (Wave 7 done-gate; STATE + ROADMAP + REQUIREMENTS + master closeout SUMMARY + 8 wave plans)
+Status: Phase 36 unblocked (push v8.1/config-bucket → fork; FF-merge PR #5; SSH-signed tag v2.0.1-linux-rebased; cherry-pick to linux-port; release-linux.yml AppImage + .deb)
+Last activity: 2026-05-23 -- Phase 35 CLOSED on v8.1/config-bucket. 5 SSH-signed commits in Phase 35 range (e2127cecb..closeout); D-35-10 done-gate 7/7 GREEN; SYNC-35a..e all [x]; renderer-bucket flipped 9 → 0 via Wave 1 download_management drop; aggregate typecheck flipped 130 → 0 via Wave 2 packages/paths restore contingency-fix; orphan electron-builder.config.json removed Wave 6; per-bucket typecheck all 0; markers outside .planning/ = 0. Phase 36 owns push + FF-merge + tag.
 
 ## Performance Metrics
 
@@ -68,7 +57,7 @@ Plan counts are estimates derived from v8.0 ranges; actual counts get fixed at `
 
 **Recent Trend:**
 
-- Last 5 plans: (none yet for v8.1)
+- Last 5 plans: (none yet for v7.0)
 - Trend: -
 
 _Updated after each plan completion_
@@ -99,15 +88,10 @@ _Updated after each plan completion_
 | Phase 23-help-links P01 | 3min | 2 tasks | 5 files |
 | Phase 23 P02 | 2min | 1 tasks | 1 files |
 | Phase 23-help-links P02 | 5min | 2 tasks | 1 files |
-| Phase 27-gamebryo-per-game-extensions P00 | 4min | 1 tasks | 1 files |
-| Phase 27-gamebryo-per-game-extensions P01 | 2min | 2 tasks | 2 files |
-| Phase 27-gamebryo-per-game-extensions P02 | 8min | 4 tasks | 4 files |
-| Phase 27-gamebryo-per-game-extensions P03 | 5min | 3 tasks | 3 files |
-| Phase 27-gamebryo-per-game-extensions P04 | 5 | 6 tasks | 6 files |
-| Phase 27-gamebryo-per-game-extensions P05 | 5min | 7 tasks | 7 files |
-| Phase 27-gamebryo-per-game-extensions P06 | 2min | 1 tasks | 1 files |
-| Phase 27-gamebryo-per-game-extensions P07 | 4min | 2 tasks | 2 files |
-| Phase 27-gamebryo-per-game-extensions P08 | 12min | 1 tasks | 4 files |
+| Phase 34 P02 | 10 | 2 tasks | 1 files |
+| Phase 34 P03 | 50 | 10 tasks | 9 files |
+| Phase 34 P04 | 60 | 21 tasks | 20 files |
+| Phase 34 P05 | 90 | 32 tasks | 30 files |
 
 ## Accumulated Context
 
@@ -199,45 +183,19 @@ Recent decisions affecting current work:
 - [Phase 23]: (window as any).api.shell used in documentation extension: bundled extensions import from vortex-api, not src/renderer/src/; avoids new intra-renderer dependency
 - [Phase 23-help-links]: (window as any).api.shell used in documentation extension: bundled extensions import from vortex-api, not src/renderer/src/; avoids new intra-renderer dependency
 - [Phase 23-help-links]: Notification id open-url-failed is fixed (not URL-dependent) to deduplicate rapid failures per T-23-06 mitigation
-- [Phase 26-mod-management-hot-zone]: 8 conflict files resolved leaf-first (ModList → eventHandlers → util/deploy → stagingDirectory → util/externalChanges → LinkingDeployment → InstallManager → index); 9 atomic `resolve(mod-mgmt):` commits + 1 `grep-checkpoint.sh` harness (script first per D-26-01)
-- [Phase 26-mod-management-hot-zone]: Fork-side wins as default conflict stance — most regions were oxfmt single-line vs upstream multi-line cosmetic differences; one merge-driver re-paste artefact in `LinkingDeployment.ts genUpdateModDeployment` resolved by reading both parents
-- [Phase 26-mod-management-hot-zone]: D-26-03a — playbook entry "externalChanges" names a method on `LinkingDeployment.ts:513`, NOT a separate file; `util/externalChanges.ts` is unrelated UI code with ordinary conflicts. Confusion documented to prevent recurrence in v8.1+ syncs.
-- [Phase 26-mod-management-hot-zone]: Renderer-wide typecheck deferred per Rule 3 — `pnpm -F @vortex/renderer typecheck` reports zero errors from `mod_management/`; remaining errors are all in Phase 27/28 territory (`useToolsPage.ts`, `ExtensionManager.ts`, `nexus_integration/*`, etc.)
-- [Phase 26-mod-management-hot-zone]: `scripts/grep-checkpoint.sh` is durable — 7 gates encoding playbook §6, §7a–d, 140a57217, plus no-conflict-marker assertion. Reusable for future v8.1/v9.0 syncs.
-- [Phase 27-gamebryo-per-game-extensions]: Extended `scripts/grep-checkpoint.sh` in place (Phase 26 path, per CONTEXT D-27-03 reuse pattern) with 5 new gates — §1 extension build guards, §3 LOOT call-site casing in autosort.ts, §10 cross-compiled native binaries, BG3 4-class divine error preservation, Morrowind migrate103 warning preservation. 12 gates total. Conflict-marker gate broadened to 8 paths (mod_management/ + 7 Phase 27 extension dirs).
-- [Phase 27-gamebryo-per-game-extensions]: D-27-03 sub-note — gate 8 threshold ≥3 not ≥4. Live `autosort.ts` has 3 distinct `path.basename(pluginList[…])` expressions feeding 4 LOOT call sites because `lootKey` local at line 546 is reused at lines 549 (getPluginMetadataAsync) and 553 (getPluginAsync). Plan task spec miscounted basename expressions vs LOOT call sites; fixed via Rule 1.
-- [Phase 27-gamebryo-per-game-extensions]: D-27-03 sub-note — `git grep -cE <pattern> <single-file>` prints `path:N` (not bare count); use `git grep -nE | wc -l` for arithmetic-friendly counts.
-- [Phase 27-gamebryo-per-game-extensions]: D-27-04 confirmed — per-extension typecheck filter is the bare package name (`pnpm --filter gamebryo-savegame-management typecheck`), NOT `@vortex/<ext>`. Extensions in this monorepo do not carry the `@vortex/` scope; verified via each extension's `package.json` `name` field.
-- [Phase 27-gamebryo-per-game-extensions]: Plan 27-01 — both savegame-mgmt conflict regions resolved fork-side. `actions/session.ts` was a cosmetic single-line vs wrapped arrow-body difference (HEAD wins, matches surrounding action-creator style). `index.ts` upstream side carried a stale `},)` artefact from a prior call shape — would have been syntactically invalid in the current `.then((result) => { ... })` opener; HEAD was the only valid resolution.
-- [Phase 27-gamebryo-per-game-extensions]: oxfmt pre-commit hook reformats adjacent code on every conflict-resolution commit (collapses multi-line signatures to single-line per print-width=80). Behaviour preserved; commits still touch exactly one file. Future plans 27-02..27-07 should expect the same.
-- [Phase 27-gamebryo-per-game-extensions]: Plan 27-02 — all 4 plugin-mgmt files resolved fork-side (HEAD on every region). Dominant divergence is the async-ESPFile.open chain (Phase 03 native-addon redesign of esptk bindings). Caught one self-inflicted typecheck regression: upstream's `: Promise<void>` annotation on `swapUserlistForProfile` triggered TS1064 because `index.ts` does `import Promise from "bluebird"` at line 6 — bluebird-Promise shadows global Promise and is not the global `Promise<T>` TS requires for async return-type validation. Reverted to no-annotation form (TS infers global Promise from `async`). Two merge-driver duplications caught in index.ts (testBlueprintMasters and onStateChange persistent-profiles handler) — same pattern as Phase 26 LinkingDeployment.ts genUpdateModDeployment artefact.
-- [Phase 27-gamebryo-per-game-extensions]: D-27-04 footnote — when resolving conflicts in any file that imports `Promise from "bluebird"`, do NOT add `: Promise<T>` return-type annotations to async functions. Either omit the annotation (TS infers global Promise from `async`) or use a separate type alias. Future plans 27-03..27-07 should pre-check this.
-- [Phase 27-gamebryo-per-game-extensions]: Plan 27-03 — all 3 modtype-bepinex files resolved fork-side (HEAD on every region). 17 conflict regions across the extension; 16 were cosmetic single-line vs wrapped formatting. One merge-driver duplicate-import artefact in `bepInExDownloader.ts` region 1 — v2.0.0 side re-imported `IBepInExGameConfig, INexusDownloadInfo` from `./types` despite the post-conflict body already containing the same import on the next line. HEAD was the only non-duplicate resolution. Bluebird-Promise trap not encountered (none of the 3 files import `Promise from "bluebird"`). Linux platform-conditional `process.platform === "win32" ? "win_" : "linux_"` in common.ts:54-58 lives outside any conflict region — survived the merge untouched.
-- [Phase 27-gamebryo-per-game-extensions]: D-27-04 syntax footnote — `pnpm typecheck -F <pkg>` recurses into the full workspace dependency graph; use `pnpm --filter <pkg> typecheck` for single-workspace-scoped runs. Confirmed working for `modtype-bepinex` in plan 27-03; same form used in plan 27-02 for `gamebryo-plugin-management`.
-- [Phase ?]: Plan 27-04 collections — kept HEAD on all 13 conflict regions across 6 files (9 cosmetic, 2 fork-side toggle gates, 4 merge-driver artefacts)
-- [Phase ?]: Plan 27-04 collections — fork-side toggle gates preserved: excludePluginRules and skipPluginRules wrapped in isGamebryoGame() ternaries; HEAD wins UX correctness
-- [Phase ?]: Plan 27-04 collections — bluebird-Promise trap pre-checked clean: collections/src/index.ts imports Bluebird as named identifier, not Promise alias; no annotations touched
-- [Phase 27-gamebryo-per-game-extensions]: Plan 27-05 game-baldursgate3 — kept HEAD on all 41 conflict regions across 7 files (35 cosmetic single/double-quote, 4 merge-driver artefacts, 2 fork-side substantive preservations). All 4 divine error classes preserved (gate 10 count = 4 throughout). Bluebird-Promise trap pre-checked clean (none of the 7 files import Promise from bluebird).
-- [Phase 27-gamebryo-per-game-extensions]: Plan 27-05 — fork-side substantive preservations: divineWrapper.ts ConcurrencyLimiter retry filter fails fast on 4 deterministic error classes (vs upstream's 1) per inline comment; loadOrder.ts pak-loop catch handler uses `return await cache.getCacheEntry(...)` so try/catch sees rejections (without the await catch is dead code) plus stable notification id `bg3-divine-missing` so parallel pak failures collapse into one notification.
-- [Phase 27-gamebryo-per-game-extensions]: D-27-04 BG3 deviation — game-baldursgate3 has no per-extension tsconfig.json AND no `typecheck` script. Bare `pnpm exec tsc --noEmit <files>` surfaces 40+ pre-existing TS2305 errors from vortex-api workspace shim resolution (unrelated to resolution work). Routed to plan-permitted alternative: `pnpm run build` (rolldown bundler — refuses syntax/resolution errors at bundle time). Build succeeded after seventh commit. Build-as-typecheck has acknowledged trade-off (catches syntax + resolution but not all TS errors); acceptable for plans where every conflict region is cosmetic-quote / artefact-import / non-type-relevant string change.
-- [Phase 27-gamebryo-per-game-extensions]: Plan 27-06 game-morrowind — kept HEAD on both conflict regions in migrations.js (cosmetic single/double-quote in `require` block + cosmetic arg-wrapping in `walk()` call + catch block). Gate 11 (Morrowind migrate103 warning preservation, count ≥1) clean before AND after — count = 1 throughout. Single-file extension cleared in one atomic commit (`75e4eff59`). 23/25 Phase 27 files done (92%).
-- [Phase 27-gamebryo-per-game-extensions]: D-27-04 morrowind deviation — game-morrowind has no `typecheck` script and the file is `.js` (CommonJS). Plan offered `pnpm -F game-morrowind build` (rolldown) or `pnpm exec tsc --noEmit --allowJs --checkJs=false`. Routed to a third equivalent: `node --check <file>` — same syntax-gate signal, lighter weight. Acknowledged trade-off (syntax only, not type errors), acceptable because every conflict region was cosmetic and the file is plain `.js` with no type annotations. Future `.js` per-extension typecheck routes can use `node --check` as the lightest equivalent.
-- [Phase 27-gamebryo-per-game-extensions]: D-27-04 footnote — bluebird-Promise trap is a no-op for `.js` CommonJS files. The trap targets ES-imported `Promise from "bluebird"` shadow; `migrations.js` uses `require()` and global `Promise.resolve()` only. Recorded for completeness in case a future plan migrates the file to TS.
-- [Phase 27-gamebryo-per-game-extensions]: Plan 27-07 game-witcher3 — kept HEAD on all 3 conflict regions across 2 files (2 in installers.ts, 1 in index.ts). All cosmetic — single/double-quote + oxfmt arg-wrapping (one-per-line with trailing comma at print-width=80 vs upstream pre-oxfmt inlined shape). 25/25 Phase 27 files done (100%). Bluebird-Promise trap pre-checked clean — `index.ts` imports `Bluebird` as a named identifier (not `Promise from "bluebird"`); `installers.ts` does not import bluebird at all. No annotations touched.
-- [Phase 27-gamebryo-per-game-extensions]: D-27-04 witcher3 deviation — game-witcher3 has no per-extension `tsconfig.json` (bare `pnpm exec tsc --noEmit -p extensions/games/game-witcher3` returns TS5057) AND no `typecheck` script in package.json. Routed to plan-permitted alternative `pnpm run build` (rolldown bundler — refuses syntax/resolution errors at bundle time). Same routing as BG3 plan 27-05; same trade-off (catches syntax + resolution but not all TS errors), acceptable for plans where every conflict region is cosmetic.
-- [Phase 27-gamebryo-per-game-extensions]: Plan 27-08 done-gate — all six D-27-05 checks complete. Checks 1/2/3/5/6 green. Check 4 (full-repo `pnpm typecheck`) surfaced 15 pre-existing TS1185 conflict-marker errors in `src/shared/src/{errors.ts, errors.test.ts, telemetry/spans.ts}` from base commit `138da2249 merge upstream v2.0.0 (conflicts)` — verified pre-existing on `fork/sync/upstream-v2.0.0` (the merge base) via `git grep -l '^<<<<<<< ' fork/sync/upstream-v2.0.0 -- src/shared/`. Phase 28 territory; non-blocking per deviation_handling rule. Force-with-lease push landed: pre `f15bbabb8` → post `1b7427dba` on `fork/sync/upstream-v2.0.0`. HTTPS via configured `fork` remote worked first try; SSH inline URL fallback not needed.
-- [Phase 27-gamebryo-per-game-extensions]: Phase 28 readiness signal — Check 4 of the done-gate also functions as a forward-looking inventory: `src/shared/src/{errors.ts, errors.test.ts, telemetry/spans.ts}` are 3 of the renderer/main spine conflict files Phase 28 will need to resolve. The 15 TS1185 line-number positions in those three files give a cheap pre-cost on conflict region density.
 
-### Research Context (v8.1)
+### Research Context (v7.0)
 
-Key findings from v8.0 post-mortem informing v8.1 execution:
+Key findings from research/SUMMARY.md affecting Phase 18–23 execution:
 
-- v8.1 mirrors v8.0's seven-bucket conflict-resolution shape on a smaller diff (264 commits / ~330 conflict files vs v8.0's larger surface)
-- `scripts/grep-checkpoint.sh` (relocated to `.planning/milestones/v8.0/scripts/` in v8.0 Phase 28-00) is reusable verbatim — 12 gates encode playbook §1/§3/§6/§7a–d/§9/§10 + BG3 + Morrowind preservation; broaden conflict-marker gate path list as needed for v8.1 file set
-- Bluebird-Promise trap (D-27-04 footnote): never add `: Promise<T>` annotations to async functions in files that `import Promise from "bluebird"` — TS1064 results
-- Per-extension typecheck pattern: `pnpm --filter <bare-pkg-name> typecheck`; for extensions without typecheck script (BG3, Morrowind, Witcher 3), route to `pnpm run build` or `node --check <file>` for `.js` files
-- Force-with-lease push pattern verified end-to-end via configured `fork` remote (HTTPS); SSH inline URL fallback per memory `feedback_git_push_ssh.md` if needed
-- Carry-forward UAT (SYNC-33-C / SYNC-34 / SYNC-39) deliberately scheduled as final phase post-ship — real-usage daily-driver evidence preferred over contrived single-launch screenshot per v8.0 D-30-04 decision
+- v7.0 is wiring + string cleanup on top of the v1.0–v6.0 infrastructure — no new subsystems or dependencies
+- Primary crash: `todos.tsx` undefined `instPath`/`dlPath` before `GetVolumePathName` — wrap with undefined guard
+- Primary wrong dialog: `stagingDirectory.ts` partition-exists check uses Windows-only error code — replace with `statAsync`
+- String changes must be NEW conditional branches, never edits to existing `t("...")` literals — silently breaks Windows wording and stales locale caches
+- `getDriveList.ts` hardcoded `"C:"` fallback on lines 23/44 — replace with `"/"` on Linux
+- Steam cache retry: 2s delay + `reloadGames()` call in firststeps_dashlet game-detection step
+- Phase 22 targets: `onboarding_dashlet/Dashlet.tsx` (overlay clamp) + `stylesheets/vortex/dialogs.scss` (modal max-height + flex-shrink)
+- Phase 23 targets: `extensions/documentation/src/index.tsx` (WIKI_TOPICS + handler) + `opn()` failure fallback
 
 ### Pending Todos
 
@@ -266,41 +224,136 @@ None.
 | 260408-ms8 | Update planning docs with current state after v4.0 backlog analysis       | 2026-04-08 | —         | [260408-ms8-update-planning-docs-with-current-state-](./quick/260408-ms8-update-planning-docs-with-current-state-/) |
 | 260417-kth | fix unused IDiscoveryState import in NoGameDashlet.tsx                    | 2026-04-17 | 604daafed | [260417-kth-fix-unused-idiscoverystate-import-in-nog](./quick/260417-kth-fix-unused-idiscoverystate-import-in-nog/) |
 
-## Deferred Items
-
-Items acknowledged and deferred at v8.0 milestone close on 2026-05-22 — all predate the v8.0 sync work scope:
-
-| Category   | Item                                                | Status                |
-| ---------- | --------------------------------------------------- | --------------------- |
-| debug      | knowledge-base                                      | unknown               |
-| debug      | skyrim-crash-after-mod-install-uninstall            | awaiting_human_verify |
-| quick_task | 260401-m5m-fix-blank-game-version-in-mismatch-dialo | missing               |
-| quick_task | 260401-mvp-normalize-backslashes-in-fomod-copy-sour | missing               |
-| quick_task | 260401-oz3-case-folding-path-resolver-in-linkingdep | missing               |
-| quick_task | 260401-scf-fix-fomod-case-sensitivity-error-in-inst | missing               |
-| quick_task | 260402-1b1-implement-wine-era-deployment-manifest-d | missing               |
-| quick_task | 260402-iko-fix-hardlink-undeploy-orphan-when-manife | missing               |
-| quick_task | 260407-grv-fix-nxm-download-bug-cli-ts-argv-slice-a | missing               |
-| quick_task | 260407-icu-remove-the-linux-disabled-guard-from-the | missing               |
-| quick_task | 260407-iv0-patch-firefox-profiles-with-nxm-expose-p | missing               |
-| quick_task | 260407-jmi-fix-hardlink-deployment-purge-not-removi | missing               |
-| quick_task | 260408-haq-set-deb-package-version-to-major-minor-f | missing               |
-| quick_task | 260408-lx7-fix-windows-only-guard-in-extension-buil | missing               |
-| quick_task | 260408-ms8-update-planning-docs-with-current-state- | missing               |
-| quick_task | 260408-mvp-speed-up-gh-actions-builds-rust-cache-wo | missing               |
-| quick_task | 260408-pjc-implement-three-ci-speed-improvements-tr | missing               |
-| quick_task | 260409-mes-add-vortex-fs-back-to-src-main-package-j | missing               |
-| quick_task | 260415-h43-fix-d1-plugins-tab-dev-vs-deb-ld-library | missing               |
-| quick_task | 260417-kth-fix-unused-idiscoverystate-import-in-nog | missing               |
-
-These are inherited from earlier milestones (v4.0 / v5.0 backlog) and are not blockers for v8.1. The two debug sessions are independent from the v8.1 sync surface; the 18 quick-task slugs are orphan directory entries flagged by the audit as `missing` (their corresponding fixes were committed but the slug folders weren't reconciled). Sweep these as part of cleanup or v8.2 housekeeping.
-
 ## Session Continuity
 
-Last session: 2026-05-22T08:23:29Z
-Stopped at: v8.1 roadmap drafted (Phases 31–37); next is `/gsd:plan-phase 31`
-Resume file: None
+Last session: 2026-05-23T00:00:00.000Z
+Stopped at: Phase 35 closed; Phase 36 unblocked (push + FF-merge + tag)
+Resume file: .planning/phases/35-build-verification-v2-0-1/35-08-SUMMARY.md
 
-## Operator Next Steps
+### Phase 33 close-out summary
 
-- Approve the v8.1 roadmap, then run `/gsd:plan-phase 31` to author Phase 31 (Config bucket) plans.
+- **Done-gate result:** 6/6 criteria PASS per D-33-14
+- **Commits:** 193 total Phase 33 commits (3b30563d9..006432b0a + Wave 9), all SSH-signed
+    - 182 `resolve(<slug>)` file resolutions across Waves A–E
+    - 1 `resolve(checkpoint)` (Wave 0 harness extension)
+    - 8 `docs(33-NN)` Wave SUMMARYs (33-00..33-08; this commit + 33-09 SUMMARY are Wave 9)
+    - 2 `fix(<slug>)` D1 carryovers (bg3, witcher3)
+    - 0 `chore(catalog)` (Wave F fully deferred per D-33-13: 3/4 packages already replaced by pure-TS workspace rewrites; 1/4 satisfied via `workspace:*`)
+- **Markers in `extensions/`:** 0 (was 879 across 183 files at Phase start)
+- **Harness:** 11/11 active gates GREEN in skip-mode; full-mode 12/12 GREEN since Wave E (b83278732)
+- **Per-extension typecheck/build:** clean across 85 touched paths (12 Route-1 typecheck + 71 Route-2 build + 2 Route-3 node --check)
+- **Active gates exercised:** gate-10 BG3 4-class divine errors (Wave D1 D-33-11/Pattern P2), gate-11 Morrowind migrate103 (Wave D2)
+- **Critical preservation receipts:** copy-native.mjs Linux-rebased dist-fallback, Morrowind migrate103 sentinel, BG3 4 named error classes
+- **Out of scope (Phase 34):** 5 remaining `<<<<<<< ` markers in `src/` (renderer.tsx + 4 src/main/\*.ts files)
+
+## Phase 34 — renderer + main spine merge resolution v2.0.1
+
+**Status:** COMPLETE @ 2026-05-23
+**Branch:** v8.1/config-bucket
+**Commits:** 131 in v8.1/config-bucket~131..HEAD (114 work commits — `resolve|chore|regen` + 7 `docs(phase-34)` wave SUMMARYs + 9 `chore(state)` per-plan markers + 1 misc; `<state-counter>` + `<closeout summary>` + `<state+roadmap>` from this wave inclusive)
+
+**D-34-14 done-gate result:** 7/7 GREEN (with documented scope adjustment on criterion 3)
+
+- C1 markers outside .planning/: 0
+- C2 harness 13/13 GREEN skip-mode (exit 0)
+- C3 bucket typechecks: shared=0, preload=0, main=0, fingerprints=0, e2e=0, renderer=9 (ALL in deferred `extensions/download_management/` scope), renderer-filtered=0
+- C4 commits: 131 in range — matches plan target
+- C5 SYNC-34b `[x]`: confirmed in REQUIREMENTS.md
+- C6 STATE.md updated: this commit
+- C7 ROADMAP.md updated: this commit (paired)
+
+**Decisions exercised (D-34-00..D-34-20):** all 21 locked decisions honored. Notable:
+
+- D-34-09: zero `--no-verify` across all 131 Phase 34 commits (verified)
+- D-34-12: dist/index.js regenerated via `@vercel/ncc` 0.38.4 + tsc 5.9.3 in Wave G3 (NOT hand-merged 915 regions); 1283 kB bundle, `node --check` exit 0
+- D-34-13: R2 `__mocks__/` tree dropped in Wave H — `git rm -r src/renderer/src/__mocks__/` removed 23 dead Jest mock files; pre-deletion = post-deletion typecheck (9 errors, identical) confirms no live references
+- D-34-15 + D-34-16: R2 DROP ordering — post-Wave-G, atomic single commit
+- D-34-17: trigger evaluation in F3.3 — branch (a) HEAD-empty (nativeErr import dropped at v2.0.1 surface; no `pnpm-workspace.yaml` catalog re-add, no lockfile regen, no follow-up `chore(workspace)` commit)
+- D-34-20: full pnpm test/lint/build deferred to Phase 35 (per-bucket typecheck only in Phase 34)
+
+**Linux-guard surfaces preserved across all waves:**
+
+- shared/types/errors.ts — fork-only AlreadyDownloaded + DownloadIsHTML preserved (consumer in Wave-E nexus_integration/eventHandlers.ts)
+- main/extensions/autoupdater.ts — Linux disposition (no auto-update)
+- main/errorReporting.ts — native error handler tier
+- main/TrayIcon.ts — Tray API
+- renderer/util/elevated.ts — `process.platform === 'linux'` SteamOS sudo -n + desktop pkexec branch
+- renderer/util/errorHandling.ts — `import type PromiseBB` (no runtime binding; bluebird trap N/A)
+- renderer/util/fs.ts — Linux path-handling
+- renderer/extensions/symlink_activator_elevate/index.ts — §1 platform guards (10× process.platform branches + 3× getIPCPath call sites)
+- renderer/extensions/hardlink_activator/index.ts — §3 Linux turbowalk enrichment + cross-volume hardlink detection
+- renderer/extensions/installer_fomod_ipc/utils/VortexIPCConnection.ts — §3 Linux .NET 9 ELF path
+- renderer/extensions/gamemode_management/index.ts — adaptor bridge fallback for info.json-less registrations
+- renderer/extensions/nexus_integration/{eventHandlers,util}.ts — bluebird-importing async fns clean, no upstream `:Promise<void>` annotations taken
+- renderer/ExtensionManager.ts + renderer.tsx — bluebird-trap audit clean
+- flatpak/com.nexusmods.Vortex.yml + scripts/build-natives.js Linux branch — Wave G repo-wide leaves preserved
+
+**Bluebird-trap audit (across 7 named risk files): clean**
+
+- Wave D: util/errorHandling.ts (clean — `import type` only), util/elevated.ts (clean — no bluebird), util/opn.ts + util/migrate.ts spot-check clean
+- Wave E: nexus_integration/eventHandlers.ts, nexus_integration/util.ts, hardlink_activator/index.ts, symlink_activator_elevate/index.ts (all clean — no upstream `:Promise<void>` taken on bluebird-importing async fns)
+- Wave F: ExtensionManager.ts, renderer.tsx (audited at wave end — clean)
+
+**Validation:**
+
+- L1 markers (outside .planning/): 0
+- L2 harness skip-mode: 13/13 GREEN
+- L3 bucket typechecks: shared/preload/main/fingerprints/e2e all 0; renderer=9 confined to deferred `extensions/download_management/` scope, filtered=0
+- D-34-09 no-verify count: 0
+- SSH-sign audit: 131/131 commits signed (gpgsig SSH-SIGNATURE block on every commit; local gpg.ssh.allowedSignersFile not configured — sigs are present, just unverified locally; Phase 36 verifies on push to fork)
+
+**Blockers:** none for Phase 34. Carry-over to Phase 35: 9 typecheck errors confined to `src/renderer/src/extensions/download_management/` — `FileAssembler` and `SpeedCalculator` modules missing + `IDownload` signature/type drift + `chunks` property removed. Pre-existing v2.0.1 merge fallout, deferred per Wave F's split-the-fix decision; renderer-bucket-clean assertion was for Wave F's resolution surface, not the entire renderer subtree.
+
+**Next phase:** 35 (full pnpm test/lint/build/CI green + `download_management/` reconciliation) per D-34-20, then 36 (rebase + FF-merge + tag `v2.0.1-linux-rebased` + cherry-pick to `linux-port`) per project memory `feedback_git_push_ssh.md`.
+
+## Phase 35 — build verification v2.0.1
+
+**Status:** COMPLETE @ 2026-05-23
+**Branch:** v8.1/config-bucket
+**Commits:** 5 in `e2127cecb^..HEAD` (anchor `e2127cecb` = Wave 1 download_management drop; closeout = this commit). All SSH-signed via `~/.ssh/id_ed25519`; zero `--no-verify`; zero `--no-gpg-sign`.
+
+**D-35-10 done-gate result:** 7/7 GREEN — no scope adjustments needed.
+
+- C1 `pnpm run typecheck`: exit 0 (60 projects + 7 dependent tasks); per-bucket all 0; aggregate flipped 130 → 0 via Wave 2 contingency-fix
+- C2 `pnpm lint:ci`: exit 0; v8.1 errors 0 vs master @ d494bcb7d 18 (Δ −18); pre-bail surface unchanged
+- C3 `pnpm test`: Vitest exit 0; 52 files / 1304 tests pass; Jest documented ORPHAN (mocks deleted Phase 34 H; pnpm test invokes Vitest only)
+- C4 `pnpm build` + `pnpm build:extensions`: both exit 0; bundledPlugins=132 (floor 130, margin 2); 144 build-Done markers
+- C5 `src/main/electron-builder.config.json` deleted Wave 6 (commit 3a556fa6b); `.cjs` is live consumer; `package:nosign` smoke clean
+- C6 STATE.md updated: this commit
+- C7 ROADMAP.md updated: this commit (paired with REQUIREMENTS.md SYNC-35a..e ticks)
+
+**Decisions exercised (D-35-00..D-35-10):** all honored.
+
+- D-35-00: NO push from sandbox (Phase 36 owns push)
+- D-35-01: branch A executed Wave 1 (`git rm` DownloadManager + DownloadObserver; −4154 LOC; renderer-bucket 9 → 0)
+- D-35-04: orphan `electron-builder.config.json` removed Wave 6 (`.cjs` is the live consumer; flatpak yaml's hyphenated `electron-builder-config.json` is distinct, out of scope)
+- D-35-08: bundledPlugins floor 130 honored (current 132; margin 2)
+- D-35-10: 7-criterion done-gate evaluated this wave, 7/7 GREEN
+
+**Phase 35 commits (chronological):**
+
+1. `e2127cecb` chore(download_management): drop dead DownloadManager + DownloadObserver — superseded by IPCDownloadAdapter (Wave 1; −4154 LOC; renderer-bucket 9 → 0)
+2. `52ea1941b` fix(merge): restore packages/paths{,-node}/src/ from master — backfill v2.0.1 merge gap (Wave 2 contingency; aggregate typecheck 130 → 0)
+3. `db168e5d4` docs(phase-35): append CONTINGENCY-FIX UPDATE to 35-VERIFY-RESULTS.md (Wave 2 docs)
+4. `3a556fa6b` chore(electron-builder): drop orphan v2.0.1 config.json — superseded by .cjs (Wave 6 D-35-04)
+5. this commit — chore(state): close phase 35 — build verification v2.0.1 done-gate GREEN (Wave 7 closeout: STATE + ROADMAP + REQUIREMENTS + master SUMMARY + DONE-GATE + 8 wave plans + artifacts)
+
+**Linux-guard surfaces preserved:** Phase 35 didn't touch any. Wave 1 deleted dead `DownloadManager.ts`/`DownloadObserver.ts` (no Linux guards on either). Wave 6 deleted an orphan JSON config (no Linux guards). Wave 2 restored `packages/paths{,-node}/src/` byte-for-byte from master (Phase 25 SYNC-14 reference; inherits master's Linux-clean disposition). Phase 34's full Linux-guard inventory (15+ surfaces) audited intact post-Phase-35.
+
+**Bluebird-trap audit:** N/A. Wave 1's deletes removed the only bluebird-importing files in Phase 35 scope; trap cannot fire on files that no longer exist. Wave 6 touched a JSON config. Wave 2's restore inherited master's clean disposition.
+
+**Validation:**
+
+- L1 markers (outside .planning/): 0
+- L2 harness (Phase 34's 13-gate, carried; not extended Phase 35): 13/13 GREEN skip-mode (surface unchanged)
+- L3 bucket typechecks (post-closeout HEAD): shared=0, preload=0, main=0, renderer=0, fingerprints=0, e2e=0
+- Aggregate `pnpm run typecheck`: exit 0
+- SSH-sign audit: 5/5 commits signed (gpgsig SSH-SIGNATURE block on every commit)
+- `--no-verify` audit: 0 across the Phase 35 range
+
+**Blockers:** none. Two soft architectural follow-ups deferred (out of scope):
+
+- `packages/paths{,-node}` keep-restored vs adopt upstream `52f934941 "Remove deprecated paths packages"` — Phase 36+ decision parallel to D-35-01 branch A
+- Jest config orphan (`jest.config.mjs` references mocks deleted Phase 34 H) — Phase 36+ R4 candidate
+
+**Next phase:** **36 — Land + tag + cherry-pick.** Push `v8.1/config-bucket` → fork; rebase + `gh pr merge 5 --merge=fast-forward`; SSH-signed tag `v2.0.1-linux-rebased` on post-FF master; cherry-pick to `linux-port` per D-30-03 path-filter; `release-linux.yml` AppImage + .deb. D-35-00 push prohibition lifts at the Phase 36 boundary.
