@@ -573,7 +573,6 @@ class Application {
      *
      */
 
-<<<<<<< HEAD
     if (process.platform === "linux") {
       // AppImage sets APPIMAGE env var; treat as "regular" (auto-updater enabled)
       // Other installs (dev, zip, deb) are "managed" (no auto-updater)
@@ -586,14 +585,6 @@ class Application {
       } catch {
         this.mAppMetadata.installType = "managed";
       }
-=======
-    try {
-      await stat(path.join(getVortexPath("application"), "Uninstall Vortex.exe"));
-      // Collect metadata - renderer will dispatch the action
-      this.mAppMetadata.installType = "regular";
-    } catch {
-      this.mAppMetadata.installType = "managed";
->>>>>>> v2.0.2
     }
   }
 
