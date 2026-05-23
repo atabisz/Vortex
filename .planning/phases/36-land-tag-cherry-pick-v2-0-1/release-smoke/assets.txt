@@ -1,0 +1,3 @@
+latest-linux.yml 559 bytes
+vortex-setup.AppImage 258768724 bytes
+vortex_amd64.deb 158044146 bytes

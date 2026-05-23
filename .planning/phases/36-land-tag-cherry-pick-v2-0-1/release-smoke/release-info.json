@@ -1,0 +1,46 @@
+{
+  "assets": [
+    {
+      "apiUrl": "https://api.github.com/repos/atabisz/Vortex/releases/assets/427645305",
+      "contentType": "text/yaml",
+      "createdAt": "2026-05-23T04:52:22Z",
+      "downloadCount": 0,
+      "id": "RA_kwDOR2SiK84ZfVl5",
+      "label": "",
+      "name": "latest-linux.yml",
+      "size": 559,
+      "state": "uploaded",
+      "updatedAt": "2026-05-23T04:52:22Z",
+      "url": "https://github.com/atabisz/Vortex/releases/download/v2.0.1-linux-rebased/latest-linux.yml"
+    },
+    {
+      "apiUrl": "https://api.github.com/repos/atabisz/Vortex/releases/assets/427645304",
+      "contentType": "application/octet-stream",
+      "createdAt": "2026-05-23T04:52:22Z",
+      "downloadCount": 0,
+      "id": "RA_kwDOR2SiK84ZfVl4",
+      "label": "",
+      "name": "vortex-setup.AppImage",
+      "size": 258768724,
+      "state": "uploaded",
+      "updatedAt": "2026-05-23T04:52:29Z",
+      "url": "https://github.com/atabisz/Vortex/releases/download/v2.0.1-linux-rebased/vortex-setup.AppImage"
+    },
+    {
+      "apiUrl": "https://api.github.com/repos/atabisz/Vortex/releases/assets/427645306",
+      "contentType": "application/x-debian-package",
+      "createdAt": "2026-05-23T04:52:22Z",
+      "downloadCount": 0,
+      "id": "RA_kwDOR2SiK84ZfVl6",
+      "label": "",
+      "name": "vortex_amd64.deb",
+      "size": 158044146,
+      "state": "uploaded",
+      "updatedAt": "2026-05-23T04:52:27Z",
+      "url": "https://github.com/atabisz/Vortex/releases/download/v2.0.1-linux-rebased/vortex_amd64.deb"
+    }
+  ],
+  "name": "Linux Beta v2.0.1-linux-rebased",
+  "publishedAt": "2026-05-23T04:52:29Z",
+  "url": "https://github.com/atabisz/Vortex/releases/tag/v2.0.1-linux-rebased"
+}

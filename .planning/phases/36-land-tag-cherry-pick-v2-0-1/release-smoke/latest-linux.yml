@@ -1,0 +1,12 @@
+version: 1.16.202605230443
+files:
+  - url: vortex-setup-1.16.202605230443.AppImage
+    sha512: dmhP/kbpH42h8WV0V0LPGERUS577qvW9GeRY+6Ee4Yhbs+Nxd0BO/gH+JfJr7Hb3v5n70CpnEaBVN4G7p0LFTg==
+    size: 258768724
+    blockMapSize: 270184
+  - url: vortex_amd64.deb
+    sha512: VVbfUJpA1UH99sZH+tlh8yLv9p5w9IN6MsTgHVNGhzA2aDO15RKrpxpyRlnQof1/0StS68OdQqvjE0l20s6fDg==
+    size: 158044146
+path: vortex-setup-1.16.202605230443.AppImage
+sha512: dmhP/kbpH42h8WV0V0LPGERUS577qvW9GeRY+6Ee4Yhbs+Nxd0BO/gH+JfJr7Hb3v5n70CpnEaBVN4G7p0LFTg==
+releaseDate: "2026-05-23T04:52:17.905Z"

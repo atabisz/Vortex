@@ -1,0 +1,407 @@
+2c4e9f23de63eb36eed62cab285a1acbd9144dfb fixed external changes dialog still being raised in some conditions
+b5c75f743730a49046819fc6becfeb8e2a11c764 small fixes
+d9acc9a6b399eec5a7a7391276a6cfc8adadb012 de-duplicating auto-resolve actions
+4c2258cd63269d9cb430379aaf2c234aff5a5c1f Fixes broken package script
+91f4a045850aac89f9bcbe951197386f644f05c4 Add DuckDB extension download to the build/dist pipeline
+128aa2d7eda4be621e38383ab5b4cd0fe3157ef5 fix: workaround Electron >=39.6.1 crash on BrowserView close
+fc3affc24c68539d53ed79755ed9e13f359c5aa9 fixed missing peer dependencies for modmeta-db
+255b8b68408f927add31e2b2c7c85a476e4d3435 fixed last few instances of app.quit causing application crash
+79048259639ab676babe2e29c8cf11568cd7d071 fixed startup crash when dialogs shown before main window exists
+95b6d0b8e4b7d6fb2ddad74abde6a8e0b473b974 fixed collection mods not considered when checking if req is installed
+5b7b1ef09ca119f0f7f7f4a129958a6b511efcbb fixed UIV2 profile pages respect Enable Profile Management toggle
+2b7b5dc6303b110c8cc2b77ffc7b03479dca9c2b fixed stack overflow when resolving long synchronous promise chains
+881b86ce433b473a290e6dcf82eaef4c72bcce83 additional defensive code when trying to fetch modInfo from API
+c1d890d1d13b26429b36240397e30e8195c9389d fixed several issues with staging/game folders recovery after tampering
+ba0fabea73f455c303797079f60f5e5614c0aec2 defensive code to mods sort to avoid executing on empty mod list
+456f76314360512400106dfe5dc89cc24b89d0a2 fixed restore state from backup workaround not functioning
+2528bba124780d382686396ffdf71bd1df499e42 on manual fomod re-install, show fomod dialog with preselected values
+23c4449315f32c405d1e380680394f89cc3100e4 wait for renderer process exit before relaunching the app
+b67c7dc2913b551d516f6a2b557318624533f8a0 fixed fomod ui cancelling installation on backdrop click
+840240eab621520e10d936774539c976a01861ca Merge pull request #22007 from Nexus-Mods/task/APP-65
+3d88c9c9f91121ca29d27f8866fad2f5cbde928b fix
+a949432887df24036a2a1f8d1c3c546ed833fdc2 use new fomod preselect parameter instead of UI syncing
+d6cb1cd6c3694804ee1f731d4d9c3fd19934c19e Fix
+d52e3cad1f82744aa8bc89a4acfe54e949488aec Fix
+1d5b7e6bdc9e83c569cbef3b17e958891140941e updated onboarding videos
+b584e68de3f5e2fcabb1f3385366fa2542572eb8 added ability to preserve FOMOD presets when installing variants
+644c843f323dad397b662b050701b37825aeaf38 healthcheck settings button will now always open global settings
+d6ee39fb9ff9e97959760b10c5b423c624d9aa45 multiple Starfield enhancements and fixes
+8ea7b0709d0b1ef31fe0d15504351593ed94bfc7 collection edit no longer warns collaborators with edit permissions
+dbd9196e642878a391a131b916b9e5281b8468d9 Fixed collections_download_completed event not being emitted
+060d2463f19eb63c9f816bf3b65c16bea2a44d8a fixed dropdown buttons not responding to click after row focus steal
+590135e57095bf3f6c14dcbd828051e933833955 Added tests
+d1ddb5eece55180c9bb009d540fc412cecbbe59a Do not show the Unpin button on the default launcher tool
+41a259c8b51000ec42adc9bbd8f10fade6797e18 Cleanup Windows API
+dd786a8036f4276af2507d21550b85f876c46d2a Check that we have an active profile when the game is selected. If not, ask to select one.
+3ec919b5bdf22584bd668ddb1dfb305ddc334011 Fix duckdb download script
+cfc25dfa6f00e208f9743fc6dc96450d8a682d18 Fixed the renderer loop
+b0adf362f13a4444a0e64a31de0834cfe345899a chore: update tool page styling
+224b85ea29e54a9cfa68be55599118020ead5fbc Refresh IsValid check (exe is present) on deploy
+7b077caafa763af94f9941272f84a1aa78e97191 fallback to local image if unable to ascertain remote gameart
+a2567723a286cc419468f8035fa9a686b31cbdb4 fix gamebryo savegame metadata regression
+6f75127161ba1f6524eb8a3f735e0b285dbab5dc fix bepinex reinstall loop and enable free-user install flow
+6354d2b766627b405dbb4e62cd5dc268ce11b4eb fixed several race conditions when switching collection revisions
+5a3f178ebf2d414dc82d115117f0587a214ab169 fixed relativeTime DST drift for day calculations
+ea82cc541ea1384cba71a62239a48230275741e4 restored auto-download for patch updates in autoupdater
+ce22bbf8942faa135c34b5eed8423a9e5d9295fc plugin rules per-profile and add controls to prevent rule contamination
+605915b48c947a862b7b8a519201d3e2cc68d9a6 fixed analytics potentially starting up multiple times on startup
+ea2c925d86e6a070a9bb9eee59cd8f1011b296ad fixed telemetry setup silently swallowing errors
+00e2bf48e3dc72ae44ef5632df7429a531643085 use main logging instead of console
+a5810172dd5fa0ee7d112c99e5089d3c2aea8ccd fixed file UID generation failing due to stale games cache
+94d21835456ffaf8d8d5d2a7038ae3deceb48331 fix notifications quickUpdate crash from stale-index writes
+48ccd1e1f96926eccc8a7e002ec42398a3e14fba preserve real error message when showError receives non-error details
+60f58f545e9358f69db9bbe1a09d32f38228a8be redact user-identifying paths from telemetry error payloads
+cfcf0027b2e4df66dd52c99caea04563e461ec67 re-use InitFunc resolver for extension dependency scan
+1bed0cc914339515bf87577ee09bf918df7e0cba fixed w3 script merger dummy installer + error handling for undefined instructions
+a476f09d2e9c776a89e67821d3d0942096e27c19 BG3: improve divine error handling and suppress pak-reading noise
+7db85205db48a68ff6eed11cc09bd8bd7ce178a8 only show "already running" dialog on real DB lock contention
+11634fb4c50ba3ba23db8f62ce57266aded5a734 fixed install crash from fileList.push spread on large archives
+1e2ad691268e5206602c5c58446b5c91aa96d629 Morrowind: skip missing mod dirs in migrate103 plugin scan
+43b1fb0a642798237def5ad99f521b01c8397b06 suppress error report when user declines Nexus login
+24e719d46c7a517b330a63b1b29c335f96b0e524 stop recording eslify environment errors as false successes
+5cf1d2c5bcf2e53e7c813eb245d9b9caac666ad1 fixed health check open-mod-page crash and improved Nexus URL fallback
+650ce69f94ed94e976d0fa22ed71a92238f6da59 guard notifications reducer and quickUpdate against malformed payloads
+323a5dbc35641b83b1c556b2e13a6f07f00e553d duckdb: use Nexus Mods level_pivot repo
+1405924a71363ecce7fb5f4ca853135d84750c37 fixed updater notifications never dismissing
+4fb2ad279723bbed524bc2937826f6cbf5531484 validate variant name against filesystem-illegal characters
+bc79325b5fadc3531426da075d1729accdae8606 Fixed double negation
+58fdc8e27165157b5c65430a4000c7e6be29a689 Formatting fix
+8256f6b01741498af979a5df3cdcaa69e78a0abb prevent false external-changes dialog after remove/replace
+fae6a73928637ae785f635ac4f4d9cbfb1d07347 Bring prepare-dist-package.mjs from master
+77c44c2a4e5505549961302c7c1a863f465943df Formatting
+8c56b55d5f266324e2c50b957002717f71ca2513 contain react-hot-toast goober render crash
+4cb8d3fc5b94725cf53347b1e64292e2978be9eb surface GraphQL error path/location/query in nexus-api logs
+15d160fcbde1ea7ed850d4674e504afb0d252dfa hide collection plugin-rules toggles for non-gamebryo games
+3b7dc7053f14408db7609e74ba5b6e96fa2fce01 missed one file
+65fe4b2b9320feb6aff204c6912e8bb450b9a038 collapse whitespace in UIV2 game-name tooltips
+2e93f84d7aa2de9fca5aada339ce6b37ac35c90f yet another fix for BG3 pak-read failure spam
+d443c0e7717908ee57afb7180af07c18f74218c5 fix NXM handler notification firing on every startup
+21d7f6655360741802bebe86ba6911b71a4c39ed ran the formatter on the entire branch
+41de79e64422e6722f5b8cb1003c0d2930993a06 fix outdated extension cleanup causing renderer bootloop
+42bb16ad7c62a971a2de0d6cb37b0044bdc6d0cd coalesce persistence writes to reduce LevelDB stalls
+b15a96d637f24a1ae9d54baa41a649512c971362 fixing lint errors
+584cf617efe7d3636730b54bcd11ff20ba613f1b strip :column from exception fingerprint
+221c6221087c5f4bf5defd6d731841842bbb407a Version removal wasn't planned to be done, removed
+8243c585700a57425950c8f73d73796b36bb816e Formatting
+d4e3035111b111f06a49bb7c4e2250b177f3fae0 Ignore SelfCopyCheckError
+99eeebf5f753af65c73f00f0d9dade09cefd6925 Ignore user caused env errors
+7f2c82129af9cdd4c41b29df689416b71b050650 Skip transient directories when loading extensions
+94e9dfadcf2e6b6a05523ccf78ea88f51eec4f16 UserCanceled was leaking
+1f0279f83fd4dca32d41d1f0f0a87f59923ad9a5 Don't allow to clone when we have issues
+6c7c9dd627ef861dd3005e4b889fd751977841e5 centralize GraphQL error handling in nexus_integration
+9036d184a93395e32523619bbb8c192f15f94038 formatting - no runtime changes
+d4a53a03feb46ce5bf95efad4b389ca1d0b91d00 fixed elevation chain failing 'Deployment interrupted'
+9cc4b502e7850baa46b8e40e6b0d778566bfa075 Fix nxm protocol registration discarded by void operator
+8b90e0c694fcd7158b30674e5cd9333491566677 persist verifier repairs via subtree-aware kv delete
+a4463564c9b368f26f598a3943a3c7f69a6fba82 improved scrollbar visibility for table component
+ec92156838e67f16ac3866bf78772695243ff8ff fix startup.json being read before ApplicationData is initialized
+dfd9ec3869520e35bf3d9133349cdc4072300ff5 removed last traces of electron/remote from bundled plugins
+8ca3b20536534905352ad60243a9096dd3bdd012 restore(workspaces): packages/paths{,-node} package.json + build configs (v8.0 Phase 25 carry-forward)
+896cabea50a3ee67b19cbab11ff299960e02be71 resolve(config): src/preload/eslint.config.mjs — pick HEAD per D-31-10 (upstream-side duplicates eslint.config.base.mjs)
+bc7b8bb195e41428f387e89a76bb6ece0f37f4a4 resolve(config): src/main/eslint.config.mjs — pick HEAD per D-31-10 (upstream-side duplicates eslint.config.base.mjs)
+aece4138cf7dcc51f8d2e2fafe5d1d040f4fb062 resolve(config): src/renderer/eslint.config.mjs — pick HEAD per D-31-10 (upstream-side duplicates eslint.config.base.mjs)
+4abab40ea836ec7a4658742f5efcbf59a8aa1b17 resolve(config): src/shared/eslint.config.mjs — pick HEAD per D-31-10 (upstream-side duplicates eslint.config.base.mjs)
+05c8cc5360f853426fa1482cb95e62941ad63b01 resolve(config): src/main/prepare-dist-package.mjs — keep HEAD per D-31-12 + D-31-13
+1e73665f06b9a972e7d5d4bfba54fd7b92b9fc54 resolve(config): game-baldursgate3 package.json — keep HEAD per Plan 31 D-31-06 stance
+d516282d4357789be15a18d95d6b1d7434cf15c5 resolve(mod-mgmt-v2.0.1): NotificationAggregator.ts — HEAD-wins (existing import already in place)
+caf800771e0057fc3aa90650e4228e589dc8c133 resolve(mod-mgmt-v2.0.1): util/VersionFilter.tsx — smaller-diff line-wrap
+c7117fe1f25e7ba62b82c3f7bd8635074c9c20cb resolve(mod-mgmt-v2.0.1): util/removeMods.ts — smaller-diff line-wrap
+3fad4e4a47f4f982718df3b3736fb143b6df51f6 resolve(mod-mgmt-v2.0.1): util/activationStore.ts — fork-wins on Wine-era detection
+d4f04c08bc77550c1ecd2d818e4b4287116e0832 resolve(mod-mgmt-v2.0.1): util/externalChanges.ts — smaller-diff line-wraps (×3)
+867ba6d20cc9963af811dac53700279fa7993f2e resolve(mod-mgmt-v2.0.1): util/deploy.ts — smaller-diff line-wraps (×2)
+8eb48a46c5fd1e70036f8f49b186e5b947329d0c resolve(mod-mgmt-v2.0.1): stagingDirectory.ts — HEAD-wins (existing log import already in place)
+d231c12e881bf6396fdd381b90461ed709fd18df resolve(mod-mgmt-v2.0.1): modMerging.ts — smaller-diff line-wraps (×2)
+282a4378f59b07945f20a87882dadb3c3cb8f03c resolve(mod-mgmt-v2.0.1): views/DeactivationButton.tsx — smaller-diff line-wrap
+aec6d3125b3fdb92b493d5d7224f26b02b4abdbb resolve(mod-mgmt-v2.0.1): views/Settings.tsx — HEAD-wins on transferPath import block (dup-import avoidance)
+cb4453cfc4b75f10df1919331014cac9c3050445 resolve(mod-mgmt-v2.0.1): eventHandlers.ts — HEAD-wins on import block (dup-import avoidance) + smaller-diff line-wraps
+d9d98be7c37ed987b1e37972b4cbd162c13e2d8b resolve(mod-mgmt-v2.0.1): views/ModList.tsx — smaller-diff line-wraps + import-block reorg (11 regions)
+3424cb5d321706b46813d897bd73a4df7bb67025 resolve(mod-mgmt-v2.0.1): LinkingDeployment.ts — fork-wins on errorCodes blocks (×3) + smaller-diff line-wraps (×5)
+392a5fbb9b26db7fca90924db6618acb00794756 resolve(mod-mgmt-v2.0.1): InstallManager.ts — fork-wins on §6 + §7a/b call pairs (4 dangerous regions) + 36 smaller-diff line-wraps
+21e88fa9b56592bd0cd82caad9c758cb1b681bc2 resolve(mod-mgmt-v2.0.1): mod_management/index.ts — barrel re-export reorg
+497e12cd91e295bd41e82428a755e4001119bf2a resolve(savegame-mgmt): tsconfig.json — smaller-diff matching master (preserve test+__mocks__ excludes)
+25944fd68dcdb80ffe818a6f47bcb926782a833f resolve(savegame-mgmt): build.mjs — upstream-wins on nativeRemapPlugin import (new v2.0.1 scaffolding)
+da6b5025052f1347c4195bea75c393ac4b13972f resolve(savegame-mgmt): src/actions/session.ts — smaller-diff (HEAD matches master)
+5ccf546712df29eeb05e650a85df9982c68e37fc resolve(savegame-mgmt): src/index.ts — smaller-diff (HEAD matches master); extension closeout
+66a4735eccabafac96a6780639d2fff7ea125a8f resolve(plugin-mgmt): build.mjs — smaller-diff (HEAD matches master verbatim)
+b9ccf951c3fb413e7b80119b72f69ff1476780be resolve(plugin-mgmt): src/util/gameSupport.ts — smaller-diff (HEAD matches master)
+9f94c9d3109a10bfc458a8fb541e8a9d0d705479 resolve(plugin-mgmt): src/util/PluginPersistor.ts — smaller-diff (HEAD matches master)
+cc858bf5836e21720f0058ee8730fa67ec931fed resolve(plugin-mgmt): src/views/PluginList.tsx — smaller-diff x6 (HEAD matches master throughout)
+e32907604dce3259cd5865f5f4fe0f7995e0a0ff resolve(gamebryo-plugin-mgmt): index.ts barrel — 12 regions HEAD-wins
+4a502cac0530ed20c738ac0e13e1034946d231fc resolve(gamebryo-archive-support): build.mjs — upstream-wins on nativeRemapPlugin
+f3a7c1fb96b5f4da740107edabdce420fcb0d7bb resolve(gamebryo-bsa-support): build.mjs — HEAD-wins single-line import
+0898601abf91bcfdf36986183011dd4f8b8f274b resolve(bepinex): bepInExDownloader.ts — smaller-diff (×6 reflow + ×1 Rule-1 dup-import)
+e959890bd28f512c91b8c9daf3e5d452e5186adc resolve(bepinex): common.ts — smaller-diff (×2 reflow, process.platform untouched)
+912a7ce9ed6c68835b7834c8d12b4628b920fa9b resolve(bepinex): index.ts — smaller-diff (×3 reflow); extension closeout
+480fe4e0927b047f97aefc375451a6ee9ff0b0fc resolve(collections): build.mjs — upstream-wins on nativeRemapPlugin
+4dbece86295701fad33a7e245342d988ea119949 resolve(collections): util/gameSupport/gamebryo.tsx — smaller-diff (HEAD matches master)
+5221f2ac2585d74ed1db4d054a33a1b72bcd1b2b resolve(collections): eventHandlers.ts — Rule-1 dup-block + smaller-diff (HEAD matches master)
+e30d41a6f94a76c9a97b0add0aa507e75d23da1b resolve(collections): collectionExport.ts — smaller-diff (HEAD matches master)
+01827728fb4eface4199de889c22268d01e5b3d2 resolve(collections): views/CollectionPageEdit/Instructions.tsx — smaller-diff (HEAD matches master)
+69f987ab837c4d74f29a63b9a73f56af03f713eb resolve(collections): views/CollectionPageEdit/ModsEditPage.tsx — smaller-diff (HEAD matches master)
+de4decf0b3613843b9422c8b602a970723c25251 resolve(collections): views/CollectionPageView/HealthDownvoteDialog.tsx — Rule-1 dup-import + smaller-diff (HEAD matches master)
+d3223f8d0954526d682632549e277325572d6b21 resolve(collections): views/CollectionPageView/index.tsx — smaller-diff (HEAD matches master)
+dac48eb2e3d288b91f49a1da5384b26c4b7f9b30 resolve(collections): views/InstallDialog/InstallFinishedDialog.tsx — smaller-diff (HEAD matches master)
+1579637e985e69db3adbb76225f1f8630db31590 resolve(collections): views/InstallDialog/InstallStartDialog.tsx — Rule-1 dup-import + smaller-diff (HEAD matches master)
+2ed7b2feea79d1c07ae2cd96a92c6a5fbb15a2f5 resolve(collections): views/CollectionList/index.tsx — Rule-1 dup-import + smaller-diff (HEAD matches master)
+cc86ea67076bdedf65dd8c2c5c047e6ed8b9e133 resolve(collections): src/index.ts — smaller-diff barrel + extension closeout
+6a5a57682d706c4091df660a31d756462d15a404 resolve(7daystodie): actions.ts — smaller-diff (HEAD has alphabetical imports + blank line group)
+704b86ed822a27a4dba7475e62fa1affc9679eb6 resolve(7daystodie): reducers.ts — smaller-diff (HEAD has alphabetical imports + blank line group)
+2058421255397ca896d92dc463f4ded64f0bf0e6 resolve(7daystodie): common.ts — smaller-diff (×2; HEAD compact path.join + alphabetical imports)
+3969d1654f1c67f691029f88488253b07bded579 resolve(7daystodie): Settings.tsx — smaller-diff (×4; HEAD compact JSX + sorted imports)
+020c28b64b779c7b6dcdf8f7423b2e00bfafdc6e resolve(7daystodie): loadOrder.ts — smaller-diff (×5; HEAD compact arrow + sig forms)
+589f7a6e5216e3e6c875afa00edc9fab00db96f6 resolve(7daystodie): migrations.ts — smaller-diff (×5; HEAD compact arrows + chain)
+f89b3b2f12a5b51a47944609b4773d2f0c1844c4 resolve(7daystodie): util.ts — smaller-diff (×11; HEAD compact arrows + sigs)
+264ee4a87ea551da38954da9276fffa59485e285 resolve(7daystodie): index.tsx — smaller-diff (×16; HEAD compact JSX + import grouping; ext closeout)
+980085715b4bb098c8e1fd656b9c2b5410fb7cb8 resolve(mhc): common.ts — smaller-diff (×1; HEAD compact path.resolve/path.join)
+1148ba6eb3128e320b3419b50a98e55cb216b59e resolve(mhc): modTypes.ts — smaller-diff (×2; HEAD blank-line + inline arrow)
+3f763ada99cc8d3eac1bfa974ec20bf6765073d1 resolve(mhc): util.ts — smaller-diff (×4; HEAD compact single-line + import blank-line)
+32054eb513b61688d4648fda79d3d6ffb6775ad2 resolve(mhc): tests.ts — smaller-diff (×1; HEAD blank-line after path import)
+3e409941f2a6485173a14c72557a310419f97e7b resolve(mhc): installers.ts — smaller-diff (×9; HEAD compact arrows + sigs)
+3f6e2a24cfa409238b59e9a3f897d45bbe05e7eb resolve(mhc): index.ts — smaller-diff (×11; HEAD compact + import grouping; ext closeout)
+2f0bf62181c5eb92fdc8ae6f50cea31c65804d55 resolve(bg3): divineCore.ts — fork-wins on 4 named DivineError classes; smaller-diff for remaining regions
+885b96be78a1797577ea34c40f2c089427add7fd resolve(bg3): divineCore.test.ts — smaller-diff (HEAD compact form matches master analog)
+cb3a754036e5e1fa8105c6a3d34e4c7aa419873f resolve(bg3): divineWrapper.ts — smaller-diff (HEAD compact form matches master analog)
+4a4dc7e1b030d1a50668a64ba2e3a4438e36eebc resolve(bg3): cache.ts — smaller-diff (HEAD compact form matches master analog)
+183aa9a23b06d57d5cee797d05847573fd5e19f3 resolve(bg3): types.tsx — smaller-diff (HEAD compact form matches master analog)
+a65c384ee5372b927ba95354c5a04a7dc0055fcc resolve(bg3): modTypes.ts — smaller-diff (HEAD compact form matches master analog)
+5ac62b530960be98e3a2056643fcc8c343144730 resolve(bg3): actions.ts — smaller-diff (HEAD compact form matches master analog)
+0c1a89baaf6b0a2df508e37778265f500078cfe3 resolve(bg3): reducers.ts — smaller-diff (HEAD compact form matches master analog)
+22c945a1d62bcd2226134ae528323f580b554f53 resolve(bg3): util.ts — smaller-diff (HEAD compact form across 20 regions)
+78ede30ff404c455f44412a96042e566809ba51b resolve(bg3): githubDownloader.ts — smaller-diff (HEAD compact form across 10 regions)
+35d16d3b1c6b773da639be04928144822e8cf634 resolve(bg3): loadOrder.ts — HEAD-side throughout (37 regions; bluebird Rule-1 dup-import resolved by HEAD-empty)
+34c028217ac5d7620bc23f5938b6e45f9108a24e resolve(bg3): installers.ts — smaller-diff (HEAD compact form across 16 regions)
+bbef9f5521a553624e23d2886b27c2f2e1af5862 resolve(bg3): migrations.tsx — smaller-diff (HEAD compact form across 4 regions)
+34b73280adf394f76390adab3da53f8111e026d3 resolve(bg3): Settings.tsx — smaller-diff (HEAD compact form across 3 regions)
+f8c44da96e14ea24172a0045f328941d59e7b36c resolve(bg3): InfoPanel.tsx — smaller-diff (HEAD compact form across 6 regions)
+ff4293dfeb270c38a5f5f9624ff419744fd69892 resolve(bg3): index.tsx — barrel + closeout (smaller-diff)
+600dc2fc8b1c4076ad347eba5fec027dc7a0e219 resolve(witcher3): types.ts — smaller-diff (drop stray HEAD blank line)
+203215f692f462d3426a68a551665a5b99bf0db0 resolve(witcher3): common.ts — smaller-diff (HEAD compact form across 6 regions)
+923a317977a6dd7c5be5a149d5f2f6bd660b8607 resolve(witcher3): iconbarActions.ts — smaller-diff (HEAD-side import order kept)
+9929f33de53d24fb3d0198008bed9227a1598607 resolve(witcher3): actions.ts — smaller-diff (HEAD matches master, single-line createAction)
+a550b9186f9d34b46fec89682f8043d8b72f5ada resolve(witcher3): reducers.ts — smaller-diff (HEAD blank line matches master)
+0c806dab2a7c927e30dc1278402587253e543001 resolve(witcher3): modTypes.ts — smaller-diff (HEAD matches master on imports + 3 callsites)
+0606a9fa790ea63a2086a84e351a8417dad6359d resolve(witcher3): priorityManager.ts — smaller-diff (HEAD matches master across 4 regions)
+bd8f209a1c407aabd04bc4b18b06add864c51fd7 resolve(witcher3): menumod.ts — smaller-diff (HEAD) on all 18 regions
+eae9edfdbf357cb0e5c1b2f28fa48be57c8f5d75 resolve(witcher3): iniParser.ts — smaller-diff (HEAD) on all 4 regions
+8a8c287b7b5c866ce9ff11849aeef661bb05f8d1 resolve(witcher3): scriptmerger.ts — smaller-diff (HEAD) on all 23 regions; exe-version preserved
+e5e53b4a43fe683731fc97650a22547f8e6af301 resolve(witcher3): modLimitPatch.ts — keep HEAD on tighter formatting + drop dup path import
+d66b23173813c442cbbc641165bc9d3d79efb395 resolve(witcher3): mergeBackup.ts — keep HEAD on tighter formatting + drop dup path import in import block
+6b0920a86387317d1d149028514c5bb872c75933 resolve(witcher3): mergeInventoryParsing.ts — keep HEAD on tighter formatting + drop dup path import
+34a7d1b808131252d2071d7947ae7ce858ba6c32 resolve(witcher3): mergers.ts — keep HEAD on tighter formatting throughout
+665da471d84017d0d19a6fe57256ef1a466ff2db resolve(witcher3): tests.ts — keep HEAD on tighter formatting
+ca099acf9b8f3066bca22ebc33493deebadecb8c resolve(witcher3): migrations.ts — keep HEAD on import order + tighter formatting
+b317b2de5a763396c264b8f4ef56ad80bea397b7 fix(witcher3): resolve util.ts merge conflicts (15 regions)
+5df001c90b585dc43555a2a8ec68ac2190ca6dfc resolve(witcher3): eventHandlers.ts — Rule-1 dup-import drops + smaller-diff body
+119a9cfebca6638046f0d6f214af31530afd8d7d resolve(witcher3): InfoComponent.tsx — smaller-diff wins (HEAD inline 80-col)
+676b01c7dd4b7ef3c470200e44b48ac6304ffd9d resolve(witcher3): ItemRenderer.tsx — smaller-diff wins (HEAD inline 80-col + dup-lock drop)
+a1fdd4c72004e64afb9188888253aa9b0ee0e8b7 resolve(witcher3): CollectionsDataView.tsx — smaller-diff wins (HEAD inline 80-col)
+d34c3050372d3a356fd049ef173895934c5c0726 resolve(witcher3): collections/util.ts — smaller-diff wins (HEAD inline 80-col)
+c9d1d58f8b86a5d1ef0df8e7885775ed1917cd10 resolve(witcher3): collections/loadOrder.ts — smaller-diff wins (HEAD inline 80-col)
+bc43ec77f6d17632bd4894a8eeb09b82ceefb94c resolve(witcher3): collections/collections.ts — smaller-diff wins (HEAD inline 80-col)
+8e1ef16af22346d6e772dfab7b7e231b5284dbf0 resolve(witcher3): loadOrder.tsx — smaller-diff wins (HEAD inline 80-col)
+72177e46f5564478c6e1bb4c86b918c02393b36b resolve(witcher3): installers.ts — smaller-diff wins (HEAD inline 80-col)
+3e05bbe479f3426760b36d647da0ceeb843f4b04 resolve(witcher3): index.ts — barrel + closeout (smaller-diff)
+abea083268312d1bbb40b60fd3ac9f9b17fb1ecd resolve(kcd): collections/util.ts — smaller-diff
+0aec06b800370e2c474165e2c60bfccbebd20587 resolve(kcd): collections/loadOrder.ts — smaller-diff
+9165705f5d45630a9393cd76af833af3ee6b459e resolve(kcd): collections/collections.ts — smaller-diff
+2a4da6412a7f6cd4ebca543519c93d1147c04d79 resolve(kcd): collections/CollectionsDataView.tsx — smaller-diff
+671e370afa4f92964421c36609155cba69bb4021 resolve(kcd): src/index.ts — smaller-diff (barrel)
+b258a09dcd10d803a1358704581de45c9eb92288 resolve(untitledgoose): util.ts — smaller-diff
+0c8c27759094ed7f7669676f255d60a23d78c128 resolve(untitledgoose): migrations.ts — smaller-diff
+e69bf8a6da85635b8a895341291d2fe897988937 resolve(untitledgoose): src/index.ts — fork-wins on Linux Epic guard + smaller-diff (barrel)
+989c4c9507b5aa68e2e4ac1023a1a5cade7c3d5b resolve(spyro): util.ts — smaller-diff
+3965ac07333242cad8e5a46655d2a79ada563837 resolve(spyro): migrations.ts — smaller-diff
+b76abae7d9e95b4b8e2f75979ed9352226da5e87 resolve(morrowind): MorrowindCollectionsDataView.tsx — smaller-diff
+af3c143e2f1961f0119f4b55b2aabb0fa0046b3f resolve(spyro): loadOrder.ts — smaller-diff
+53b45bd13e91cbacb13b61076d1fd3e81d1730bf resolve(morrowind): loadorder.js — smaller-diff
+39d321a4c51cbe3eb6c87184e9f97bf06e437d30 resolve(spyro): src/index.ts — smaller-diff (barrel)
+67dfac96f3d8faf89c79c78f637f08b98f5aad45 resolve(morrowind): migrations.js — fork-wins on migrate103 sentinel (gate-11 active)
+a9702af0d8eebc3737a0e52dbfc1ea0ee2ce2019 resolve(codevein): util.ts — smaller-diff
+8dace0a82076076f9f9dc5adf9dfb3e4df25aa3d resolve(codevein): migrations.ts — smaller-diff
+84b1abcc23559b6e62d8db615f8b89309cb1b070 resolve(codevein): loadOrder.ts — smaller-diff
+44ec5ec694281147b667e2625fcc008685d72cc5 resolve(morrowind): src/index.ts — smaller-diff (barrel)
+6ca156b66d1864eecd03d1f6800125c6e6b89f4d resolve(codevein): src/index.ts — smaller-diff (barrel)
+d1251096f3c0be4b2d16517be295a00355645edb resolve(bloodstained): util.ts — smaller-diff
+cdc13b8a2e3aff4f221d158acd99f5b0996bf776 resolve(bloodstained): migrations.ts — smaller-diff
+eda47a6cd2778729fb2023ca6760444478394322 resolve(bloodstained): loadOrder.ts — smaller-diff
+d0a7ed20732f4a17b796be9e7e63b85d4457fa3a resolve(bloodstained): src/index.ts — smaller-diff (barrel)
+a3aaf85ec6d256267325790099fd7556c91cb712 resolve(bas): util.js — smaller-diff
+b9cf294ce97a4cebe67f57cf888b97b0bca769c3 resolve(bas): migrations.js — smaller-diff
+2e2d4b5595469bd9b92a7f57f46cb202100c69ed resolve(bas): installers.js — smaller-diff
+44aaafb87ac184b9209e0a25ca785caf71da6173 resolve(bas): src/index.js — smaller-diff (barrel)
+b50ee248e972f619561f9054e317ef0d09e8ca0a resolve(ahatintime): src/index.js — smaller-diff
+d1af50d2ea629d7262640e3b311dd5563983680a resolve(battletech): src/index.js — smaller-diff
+fde618c8ab8b01530ceabf703fb20323677f3d23 resolve(conanexiles): src/index.js — smaller-diff
+fd9a341156cac20be833b338a01dfc4ae427b174 resolve(daggerfallunity): src/index.js — smaller-diff
+6042da707cc468ad736003df078eccf5b40a6d0a resolve(darkestdungeon): src/index.js — smaller-diff
+c05fff0ede83c71da994a117e18a7a8e0f79c8a9 resolve(darksouls): src/index.js — smaller-diff
+c6017074fcb4baa0dbdecb4dc1c743e36f3f72f3 resolve(dawnofman): src/index.js — smaller-diff
+c2344b238e2d9251595bfd000841cacbe073eced resolve(dos2): src/index.js — smaller-diff
+24ea1d7dfd3738d40453b97f28a2462393226703 resolve(dragonage): src/index.js — smaller-diff
+330a8d8f97ac4500aa6e423b0cb0ec3a6b0bee8d resolve(dragonage2): src/index.js — smaller-diff
+3848607d9a2790a23c5943438e7861a1c9936352 resolve(dragons-dogma): src/index.js — smaller-diff
+7b2d1b1d8c8383e0378fb24397637177e8a5220c resolve(elex): src/index.js — smaller-diff
+0b3fa348b4561ed71c6d5889eb3a53d60d988e8c resolve(enderal): src/index.js — smaller-diff
+3e08432c44f3784d8a006c77dd204ab8c776cc36 resolve(factorio): src/index.js — smaller-diff
+3dd77bf4ece91ddb601f568afa83383c8b524c6b resolve(fallout3): src/index.js — smaller-diff
+03b6da4c629c5d6c9ce79f5937da0edd98a5ab2f resolve(fallout4): src/index.js — smaller-diff
+be541c340f90e20d127967d744b5c6892792d22c resolve(fallout4vr): src/index.js — smaller-diff
+8c381b6fc154d6f8537cfa5d6f2735b9352bc955 resolve(falloutnv): src/index.ts — smaller-diff
+442c69830c61d90c0c98a60d0cf3b0bb3dffa4ff resolve(galciv3): src/index.js — smaller-diff
+f61c5370bae06f2ea66cebc767db8355b54905d7 resolve(gardenpaws): src/index.js — smaller-diff
+80cc23696f0da84dcbe042038f6b53b18cca5e65 resolve(greedfall): src/index.js — smaller-diff
+2e757f4b6e30bdf8b7ca47b752ff1d7ef8b3e7bf resolve(grimdawn): src/index.js — smaller-diff
+c06c5398d410f2e8926c15a2a913c4024f2024e5 resolve(grimrock): src/index.js — smaller-diff
+858b4cdd476634d9b917c75bc3904cc98de525f3 resolve(kenshi): src/index.js — smaller-diff
+ba00c046b0f6f4428cf22ce6f0d53cad1d900346 resolve(ksp): src/index.js — smaller-diff
+6fced10cba39f12592a2988746e2917778773d3b resolve(msfs): src/index.js — smaller-diff
+a190c661d7b3b9a597df64c7beb28c4ea536c673 resolve(mhw): src/index.js — smaller-diff
+cd95ca0f6f841538291dd40f9c8dade1e17eb4be resolve(mab): src/index.js — smaller-diff
+e382e385c9be167bd5a4fbc0162f7e55eed47e38 resolve(nwn): src/index.js — smaller-diff
+14751935dd5b10b0007df3ca3bc1f59877c7efca resolve(nwn2): src/index.js — smaller-diff
+1bf65db4b362251102389cc2c1fac1e2c4d8fde7 resolve(nomanssky): src/index.ts — smaller-diff
+41c18c906f3b6b9bbb157ae627da8488848c7c52 resolve(oblivion): src/index.js — smaller-diff
+6cfc12b5373cce9b61937691619ca3fa19c9bee6 resolve(oni): src/index.js — smaller-diff
+2be5a48d32889ee938c8e28eb28245cc5bee4adf resolve(pfkm): src/index.js — smaller-diff
+d4a0a46bafc517499064db4f5b90afcf6d4cf04c resolve(pfwotr): src/index.ts — smaller-diff
+65883e4d730315b88c51796aec2dc75c12b9ab55 resolve(prisonarchitect): src/index.js — smaller-diff
+8169a1c1ad9bf460195426bb7be67aafd8df3dc0 resolve(rimworld): src/index.js — smaller-diff
+c5f6e353d6b316190a89f58b48aca88d9dac4c9a resolve(sekiro): src/index.js — smaller-diff
+358f1ee1d4b8c187b8ec36968af657c31dd0e006 resolve(shadowrun): src/index.js — smaller-diff
+5eb3561792e9101dd36dcef2de71c8dab757126e resolve(sims3): src/index.js — smaller-diff
+c2d207e731bfbdfcf5c6be31648098f0adc5c72e resolve(sims4): src/index.js — smaller-diff
+c0a2020efc93233b82832ebbc34eede437e1f702 resolve(skyrim): src/index.js — smaller-diff
+b80702f749c87d0b4a8aed02a4428f187ce44a59 resolve(skyrimse): src/index.js — smaller-diff
+e2a0e0b502d035b4153f76ac8fe68cbb4ca12f68 resolve(skyrimvr): src/index.js — smaller-diff
+576a70e82ae9bf7d96fd61420c4acd32b8555c1e resolve(starbound): src/index.js — smaller-diff
+023d761b1fb63fd0bcf0f4d9a9099b37028cfcd9 resolve(survivingmars): src/index.js — smaller-diff
+8f06b5fee250b08083bab1d7d99d2fa98741f3ec resolve(kotor): src/index.js — smaller-diff
+0284d996763f1c47182065771ed505d2aba7114b resolve(tf2): src/index.js — smaller-diff
+1a2479dd6d45ba2dd9b6e0589d9bfa37f6578b21 resolve(teso): src/index.js — smaller-diff
+634ea5732463bc62bd6686b69620a9533576c765 resolve(torchlight2): src/index.js — smaller-diff
+bb5cbec7be53df133c6a4f3b3cb08229bd7a8252 resolve(tw3k): src/index.js — smaller-diff
+18d5bb619db45aa558fe1d071784d4d75630d5e0 resolve(vtmb): src/index.js — smaller-diff
+4e2b2653319ef1fc7bde8b483f811c6e3f88a8e0 resolve(warthunder): src/index.js — smaller-diff
+b4d84bdc61ba1c12415667bb66c9a1f7fa585474 resolve(witcher): src/index.js — smaller-diff
+f56a222070cd9b27b322efa0cbb097f10ef5ea30 resolve(witcher2): src/index.js — smaller-diff
+84787a756088c1f1d74b16c713f96578d04ec5bf resolve(wolcen): src/index.js — smaller-diff
+1f081629d7cbe0eece40719b0374f4563708539e resolve(wot): src/index.js — smaller-diff
+3b3c12e49ab353caa93309d5b5a224d45ceae2e5 resolve(x4): src/index.js — smaller-diff
+3f690d04a91fedc0228788d6c7a188903bd2b670 resolve(xcom2): src/index.js — smaller-diff
+d8cc51b5336d20626b073ecea3e771d58f6fec5e resolve(xrebirth): src/index.js — smaller-diff
+eb907a9bf7fd7bd121d879740569b130a2df424c resolve(copy-ext): copy-extension.mjs — upstream-wins on target-runtime-arg API + preserve fork CWD inference
+05c0492b9ab786417806e906c69e88610845f36f resolve(copy-native): copy-native.mjs — fork-wins on dist-fallback + Rule-1 HEAD-empty on import block
+31ec4632555944e344a531f58c064795959bc88e resolve(gog): src/index.ts — smaller-diff
+d4b328ceb168a41742911bc8a57a79bebacf4c2b resolve(uplay): src/index.ts — smaller-diff
+f5e2193d09a6b7899e4c62258e8154aedd51522b resolve(xbox): src/index.ts — smaller-diff
+987a7eeac896e7ab65d24c0bc8c47e1cc0b85d66 resolve(local-gs): src/index.ts — smaller-diff
+f1ab7ee0454681b79965277974f2137ac888e412 resolve(mdm): util/blacklist.ts — smaller-diff
+95c72756d9a75c00d4a86447b26dd5b02df8d02d resolve(mdm): views/ConflictEditor.tsx — smaller-diff
+8972f69f285a0164aeefb1583192e910ea5b310e resolve(mdm): views/OverrideEditor.tsx — smaller-diff
+7ce6f4663400f7e84619ab00df9444bc35432263 resolve(mdm): src/index.tsx (barrel) — smaller-diff
+ad4408ceda6cda3112a8c24abdb7bd0a76e344de resolve(theme-switcher): build.mjs — smaller-diff
+b832787328877c0ec8862438ea52984a0924cc6d resolve(theme-switcher): src/SettingsDebug.tsx — smaller-diff
+c174b86037971f75b8592d24086313ce5b172f09 fix(bg3): close lslib reduce() callback braces in util.ts + loadOrder.ts
+e57c6264d31efa8e308e613e33b3605d5ffcf58d resolve(shared): types/errors.ts — fork-wins (preserve AlreadyDownloaded + DownloadIsHTML; keep v2.0.1 isUserCanceled additive helper)
+16ef84187abf3bf4c18ac3fb9529708aa06c3f87 resolve(shared): types/state.ts — upstream-wins on additive bulk persistor methods (v2.0.1 LevelPersist surface)
+74c051c0afa48619066e68a8ab46a2a974c607fe resolve(shared): errors.ts — smaller-diff on sanitizeFramePath formatter reflow
+d46e03bfe2e67e03c15f2002fe32151c1725beae resolve(shared): telemetry/spans.ts — smaller-diff on sanitizedStack ternary reflow
+824a051e59ef1f963c6230de2e2b03b9deaa9a71 resolve(shared): errors.test.ts — smaller-diff with upstream-wins on additive isEnvironmentalError test block (Wave A closeout, bucket typecheck = 0)
+e1aa3d11e95b924190447572a2e34c2324274308 resolve(preload): src/index.ts — smaller-diff on window:moveTop reflow
+5fbbeaba7f9742afbde8d16d576d0d4f818333a8 resolve(main): store/SubPersistor.ts — upstream-wins on additive bulk persistor methods
+b14673577f2495413ef101523ac274c826a5a75d resolve(main): store/LevelPersist.ts — upstream-wins on timedWrite + transaction-API surface
+d1bbcbda8d44aaf52ee261c0e1f3d52b508cc821 resolve(main): store/ReduxPersistorIPC.ts — upstream-wins on bulk run-batching
+aa874369e0229e7505620c1119b17d5422396c89 resolve(main): errorReporting.ts — fork-wins on ReportableError type import (Rule-2 keep-required-import)
+047d2974a350d7f1aafb83b56975d3ce2dba92c7 resolve(main): cli.ts — Rule-1 dup-import HEAD-empty (imports already present below)
+b3fbafd1174a5747e02ae2326ae0d25fa621902e resolve(main): extensions/autoupdater.ts — Rule-1 dup-import HEAD-empty (imports already present below)
+1066cf2197e4bf40e696c4436c5fcc26b03778d6 resolve(main): TrayIcon.ts — Rule-1 dup-import HEAD-empty (electron import already present below)
+b86678df742dbb06716c52d12f3a8f19fcf360f0 resolve(main): Application.ts — fork-wins on PROT-01 NXM cold-start, smaller-diff on 9 reflows, upstream-wins on 1 dup-removed
+c7c49277446fd40d58176aee76f8f55c4c89c6c8 resolve(main): main.ts — hybrid (upstream-wins on --run-before-init reorder, fork-wins on adaptor/download init calls)
+2ea2e91836ef87a5f2f79b5152a6030bbfdf89e6 resolve(renderer-leaves): util/opn.ts — fork-wins (bluebird PromiseBB used in body)
+9eb39d3e7e1d894a7bb39cb4feec279b35aeeb41 resolve(renderer-leaves): util/walk.ts — smaller-diff (HEAD one-liner over upstream 3-line reflow)
+436016657cad71a90663d590f53516c127143b8a resolve(renderer-leaves): util/startupSettings.ts — upstream-wins (log import needed for body)
+e0ccee883946610b6ff75789720f7e7d81ab021a resolve(renderer-leaves): util/migrate.ts — Rule-1 dup-import (HEAD makeCI kept; upstream re-imports rejected)
+7bcb1e6381ffd3a9db1bac7f13993fbd2920177a resolve(renderer-leaves): util/message.ts — Rule-1 dup-import HEAD-empty (3 symbols already imported above)
+0f87b6307684e3c579bd9afd123df502ee74f971 resolve(renderer-leaves): util/errorHandling.ts — hybrid (HEAD compact OT import + upstream added symbols)
+dc60e99fe63d08b5e708d866cbdbaf02ee09a4a4 resolve(renderer-leaves): util/elevated.ts — §3 Linux-guard fork-wins + hybrid asar block + Rule-1 dup-import
+7403a2073e8def822f379f8b2a9b36ba87c3850c resolve(renderer-leaves): util/util.objDiff.test.ts — fork-wins (TS over upstream JS rename)
+6e9450db91c177d69b9a4299a57fc3ce04fed0f7 resolve(renderer-leaves): reducers/notifications.ts — smaller-diff (HEAD one-liner)
+eb6b4f009c5af28c94bd72cb45ae397a82494592 resolve(renderer-leaves): reducers/verify.test.ts — smaller-diff (HEAD compact assertions)
+354a8270d0ea15bb40b75b45c5645da2506dcb50 resolve(renderer-leaves): hooks/windowControls.ts — smaller-diff (HEAD one-liner)
+302f57fa902ad92435be68aa5c23aecc6ed44acb resolve(renderer-leaves): store/stateDiff.ts — hybrid (upstream comments + HEAD compact .push)
+7549591e9cc85e7a59923203298014c887dc3a83 resolve(renderer-leaves): store/stateDiff.test.ts — smaller-diff (HEAD one-liners x4)
+1451726fc74c0cc3eee86f451e2e649975c5d9b2 resolve(renderer-leaves): telemetry/selectors.ts — smaller-diff (HEAD-wins on blank-line nit)
+354b8ca2e843b208e0fff4210cc20fb798734976 resolve(renderer-leaves): contexts/PagesContext.tsx — smaller-diff (HEAD compact useSelector + deps)
+7c7abcbdb640dbd4bcf907e36509dbc0c892ee00 resolve(renderer-leaves): contexts/builtInPages.ts — smaller-diff (HEAD compact x2)
+c2f29d952160888475dbafffcff61d43d9acf990 resolve(renderer-leaves): ui/README.md — smaller-diff (HEAD compact JSX example)
+84b39a0e6f3f1a845d2053569ab769a3c8203ac5 resolve(renderer-leaves): ui/components/form/input/Input.tsx — smaller-diff (HEAD compact extends)
+11fd65a7d0fbfc780a4cd00948a965a17565efec resolve(renderer-leaves): ui/components/form/formfield/FormField.tsx — smaller-diff (HEAD compact extends)
+e3b951b82a7f07a6168c6fd2f0b0c318fafda62d resolve(renderer-leaves): ui/components/no_results/NoResults.tsx — smaller-diff (HEAD one-line URL)
+94a2929e9765adf60970d817aa1602a1dd32beeb resolve(renderer-extensions): nexus_integration/types/IValidateKeyData.ts — smaller-diff HEAD-wins
+5e6560862c9f4885d98db8d9bb4bd60083b71168 resolve(renderer-extensions): nexus_integration/util/UIDs.ts — Rule-1 dup-import HEAD-empty
+b605eeb5ee86b2053dda25fbd52f33d92fad5d68 resolve(renderer-extensions): nexus_integration/util/oauth.ts — smaller-diff HEAD-wins all 3 regions
+8a51cfdcaa8bceeff087ef6a031a1aa2f1b2a930 resolve(renderer-extensions): nexus_integration/util.ts — hybrid (HEAD shared/errors path + upstream handleGraphError feature)
+84e864a281cd41fe6315763d78e887b57716a866 resolve(renderer-extensions): nexus_integration/eventHandlers.ts — hybrid (HEAD shared/errors path + upstream handleGraphError adoption)
+87b4f81fa06305f9f5e01f9494ef94f892fef099 resolve(renderer-extensions): nexus_integration/views/FreeUserDLDialog.tsx — Rule-1 dup-import + HEAD-wins type import
+19e5e204c9efb3baae070edf36073ee0cb6bcb74 resolve(renderer-extensions): nexus_integration/views/GoPremiumDashlet.tsx — smaller-diff HEAD-wins
+8d18447b9d391531d69ecbb959d3816b47bb8120 resolve(renderer-extensions): nexus_integration/selectors.test.ts — smaller-diff HEAD-wins
+a873dfa422a50a1475fb50382360d32bc032a0a6 resolve(renderer-extensions): nexus_integration/index.tsx — hybrid (HEAD shared/errors path + Rule-1 dup-import)
+5df67aed535bdcfd1d456e0bdf3cb0a11f9dc5e8 fix(renderer-extensions): nexus_integration/index.tsx — drop duplicate imports
+52b7e2c31b947c3c5e27703994fa9a02b8d85119 resolve(renderer-extensions): health_check/types.ts — smaller-diff HEAD-wins
+42227c38017fbca0c428a22f2eaa2122badd0e69 resolve(renderer-extensions): health_check/api/triggers.ts — Rule-1 dup-import + smaller-diff HEAD-wins
+8325e2bd897ebf736e55d65dc6909042c9ed1b10 resolve(renderer-extensions): health_check/checks/modRequirementsCheck.ts — hybrid (R1 upstream-wins var rename, R2 HEAD-wins)
+ad80a0b44fe954e05620f1bf85da09000cce739f resolve(renderer-extensions): health_check/components/mod_requirement/ModRequirement.tsx — HEAD-wins (type import)
+5f8ddf0b138aeea7dc30217f29702b501f201144 resolve(renderer-extensions): health_check/views/HealthCheckDetailPage.tsx — HEAD-wins (shouldShowPremiumAd import)
+1a4e5b305e98b6502b15e09084657f91ea552c26 resolve(renderer-extensions): health_check/views/HealthCheckPage.tsx — HEAD-empty (Rule-1 dup-import)
+6db36c3841054f8e7f71ccaa7ede107ea50b632c resolve(renderer-extensions): profile_management/selectors.ts — HEAD-wins (line-wrap)
+87ebfb9878f8d3f755fa31779d7f9beca40d8cd4 resolve(renderer-extensions): profile_management/views/ProfileView.tsx — HEAD-wins (line-wrap × 2)
+070e97ce37cbc36e0db03081fbbea0eab8e6db5e resolve(renderer-extensions): profile_management/index.ts — HEAD-wins (line-wrap × 2)
+01c186b9f507ac006a0c0953f87c399df1e407ac resolve(renderer-extensions): gamemode_management/views/GameRow.tsx — HEAD-wins (logoPath defensive guard)
+a3b37ea236076b389509cad334e03873247cb7e1 fix(renderer-extensions): gamemode_management/views/GameRow.tsx — drop duplicate imports
+39b5220c7306da27eba29817f9fa956c1d383888 resolve(renderer-extensions): gamemode_management/index.ts — HEAD-wins (adaptor bridge fallback + line-wrap)
+496297eabdac63cb2105cf0ec9d518ef68a88c98 resolve(renderer-extensions): starter_dashlet/actions.ts — HEAD-wins (formatting)
+1e99da75e0eb521b4e1fc1dfb2975733f05ed630 resolve(renderer-extensions): starter_dashlet/Tools.tsx — HEAD-empty (Rule-1 dup-import)
+63d4c8b0b1e4b0f84108a2c079a964cd6a09108b resolve(renderer-extensions): installer_fomod_ipc/utils/VortexIPCConnection.ts — HEAD-wins (path import)
+0a2071c49d984a52a163d28f46eb18c05506d0f8 resolve(renderer-extensions): installer_fomod_native/installer.ts — HEAD-wins (formatting × 5)
+6fe242d463076c785fd1646738911d0fc9826037 resolve(renderer-extensions): browse_nexus/views/BrowseNexusPage.tsx — HEAD-wins (line-wrap × 3)
+84d8bd7449b58d747488c72457f7991c35406356 resolve(renderer-extensions): category_management/index.ts — HEAD-wins (line-wrap)
+83c6e7395d43e9b20d9fc1fa7ac6d3ebac501024 resolve(renderer-extensions): extension_manager/installExtension.ts — HEAD-wins (formatting × 8)
+0ff885d43c0343a31a446d11cff7fc7c222029c9 resolve(renderer-extensions): file_based_loadorder/UpdateSet.ts — HEAD-wins (line-wrap)
+2e16cbb45e4bf27557a6a7377da492bc91e3f215 resolve(renderer-extensions): hardlink_activator/index.ts — HEAD-wins (fs + installPathForGame imports)
+3aaf64791b7da61876760048887130e3418de9a6 resolve(renderer-extensions): symlink_activator_elevate/index.ts — HEAD-empty (Rule-1 dup-import)
+8f7847831ceb3c357b671fbf34e13a5a6033af6f resolve(renderer-views): views/components/Header/IconButton.tsx — smaller-diff
+68b1b7673a8f4b9e0b33c23ce5d78f4f710d7e30 resolve(renderer-views): views/components/Header/Notifications/useNotificationFiltering.ts — smaller-diff
+9585a19ed93c42c7cfa12d9338358bab842903b5 resolve(renderer-views): views/components/Menu/useTools.ts — smaller-diff
+20be50f00454007741c7ad0ef9d38365854babb2 resolve(renderer-views): views/components/Menu/ToolsSection.tsx — Rule-1 dup-import + smaller-diff
+61af473dcb72300d5e80c172335db91c0ef0acda resolve(renderer-views): views/components/Menu/DownloadsMenuContent.tsx — smaller-diff
+947e26a37be3e0fa3ce6e4db91fa7c68b20cf258 resolve(renderer-views): views/components/Spine/utils.ts — smaller-diff
+888bcc97dcc72cda584a083a6625d331d9ec57df resolve(renderer-views): views/components/Spine/SpineContext.tsx — fork-wins typed selector + smaller-diff
+a60099a76a0aa52a2de104ec96ce917862dee0d4 resolve(renderer-views): views/components/Spine/GameButton.tsx — smaller-diff
+4bc1cb49077ab98433d883beba63c75386e02ba6 resolve(renderer-views): views/components/Spine/index.tsx — smaller-diff
+ae482710fb102b8843440a7c8e6a9d0d472cf646 resolve(renderer-views): views/layout/ToastContainer.tsx — smaller-diff (closes F1)
+cc370549d8bcc3b2874a75f3d76d2d3a5f840ac8 resolve(renderer-views): views/pages/Tools/toolStarters.ts — fork-wins guard + smaller-diff
+9f1d6b1c06105c151e8d61b0a0cd7871448b4540 resolve(renderer-views): views/pages/Tools/useToolsData.ts — smaller-diff
+5e08169d801610e0d09294aad9c85cf2fda75465 resolve(renderer-views): views/pages/Tools/useToolsPage.ts — smaller-diff
+51c7b7387028e3035f27479efc9f50482d43c4de resolve(renderer-views): views/pages/Tools/ToolRow.tsx — smaller-diff
+8689d341da28eabdd8c7db2bffdf2bcc7c92b914 resolve(renderer-views): views/pages/Tools/index.tsx — smaller-diff (closes F2)
+d3b8344b4d4ebde7e6dff8b2899c8f88618e021a resolve(renderer-views): controls/Table.tsx — smaller-diff (heaviest in F3)
+de37adea8a17514fe8b8b4ca73fb494ba64f76f8 resolve(renderer-views): ExtensionManager.ts — combined fork-wins + v2.0.1-feature + smaller-diff
+a204f28bdc52b818d1ca31062adf91dce1429019 resolve(renderer-views): renderer.tsx — combined Rule-1 dup-import + smaller-diff
+6708d571ac98dbab7faf75603e51923610e82762 fix(renderer-views): remove duplicate useSelector blocks in Menu/useToolsData.ts — Wave F gate prerequisite
+4a352b382cc84184bbed8fdb765d84274b89ed4b resolve(e2e): README.md — smaller-diff (HEAD long-line)
+fd2a18adc456404d86b7071193c39ed2f199746b resolve(e2e): fixtures/game-setup/fake-game.ts — smaller-diff (HEAD long-lines)
+deae1569ea303dd96da3217424e3045f06e3049f resolve(e2e): fixtures/vortex-app.ts — combined Rule-1 dup-import HEAD-empty + smaller-diff
+8f8cc10c66bce0d0f24646daab3ac082cdc0637d resolve(e2e): helpers/navigation.ts — upstream-wins (v2.0.1 timeout addition)
+314c37ada203e8747c668acc77867864a1e98674 resolve(e2e): selectors/navbar.ts — combined Rule-2 D1-carryover + v2.0.1 feature upstream-wins
+7d8bf1722f5491e5bf2c071336452bc896333d38 resolve(e2e): selectors/settings.ts — smaller-diff (HEAD long-line)
+19ede560e2db2636c1bb77eec80603915498316f resolve(e2e): tests/smoke.spec.ts — smaller-diff (HEAD long-lines)
+affba619df809713ad849d0dd26287fc503744ba resolve(e2e): tests/dashboard.spec.ts — upstream-wins (v2.0.1 explicit timeouts)
+c55e8861345cb29a1fb70df49cb1a6972427f407 resolve(e2e): tests/login.spec.ts — fork-wins (real login test using helpers)
+a592fef53fd4ea25abd45fe9235de96a998ba38c resolve(e2e): tests/game-management.spec.ts — combined Rule-1 dup-import HEAD-empty + fork-wins
+76adb4e64ea8d6ae8649c525c95313cd4eace2e8 resolve(e2e): tests/settings.spec.ts — smaller-diff (HEAD long-lines)
+1e8d0c7563b00501fa4022d6b482b4b52de12408 fix(phase-34): G4 typecheck — strict-TS Rule 1 auto-fix
+1156659948337c8388377505bf0c38a0350145f8 fix(phase-34): G5.5+G5.6 download-duckdb-extensions[.test].ts — smaller-diff
+6c41da31b92cf3905d3eb31a2b694f5e79df07eb chore(renderer): drop dead Jest __mocks__/ tree (R2)
+e2127cecbdbdfcd1950cadabe7d3240e0c2efef0 chore(download_management): drop dead DownloadManager + DownloadObserver — superseded by IPCDownloadAdapter
+52ea1941b6040acabf121e81be284eb174454717 fix(merge): restore packages/paths{,-node}/src/ from master — backfill v2.0.1 merge gap
+3a556fa6b8dca48b44d4df7413f8fc7981700b27 chore(electron-builder): drop orphan v2.0.1 config.json — superseded by .cjs
