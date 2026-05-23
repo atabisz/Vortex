@@ -3,11 +3,8 @@ import * as path from "path";
 import format from "string-template";
 
 import getVortexPath from "../../util/getVortexPath";
-<<<<<<< HEAD
 import { getMyGamesPath } from "../../util/linux/proton";
 import type { ISteamEntry } from "../../util/Steam";
-=======
->>>>>>> v2.0.2
 import { makeOverlayableDictionary } from "../../util/util";
 import type { IDiscoveryResult } from "../gamemode_management/types/IDiscoveryResult";
 
