@@ -329,10 +329,6 @@ export class CollectionsInstallationCancelledEvent implements MixpanelEvent {
 export class ModsDownloadStartedClientEvent implements MixpanelEvent {
   readonly eventName = "mods_download_started_client";
   readonly properties: Record<string, any>;
-<<<<<<< HEAD
-  constructor(mod_id: string, file_id: string, game_id: number, mod_uid: string, file_uid: string) {
-    this.properties = { mod_id, file_id, game_id, mod_uid, file_uid };
-=======
   constructor(
     mod_id: string,
     file_id: string,
@@ -342,7 +338,6 @@ export class ModsDownloadStartedClientEvent implements MixpanelEvent {
     collection_id: string | null,
   ) {
     this.properties = { mod_id, file_id, game_id, mod_uid, file_uid, collection_id };
->>>>>>> v2.0.2
   }
 }
 
@@ -395,10 +390,6 @@ export class ModsDownloadCompletedEvent implements MixpanelEvent {
 export class ModsDownloadCancelledEvent implements MixpanelEvent {
   readonly eventName = "mods_download_cancelled";
   readonly properties: Record<string, any>;
-<<<<<<< HEAD
-  constructor(mod_id: string, file_id: string, game_id: number, mod_uid: string, file_uid: string) {
-    this.properties = { mod_id, file_id, game_id, mod_uid, file_uid };
-=======
   constructor(
     mod_id: string,
     file_id: string,
@@ -408,7 +399,6 @@ export class ModsDownloadCancelledEvent implements MixpanelEvent {
     collection_id: string | null,
   ) {
     this.properties = { mod_id, file_id, game_id, mod_uid, file_uid, collection_id };
->>>>>>> v2.0.2
   }
 }
 
