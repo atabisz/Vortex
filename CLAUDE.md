@@ -411,6 +411,26 @@ This fork maintains two branches:
 | GitHub Actions distribution CI         | `master` only                                         |
 | Fork-specific IDE config               | `master` only                                         |
 
+## Upstream Sync — Two-Motion Model
+
+The fork has two distinct motions that should never be confused:
+
+**Receiving motion (mechanical, fast).** Routine syncs from `Nexus-Mods/Vortex` are a daily cron + draft-PR ritual: `.github/workflows/rebase-upstream.yml` fetches the latest upstream tag, merges it into a `sync/upstream-<tag>` branch off `master`, runs `scripts/linux-smoke.sh`, and opens a draft PR with the smoke-test result in the body. Target: <2 hours of human time per upstream release. **No GSD phase ceremony for routine syncs.** The script and the PR body are the audit trail.
+
+**Authoring motion (structured, deliberate).** When *we* are adding Linux capability — new platform guard, native addon work, AppImage tweak, distribution CI — GSD phases on `master` remain. That's where their value lives.
+
+### Escalation rule
+
+Open the draft PR. Read the smoke-test status in the PR body:
+
+- **Smoke pass + clean merge** → review the upstream commits, merge.
+- **Smoke pass + minor conflicts** → resolve inline, merge.
+- **Smoke fail OR conflict count exceeds the renderer/main hot zones** → escalate to a GSD phase. The smoke failures point at the playbook section that needs attention.
+
+### The Linux delta document
+
+[`VORTEX-LINUX-MERGE-PLAYBOOK.md`](VORTEX-LINUX-MERGE-PLAYBOOK.md) is the canonical document for the Linux delta. It enumerates every Linux-specific patch as a numbered, named, grep-probeable invariant. The playbook is also the smoke-test spec — `scripts/linux-smoke.sh` executes its probes. Keep them in sync: when a new Linux fix lands, add a playbook entry AND a probe to the smoke script in the same commit.
+
 ## GSD Workflow Enforcement
 
 Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
