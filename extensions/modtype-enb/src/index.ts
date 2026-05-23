@@ -50,12 +50,9 @@ function install(
 
 function gameSupported(gameId: string) {
   const game = util.getGame(gameId);
-<<<<<<< HEAD
-=======
   if (game === undefined) {
     return false;
   }
->>>>>>> v2.0.2
   if (game.compatible?.deployToGameDirectory === false || game.compatible?.enb === false) {
     return false;
   }
