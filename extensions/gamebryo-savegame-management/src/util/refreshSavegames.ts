@@ -1,10 +1,6 @@
 import * as path from "path";
 
 import Promise from "bluebird";
-<<<<<<< HEAD
-=======
-import * as savegameLib from "gamebryo-savegame";
->>>>>>> v2.0.2
 import turbowalk, { IEntry } from "turbowalk";
 
 import { CORRUPTED_NAME, MAX_SAVEGAMES } from "../constants";
