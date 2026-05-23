@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 import { appendFileSync } from "node:fs";
->>>>>>> v2.0.2
 import * as path from "path";
 import { pathToFileURL } from "url";
 
