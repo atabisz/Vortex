@@ -1,13 +1,8 @@
 import path from "node:path";
 
-<<<<<<< HEAD
 import { shell, BrowserWindow } from "electron";
 
 import { betterIpcMain } from "./ipc";
-=======
-import { shell } from "electron";
-
->>>>>>> v2.0.2
 import { log } from "./logging";
 
 /** Opens the file using the default application registered for the protocol */
