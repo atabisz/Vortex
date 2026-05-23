@@ -300,19 +300,13 @@ async function bakeSettings(
     .then(() => undefined);
 }
 
-<<<<<<< HEAD
 async function purgeChanges(t: TFunction, gameMode: string, discovery: IDiscoveryResult) {
   const steamEntry = await getSteamEntry(discovery);
   return PromiseBB.map(await iniFiles(gameMode, discovery, steamEntry), (iniFileName) =>
-=======
-function purgeChanges(t: TFunction, gameMode: string, discovery: IDiscoveryResult) {
-  return PromiseBB.map(iniFiles(gameMode, discovery), (iniFileName) =>
->>>>>>> v2.0.2
     fs
       .copyAsync(iniFileName + ".base", iniFileName + ".baked", {
         noSelfCopy: true,
       })
-<<<<<<< HEAD
       .then(() => fs.copyAsync(iniFileName + ".base", iniFileName, { noSelfCopy: true }))
       .catch((err) => {
         if (err.code !== "ENOENT") {
@@ -322,9 +316,6 @@ function purgeChanges(t: TFunction, gameMode: string, discovery: IDiscoveryResul
           file: iniFileName,
         });
       }),
-=======
-      .then(() => fs.copyAsync(iniFileName + ".base", iniFileName, { noSelfCopy: true })),
->>>>>>> v2.0.2
   );
 }
 
@@ -468,11 +459,7 @@ function main(context: IExtensionContext) {
       const onApplySettings = (fileName: string, parser: IniFile<any>): PromiseBB<void> =>
         context.api.emitAndAwait("apply-settings", profile, fileName, parser);
 
-<<<<<<< HEAD
       return PromiseBB.resolve(discoverSettingsChanges(context.api, profile.gameId, discovery))
-=======
-      return discoverSettingsChanges(context.api, profile.gameId, discovery)
->>>>>>> v2.0.2
         .then(() =>
           bakeSettings(
             context.api.translate,
@@ -487,19 +474,11 @@ function main(context: IExtensionContext) {
           // nop
           log("info", "user canceled baking game settings");
         })
-<<<<<<< HEAD
         .catch((err: any) => {
           const nonReportable = [362, 1359, "EBUSY"];
           const allowReport = !(
             err.stack?.includes("not enough space on the disk") ||
             err.stack?.includes("The cloud operation was unsuccessful") ||
-=======
-        .catch((err) => {
-          const nonReportable = [362, 1359, "EBUSY"];
-          const allowReport = !(
-            err.stack.includes("not enough space on the disk") ||
-            err.stack.includes("The cloud operation was unsuccessful") ||
->>>>>>> v2.0.2
             nonReportable.includes(err.systemCode) ||
             nonReportable.includes(err.errno) ||
             nonReportable.includes(err.code)
@@ -515,11 +494,7 @@ function main(context: IExtensionContext) {
       const state: IState = context.api.store.getState();
       const gameMode = activeGameId(state);
       const discovery: IDiscoveryResult = state.settings.gameMode.discovered[gameMode];
-<<<<<<< HEAD
       PromiseBB.resolve(discoverSettingsChanges(context.api, gameMode, discovery))
-=======
-      discoverSettingsChanges(context.api, gameMode, discovery)
->>>>>>> v2.0.2
         .then(() => purgeChanges(context.api.translate, gameMode, discovery))
         .catch(UserCanceled, () => {
           context.api.showErrorNotification("Ini files were not restored", undefined, {
