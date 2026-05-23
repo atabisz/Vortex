@@ -20,10 +20,6 @@ import * as fuzz from "fuzzball";
 import type { TFunction } from "i18next";
 import * as React from "react";
 import { Button } from "react-bootstrap";
-<<<<<<< HEAD
-=======
-import { toast } from "react-hot-toast";
->>>>>>> v2.0.2
 import type { Action } from "redux";
 import {} from "uuid";
 
@@ -66,10 +62,6 @@ import {
 } from "../../util/util";
 import { MainContext } from "../../views/MainWindow";
 import type { ICategoryDictionary } from "../category_management/types/ICategoryDictionary";
-<<<<<<< HEAD
-=======
-import { DownloadIsHTML } from "../download_management/DownloadManager";
->>>>>>> v2.0.2
 import type { IDownload } from "../download_management/types/IDownload";
 import type { IResolvedURL } from "../download_management/types/ProtocolHandlers";
 import { SITE_ID } from "../gamemode_management/constants";
@@ -77,13 +69,8 @@ import type { IGameStored } from "../gamemode_management/types/IGameStored";
 import { getGame } from "../gamemode_management/util/getGame";
 import type { IMod, IModRepoId } from "../mod_management/types/IMod";
 import { isDownloadIdValid, isIdValid } from "../mod_management/util/modUpdateState";
-<<<<<<< HEAD
 import { setNewestVersion } from "./actions/persistent";
 import { addFreeUserDLItem, removeFreeUserDLItem } from "./actions/session";
-=======
-import { setNewestVersion, setUserInfo } from "./actions/persistent";
-import { addFreeUserDLItem, removeFreeUserDLItem, setOauthPending } from "./actions/session";
->>>>>>> v2.0.2
 import { setAssociatedWithNXMURLs } from "./actions/settings";
 import {
   genCollectionIdAttribute,
@@ -369,8 +356,6 @@ const requestLog = {
   },
 };
 
-<<<<<<< HEAD
-=======
 export interface IExtensionContextExt extends IExtensionContext {
   registerDownloadProtocol: (
     schema: string,
@@ -378,7 +363,6 @@ export interface IExtensionContextExt extends IExtensionContext {
   ) => void;
 }
 
->>>>>>> v2.0.2
 function retrieveCategories(api: IExtensionApi, isUpdate: boolean) {
   let askUser: PromiseBB<boolean>;
   if (isUpdate) {
@@ -1464,11 +1448,7 @@ function makeNXMProtocol(api: IExtensionApi, onAwaitLink: AwaitLinkCB) {
   // out of the larger process without the user having to click cancel multiple times.
   // Thus we have to keep track of all queued downloads.
 
-<<<<<<< HEAD
   function freeUserDownload(input: string, url: NXMUrl) {
-=======
-  function freeUserDownload(input: string, url: NXMUrl, name: string, friendlyName: string) {
->>>>>>> v2.0.2
     // non-premium user trying to download a file with no id, have to send the user to the
     // corresponding site to generate a proper link
     return new PromiseBB<IResolvedURL>((resolve, reject, onCancel) => {
@@ -1736,11 +1716,7 @@ function onUpdated() {
   bringToFront();
 }
 
-<<<<<<< HEAD
 type ResolveFunc = (input: string) => PromiseBB<IResolvedURL>;
-=======
-type ResolveFunc = (input: string, name?: string, friendlyName?: string) => PromiseBB<IResolvedURL>;
->>>>>>> v2.0.2
 
 function onDownloadImpl(resolveFunc: ResolveFunc, inputUrl: string) {
   const queueItem = freeDLQueue.find((iter) => iter.input === inputUrl);
