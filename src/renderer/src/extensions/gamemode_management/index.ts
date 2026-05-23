@@ -735,7 +735,6 @@ function init(context: IExtensionContext): boolean {
   context.registerGame = ((game: IGame, extensionPath: string) => {
     try {
       game.extensionPath = extensionPath;
-<<<<<<< HEAD
       const infoPath = path.join(extensionPath, "info.json");
       if (fsExtra.existsSync(infoPath)) {
         const gameExtInfo = JSON.parse(
@@ -755,19 +754,6 @@ function init(context: IExtensionContext): boolean {
         game.final = true;
         game.version = "1.0.0";
       }
-=======
-      const gameExtInfo = JSON.parse(
-        fs.readFileSync(path.join(extensionPath, "info.json"), {
-          encoding: "utf8",
-        }),
-      );
-      game.contributed =
-        gameExtInfo.author === COMPANY_ID || gameExtInfo.author === NEXUSMODS_EXT_ID
-          ? undefined
-          : gameExtInfo.author;
-      game.final = semver.gte(gameExtInfo.version, "1.0.0");
-      game.version = gameExtInfo.version;
->>>>>>> v2.0.2
       $.extensionGames.push(game);
     } catch (err) {
       context.api.showErrorNotification("Game Extension not loaded", err, {
