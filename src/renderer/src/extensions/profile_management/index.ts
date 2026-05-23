@@ -676,11 +676,20 @@ function manageGameUndiscovered(api: IExtensionApi, gameId: string): PromiseBB<v
 }
 
 function manageGame(api: IExtensionApi, gameId: string): PromiseLike<void> {
-  const state: IState = api.store.getState();
-  const discoveredGames = state.settings.gameMode?.discovered || {};
+  const state = api.store.getState() as IState;
   const profiles = state.persistent.profiles || {};
 
+<<<<<<< HEAD
   if (getSafe(discoveredGames, [gameId, "path"], undefined) !== undefined) {
+=======
+  // Discovery state outlives the registering extension. If the extension
+  // didn't load (missing dependency, exception, disabled) getGame is
+  // undefined and activating would create an orphan profile.
+  if (
+    state.settings.gameMode?.discovered?.[gameId]?.path !== undefined &&
+    getGame(gameId) !== undefined
+  ) {
+>>>>>>> v2.0.2
     const profile = Object.values(profiles).find((prof) => prof.gameId === gameId);
     if (profile !== undefined) {
       return activateGame(api.store, gameId);
@@ -897,8 +906,11 @@ function init(context: IExtensionContext): boolean {
         .then(() => checkOverridden(context.api, gameId))
         .then(() => {
           const state = context.api.getState();
+          // Mirrors the guard in manageGame: discovery can outlive the
+          // registering extension.
           const manageFunc =
-            state.settings.gameMode.discovered[gameId]?.path !== undefined
+            state.settings.gameMode.discovered[gameId]?.path !== undefined &&
+            getGame(gameId) !== undefined
               ? manageGameDiscovered
               : manageGameUndiscovered;
 
@@ -1007,7 +1019,18 @@ function init(context: IExtensionContext): boolean {
 
   context.registerActionCheck("SET_NEXT_PROFILE", (state: IState, action: any) => {
     const { profileId } = action.payload;
+<<<<<<< HEAD
     context.api.dismissAllNotifications();
+=======
+    // Only clear notifications on a real transition between two
+    // different profiles. Startup restores SET_NEXT_PROFILE from
+    // undefined, and re-activation targets the current profile; both
+    // would otherwise wipe warnings the user hasn't yet seen.
+    const activeProfileId = state.settings.profiles.activeProfileId;
+    if (profileId !== undefined && activeProfileId !== undefined && activeProfileId !== profileId) {
+      context.api.dismissAllNotifications();
+    }
+>>>>>>> v2.0.2
     if (profileId === undefined) {
       // resetting must always work
       return undefined;
@@ -1110,7 +1133,18 @@ function init(context: IExtensionContext): boolean {
           );
 
           if (game !== undefined) {
+<<<<<<< HEAD
             manageGame(context.api, game.id);
+=======
+            // Wait for discovery to populate before deciding undiscovered vs
+            // discovered; otherwise this races the fire-and-forget
+            // startQuickDiscovery in gamemode_management.once() and pops the
+            // "Game not discovered" dialog even though discovery would have
+            // succeeded.
+            context.api
+              .emitAndAwait("discover-game", game.id)
+              .then(() => manageGame(context.api, game.id));
+>>>>>>> v2.0.2
           } else {
             log("warn", "game specified on command line not found", {
               game: commandLine.game,
@@ -1163,6 +1197,30 @@ function init(context: IExtensionContext): boolean {
             commandLine?.profile === undefined &&
             commandLine?.game === undefined
           ) {
+            // Re-read state: gamemode_management's startup discovery pass
+            // (startQuickDiscovery → removeDisappearedGames) runs in parallel
+            // and may have just cleared the active game's discovery if its
+            // folder is no longer on disk. Emitting profile-did-change for a
+            // game with no discovery causes downstream handlers to call into
+            // path.join(undefined, ...). The manual-switch path already
+            // refuses this state in genOnProfileChange; do the same here.
+            const currentState: IState = store.getState();
+            const discovery = currentState.settings.gameMode.discovered[initProfile.gameId];
+            if (discovery?.path === undefined) {
+              showError(
+                store.dispatch,
+                "Game is no longer discoverable, please go to the games page and scan for, or " +
+                  "manually select the game folder.",
+                initProfile.gameId,
+                { allowReport: false },
+              );
+              store.dispatch(setCurrentProfile(undefined, undefined));
+              store.dispatch(setNextProfile(undefined));
+              if (finishProfileSwitch !== undefined) {
+                finishProfileSwitch();
+              }
+              return null;
+            }
             context.api.events.emit("profile-did-change", initProfile.id);
           }
           return null;

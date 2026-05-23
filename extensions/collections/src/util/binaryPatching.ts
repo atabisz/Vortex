@@ -1,4 +1,14 @@
 import * as path from "path";
+<<<<<<< HEAD
+=======
+
+import Bluebird from "bluebird";
+import * as bsdiffT from "bsdiff-node";
+import * as crc32 from "crc-32";
+import { fs, log, selectors, types, util } from "vortex-api";
+
+import { MAX_PATCH_SIZE, PATCHES_PATH, PATCH_OVERHEAD } from "../constants";
+>>>>>>> v2.0.2
 
 import Bluebird from "bluebird";
 import * as crc32 from "crc-32";
@@ -100,7 +110,13 @@ export function scanForDiffs(
                   const srcFilePath = path.join(tempPath, file.source);
                   const patchPath = path.join(destPath, file.destination + ".diff");
                   await fs.ensureDirWritableAsync(path.dirname(patchPath));
+<<<<<<< HEAD
                   await diffFiles(srcFilePath, dstFilePath, patchPath);
+=======
+                  await bsdiff.diff(srcFilePath, dstFilePath, patchPath, (progress) => {
+                    // nop - currently not showing progress
+                  });
+>>>>>>> v2.0.2
                   try {
                     await validatePatch(srcFilePath, patchPath);
                     result[file.destination] = srcCRC;

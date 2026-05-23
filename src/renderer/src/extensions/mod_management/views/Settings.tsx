@@ -1,7 +1,10 @@
 import * as path from "path";
 
 import { getErrorCode, getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
+<<<<<<< HEAD
 import PromiseBB from "bluebird";
+=======
+>>>>>>> v2.0.2
 import * as React from "react";
 import {
   Alert,
@@ -67,7 +70,10 @@ import { modPathsForGame } from "../selectors";
 import { STAGING_DIR_TAG } from "../stagingDirectory";
 import getText from "../texts";
 import type { IDeploymentMethod } from "../types/IDeploymentMethod";
+<<<<<<< HEAD
 import { resolveExternalChangesBeforePurge } from "../util/deploy";
+=======
+>>>>>>> v2.0.2
 import { getSupportedActivators } from "../util/deploymentMethods";
 import { NoDeployment } from "../util/exceptions";
 import getInstallPath, { getInstallPathPattern } from "../util/getInstallPath";

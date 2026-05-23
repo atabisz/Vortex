@@ -9,7 +9,10 @@ import ExtensionManager from "../ExtensionManager";
 import type { IRegisteredExtension } from "../types/extensions";
 import type { LogLevel } from "./log";
 import { webpackRequireHack } from "./webpack-hacks";
+<<<<<<< HEAD
 import * as winapiShim from "./winapi-shim";
+=======
+>>>>>>> v2.0.2
 
 const identity = (input) => input;
 

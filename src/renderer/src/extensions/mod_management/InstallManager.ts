@@ -1,7 +1,10 @@
+<<<<<<< HEAD
 /**
  * @see AGENTS-COLLECTIONS.md - For collections & phased installation documentation
  */
 
+=======
+>>>>>>> v2.0.2
 import * as os from "os";
 import * as path from "path";
 
@@ -126,6 +129,10 @@ import {
 } from "../collections_integration/selectors";
 import { generateCollectionSessionId } from "../collections_integration/util";
 import { finishDownload } from "../download_management/actions/state";
+<<<<<<< HEAD
+=======
+import { AlreadyDownloaded, DownloadIsHTML } from "../download_management/DownloadManager";
+>>>>>>> v2.0.2
 import type { IDownload } from "../download_management/types/IDownload";
 import getDownloadGames from "../download_management/util/getDownloadGames";
 import { discoveryByGame } from "../gamemode_management/selectors";
@@ -595,6 +602,11 @@ class InstallManager {
       // Clear the dependency installs map
       this.mDependencyInstalls = {};
 
+<<<<<<< HEAD
+=======
+      // Reset concurrency limiters
+      this.mDependencyDownloadsLimit = new DynamicDownloadConcurrencyLimiter(api);
+>>>>>>> v2.0.2
       this.mDependencyInstallsLimit = new ConcurrencyLimiter(10);
 
       // Clear all retry counters
@@ -5017,6 +5029,7 @@ class InstallManager {
     referenceTag?: string,
     campaign?: string,
     fileName?: string,
+    parentCollectionId?: string,
   ): Promise<string> {
     const call = (input: string | (() => PromiseLike<string>)): Promise<string> =>
       input !== undefined && typeof input === "function"
@@ -5042,21 +5055,43 @@ class InstallManager {
               parsedUrl.searchParams.set("campaign", campaign);
             }
 
+            const startDownloadModInfo: any = {
+              game: convertGameIdReverse(knownGames(api.store.getState()), lookupResult.domainName),
+              source: lookupResult.source,
+              name: lookupResult.logicalFileName,
+              referer: resolvedReferer,
+              referenceTag,
+              meta: lookupResult,
+            };
+            // Populate nexus.ids upfront so analytics events that fire before
+            // finalize (e.g. ModsDownloadStartedClientEvent) can resolve modId/
+            // fileId via nexusIdsFromDownloadId. Without this, the started gate
+            // sees undefined ids and skips the event for dependency downloads.
+            const isNexusSource = lookupResult.source === "nexus";
+            const lookupModId = parseInt(lookupResult.details?.modId, 10);
+            const lookupFileId = parseInt(lookupResult.details?.fileId, 10);
+            const nexusIds: { modId?: number; fileId?: number; gameId?: string } = {};
+            if (isNexusSource) {
+              if (!isNaN(lookupModId)) nexusIds.modId = lookupModId;
+              if (!isNaN(lookupFileId)) nexusIds.fileId = lookupFileId;
+              if (lookupResult.domainName) nexusIds.gameId = lookupResult.domainName;
+            }
+            const hasNexusIds = Object.keys(nexusIds).length > 0;
+            if (hasNexusIds || parentCollectionId !== undefined) {
+              // `parentCollectionId` is kept off `nexus.ids` because the install
+              // attribute extractor would copy `nexus.ids.collectionId` onto the
+              // installed mod and make a regular mod look like a collection.
+              startDownloadModInfo.nexus = {
+                ...(hasNexusIds ? { ids: nexusIds } : {}),
+                ...(parentCollectionId !== undefined ? { parentCollectionId } : {}),
+              };
+            }
+
             if (
               !api.events.emit(
                 "start-download",
                 [parsedUrl],
-                {
-                  game: convertGameIdReverse(
-                    knownGames(api.store.getState()),
-                    lookupResult.domainName,
-                  ),
-                  source: lookupResult.source,
-                  name: lookupResult.logicalFileName,
-                  referer: resolvedReferer,
-                  referenceTag,
-                  meta: lookupResult,
-                },
+                startDownloadModInfo,
                 fileName,
                 async (error, id) => {
                   if (error == null) {
@@ -5088,6 +5123,7 @@ class InstallManager {
                         referenceTag,
                         campaign,
                         fileName,
+                        parentCollectionId,
                       );
                       return resolve(id);
                     } else {
@@ -5115,11 +5151,24 @@ class InstallManager {
     wasCanceled: () => boolean,
     campaign: string,
     fileName?: string,
+    parentCollectionId?: string,
   ): Promise<string> {
     const modId: string = getSafe(lookupResult, ["details", "modId"], undefined);
     const fileId: string = getSafe(lookupResult, ["details", "fileId"], undefined);
     if (modId === undefined && fileId === undefined) {
+<<<<<<< HEAD
       return this.downloadURL(api, lookupResult, wasCanceled, referenceTag, fileName);
+=======
+      return this.downloadURL(
+        api,
+        lookupResult,
+        wasCanceled,
+        referenceTag,
+        fileName,
+        undefined,
+        parentCollectionId,
+      );
+>>>>>>> v2.0.2
     }
 
     const gameId = convertGameIdReverse(
@@ -5157,6 +5206,17 @@ class InstallManager {
                 api.store.dispatch(
                   setDownloadModInfo(results[0].dlId, "referenceTag", referenceTag),
                 );
+                if (parentCollectionId !== undefined) {
+                  // See downloadURL: kept off nexus.ids.collectionId to avoid the
+                  // install attribute extractor copying it onto the installed mod.
+                  api.store.dispatch(
+                    setDownloadModInfo(
+                      results[0].dlId,
+                      "nexus.parentCollectionId",
+                      parentCollectionId,
+                    ),
+                  );
+                }
                 return Promise.resolve(results[0].dlId);
               }
             }
@@ -5171,6 +5231,7 @@ class InstallManager {
     lookupResult: IModInfoEx,
     wasCanceled: () => boolean,
     fileName: string,
+    parentCollectionId?: string,
   ): Promise<string> {
     const referenceTag = requirement["tag"];
     const { campaign } = requirement["repo"] ?? {};
@@ -5189,6 +5250,7 @@ class InstallManager {
         wasCanceled,
         campaign,
         fileName,
+        parentCollectionId,
       )
         .catch((err) => {
           if (err instanceof HTTPError) {
@@ -5201,7 +5263,19 @@ class InstallManager {
         })
         .then((res) =>
           res === undefined
+<<<<<<< HEAD
             ? this.downloadURL(api, lookupResult, wasCanceled, referenceTag, campaign, fileName)
+=======
+            ? this.downloadURL(
+                api,
+                lookupResult,
+                wasCanceled,
+                referenceTag,
+                campaign,
+                fileName,
+                parentCollectionId,
+              )
+>>>>>>> v2.0.2
             : res,
         );
     } else {
@@ -5212,6 +5286,7 @@ class InstallManager {
         referenceTag,
         campaign,
         fileName,
+        parentCollectionId,
       ).catch((err) => {
         if (err instanceof UserCanceled || err instanceof ProcessCanceled) {
           return Promise.reject(err);
@@ -5226,6 +5301,7 @@ class InstallManager {
             wasCanceled,
             campaign,
             fileName,
+            parentCollectionId,
           );
         } else {
           return Promise.reject(err);
@@ -5656,6 +5732,13 @@ class InstallManager {
       return Promise.resolve([]);
     }
 
+    // When installing a collection, tag each dependency download with the parent
+    // collection id so the Mixpanel mod download events can carry collection_id.
+    const parentCollectionId: string | undefined =
+      sourceMod.type === "collection" && sourceMod.attributes?.collectionId !== undefined
+        ? String(sourceMod.attributes.collectionId)
+        : undefined;
+
     let queuedDownloads: IModReference[] = [];
 
     const clearQueued = () => {
@@ -5682,6 +5765,7 @@ class InstallManager {
     };
 
     const queueDownload = (dep: IDependency): Promise<string> => {
+<<<<<<< HEAD
       if (dep.reference.tag !== undefined) {
         queuedDownloads.push(dep.reference);
       }
@@ -5702,6 +5786,30 @@ class InstallManager {
             .catch((err: unknown) => {
               const idx = queuedDownloads.indexOf(dep.reference);
               queuedDownloads.splice(idx, 1);
+=======
+      return this.mDependencyDownloadsLimit.do<string>(() => {
+        if (dep.reference.tag !== undefined) {
+          queuedDownloads.push(dep.reference);
+        }
+        return abort.signal.aborted
+          ? Promise.reject(new UserCanceled(false))
+          : this.downloadDependencyAsync(
+              dep.reference,
+              api,
+              dep.lookupResults[0].value,
+              () => abort.signal.aborted,
+              dep.extra?.fileName,
+              parentCollectionId,
+            )
+              .then((dlId) => {
+                const idx = queuedDownloads.indexOf(dep.reference);
+                queuedDownloads.splice(idx, 1);
+                return dlId;
+              })
+              .catch((err: unknown) => {
+                const idx = queuedDownloads.indexOf(dep.reference);
+                queuedDownloads.splice(idx, 1);
+>>>>>>> v2.0.2
 
               const errMsg = unknownToError(err).message;
               const errCode = getErrorCode(err);
@@ -5720,6 +5828,7 @@ class InstallManager {
                 errMsg?.includes("File already downloaded") ||
                 errMsg?.includes("already downloaded");
 
+<<<<<<< HEAD
               if (isAlreadyDownloaded) {
                 if (err instanceof AlreadyDownloaded && err.downloadId !== undefined) {
                   log("info", "File already downloaded, using existing download ID", {
@@ -5751,11 +5860,46 @@ class InstallManager {
                         (dlId) => currentDownloads[dlId].localPath === alreadyDlErr?.fileName,
                       );
                       return downloadId ? resolve(downloadId) : resolve(null);
+=======
+                if (isAlreadyDownloaded) {
+                  if (err instanceof AlreadyDownloaded && err.downloadId !== undefined) {
+                    log("info", "File already downloaded, using existing download ID", {
+                      downloadId: err.downloadId,
+                    });
+                    return Promise.resolve(err.downloadId);
+                  }
+                  // If file is already downloaded, check if we can find the download
+                  // Try to find the download by filename
+                  const alreadyDlErr = err instanceof AlreadyDownloaded ? err : undefined;
+                  const currentDownloads = api.getState().persistent.downloads.files;
+                  const downloadId = Object.keys(currentDownloads).find(
+                    (dlId) =>
+                      currentDownloads[dlId].localPath === alreadyDlErr?.fileName ||
+                      currentDownloads[dlId].modInfo?.referenceTag === dep.reference?.tag,
+                  );
+
+                  if (downloadId) {
+                    log("info", "Download already completed, using existing download", {
+                      downloadId,
+                    });
+                    return Promise.resolve(downloadId);
+                  } else {
+                    // The download file exists but we can't find its record - refresh downloads and try again
+                    return new Promise((resolve) => {
+                      api.events.emit("refresh-downloads", gameId, () => {
+                        const currentDownloads = api.getState().persistent.downloads.files;
+                        const downloadId = Object.keys(currentDownloads).find(
+                          (dlId) => currentDownloads[dlId].localPath === alreadyDlErr?.fileName,
+                        );
+                        return downloadId ? resolve(downloadId) : resolve(null);
+                      });
+>>>>>>> v2.0.2
                     });
                   });
                 }
               }
 
+<<<<<<< HEAD
               if (isNetworkError) {
                 // For network errors, check if the download ended up in paused state
                 // and if so, try to resume it through the concurrent queue
@@ -5772,10 +5916,68 @@ class InstallManager {
                     });
                     // The download will be caught by the paused download check in doDownload
                     return;
+=======
+                if (isNetworkError) {
+                  // For network errors, check if the download ended up in paused state
+                  // and if so, try to resume it through the concurrent queue
+                  setTimeout(() => {
+                    const currentDownloads = api.getState().persistent.downloads.files;
+                    const downloadId = Object.keys(currentDownloads).find(
+                      (dlId) => currentDownloads[dlId].modInfo?.referenceTag === dep.reference?.tag,
+                    );
+
+                    if (downloadId && currentDownloads[downloadId].state === "paused") {
+                      log(
+                        "info",
+                        "Network error resulted in paused download, will attempt resume",
+                        {
+                          downloadId,
+                          error: errMsg,
+                        },
+                      );
+                      // The download will be caught by the paused download check in doDownload
+                      return;
+                    }
+                  }, 1000);
+                }
+
+                return Promise.reject(err);
+              });
+      });
+    };
+
+    const resumeDownload = (dep: IDependency): Promise<string> => {
+      // This function handles resuming downloads that were paused due to network issues or user action
+      return this.mDependencyDownloadsLimit.do<string>(() =>
+        abort.signal.aborted
+          ? Promise.reject(new UserCanceled(false))
+          : new Promise((resolve, reject) => {
+              // First check current download state to avoid unnecessary resume attempts
+              const currentDownloads = api.getState().persistent.downloads.files;
+              let resolvedId: string = dep.download;
+              let currentDownload = currentDownloads[resolvedId];
+
+              if (!currentDownload) {
+                // Try to resolve the download by referenceTag if possible
+                const tag = dep.reference?.tag;
+                if (truthy(tag)) {
+                  const foundId = Object.keys(currentDownloads).find(
+                    (dlId) => currentDownloads[dlId]?.modInfo?.referenceTag === tag,
+                  );
+                  if (foundId) {
+                    log("info", "Resolved missing download id from referenceTag", {
+                      from: dep.download,
+                      to: foundId,
+                      tag,
+                    });
+                    resolvedId = foundId;
+                    currentDownload = currentDownloads[resolvedId];
+>>>>>>> v2.0.2
                   }
                 }, 1000);
               }
 
+<<<<<<< HEAD
               return Promise.reject(err);
             });
     };
@@ -5861,6 +6063,63 @@ class InstallManager {
             );
           });
 
+=======
+              if (!currentDownload) {
+                const readableRef = renderModReference(dep.reference);
+                log("warn", "Download not found when trying to resume", {
+                  intendedId: dep.download,
+                  ref: readableRef,
+                });
+                return reject(new NotFound(`download for ${readableRef}`));
+              }
+
+              if (currentDownload.state === "finished") {
+                log("info", "Download already finished, no need to resume", {
+                  downloadId: resolvedId,
+                });
+                return resolve(resolvedId);
+              }
+
+              if (currentDownload.state !== "paused") {
+                log("info", "Download not in paused state", {
+                  downloadId: resolvedId,
+                  state: currentDownload.state,
+                });
+                return resolve(resolvedId);
+              }
+
+              log("info", "Resuming paused download", {
+                downloadId: resolvedId,
+                tag: dep.reference?.tag,
+              });
+
+              api.events.emit(
+                "resume-download",
+                resolvedId,
+                (err) => {
+                  if (err != null) {
+                    // Handle "File already downloaded" error gracefully
+                    if (
+                      err.message?.includes("File already downloaded") ||
+                      err.message?.includes("already downloaded")
+                    ) {
+                      log("info", "Download already completed during resume attempt", {
+                        downloadId: resolvedId,
+                      });
+                      return resolve(resolvedId);
+                    }
+                    reject(err);
+                  } else {
+                    resolve(resolvedId);
+                  }
+                },
+                { allowInstall: false },
+              );
+            }),
+      );
+    };
+
+>>>>>>> v2.0.2
     const installDownload = (dep: IDependency, downloadId: string): Promise<string> => {
       return new Promise<string>((resolve, reject) => {
         return this.mDependencyInstallsLimit.do(async () => {
@@ -7055,6 +7314,7 @@ class InstallManager {
               // destination exists (stale from a previous
               // failed install?) - remove it and fall back to copy
               await fs.removeAsync(job.dst);
+<<<<<<< HEAD
               if (!(await copyAsyncWrap(job.src, job.dst))) {
                 copyFailures.add(job.src);
               }
@@ -7062,6 +7322,11 @@ class InstallManager {
               if (!(await copyAsyncWrap(job.src, job.dst))) {
                 copyFailures.add(job.src);
               }
+=======
+              await copyAsyncWrap(job.src, job.dst);
+            } else if (code && ["EXDEV", "EPERM", "EACCES", "ENOTSUP"].includes(code)) {
+              await copyAsyncWrap(job.src, job.dst);
+>>>>>>> v2.0.2
             } else {
               throw err;
             }

@@ -50,6 +50,7 @@ function mainOn<C extends keyof RendererChannels>(
     ...args: SerializableArgs<Parameters<RendererChannels[C]>>
   ) => void,
   logOptions: LogOptions = false,
+<<<<<<< HEAD
 ): () => void {
   const outerListener = (
     event: Electron.IpcMainEvent,
@@ -113,6 +114,13 @@ function mainCallback<C extends keyof CallbackChannels>(
   return promise.finally(() => {
     off();
     clearTimeout(timer);
+=======
+): void {
+  ipcMain.on(channel, (event, ...args: SerializableArgs<Parameters<RendererChannels[C]>>) => {
+    ipcLogger(logOptions, channel, event, args);
+    assertTrustedSender(event);
+    listener(event, ...args);
+>>>>>>> v2.0.2
   });
 }
 
@@ -131,6 +139,22 @@ function mainHandle<C extends keyof InvokeChannels>(
     assertTrustedSender(event);
     return listener(event, ...args);
   });
+<<<<<<< HEAD
+=======
+}
+
+function mainHandleSync<C extends keyof SyncChannels>(
+  channel: C,
+  listener: (
+    event: Electron.IpcMainEvent,
+    ...args: SerializableArgs<Parameters<SyncChannels[C]>>
+  ) => AssertSerializable<ReturnType<SyncChannels[C]>>,
+): void {
+  ipcMain.on(channel, (event, ...args: SerializableArgs<Parameters<SyncChannels[C]>>) => {
+    assertTrustedSender(event);
+    event.returnValue = listener(event, ...args);
+  });
+>>>>>>> v2.0.2
 }
 
 function mainSend<C extends keyof MainChannels>(

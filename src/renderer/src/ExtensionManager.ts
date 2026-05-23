@@ -34,7 +34,10 @@ import { suppressNotification } from "./actions/notificationSettings";
 import { setExtensionLoadFailures } from "./actions/session";
 import { setOptionalExtensions } from "./extensions/extension_manager/actions";
 import type { IModReference, IModRepoId } from "./extensions/mod_management/types/IMod";
+<<<<<<< HEAD
 import { IPCDownloadAdapter } from "./IPCDownloadAdapter";
+=======
+>>>>>>> v2.0.2
 import { log } from "./logging";
 import type { SanityCheck } from "./store/reduxSanity";
 import { registerSanityCheck } from "./store/reduxSanity";
@@ -2171,6 +2174,7 @@ class ExtensionManager {
     progressFunc?: (progress: number, total: number) => void,
   ): PromiseBB<IHashResult> => {
     let lastProgress: number = 0;
+<<<<<<< HEAD
     const progressHash = progressFunc
       ? (progress: number, total: number) => {
           progressFunc(progress, total);
@@ -2190,6 +2194,34 @@ class ExtensionManager {
             .catch(() => 0);
 
       return sizePromise.then((numBytes) => ({ md5sum, numBytes }));
+=======
+    const progressHash = (progress: number, total: number) => {
+      progressFunc?.(progress, total);
+      if (lastProgress !== total) {
+        lastProgress = total;
+      }
+    };
+    return toPromise<string>((cb) => fileMD5(data, cb, progressHash)).then((result) => {
+      if (lastProgress === 0) {
+        // Need to get the size from the file or buffer
+        const sizePromise = Buffer.isBuffer(data)
+          ? PromiseBB.resolve(data.length)
+          : fsVortex
+              .statAsync(data)
+              .then((stats) => stats.size)
+              .catch(() => 0);
+
+        return sizePromise.then((numBytes) => ({
+          md5sum: result,
+          numBytes,
+        }));
+      } else {
+        return PromiseBB.resolve({
+          md5sum: result,
+          numBytes: lastProgress,
+        });
+      }
+>>>>>>> v2.0.2
     });
   };
 

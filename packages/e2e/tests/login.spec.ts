@@ -7,8 +7,20 @@ import { loginToNexus } from "../helpers/login";
 import { freeUser } from "../helpers/users";
 
 test.describe("Login UI", () => {
+<<<<<<< HEAD
   test("Login", async ({ vortexApp, vortexWindow }) => {
     await loginToNexus(vortexApp, vortexWindow, freeUser);
+=======
+  test("login button is visible when not logged in", async ({ vortexWindow }) => {
+    await test.step("Verify login UI is present", async () => {
+      // With a fresh user data dir, the user should not be logged in.
+      const loginBtn = vortexWindow.getByText(/log in/i).first();
+
+      if (await loginBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+        await expect(loginBtn).toBeVisible();
+      }
+    });
+>>>>>>> v2.0.2
   });
 
   // TODO: Implement with API key injection fixture

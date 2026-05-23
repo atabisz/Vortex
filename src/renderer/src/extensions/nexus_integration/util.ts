@@ -64,7 +64,12 @@ import { getPreloadApi, getWindowId } from "../../util/preloadAccess";
 import { activeGameId } from "../../util/selectors";
 import { getSafe } from "../../util/storeHelper";
 import { batchDispatch, toPromise, truthy } from "../../util/util";
+<<<<<<< HEAD
 import type { RedownloadMode } from "../download_management/types/IDownload";
+=======
+import type { RedownloadMode } from "../download_management/DownloadManager";
+import { AlreadyDownloaded, DownloadIsHTML } from "../download_management/DownloadManager";
+>>>>>>> v2.0.2
 import { SITE_ID } from "../gamemode_management/constants";
 import { gameById, knownGames } from "../gamemode_management/selectors";
 import modName from "../mod_management/util/modName";
@@ -80,7 +85,12 @@ import { checkModVersion, fetchRecentUpdates, ONE_DAY, ONE_MINUTE } from "./util
 import { convertGameIdReverse, convertNXMIdReverse, nexusGameId } from "./util/convertGameId";
 import { endorseCollection, endorseMod } from "./util/endorseMod";
 import { FULL_REVISION_INFO, MOD_FILE_INFO } from "./util/graphQueries";
+<<<<<<< HEAD
 import OAuth, { type ITokenReply } from "./util/oauth";
+=======
+import type { ITokenReply } from "./util/oauth";
+import OAuth from "./util/oauth";
+>>>>>>> v2.0.2
 import { makeFileUID } from "./util/UIDs";
 
 const UPDATE_CHECK_DELAY = 60 * 60 * 1000;

@@ -317,6 +317,7 @@ class InstallDriver {
       },
     );
 
+<<<<<<< HEAD
     api.onStateChange(
       ["persistent", "downloads", "files"],
       (prev: { [id: string]: types.IDownload }, current: { [id: string]: types.IDownload }) => {
@@ -337,6 +338,17 @@ class InstallDriver {
           if (matchingRule && !isBundled) {
             this.updateModTracking(matchingRule, "downloading");
           }
+=======
+    api.events.on(
+      "did-start-download",
+      (info: { id: string; tag: string; urls: string[]; fileName: string }) => {
+        const rule = this.mDependentMods.find(
+          (r) => r.reference.tag === info.tag || r.reference.logicalFileName === info.fileName,
+        );
+        const isBundled = rule?.extra?.localPath != null;
+        if (rule && !isBundled) {
+          this.updateModTracking(rule, "downloading");
+>>>>>>> v2.0.2
         }
       },
     );
@@ -996,12 +1008,16 @@ class InstallDriver {
     const gameVersion = await currentgame.getInstalledVersion(discovery);
     const gvMatch = (gv) => gv.reference === gameVersion;
     const revGameVersions = this.mRevisionInfo?.gameVersions ?? [];
+<<<<<<< HEAD
     if (
       gameVersion !== undefined &&
       gameVersion !== "" &&
       (revGameVersions.length ?? 0 !== 0) &&
       revGameVersions.find(gvMatch) === undefined
     ) {
+=======
+    if ((revGameVersions.length ?? 0 !== 0) && revGameVersions.find(gvMatch) === undefined) {
+>>>>>>> v2.0.2
       const choice = await this.mApi.showDialog(
         "question",
         "Game version mismatch",

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import type { list as drivelistListT } from "drivelist";
+=======
+import type { list as listT } from "drivelist";
+>>>>>>> v2.0.2
 
 import type { IExtensionApi } from "../../../types/IExtensionContext";
 import { log } from "../../../util/log";

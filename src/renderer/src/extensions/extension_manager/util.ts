@@ -1,6 +1,9 @@
 import * as path from "path";
 
+<<<<<<< HEAD
 import { AlreadyDownloaded } from "@vortex/shared/errors";
+=======
+>>>>>>> v2.0.2
 import PromiseBB from "bluebird";
 import * as _ from "lodash";
 import SevenZip from "node-7z";
@@ -31,6 +34,10 @@ import { jsonRequest, rawRequest } from "../../util/network";
 import { getSafe } from "../../util/storeHelper";
 import { INVALID_FILENAME_RE, truthy } from "../../util/util";
 import { addLocalDownload, setDownloadModInfo } from "../download_management/actions/state";
+<<<<<<< HEAD
+=======
+import { AlreadyDownloaded } from "../download_management/DownloadManager";
+>>>>>>> v2.0.2
 import { downloadPathForGame } from "../download_management/selectors";
 import { SITE_ID } from "../gamemode_management/constants";
 import installExtension from "./installExtension";

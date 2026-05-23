@@ -2,6 +2,7 @@ import crypto from "crypto";
 import path from "path";
 
 import { fs, log, selectors, types, util } from "vortex-api";
+import { fileMD5 } from "vortexmt";
 
 import { DEBUG_MODE, HASHMAP_LOCAL_PATH, TEMP_PATH, WD_NAME } from "./constants";
 import { HashMapper } from "./hashMapper";
@@ -50,6 +51,22 @@ async function insertCacheEntry(
   }
 }
 
+<<<<<<< HEAD
+=======
+function nop() {
+  // nop
+}
+
+const fileMD5Async = (fileName: string) =>
+  new Promise<string>((resolve, reject) => {
+    fileMD5(
+      fileName,
+      (err: Error, result: string) => (err !== null ? reject(err) : resolve(result)),
+      nop,
+    );
+  });
+
+>>>>>>> v2.0.2
 async function generateHash(filePaths: string[]): Promise<string> {
   const hashes: string[] = [];
   for (const filePath of filePaths) {

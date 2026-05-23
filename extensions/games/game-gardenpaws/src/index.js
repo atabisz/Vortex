@@ -68,7 +68,13 @@ function main(context) {
               actions.showDialog(
                 "question",
                 "Action required",
+<<<<<<< HEAD
                 { message: "You must install Unity Mod Manager to use mods with " + Name + "." },
+=======
+                {
+                  message: "You must install Unity Mod Manager to use mods with " + Name + ".",
+                },
+>>>>>>> v2.0.2
                 [
                   { label: "Cancel", action: () => reject(new util.UserCanceled()) },
                   {

@@ -303,6 +303,7 @@ async function preparePNPM(rawWorkspaceYaml, neededWorkspaceDirs) {
   const catalog = extractCatalogBlock(rawWorkspaceYaml);
   const overrides = extractOverridesBlock(rawWorkspaceYaml);
 
+<<<<<<< HEAD
   // Emit a packages: section so pnpm can resolve workspace:* refs in file: deps.
   // Without this, any workspace package that depends on another workspace package
   // via workspace:* will fail with ERR_PNPM_WORKSPACE_PKG_NOT_FOUND in the dist context.
@@ -316,6 +317,9 @@ async function preparePNPM(rawWorkspaceYaml, neededWorkspaceDirs) {
 
   const minimalYaml =
     packagesSection + (overrides ? overrides + "\n" : "") + catalog + "\n" + allowBuilds + "\n";
+=======
+  const minimalYaml = (overrides ? overrides + "\n" : "") + catalog + "\n" + allowBuilds + "\n";
+>>>>>>> v2.0.2
 
   await writeFile(resolve(DIST_DIR, "pnpm-workspace.yaml"), minimalYaml);
   console.log("✔  Created build/pnpm-workspace.yaml");

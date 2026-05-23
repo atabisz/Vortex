@@ -412,6 +412,7 @@ type SerializablePrimitive =
   | DataView
   | TypedArray;
 
+<<<<<<< HEAD
 /**
  * Represents all IPC-safe types.
  *
@@ -429,6 +430,10 @@ export type Serializable =
   | { [key: string]: Serializable }
   | Map<Serializable, Serializable>
   | Set<Serializable>;
+=======
+/** Represents all IPC-safe types */
+export type Serializable = SerializablePrimitive | Serializable[] | { [key: string]: Serializable };
+>>>>>>> v2.0.2
 
 type IsAny<T> = 0 extends 1 & T ? true : false;
 

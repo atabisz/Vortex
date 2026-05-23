@@ -7,8 +7,11 @@ import { describe, expect, test } from "vitest";
 
 // Arrange: load the mock before the module under test.
 import "./fixtures/vortexApi.mock";
+<<<<<<< HEAD
 import { types } from "vortex-api";
 
+=======
+>>>>>>> v2.0.2
 import {
   isSMAPIModType,
   linuxSMAPIPlatform,
@@ -58,7 +61,11 @@ describe("installers/smapi platform resolution", () => {
 describe("installers/smapi isSMAPIModType", () => {
   test("matches windows executable instructions from extracted install.dat payload", async () => {
     // Arrange: include the Windows executable.
+<<<<<<< HEAD
     const instructions: types.IInstruction[] = [{ type: "copy", source: "StardewModdingAPI.exe" }];
+=======
+    const instructions = [{ type: "copy", source: "StardewModdingAPI.exe" }] as any;
+>>>>>>> v2.0.2
 
     // Act + assert: match it as SMAPI.
     await expect(isSMAPIModType(instructions, windowsSMAPIPlatform)).resolves.toBe(true);

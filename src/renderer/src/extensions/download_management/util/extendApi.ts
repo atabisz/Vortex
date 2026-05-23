@@ -1,5 +1,9 @@
 import type { IExtensionApi } from "../../../types/IExtensionContext";
+<<<<<<< HEAD
 import type { RedownloadMode } from "../types/IDownload";
+=======
+import type { RedownloadMode } from "../DownloadManager";
+>>>>>>> v2.0.2
 import type { IDownloadRemoveOptions } from "../types/IDownloadRemoveOptions";
 import type { IDownloadResult } from "../types/IDownloadResult";
 import type { IDownloadsAPIExtension } from "../types/IDownloadsAPIExtension";

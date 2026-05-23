@@ -43,7 +43,13 @@ export async function serialize(
 
   // Write the prefixed LO to file.
   await fs.removeAsync(loFilePath).catch({ code: "ENOENT" }, () => Promise.resolve());
+<<<<<<< HEAD
   await fs.writeFileAsync(loFilePath, JSON.stringify(loadOrder), { encoding: "utf8" });
+=======
+  await fs.writeFileAsync(loFilePath, JSON.stringify(loadOrder), {
+    encoding: "utf8",
+  });
+>>>>>>> v2.0.2
 
   // check the state for if we are keeping the game one in sync
   // if we are writing vortex's load order, then we will also write the games one
@@ -818,7 +824,14 @@ function getLatestLSLibMod(api: types.IExtensionApi) {
           prev = mods[id];
         }
       } catch (err) {
+<<<<<<< HEAD
         log("warn", "invalid mod version", { modId: id, version: currentVer });
+=======
+        log("warn", "invalid mod version", {
+          modId: id,
+          version: currentVer,
+        });
+>>>>>>> v2.0.2
       }
     }
     return prev;

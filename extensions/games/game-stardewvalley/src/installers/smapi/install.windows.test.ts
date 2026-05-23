@@ -66,7 +66,11 @@ describe("installers/smapi installSMAPI (windows)", () => {
           instr.type === "generatefile" && instr.destination === "StardewModdingAPI.deps.json",
       ),
     ).toBe(true);
+<<<<<<< HEAD
     expect(normalizePathSeparators(depsFilePath)).toBe("/game/Stardew Valley.deps.json");
+=======
+    expect(normalizePathSeparators(depsFilePath as string)).toBe("/game/Stardew Valley.deps.json");
+>>>>>>> v2.0.2
     expect(depsReadOptions).toEqual({ encoding: "utf8" });
     expect(walkMock).toHaveBeenCalledTimes(1);
   });

@@ -1,8 +1,14 @@
 import * as _ from "lodash";
 
+<<<<<<< HEAD:__tests__/reducers.download_management.test.js
 import { stateReducer } from "../src/extensions/download_management/reducers/state";
 
 jest.mock("../src/util/errorHandling", () => ({
+=======
+import { stateReducer } from "../extensions/download_management/reducers/state";
+
+jest.mock("../util/errorHandling", () => ({
+>>>>>>> v2.0.2:src/renderer/src/__tests__/reducers.download_management.test.js
   terminate: jest.fn(),
 }));
 

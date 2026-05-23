@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import type { RedownloadMode } from "./IDownload";
+=======
+import type { RedownloadMode } from "../DownloadManager";
+>>>>>>> v2.0.2
 import type { IDownloadRemoveOptions } from "./IDownloadRemoveOptions";
 import type { IDownloadResult } from "./IDownloadResult";
 import type { IStartDownloadOptions } from "./IStartDownloadOptions";

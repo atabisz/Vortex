@@ -10,6 +10,14 @@ import type { IDiscoveryResult } from "../types/IDiscoveryResult";
 import type { IGameStored } from "../types/IGameStored";
 import GameThumbnail from "./GameThumbnail";
 
+import { ComponentEx, connect, translate } from "../../../controls/ComponentEx";
+import type { IState } from "../../../types/IState";
+import { IDiscoveryState } from "../../../types/IState";
+import { getSafe } from "../../../util/storeHelper";
+import type { IDiscoveryResult } from "../types/IDiscoveryResult";
+import type { IGameStored } from "../types/IGameStored";
+import GameThumbnail from "./GameThumbnail";
+
 export interface IBaseProps {}
 
 interface IConnectedProps {

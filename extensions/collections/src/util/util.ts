@@ -5,6 +5,10 @@ import { ICollectionPermission, CollectionPermission, ICollection } from "@nexus
 import Bluebird from "bluebird";
 import turbowalk, { IEntry, IWalkOptions } from "turbowalk";
 import { selectors, types, util } from "vortex-api";
+<<<<<<< HEAD
+=======
+import { fileMD5 } from "vortexmt";
+>>>>>>> v2.0.2
 
 import { doExportToAPI } from "../collectionExport";
 import { TOS_URL } from "../constants";
@@ -136,7 +140,17 @@ export function calculateCollectionSize(mods: { [id: string]: IModWithRule }): n
 }
 
 export async function fileMD5Async(fileName: string): Promise<string> {
+<<<<<<< HEAD
   return util.fileMD5(fileName);
+=======
+  return new Promise((resolve, reject) => {
+    fileMD5(
+      fileName,
+      (err: Error, result: string) => (err !== null ? reject(err) : resolve(result)),
+      () => null,
+    );
+  });
+>>>>>>> v2.0.2
 }
 
 export async function walkPath(dirPath: string, walkOptions?: IWalkOptions): Promise<IEntryEx[]> {

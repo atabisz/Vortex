@@ -1,10 +1,17 @@
 import * as path from "path";
 
 import Promise from "bluebird";
+<<<<<<< HEAD
+=======
+import * as savegameLib from "gamebryo-savegame";
+>>>>>>> v2.0.2
 import turbowalk, { IEntry } from "turbowalk";
 
 import { CORRUPTED_NAME, MAX_SAVEGAMES } from "../constants";
 import { parseSaveGame } from "../savegame/GamebryoSaveGame";
+import { ISavegame } from "../types/ISavegame";
+
+import { CORRUPTED_NAME, MAX_SAVEGAMES } from "../constants";
 import { ISavegame } from "../types/ISavegame";
 
 // TODO essentially disables cache clearing since we can as many screenshots as the max of

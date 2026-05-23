@@ -6963,7 +6963,14 @@
               const { response_headers, stream, http_status_code } = await this.request(
                 {
                   method: "POST",
+<<<<<<< HEAD
                   url: (0, client_common_1.transformUrl)({ url: this.params.url, searchParams }),
+=======
+                  url: (0, client_common_1.transformUrl)({
+                    url: this.params.url,
+                    searchParams,
+                  }),
+>>>>>>> v2.0.2
                   body: params.query,
                   abort_signal: controller.signal,
                   enable_response_compression: enableResponseCompression,
@@ -7016,7 +7023,14 @@
               const { stream, summary, response_headers, http_status_code } = await this.request(
                 {
                   method: "POST",
+<<<<<<< HEAD
                   url: (0, client_common_1.transformUrl)({ url: this.params.url, searchParams }),
+=======
+                  url: (0, client_common_1.transformUrl)({
+                    url: this.params.url,
+                    searchParams,
+                  }),
+>>>>>>> v2.0.2
                   body: params.values,
                   abort_signal: controller.signal,
                   enable_request_compression: this.params.compression.compress_request,
@@ -7236,7 +7250,14 @@
               const { stream, summary, response_headers, http_status_code } = await this.request(
                 {
                   method: "POST",
+<<<<<<< HEAD
                   url: (0, client_common_1.transformUrl)({ url: this.params.url, searchParams }),
+=======
+                  url: (0, client_common_1.transformUrl)({
+                    url: this.params.url,
+                    searchParams,
+                  }),
+>>>>>>> v2.0.2
                   body: sendQueryInParams ? params.values : params.query,
                   abort_signal: controller.signal,
                   parse_summary: true,
@@ -9940,7 +9961,15 @@
               async next() {
                 if (!url) return { done: true };
                 try {
+<<<<<<< HEAD
                   const response = await requestMethod({ method, url, headers });
+=======
+                  const response = await requestMethod({
+                    method,
+                    url,
+                    headers,
+                  });
+>>>>>>> v2.0.2
                   const normalizedResponse = normalizePaginatedListResponse(response);
                   url = ((normalizedResponse.headers.link || "").match(
                     /<([^<>]+)>;\s*rel="next"/,
@@ -10626,7 +10655,13 @@
             removeRepoFromInstallation: [
               "DELETE /user/installations/{installation_id}/repositories/{repository_id}",
               {},
+<<<<<<< HEAD
               { renamed: ["apps", "removeRepoFromInstallationForAuthenticatedUser"] },
+=======
+              {
+                renamed: ["apps", "removeRepoFromInstallationForAuthenticatedUser"],
+              },
+>>>>>>> v2.0.2
             ],
             removeRepoFromInstallationForAuthenticatedUser: [
               "DELETE /user/installations/{installation_id}/repositories/{repository_id}",
@@ -10878,7 +10913,13 @@
             getRestrictionsForYourPublicRepos: [
               "GET /user/interaction-limits",
               {},
+<<<<<<< HEAD
               { renamed: ["interactions", "getRestrictionsForAuthenticatedUser"] },
+=======
+              {
+                renamed: ["interactions", "getRestrictionsForAuthenticatedUser"],
+              },
+>>>>>>> v2.0.2
             ],
             removeRestrictionsForAuthenticatedUser: ["DELETE /user/interaction-limits"],
             removeRestrictionsForOrg: ["DELETE /orgs/{org}/interaction-limits"],
@@ -10886,7 +10927,13 @@
             removeRestrictionsForYourPublicRepos: [
               "DELETE /user/interaction-limits",
               {},
+<<<<<<< HEAD
               { renamed: ["interactions", "removeRestrictionsForAuthenticatedUser"] },
+=======
+              {
+                renamed: ["interactions", "removeRestrictionsForAuthenticatedUser"],
+              },
+>>>>>>> v2.0.2
             ],
             setRestrictionsForAuthenticatedUser: ["PUT /user/interaction-limits"],
             setRestrictionsForOrg: ["PUT /orgs/{org}/interaction-limits"],
@@ -10894,7 +10941,13 @@
             setRestrictionsForYourPublicRepos: [
               "PUT /user/interaction-limits",
               {},
+<<<<<<< HEAD
               { renamed: ["interactions", "setRestrictionsForAuthenticatedUser"] },
+=======
+              {
+                renamed: ["interactions", "setRestrictionsForAuthenticatedUser"],
+              },
+>>>>>>> v2.0.2
             ],
           },
           issues: {
@@ -11173,7 +11226,13 @@
             getAllPackageVersionsForAPackageOwnedByAnOrg: [
               "GET /orgs/{org}/packages/{package_type}/{package_name}/versions",
               {},
+<<<<<<< HEAD
               { renamed: ["packages", "getAllPackageVersionsForPackageOwnedByOrg"] },
+=======
+              {
+                renamed: ["packages", "getAllPackageVersionsForPackageOwnedByOrg"],
+              },
+>>>>>>> v2.0.2
             ],
             getAllPackageVersionsForAPackageOwnedByTheAuthenticatedUser: [
               "GET /user/packages/{package_type}/{package_name}/versions",
@@ -11932,7 +11991,13 @@
             setPrimaryEmailVisibilityForAuthenticated: [
               "PATCH /user/email/visibility",
               {},
+<<<<<<< HEAD
               { renamed: ["users", "setPrimaryEmailVisibilityForAuthenticatedUser"] },
+=======
+              {
+                renamed: ["users", "setPrimaryEmailVisibilityForAuthenticatedUser"],
+              },
+>>>>>>> v2.0.2
             ],
             setPrimaryEmailVisibilityForAuthenticatedUser: ["PATCH /user/email/visibility"],
             unblock: ["DELETE /user/blocks/{username}"],
@@ -27487,6 +27552,14 @@
           return isAborted(fetchParams)
             ? makeNetworkError(
                 Object.assign(new DOMException("The operation was aborted.", "AbortError"), {
+<<<<<<< HEAD
+=======
+                  cause: err,
+                }),
+              )
+            : makeNetworkError(
+                Object.assign(new DOMException("Request was cancelled."), {
+>>>>>>> v2.0.2
                   cause: err,
                 }),
               )
@@ -32481,7 +32554,16 @@ ${pendingInterceptorsFormatter.format(pending)}
         }
 
         function addMockDispatch(mockDispatches, key, data) {
+<<<<<<< HEAD
           const baseData = { timesInvoked: 0, times: 1, persist: false, consumed: false };
+=======
+          const baseData = {
+            timesInvoked: 0,
+            times: 1,
+            persist: false,
+            consumed: false,
+          };
+>>>>>>> v2.0.2
           const replyData = typeof data === "function" ? { callback: data } : { ...data };
           const newMockDispatch = {
             ...baseData,
@@ -35547,7 +35629,13 @@ ${pendingInterceptorsFormatter.format(pending)}
             return webidl.converters.WebSocketInit(V);
           }
 
+<<<<<<< HEAD
           return { protocols: webidl.converters["DOMString or sequence<DOMString>"](V) };
+=======
+          return {
+            protocols: webidl.converters["DOMString or sequence<DOMString>"](V),
+          };
+>>>>>>> v2.0.2
         };
 
         webidl.converters.WebSocketSendData = function (V) {

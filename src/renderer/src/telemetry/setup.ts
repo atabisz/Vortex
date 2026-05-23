@@ -1,5 +1,9 @@
 import type { Context } from "@opentelemetry/api";
+<<<<<<< HEAD
 import { ZoneContextManager } from "@opentelemetry/context-zone";
+=======
+import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
+>>>>>>> v2.0.2
 import type { ReadableSpan, Span, SpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { BasicTracerProvider } from "@opentelemetry/sdk-trace-base";
 import { serializeSpan } from "@vortex/shared/telemetry";

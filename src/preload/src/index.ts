@@ -42,8 +42,11 @@ try {
     shell: {
       openUrl: (url) => betterIpcRenderer.send("shell:openUrl", url),
       openFile: (filePath) => betterIpcRenderer.send("shell:openFile", filePath),
+<<<<<<< HEAD
       onOpenUrlFailed: (callback: (url: string) => void) =>
         betterIpcRenderer.on("shell:openUrlFailed", (_, url) => callback(url)),
+=======
+>>>>>>> v2.0.2
     },
 
     persist: {
@@ -220,6 +223,7 @@ try {
       forwardSpan: (span) => betterIpcRenderer.send("telemetry:forward-span", span),
     },
 
+<<<<<<< HEAD
     downloader: {
       start: (dest, collationId) => betterIpcRenderer.invoke("download:start", dest, collationId),
       pause: (downloadId) => betterIpcRenderer.invoke("download:pause", downloadId),
@@ -237,6 +241,16 @@ try {
         };
         ipcRenderer.on("download:resolve", listener);
         return () => ipcRenderer.removeListener("download:resolve", listener);
+=======
+    diag: {
+      // Raw ipcRenderer because betterIpcRenderer has no sendSync helper.
+      fatal: (message: string) => {
+        try {
+          ipcRenderer.sendSync("diag:fatal", message);
+        } catch {
+          // diagnostic must never throw
+        }
+>>>>>>> v2.0.2
       },
     },
   });

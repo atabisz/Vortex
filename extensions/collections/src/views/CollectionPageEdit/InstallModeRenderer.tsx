@@ -43,11 +43,15 @@ class InstallModeRenderer extends ComponentEx<IProps, {}> {
     const { t, hasInstallerOptions } = this.props;
     return hasInstallerOptions ? (
       <FlexLayout.Fixed style={{ marginLeft: "5px", marginTop: "3px" }}>
+<<<<<<< HEAD
         <tooltip.Icon
           name="options"
           set="collections"
           tooltip={t("This mod has installer options")}
         />
+=======
+        <tooltip.Icon name="options" tooltip={t("This mod has installer options")} />
+>>>>>>> v2.0.2
       </FlexLayout.Fixed>
     ) : null;
   };

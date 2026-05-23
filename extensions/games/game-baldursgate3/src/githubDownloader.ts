@@ -23,7 +23,13 @@ function query(baseUrl: string, request: string): Promise<any> {
         );
         if (res.statusCode === 403 && callsRemaining === 0) {
           const resetDate = parseInt(util.getSafe(msgHeaders, ["x-ratelimit-reset"], "0"), 10);
+<<<<<<< HEAD
           log("info", "GitHub rate limit exceeded", { reset_at: new Date(resetDate).toString() });
+=======
+          log("info", "GitHub rate limit exceeded", {
+            reset_at: new Date(resetDate).toString(),
+          });
+>>>>>>> v2.0.2
           return reject(new util.ProcessCanceled("GitHub rate limit exceeded"));
         }
 

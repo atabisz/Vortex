@@ -195,6 +195,15 @@ export class DownloadObserver {
       );
       const isCollection =
         nexusIds.collectionSlug !== undefined && nexusIds.revisionId !== undefined;
+<<<<<<< HEAD
+=======
+      // Mod downloads triggered by a collection install carry the parent collection's id
+      // under modInfo.nexus.parentCollectionId (see InstallManager.downloadURL).
+      const parentCollectionId = innerState.persistent.downloads.files?.[id]?.modInfo?.nexus
+        ?.parentCollectionId as string | undefined;
+      const modCollectionId =
+        isCollection || parentCollectionId === undefined ? null : parentCollectionId;
+>>>>>>> v2.0.2
 
       if (err instanceof ProcessCanceled || err instanceof UserCanceled) {
         if (isCollection) {
@@ -215,6 +224,7 @@ export class DownloadObserver {
               nexusIds.numericGameId,
               modUID,
               fileUID,
+              modCollectionId,
             ),
           );
         }
@@ -241,6 +251,7 @@ export class DownloadObserver {
               fileUID,
               "",
               err.message,
+              modCollectionId,
             ),
           );
         }
@@ -564,6 +575,13 @@ export class DownloadObserver {
           const nexusIds = nexusIdsFromDownloadId(state, id);
           const isCollection =
             nexusIds?.collectionSlug !== undefined && nexusIds?.revisionId !== undefined;
+<<<<<<< HEAD
+=======
+          const parentCollectionId = state.persistent.downloads.files?.[id]?.modInfo?.nexus
+            ?.parentCollectionId as string | undefined;
+          const modCollectionId =
+            isCollection || parentCollectionId === undefined ? null : parentCollectionId;
+>>>>>>> v2.0.2
 
           // this is so we know if it's a collection bundle/manifest downloading or an individual mod
           if (isCollection) {
@@ -593,6 +611,7 @@ export class DownloadObserver {
                 fileUID,
                 download.size,
                 duration_ms,
+                modCollectionId,
               ),
             );
           } else {
@@ -665,6 +684,13 @@ export class DownloadObserver {
             nexusIds?.modId !== undefined &&
             nexusIds?.fileId !== undefined
           ) {
+            const isCollection =
+              nexusIds.collectionSlug !== undefined && nexusIds.revisionId !== undefined;
+            const parentCollectionId = download.modInfo?.nexus?.parentCollectionId as
+              | string
+              | undefined;
+            const modCollectionId =
+              isCollection || parentCollectionId === undefined ? null : parentCollectionId;
             const { modUID, fileUID } = makeModAndFileUIDs(
               nexusIds.numericGameId.toString(),
               nexusIds.modId,
@@ -678,6 +704,7 @@ export class DownloadObserver {
                 nexusIds.numericGameId,
                 modUID,
                 fileUID,
+                modCollectionId,
               ),
             );
           }
@@ -861,7 +888,11 @@ export class DownloadObserver {
           tag: download.modInfo?.referenceTag,
         });
       }
+<<<<<<< HEAD
       this.mApi.store.dispatch(pauseDownload(downloadId, true));
+=======
+      this.mApi.store.dispatch(pauseDownload(downloadId, true, unfinishedChunks));
+>>>>>>> v2.0.2
       callback?.(null);
     }
   }

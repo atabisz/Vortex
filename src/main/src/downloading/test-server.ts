@@ -157,10 +157,16 @@ export type TestServer = {
   close: () => Promise<void>;
 };
 
+<<<<<<< HEAD
 export async function createTestServer(): Promise<TestServer> {
   const routes = new Map<string, { handler: RequestHandler; record: RouteRecord }>();
   const middlewares: Middleware[] = [];
   let routeCounter = 0;
+=======
+export async function createTestServer(initialHandler: RequestHandler): Promise<TestServer> {
+  let handler = initialHandler;
+  const requests: RecordedRequest[] = [];
+>>>>>>> v2.0.2
 
   const server = http.createServer((req, res) => {
     const range = parseRange(req.headers["range"]);
@@ -382,6 +388,7 @@ export function serveFile(opts: ServeFileOptions): RequestHandler {
   };
 }
 
+<<<<<<< HEAD
 // ---------------------------------------------------------------------------
 // Simple status handlers
 // ---------------------------------------------------------------------------
@@ -391,6 +398,23 @@ export function serveStall(): RequestHandler {
     new Promise(() => {
       /* never resolves */
     });
+=======
+/**
+ * Routes requests to different handlers based on URL path. Useful for testing
+ * resolvers that return different URLs for probe vs chunk requests.
+ */
+export function serveRoutes(routes: Record<string, RequestHandler>): RequestHandler {
+  return (ctx) => {
+    const pathname = ctx.req.url ?? "/";
+    const handler = routes[pathname];
+    if (!handler) {
+      ctx.res.writeHead(404);
+      ctx.res.end();
+      return Promise.resolve();
+    }
+    return handler(ctx);
+  };
+>>>>>>> v2.0.2
 }
 
 export function serveStatus(
@@ -400,7 +424,15 @@ export function serveStatus(
   return (ctx) => writeResponse(ctx, statusCode, headers ?? {});
 }
 
+<<<<<<< HEAD
 export function serveDropConnection(): RequestHandler {
+=======
+/**
+ * Writes part of the response body then abruptly destroys the socket,
+ * simulating a dropped connection mid-transfer.
+ */
+export function serveTruncated(body: Buffer, bytesBeforeDrop: number): RequestHandler {
+>>>>>>> v2.0.2
   return ({ res }) => {
     res.socket?.destroy();
     return Promise.resolve();
@@ -607,11 +639,15 @@ function listen(server: http.Server): Promise<URL> {
   });
 }
 
+<<<<<<< HEAD
 function delay(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
 function parseRange(header: string | undefined): Range | null {
+=======
+function parseRange(header: string | undefined): { start: number; end: number } | null {
+>>>>>>> v2.0.2
   if (!header) return null;
   const value = header.replace(/^bytes=/, "");
   const parts = value.split(",").map((s) => s.trim());

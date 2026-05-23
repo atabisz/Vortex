@@ -629,6 +629,7 @@ class ConflictEditor extends ComponentEx<IProps, IComponentState> {
     }
 
     let newRules = { ...rules };
+<<<<<<< HEAD
     const hasAppliedFilters = hideResolved || !!filterValue;
     const refIds = hasAppliedFilters
       ? Object.keys(rules[modId]).filter((refId) => {
@@ -647,6 +648,16 @@ class ConflictEditor extends ComponentEx<IProps, IComponentState> {
           );
         })
       : Object.keys(rules[modId]);
+=======
+    // Reuse the dialog's visibility predicate so the rule applies to exactly
+    // the conflict rows the user sees in this group.
+    const refIds = (conflicts[modId] ?? [])
+      .filter((conflict) =>
+        this.applyFilter(conflict, mods, modId, filterValue, rules, hideResolved),
+      )
+      .map((conflict) => conflict.otherMod.id)
+      .filter((refId) => rules[modId]?.[refId] !== undefined);
+>>>>>>> v2.0.2
     const unassignedRefIds = refIds.filter((refId) => {
       const currentModRule = rules[modId]?.[refId]?.type;
       const currentRefRule = rules[refId]?.[modId]?.type;

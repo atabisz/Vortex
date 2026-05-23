@@ -107,8 +107,13 @@ async function shouldRunWithProton(
 
     const match = games.find(
       (g) =>
+<<<<<<< HEAD
         (info.workingDirectory && isPathPrefix(g.gamePath, info.workingDirectory)) ||
         isPathPrefix(g.gamePath, info.exePath),
+=======
+        info.workingDirectory?.toLowerCase().startsWith(g.gamePath.toLowerCase()) ||
+        info.exePath.toLowerCase().startsWith(g.gamePath.toLowerCase()),
+>>>>>>> v2.0.2
     );
 
     return match;

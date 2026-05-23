@@ -1,8 +1,15 @@
+<<<<<<< HEAD
 import * as nodeFs from "fs";
+=======
+>>>>>>> v2.0.2
 import * as path from "path";
 
 import { getErrorCode, isErrorWithSystemCode, unknownToError } from "@vortex/shared";
 import PromiseBB from "bluebird";
+<<<<<<< HEAD
+=======
+import * as diskusage from "diskusage";
+>>>>>>> v2.0.2
 import type { IEntry } from "turbowalk";
 import turbowalk from "turbowalk";
 import * as winapi from "winapi-bindings";
@@ -35,6 +42,13 @@ const MIN_DISK_SPACE_OFFSET = 512 * 1024 * 1024;
  * @param destination The proposed destination folder.
  */
 export function testPathTransfer(source: string, destination: string): PromiseBB<void> {
+<<<<<<< HEAD
+=======
+  if (process.platform !== "win32") {
+    return PromiseBB.reject(new UnsupportedOperatingSystem());
+  }
+
+>>>>>>> v2.0.2
   let destinationRoot: string;
   try {
     destinationRoot = winapi.GetVolumePathName(destination);

@@ -124,6 +124,7 @@ const PluginFlags = (props: IProps): JSX.Element => {
   if (plugin.isMaster) {
     const key = `ico-master-${plugin.id}`;
     flags.push(<tooltip.Icon id={key} key={key} name="plugin-master" tooltip={t("Master")} />);
+<<<<<<< HEAD
   }
 
   if (plugin.isBlueprint) {
@@ -140,6 +141,8 @@ const PluginFlags = (props: IProps): JSX.Element => {
         )}
       />,
     );
+=======
+>>>>>>> v2.0.2
   }
 
   if (plugin.isBlueprint) {

@@ -14,7 +14,10 @@ import type { IState } from "../../types/IState";
 import { getGame, UserCanceled } from "../../util/api";
 import * as fs from "../../util/fs";
 import type { Normalize } from "../../util/getNormalizeFunc";
+<<<<<<< HEAD
 import { resolvePathCase } from "../../util/resolvePathCase";
+=======
+>>>>>>> v2.0.2
 import { activeGameId } from "../../util/selectors";
 import { truthy } from "../../util/util";
 import type {
@@ -214,7 +217,10 @@ abstract class LinkingActivator implements IDeploymentMethod {
               link: context.newDeployment[key].relPath,
               error: getErrorMessageOrDefault(err),
             });
+<<<<<<< HEAD
             errorCodes.add(getErrorCode(err) ?? "UNKNOWN");
+=======
+>>>>>>> v2.0.2
             ++errorCount;
           }),
         50,
@@ -229,7 +235,10 @@ abstract class LinkingActivator implements IDeploymentMethod {
                     link: context.newDeployment[key].relPath,
                     error: getErrorMessageOrDefault(err),
                   });
+<<<<<<< HEAD
                   errorCodes.add(getErrorCode(err) ?? "UNKNOWN");
+=======
+>>>>>>> v2.0.2
                   ++errorCount;
                   sourceChanged.splice(idx, 1);
                 },
@@ -247,7 +256,10 @@ abstract class LinkingActivator implements IDeploymentMethod {
                     link: context.newDeployment[key].relPath,
                     error: getErrorMessageOrDefault(err),
                   });
+<<<<<<< HEAD
                   errorCodes.add(getErrorCode(err) ?? "UNKNOWN");
+=======
+>>>>>>> v2.0.2
                   ++errorCount;
                   contentChanged.splice(idx, 1);
                 },
@@ -510,6 +522,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
 
     return mapWithConcurrency(
       activation ?? [],
+<<<<<<< HEAD
       async (fileEntry) => {
         const relDataPath = truthy(fileEntry.target)
           ? [fileEntry.target, fileEntry.relPath].join(path.sep)
@@ -521,6 +534,14 @@ abstract class LinkingActivator implements IDeploymentMethod {
         // below can find the actual file instead of spuriously reporting it
         // as externally deleted.
         const fileDataPath = await resolvePathCase(dataPath, relDataPath, dirCache);
+=======
+      (fileEntry) => {
+        const fileDataPath = (
+          truthy(fileEntry.target)
+            ? [dataPath, fileEntry.target, fileEntry.relPath]
+            : [dataPath, fileEntry.relPath]
+        ).join(path.sep);
+>>>>>>> v2.0.2
         const fileModPath = [installPath, fileEntry.source, fileEntry.relPath].join(path.sep);
         let sourceDeleted: boolean = false;
         let destDeleted: boolean = false;

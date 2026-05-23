@@ -86,7 +86,18 @@ function InfoPanel(props: any) {
   const { t, onInstallLSLib, isLsLibInstalled } = props;
 
   return isLsLibInstalled() ? (
+<<<<<<< HEAD
     <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginRight: "16px" }}>
+=======
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px",
+        marginRight: "16px",
+      }}
+    >
+>>>>>>> v2.0.2
       <Alert bsStyle="warning" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         <div>
           {t(

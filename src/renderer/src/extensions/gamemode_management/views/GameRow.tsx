@@ -11,8 +11,11 @@ import { ComponentEx } from "../../../controls/ComponentEx";
 import IconBar from "../../../controls/IconBar";
 import OverlayTrigger from "../../../controls/OverlayTrigger";
 import { IconButton } from "../../../controls/TooltipControls";
+<<<<<<< HEAD
 import { nexusGames } from "../../../extensions/nexus_integration/util";
 import { nexusGameId } from "../../../extensions/nexus_integration/util/convertGameId";
+=======
+>>>>>>> v2.0.2
 import type { IActionDefinition } from "../../../types/IActionDefinition";
 import opn from "../../../util/opn";
 import type { IMod } from "../../mod_management/types/IMod";
@@ -49,10 +52,15 @@ class GameRow extends ComponentEx<IProps, {}> {
       return null;
     }
 
+<<<<<<< HEAD
     let logoPath: string | undefined =
       game.extensionPath !== undefined && game.logo !== undefined
         ? path.join(game.extensionPath, game.logo)
         : game.imageURL;
+=======
+    const logoPath: string =
+      game.extensionPath !== undefined ? path.join(game.extensionPath, game.logo) : game.imageURL;
+>>>>>>> v2.0.2
 
     // For adaptor-registered games (no local logo), resolve a Nexus thumbnail
     if (logoPath == null) {
@@ -103,6 +111,7 @@ class GameRow extends ComponentEx<IProps, {}> {
       </Popover>
     );
 
+<<<<<<< HEAD
     let imgurl = null;
     if (logoPath != null) {
       let protocol = null;
@@ -114,6 +123,11 @@ class GameRow extends ComponentEx<IProps, {}> {
       imgurl =
         protocol != null && protocol.startsWith("http") ? logoPath : pathToFileURL(logoPath).href;
     }
+=======
+    const protocol = new URL(logoPath)?.protocol;
+    const imgurl =
+      protocol != null && protocol.startsWith("http") ? logoPath : pathToFileURL(logoPath).href;
+>>>>>>> v2.0.2
 
     return (
       <ListGroupItem className={classes.join(" ")}>

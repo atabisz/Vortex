@@ -35,7 +35,13 @@ export const doMergeXML =
       const modGroups = modXml?.UserConfig?.Group;
       if (!modGroups) {
         const err = new ModXMLDataInvalid("Invalid XML data - inform mod author", modFilePath);
+<<<<<<< HEAD
         api.showErrorNotification("Failed to merge XML data", err, { allowReport: false });
+=======
+        api.showErrorNotification("Failed to merge XML data", err, {
+          allowReport: false,
+        });
+>>>>>>> v2.0.2
         return Promise.resolve();
       }
       const currentInputFile = await readXMLInputFile(api, modFilePath, targetMergeDir);
