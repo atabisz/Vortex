@@ -51,22 +51,6 @@ async function insertCacheEntry(
   }
 }
 
-<<<<<<< HEAD
-=======
-function nop() {
-  // nop
-}
-
-const fileMD5Async = (fileName: string) =>
-  new Promise<string>((resolve, reject) => {
-    fileMD5(
-      fileName,
-      (err: Error, result: string) => (err !== null ? reject(err) : resolve(result)),
-      nop,
-    );
-  });
-
->>>>>>> v2.0.2
 async function generateHash(filePaths: string[]): Promise<string> {
   const hashes: string[] = [];
   for (const filePath of filePaths) {
