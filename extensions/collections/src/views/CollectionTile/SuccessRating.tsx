@@ -56,11 +56,7 @@ export function SuccessRating(props: ISuccessRatingProps) {
 
   return (
     <div className={classes.join(" ")}>
-<<<<<<< HEAD
       <Icon set="collections" name="health" />
-=======
-      <Icon name="health" />
->>>>>>> v2.0.2
       {rating === undefined ? t("Awaiting") : t("{{rating}}%", { replace: { rating } })}
     </div>
   );
