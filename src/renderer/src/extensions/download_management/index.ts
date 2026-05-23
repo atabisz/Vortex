@@ -13,11 +13,8 @@ import ReduxProp from "../../ReduxProp";
 import type { IExtensionApi, IExtensionContext } from "../../types/IExtensionContext";
 import type { IState } from "../../types/IState";
 import type { ITestResult } from "../../types/ITestResult";
-<<<<<<< HEAD
-import { fileMD5 } from "../../util/checksum";
-=======
 import { getApplication } from "../../util/application";
->>>>>>> v2.0.2
+import { fileMD5 } from "../../util/checksum";
 import { DataInvalid, ProcessCanceled, UserCanceled } from "../../util/CustomErrors";
 import Debouncer from "../../util/Debouncer";
 import { setErrorContext } from "../../util/errorHandling";
@@ -28,15 +25,10 @@ import { log } from "../../util/log";
 import * as selectors from "../../util/selectors";
 import { knownGames } from "../../util/selectors";
 import { getSafe } from "../../util/storeHelper";
-<<<<<<< HEAD
-import { batchDispatch, toPromise, truthy } from "../../util/util";
-import { convertGameIdReverse } from "../nexus_integration/util/convertGameId";
-=======
 import { batchDispatch, sum, toPromise, truthy } from "../../util/util";
 import NXMUrl from "../nexus_integration/NXMUrl";
 import { ensureLoggedIn } from "../nexus_integration/util";
 import { convertNXMIdReverse, convertGameIdReverse } from "../nexus_integration/util/convertGameId";
->>>>>>> v2.0.2
 import {
   addLocalDownload,
   downloadProgress,
@@ -44,7 +36,10 @@ import {
   removeDownloadSilent,
   setDownloadHash,
   setDownloadHashByFile,
+  setDownloadInterrupted,
   setDownloadModInfo,
+  setDownloadSpeed,
+  setDownloadSpeeds,
 } from "./actions/state";
 import { setTransferDownloads } from "./actions/transactions";
 import downloadAttributes from "./downloadAttributes";
@@ -55,10 +50,7 @@ import { settingsReducer } from "./reducers/settings";
 import { stateReducer } from "./reducers/state";
 import { transactionsReducer } from "./reducers/transactions";
 import type { DownloadState, IDownload } from "./types/IDownload";
-<<<<<<< HEAD
-=======
 import type { IProtocolHandlers, IResolvedURL } from "./types/ProtocolHandlers";
->>>>>>> v2.0.2
 import { ensureDownloadsDirectory } from "./util/downloadDirectory";
 import extendAPI from "./util/extendApi";
 import getDownloadGames from "./util/getDownloadGames";
@@ -72,6 +64,9 @@ import ShutdownButton from "./views/ShutdownButton";
 import SpeedOMeter from "./views/SpeedOMeter";
 
 let updateDebouncer: Debouncer;
+let observer: DownloadObserver;
+let manager: DownloadManager;
+const protocolHandlers: IProtocolHandlers = {};
 
 import { knownArchiveExt } from "../../util/archives";
 
@@ -115,8 +110,6 @@ function refreshDownloads(
     });
 }
 
-<<<<<<< HEAD
-=======
 export type ProtocolHandler = (inputUrl: string, name: string) => PromiseBB<IResolvedURL>;
 
 export interface IExtensionContextExt extends IExtensionContext {
@@ -127,7 +120,6 @@ export interface IExtensionContextExt extends IExtensionContext {
   registerDownloadProtocol: (schema: string, handler: ProtocolHandler) => void;
 }
 
->>>>>>> v2.0.2
 function attributeExtractor(input: any) {
   let downloadGame: string | string[] = getSafe(input, ["download", "game"], []);
   if (Array.isArray(downloadGame)) {
@@ -183,11 +175,7 @@ function genDownloadChangeHandler(
           fs.statAsync(path.join(currentDownloadPath, fileName)).then((stats) => {
             const dlId = findDownload(fileName);
             if (dlId !== undefined) {
-<<<<<<< HEAD
-              store.dispatch(downloadProgress(dlId, stats.size, stats.size, undefined));
-=======
               store.dispatch(downloadProgress(dlId, stats.size, stats.size, [], undefined));
->>>>>>> v2.0.2
             }
           });
         }, 1000);
@@ -286,11 +274,7 @@ async function removeInvalidDownloads(api: IExtensionApi, gameId?: string) {
       const stats = await fs.statAsync(filePath).catch(() => undefined);
       if (stats?.size > 0) {
         // file exists and is valid on disk - repair the state instead of deleting
-<<<<<<< HEAD
-        repairActions.push(downloadProgress(dlId, stats.size, stats.size, undefined));
-=======
         repairActions.push(downloadProgress(dlId, stats.size, stats.size, [], undefined));
->>>>>>> v2.0.2
       } else {
         // file genuinely missing or empty - safe to clean up
         await fs.removeAsync(filePath).catch(() => null);
@@ -530,11 +514,7 @@ function postImport(
   return fs
     .statAsync(destination)
     .then((stats) => {
-<<<<<<< HEAD
-      store.dispatch(downloadProgress(dlId, stats.size, stats.size, undefined));
-=======
       store.dispatch(downloadProgress(dlId, stats.size, stats.size, [], undefined));
->>>>>>> v2.0.2
       return toPromise((cb) => api.events.emit("did-import-downloads", [dlId], cb));
     })
     .then(() => {
@@ -854,11 +834,7 @@ function checkForUnfinalized(
                     })
                     .finally(() => ++completed);
                 } else {
-<<<<<<< HEAD
                   return fileMD5(filePath)
-=======
-                  return toPromise<string>((cb) => fileMD5(filePath, cb, () => {}))
->>>>>>> v2.0.2
                     .then((md5sum) => {
                       api.store.dispatch(setDownloadHash(id, md5sum));
                     })
@@ -897,8 +873,6 @@ function removeDownloadsWithoutFile(store: Redux.Store, downloads: { [id: string
     });
 }
 
-<<<<<<< HEAD
-=======
 function processInterruptedDownloads(
   api: IExtensionApi,
   downloads: { [dlId: string]: IDownload },
@@ -936,7 +910,6 @@ function processInterruptedDownloads(
   });
 }
 
->>>>>>> v2.0.2
 function checkDownloadsWithMissingMeta(api: IExtensionApi) {
   const state = api.getState();
   const downloads = state.persistent.downloads.files ?? {};
@@ -1011,13 +984,10 @@ function init(context: IExtensionContext): boolean {
 
   context.registerFooter("speed-o-meter", SpeedOMeter);
 
-<<<<<<< HEAD
-=======
   context.registerDownloadProtocol = (schema: string, handler: ProtocolHandler) => {
     protocolHandlers[schema] = handler;
   };
 
->>>>>>> v2.0.2
   const queryCondition = (instanceIds: string[]) => {
     const state: IState = context.api.store.getState();
     const incomplete = instanceIds.find(
@@ -1131,11 +1101,8 @@ function init(context: IExtensionContext): boolean {
 
   context.once(() => {
     Object.assign(context.api.ext, extendAPI(context.api));
-<<<<<<< HEAD
-=======
     const DownloadManagerImpl: typeof DownloadManager = require("./DownloadManager").default;
     const observeImpl: typeof observe = require("./DownloadObserver").default;
->>>>>>> v2.0.2
 
     const store = context.api.store;
 
@@ -1302,16 +1269,6 @@ function init(context: IExtensionContext): boolean {
       return updateDownloadPath(context.api);
     }, 1000);
 
-<<<<<<< HEAD
-    const state = context.api.getState();
-    const downloads = state.persistent.downloads?.files ?? {};
-    const gameMode = selectors.activeGameId(state);
-
-    checkForUnfinalized(context.api, downloads, gameMode);
-    removeDownloadsWithoutFile(store, downloads);
-
-    processCommandline(context.api);
-=======
     {
       let powerTimer: NodeJS.Timeout;
       let powerBlockerId: number;
@@ -1422,7 +1379,6 @@ function init(context: IExtensionContext): boolean {
         }
       });
     }
->>>>>>> v2.0.2
   });
 
   return true;
