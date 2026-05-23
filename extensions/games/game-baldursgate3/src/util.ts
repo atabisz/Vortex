@@ -318,14 +318,7 @@ export function getLatestLSLibMod(api: types.IExtensionApi) {
           prev = mods[id];
         }
       } catch (err) {
-<<<<<<< HEAD
         log("warn", "invalid mod version", { modId: id, version: currentVer });
-=======
-        log("warn", "invalid mod version", {
-          modId: id,
-          version: currentVer,
-        });
->>>>>>> v2.0.2
       }
     }
     return prev;
