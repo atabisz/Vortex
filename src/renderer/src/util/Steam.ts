@@ -12,11 +12,7 @@ import { GameEntryNotFound } from "../types/IGameStore";
 import * as fs from "./fs";
 import getVortexPath from "./getVortexPath";
 import { getProtonInfo, buildProtonEnvironment, buildProtonCommand } from "./linux/proton";
-<<<<<<< HEAD
 import { findAllLinuxSteamPaths, findLinuxSteamPath } from "./linux/steamPaths";
-=======
-import { findLinuxSteamPath } from "./linux/steamPaths";
->>>>>>> v2.0.2
 import { log } from "./log";
 import opn from "./opn";
 import { getSafeCI } from "./storeHelper";
@@ -367,16 +363,12 @@ class Steam implements IGameStore {
             return this.mBaseFolder.then((basePath) =>
               PromiseBB.map(entries, async (entry) => {
                 try {
-<<<<<<< HEAD
                   const protonInfo = await getProtonInfo(
                     basePath,
                     steamAppsPath,
                     entry.appid,
                     entry.manifestData?.["AppState"]?.["oslist"],
                   );
-=======
-                  const protonInfo = await getProtonInfo(basePath, steamAppsPath, entry.appid);
->>>>>>> v2.0.2
                   entry.usesProton = protonInfo.usesProton;
                   entry.compatDataPath = protonInfo.compatDataPath;
                   entry.protonPath = protonInfo.protonPath;
@@ -443,16 +435,12 @@ class Steam implements IGameStore {
       exePath,
       args,
     );
-<<<<<<< HEAD
     const protonEnv = buildProtonEnvironment(
       gameEntry.compatDataPath,
       steamPath,
       gameEntry.appid,
       options.env,
     );
-=======
-    const protonEnv = buildProtonEnvironment(gameEntry.compatDataPath, steamPath, options.env);
->>>>>>> v2.0.2
 
     return api.runExecutable(executable, protonArgs, {
       ...options,
