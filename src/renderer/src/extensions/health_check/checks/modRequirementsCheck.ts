@@ -23,10 +23,7 @@ import type {
   IModRequirementsCheckMetadata,
   IModMissingRequirements,
   IModRequirementsCheckParams,
-<<<<<<< HEAD
   IModRequirementExt,
-=======
->>>>>>> v2.0.2
 } from "../types";
 import { getModFilesWithCache } from "../util";
 
@@ -301,31 +298,9 @@ export async function checkModRequirements(
         };
 
         for (const req of requirements.nexusRequirements.nodes) {
-<<<<<<< HEAD
           // External requirements (e.g. tools from GitHub) don't have valid
           // Nexus mod IDs — report them as missing but skip the API lookup
           if (req.externalRequirement) {
-=======
-          const requiredModId = parseInt(req.modId, 10);
-          const requiredGameId = req.gameId ? parseInt(req.gameId, 10) : undefined;
-          const domainName =
-            requiredGameId != null ? numericGameIdToDomainName(requiredGameId) : gameId;
-          // Fallback for gameId if domain name not found (to satisfy type contract)
-          const gameIdForStorage = domainName ?? gameId;
-
-          if (!installedModIds.has(requiredModId)) {
-            // Only show items for mods with exactly one main file
-            try {
-              const mainFiles = await getModFilesWithCache(api, gameIdForStorage, requiredModId);
-              if (mainFiles.length !== 1) {
-                continue;
-              }
-            } catch {
-              // If we can't fetch files, skip this requirement
-              continue;
-            }
-
->>>>>>> v2.0.2
             getModEntry().missingMods.push({
               ...req,
               modId: 0,
