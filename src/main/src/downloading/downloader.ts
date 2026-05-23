@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { type FileHandle as NodeFileHandle, mkdir, open } from "node:fs/promises";
 import type { IncomingHttpHeaders } from "node:http";
 import { dirname } from "node:path";
@@ -17,26 +16,12 @@ import { DownloadError } from "@vortex/shared/errors";
 import type { Got, Headers, Delays as GotTimeoutOptions, ExtendOptions } from "got";
 import got from "got";
 import type { RateLimiter } from "limiter";
-=======
-import { createWriteStream } from "node:fs";
-import { type FileHandle, open } from "node:fs/promises";
-import { pipeline } from "node:stream/promises";
-import { type URL } from "node:url";
-
-import got from "got";
->>>>>>> v2.0.2
 import PQueue from "p-queue";
 import type { CookieJar } from "tough-cookie";
 
-<<<<<<< HEAD
 import { isCancellation, toNetworkError } from "./errors";
 import type { ProgressReporter } from "./progress";
 import type { NormalizedResource } from "./resolver";
-=======
-import type { Chunk, Chunker } from "./chunking";
-import { staticChunker } from "./chunking";
-import type { Resolver, NormalizedResource } from "./resolver";
->>>>>>> v2.0.2
 import { normalize } from "./resolver";
 import { sleep } from "./retry";
 
@@ -301,25 +286,12 @@ async function probeUrl(
     headers: createHeaders(previousETag, null, endpoint.headers),
   });
 
-<<<<<<< HEAD
   const contentType = response.headers["content-type"] ?? "";
   if (contentType.startsWith("text/html")) {
     throw new DownloadError(
       { code: "is-html", url: endpoint.url },
       "Server returned an HTML page instead of a file",
     );
-=======
-    const contentLength = response.headers["content-length"];
-    let size = contentLength ? parseInt(contentLength, 10) : 0;
-    size = isNaN(size) ? 0 : size;
-
-    const acceptsRanges = response.headers["accept-ranges"] === "bytes";
-    return { size, acceptsRanges };
-  }
-
-  async #downloadSingle(url: URL, dest: string) {
-    return this.#chunkQueue.add(() => pipeline(got.stream(url), createWriteStream(dest)));
->>>>>>> v2.0.2
   }
 
   const size = getSize(response.headers, "content-length");
@@ -329,7 +301,6 @@ async function probeUrl(
   // https://www.iana.org/assignments/http-parameters/http-parameters.xhtml#range-units
   const acceptsRanges = response.headers["accept-ranges"] === "bytes";
 
-<<<<<<< HEAD
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/ETag
   const etag = response.headers.etag ?? null;
 
@@ -343,18 +314,6 @@ async function probeUrl(
 
   const fileName =
     getContentDispositionFileName(response.headers) ?? getFileNameFromUrl(endpoint.url.toString());
-=======
-      await Promise.all(
-        chunks.map((chunk) => this.#chunkQueue.add(() => this.#downloadChunk(resource, chunk, fd))),
-      );
-    } finally {
-      await fd.close();
-    }
-  }
-
-  async #downloadChunk(resource: NormalizedResource, chunk: Chunk, fd: FileHandle): Promise<void> {
-    const url = await resource.chunkUrl(chunk);
->>>>>>> v2.0.2
 
   return { size, acceptsRanges, etag, fileName };
 }
