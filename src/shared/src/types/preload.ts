@@ -95,13 +95,11 @@ export interface Api {
   /** Telemetry APIs - span export from renderer to main */
   telemetry: TelemetryApi;
 
-<<<<<<< HEAD
   /** Downloader APIs */
   downloader: DownloaderApi;
-=======
+
   /** Diagnostic APIs */
   diag: Diag;
->>>>>>> v2.0.2
 }
 
 export interface Example {
