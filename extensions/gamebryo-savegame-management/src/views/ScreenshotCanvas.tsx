@@ -1,14 +1,7 @@
-<<<<<<< HEAD
 import * as React from "react";
 import { log } from "vortex-api";
 
 import type { Dimensions } from "../savegame/GamebryoSaveGame";
-=======
-import { Dimensions } from "gamebryo-savegame";
-import * as React from "react";
-import { log } from "vortex-api";
-
->>>>>>> v2.0.2
 import { ISavegame } from "../types/ISavegame";
 import { getScreenshot } from "../util/refreshSavegames";
 
