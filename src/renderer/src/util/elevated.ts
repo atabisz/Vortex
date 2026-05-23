@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 import { spawn } from "child_process";
 import type { ChildProcess } from "child_process";
-=======
->>>>>>> v2.0.2
 import * as fs from "fs";
 import * as path from "path";
 
@@ -277,7 +274,6 @@ export function runElevated(
           }
         }
 
-<<<<<<< HEAD
         if (process.platform === "linux") {
           if (isSteamOS()) {
             // SteamOS: pkexec hangs without polkit agent in Game Mode.
@@ -312,8 +308,6 @@ export function runElevated(
           return resolve(tmpPath);
         }
 
-=======
->>>>>>> v2.0.2
         try {
           winapi.ShellExecuteEx({
             verb: "runas",
