@@ -2,20 +2,14 @@ import * as path from "path";
 
 import { getErrorCode, unknownToError } from "@vortex/shared";
 
-<<<<<<< HEAD
-=======
 import { log } from "../../../logging";
->>>>>>> v2.0.2
 import type {
   IDeployedFile,
   IDeploymentMethod,
   IExtensionApi,
   IFileChange,
 } from "../../../types/IExtensionContext";
-<<<<<<< HEAD
-=======
 import type { IState } from "../../../types/IState";
->>>>>>> v2.0.2
 import { ProcessCanceled } from "../../../util/CustomErrors";
 import * as fs from "../../../util/fs";
 import {
@@ -181,8 +175,6 @@ function defaultAction(changeType: string): FileAction {
   }
 }
 
-<<<<<<< HEAD
-=======
 export type ExternalChangeBucket = "merged" | "autoResolved" | "rest";
 
 /**
@@ -209,7 +201,6 @@ export function classifyExternalChange(
   return "rest";
 }
 
->>>>>>> v2.0.2
 export function changeToEntry(modTypeId: string, change: IFileChange): IFileEntry {
   return {
     modTypeId,
@@ -292,31 +283,6 @@ export function dealWithExternalChanges(
   return checkForExternalChanges(api, activator, profileId, stagingPath, modPaths, lastDeployment)
     .then((changes: { [typeId: string]: IFileChange[] }) => {
       const automaticActions: IFileEntry[] = [];
-<<<<<<< HEAD
-      const isInstallingCollection = getCollectionActiveSession(api.store.getState()) !== undefined;
-      const userChanges = Object.keys(changes).reduce((prev, typeId) => {
-        const { merged, rest, autoResolved } = changes[typeId].reduce(
-          (prevInner, change) => {
-            const isMerged = path.basename(change.source).startsWith(MERGED_PATH);
-            if (isMerged) {
-              prevInner.merged.push(change);
-              return prevInner;
-            }
-            if (isInstallingCollection || recentChanges?.has(change.source)) {
-              prevInner.autoResolved.push(change);
-              return prevInner;
-            }
-
-            prevInner.rest.push(change);
-
-            return prevInner;
-          },
-          { merged: [], rest: [], autoResolved: [] },
-        );
-
-        if (merged.length > 0) {
-          merged.forEach((change) => automaticActions.push(defaultInternalAction(typeId, change)));
-=======
       const userChanges: { [typeId: string]: IFileChange[] } = {};
       let count = 0;
       const state = api.store.getState() as IState;
@@ -331,7 +297,6 @@ export function dealWithExternalChanges(
           } else {
             automaticActions.push(defaultInternalAction(typeId, change));
           }
->>>>>>> v2.0.2
         }
       }
 
