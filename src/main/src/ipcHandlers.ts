@@ -3,10 +3,7 @@
  * These handlers respond to requests from the renderer process via preload.
  */
 
-<<<<<<< HEAD
-=======
 import { appendFileSync } from "node:fs";
->>>>>>> v2.0.2
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -178,8 +175,6 @@ export function init() {
   betterIpcMain.handle("app:exit", (_event: IpcMainInvokeEvent, exitCode: number) => {
     app.exit(exitCode);
   });
-<<<<<<< HEAD
-=======
 
   // Sync write: the caller is typically about to die, so the line must be on
   // disk before we return. Raw ipcMain because betterIpcMain has no sync
@@ -197,7 +192,6 @@ export function init() {
     }
     event.returnValue = null;
   });
->>>>>>> v2.0.2
 
   // Shell
   betterIpcMain.on("shell:openUrl", (_event, url) => {
