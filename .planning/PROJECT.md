@@ -1,23 +1,26 @@
 # Vortex Linux Support
 
-## Current Milestone: v8.1 Upstream v2.0.1 Sync
+## Current Milestone: v8.2 Upstream v2.0.2 Sync
 
-**Goal:** Fold upstream Nexus-Mods/Vortex `v2.0.1` into the fork on top of `v2.0.0-linux-rebased`. Every Linux fix from `VORTEX-LINUX-MERGE-PLAYBOOK.md` preserved. `pnpm run build` and `pnpm run test` pass on master. Closing artifact: FF-merge of `sync/upstream-v2.0.1` tagged `v2.0.1-linux-rebased`.
+**Goal:** Fold upstream Nexus-Mods/Vortex `v2.0.2` (41 commits via fork PR #6 `sync/upstream-v2.0.2`) into the fork on top of `v2.0.1-linux-rebased`. Every Linux fix from `VORTEX-LINUX-MERGE-PLAYBOOK.md` preserved. `pnpm run build` and `pnpm run test` pass on master. Closing artifact: FF-merge of `sync/upstream-v2.0.2` tagged `v2.0.2-linux-rebased`.
+
+**Conflict surface (probed 2026-05-23):** 108 source files, ~234 regions across the v8.0/v8.1 conflict buckets — smaller than v8.1's 109/365.
 
 **Target features:**
 
-- Phase 31 ✅ Config bucket (workspace + lockfile + root configs parse)
-- Phase 32 — Mod-management hot zone resolution
-- Phase 33 — Gamebryo + per-game extensions resolution
-- Phase 34 — Renderer + main spine resolution
-- Phase 35 — Build verification (typecheck/lint/test/build green)
-- Phase 36 — Land + tag + cherry-pick to `linux-port`
-- Phase 37 — Carry-forward UAT and playbook updates
+- Phase 38 ✅ Config bucket — workspace + lockfile + root configs parse; pushed to PR #6 at `84c3310a4` (2026-05-23)
+- Phase 39 — Mod-management + download-management hot zone (bucket D)
+- Phase 40 — Gamebryo + per-game extensions resolution (buckets E + F)
+- Phase 41 — Renderer + main spine + nexus + e2e (buckets G + H + I + J)
+- Phase 42 — Build verification (typecheck/lint/test/build green)
+- Phase 43 — Land + tag `v2.0.2-linux-rebased` + cherry-pick to `linux-port`
+- Phase 44 — Carry-forward UAT + playbook v8.2 deltas
 
-**Branch:** `v8.1/config-bucket` (Phase 31 pushed to fork; subsequent phases stack here until the Phase 36 FF-merge).
+**Branch:** `v8.2/sync-upstream-v2.0.2` (stacked on `master` at `855fb3e1a`; phases land here until the Phase 43 FF-merge).
 
 ## Previous Milestones
 
+- ✅ v8.1 Upstream v2.0.1 Sync — SHIPPED 2026-05-23
 - ✅ v8.0 Upstream v2.0.0 Sync — SHIPPED 2026-05-22
 - ✅ v7.0 First-Run Onboarding Wizard — SHIPPED 2026-04-17
 - ✅ v6.0 Infrastructure — SHIPPED 2026-04-15

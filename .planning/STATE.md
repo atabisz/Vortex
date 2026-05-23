@@ -1,34 +1,34 @@
 ---
 gsd_state_version: 1.0
-milestone: v8.1
-milestone_name: Upstream v2.0.1 Sync
-status: completed
-stopped_at: Phase 35 closed; Phase 36 unblocked (push + FF-merge + tag)
-last_updated: "2026-05-23T00:00:00.000Z"
-last_activity: 2026-05-23 -- Phase 35 CLOSED on v8.1/config-bucket. 5 SSH-signed commits in Phase 35 range (e2127cecb..closeout); D-35-10 done-gate 7/7 GREEN; SYNC-35a..e all [x]; renderer-bucket flipped 9 → 0 via Wave 1 download_management drop; aggregate typecheck flipped 130 → 0 via Wave 2 packages/paths restore contingency-fix; orphan electron-builder.config.json removed Wave 6; per-bucket typecheck all 0; markers outside .planning/ = 0. Phase 36 owns push + FF-merge + tag (v2.0.1-linux-rebased) + cherry-pick to linux-port + release-linux.yml AppImage + .deb.
+milestone: v8.2
+milestone_name: Upstream v2.0.2 Sync
+status: in_progress
+stopped_at: Phase 38 landed on PR #6 at 84c3310a4; Phase 39 unblocked (mod-management + download-management hot zone)
+last_updated: "2026-05-23T12:00:00.000Z"
+last_activity: 2026-05-23 -- Phase 38 CLOSED on `v8.2/sync-upstream-v2.0.2`. 11 SSH-signed commits in `4d5822adb..84c3310a4` (8 hand-resolved Bucket A files + lockfile regen + playwright catalog pin follow-up + setup commit). Pushed to `fork/sync/upstream-v2.0.2` PR #6 via force-with-lease (no race detected, no rebase fallback used). D-38-17 5-criterion done-gate GREEN: zero conflict markers across 9 Bucket A files; `pnpm install` exit 0; `pnpm install --frozen-lockfile` exit 0 (3.5s); workspace + nx resolution green (gate 4 partial-PASS — TS1185 source-marker errors in `src/shared/src/types/{ipc,preload}.ts` deferred to Phase 41 per Plan 38-06 Task 4); lockfile drift summary in `84c3310a4` body. Phase 39 owns bucket D resolution (`InstallManager`, `LinkingDeployment`, `externalChanges`, `mod_management/{index,eventHandlers}`, `stagingDirectory`, `util/deploy`, `views/ModList`, `download_management/`).
 progress:
-    total_phases: 8
-    completed_phases: 5
-    total_plans: 34
-    completed_plans: 43
-    percent: 63
+    total_phases: 7
+    completed_phases: 1
+    total_plans: 7
+    completed_plans: 7
+    percent: 14
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-22 after v8.0 ship + v8.1 milestone start)
+See: .planning/PROJECT.md (updated 2026-05-23 after v8.1 ship + v8.2 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** Phase 34 — renderer + main spine (v8.1)
+**Current focus:** Phase 39 — mod-management + download-management hot zone (v8.2 bucket D)
 
 ## Current Position
 
-Phase: 35 — COMPLETE
-Plan: 35-08 — COMPLETE (Wave 7 done-gate; STATE + ROADMAP + REQUIREMENTS + master closeout SUMMARY + 8 wave plans)
-Status: Phase 36 unblocked (push v8.1/config-bucket → fork; FF-merge PR #5; SSH-signed tag v2.0.1-linux-rebased; cherry-pick to linux-port; release-linux.yml AppImage + .deb)
-Last activity: 2026-05-23 -- Phase 35 CLOSED on v8.1/config-bucket. 5 SSH-signed commits in Phase 35 range (e2127cecb..closeout); D-35-10 done-gate 7/7 GREEN; SYNC-35a..e all [x]; renderer-bucket flipped 9 → 0 via Wave 1 download_management drop; aggregate typecheck flipped 130 → 0 via Wave 2 packages/paths restore contingency-fix; orphan electron-builder.config.json removed Wave 6; per-bucket typecheck all 0; markers outside .planning/ = 0. Phase 36 owns push + FF-merge + tag.
+Phase: 38 — COMPLETE
+Plan: 38-07 — COMPLETE (force-with-lease push to PR #6 — `84c3310a4` landed; PR #6 `headRefOid` matches local HEAD)
+Status: Phase 39 unblocked. Bucket D resolution (`InstallManager.ts`, `LinkingDeployment.ts`, `externalChanges.ts`, `mod_management/{index,eventHandlers}.ts`, `stagingDirectory.ts`, `util/deploy.ts`, `views/ModList.tsx`, `download_management/`). Decision points carried in from v8.1: Path C 3-way pattern, bluebird-trap audit, casing/SteamOS/elevation §6/§7/externalChanges sites preserved.
+Last activity: 2026-05-23 -- Phase 38 CLOSED on `v8.2/sync-upstream-v2.0.2`. 11 SSH-signed commits in `4d5822adb..84c3310a4` (8 hand-resolved Bucket A files + lockfile regen + playwright catalog pin follow-up + setup commit). Pushed to `fork/sync/upstream-v2.0.2` PR #6 via force-with-lease (no race detected). D-38-17 5-criterion done-gate GREEN. Phase 39 owns bucket D.
 
 ## Performance Metrics
 
@@ -226,9 +226,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-23T00:00:00.000Z
-Stopped at: Phase 35 closed; Phase 36 unblocked (push + FF-merge + tag)
-Resume file: .planning/phases/35-build-verification-v2-0-1/35-08-SUMMARY.md
+Last session: 2026-05-23T08:35:00.000Z
+Stopped at: v8.2 milestone init — PROJECT.md + STATE.md flipped; REQUIREMENTS + ROADMAP next
+Resume file: None
 
 ### Phase 33 close-out summary
 
@@ -357,3 +357,44 @@ Resume file: .planning/phases/35-build-verification-v2-0-1/35-08-SUMMARY.md
 - Jest config orphan (`jest.config.mjs` references mocks deleted Phase 34 H) — Phase 36+ R4 candidate
 
 **Next phase:** **36 — Land + tag + cherry-pick.** Push `v8.1/config-bucket` → fork; rebase + `gh pr merge 5 --merge=fast-forward`; SSH-signed tag `v2.0.1-linux-rebased` on post-FF master; cherry-pick to `linux-port` per D-30-03 path-filter; `release-linux.yml` AppImage + .deb. D-35-00 push prohibition lifts at the Phase 36 boundary.
+
+## Phase 37 — Carry-forward UAT (v2.0.1)
+
+**Status:** COMPLETE @ 2026-05-23
+**Branch:** `master`
+**Commits:** 4 in Phase 37 range — Wave 2 evidence `7e5a59b6f` + Wave 3 playbook `b0037bf1e` + Wave 4 Commit A done-gate + Wave 4 Commit B metadata flips. All SSH-signed via `~/.ssh/id_ed25519`; zero `--no-verify`; zero `--no-gpg-sign`.
+
+**D-37-10 done-gate result:** 5/5 GREEN — no scope adjustments needed.
+
+- C1 SYNC-37a AppImage local-boot: PASS — canonical AppImage SHA `13aa29288e8936a4dd7cdc3c9f3f669d15c7c65d3d416efee8ab2ba957059c9b` (247 MiB) bit-identical to Phase 36 SYNC-36d manifest; real-usage attestation per D-37-02 default
+- C2 SYNC-37a .deb local-boot: PASS — canonical .deb SHA `3d82353963d3625865bcd9281862172ede2a6f860812cc52579f1c1d7b22f3a6` (151 MiB) bit-identical to Phase 36 SYNC-36d manifest; apt install registers `/usr/bin/vortex` shim + desktop entry
+- C3 SYNC-37a Skyrim walkthrough: PASS — real-usage roll-up per D-37-02 default; all 4 D-37-02 checkpoints transitively confirmed by operator's daily-driver Skyrim SE workflow on `linux-port` HEAD via Vortex through Steam/Proton
+- C4 SYNC-37b playbook commit landed: PASS — single SSH-signed commit `b0037bf1efc0ff6063ba202f75ef618c9ab0c145 docs(playbook): v8.1 milestone post-mortem` lands all 5 D-37-06 deltas (Path C forward-sync 3-way merge pattern, packages/paths master-restore contingency-fix, bundledPlugins ≥ 130 floor invariant, per-bucket typecheck idiom, cherry-pick `--no-merges` filter + cherry-induced-regression fix-ups) + commit-index table refresh; lint:ci exit 0; pushed to fork/master via inline SSH URL
+- C5 milestone closeout: PASS — STATE.md / ROADMAP.md / REQUIREMENTS.md flipped via this commit pair (Commit A done-gate+summary, Commit B metadata flips), including Phase 36 STATE/ROADMAP carry-forward catch-up
+
+**Decisions exercised (D-37-01..D-37-13):** all 13 honored. Notable:
+
+- D-37-02: real-usage roll-up = default path; Skyrim SE daily-driver workflow on `linux-port` HEAD beat contrived 5-minute capture
+- D-37-05: single SSH-signed commit on master for SYNC-37b (mirrors v8.0 SYNC-39 shape); casual voice (memory `feedback_casual_voice.md`)
+- D-37-09: pre-push `pnpm lint:ci` exit 0 sanity gate; inline SSH URL push (no force-with-lease — fast-forward push, no race)
+- D-37-10: 5-criterion done-gate (smaller than Phase 30's 7-criterion because v8.1 has 2 SYNCs vs v8.0's 5 native + 2 carry-forward)
+- D-37-12: `git add -f` for every `.planning/` path in both Commit A and Commit B (memory `feedback_planning_gitignored.md`)
+- D-37-13: SSH-signed via `~/.ssh/id_ed25519`; corepack PATH workaround for husky/lint-staged (memory)
+
+**Linux-guard surfaces preserved across all waves:** N/A — Phase 37 is documentation-only (no `src/` / `packages/` / `extensions/` changes). Phase 34's full Linux-guard inventory (15+ surfaces) and Phase 35's restored `packages/paths{,-node}/src/` from master both audited intact pre-Phase 37 close; Phase 37 didn't touch any.
+
+**Bluebird-trap audit:** N/A — docs phase, no source change. The rule applies if any code snippets are quoted in the playbook delta; Wave 3 audit confirmed no `:Promise<T>` annotations on bluebird-importing async fns in the quoted snippets (memory `feedback_bluebird_promise_trap.md`).
+
+**Validation:**
+
+- Phase 37 commit count: 4 (Wave 2 evidence + Wave 3 playbook + Wave 4 Commit A + Wave 4 Commit B) — matches plan
+- D-37-10 done-gate: 5/5 GREEN
+- SSH-sign audit: 4/4 commits signed (gpgsig SSH-SIGNATURE block on every commit)
+- `--no-verify` audit: 0 across the Phase 37 range
+- `pnpm lint:ci` exit 0 pre-push gate: clean
+
+**Phase 36 carry-forward note:** Phase 36 closeout commit `855fb3e1a` shipped to fork/master 2026-05-23 but its STATE.md / ROADMAP.md flips were deferred. Plan 37-04 Task 4.2 explicitly picked up those flips alongside Phase 37's own — `completed_phases: 4 → 6` (Phase 36 + Phase 37 carry-forward), Phase 36 ROADMAP progress-table row `Pending → Complete`. Precondition assertions confirmed the documented case (current `completed_phases: 4` and Phase 36 row showing `Pending`); fallback path for `5 → 6` would have been deterministic if Phase 36 STATE flip had landed independently.
+
+**Blockers:** none. v8.1 milestone (Upstream v2.0.1 Sync) SHIPPED.
+
+**Next milestone:** **v8.2 / upstream v2.0.2+ sync** — separate milestone scope; out of v8.1. Phase 999.1 (ELEV-05/ELEV-06/ONBRD-04 hardware UAT) remains BACKLOG.
