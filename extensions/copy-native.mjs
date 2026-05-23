@@ -2,10 +2,7 @@
 
 import { execSync } from "node:child_process";
 import fs from "node:fs";
-<<<<<<< HEAD
 import path from "node:path";
-=======
->>>>>>> v2.0.2
 
 const args = process.argv.slice(2);
 

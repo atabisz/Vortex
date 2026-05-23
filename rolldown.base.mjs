@@ -12,27 +12,14 @@ export const mainOutputDirectory = path.resolve(import.meta.dirname, "src", "mai
  * @param {"cjs" | "esm"} format
  * @param {import("rolldown").Plugin[]} [customPlugins=[]]
  * @param {import("rolldown").ExternalOption} [external=undefined]
- * @param {Record<string, string>} [alias=undefined]
  * @returns {import("rolldown").RolldownOptions}
  * */
-<<<<<<< HEAD
-export function createConfig(
-  input,
-  output,
-  format,
-  customPlugins = [],
-  external = undefined,
-  alias = undefined,
-) {
-=======
 export function createConfig(input, output, format, customPlugins = [], external = undefined) {
->>>>>>> v2.0.2
   return defineConfig({
     input: input,
     platform: "node",
     plugins: customPlugins,
     external: external,
-    ...(alias !== undefined && { resolve: { alias } }),
     onLog: (level, log, defaultHandler) => {
       if (log.code === "UNRESOLVED_IMPORT") {
         defaultHandler("error", log);
