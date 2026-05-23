@@ -265,7 +265,6 @@ function ensureDevDesktopEntry(
     "Keywords=mod;mods;modding;nexus;games;skyrim;fallout;\n";
 
   const desktopChanged = writeFileIfChanged(desktopFilePath, desktopFileContent, 0o755);
-<<<<<<< HEAD
 
   return wrapperChanged || desktopChanged;
 }
@@ -304,8 +303,6 @@ function ensureAppImageDesktopEntry(applicationsDir: string, appImagePath: strin
     "Keywords=mod;mods;modding;nexus;games;skyrim;fallout;\n";
 
   const desktopChanged = writeFileIfChanged(desktopFilePath, desktopFileContent, 0o755);
-=======
->>>>>>> v2.0.2
 
   return wrapperChanged || desktopChanged;
 }
