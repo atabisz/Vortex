@@ -7,9 +7,6 @@ import { CORRUPTED_NAME, MAX_SAVEGAMES } from "../constants";
 import { parseSaveGame } from "../savegame/GamebryoSaveGame";
 import { ISavegame } from "../types/ISavegame";
 
-import { CORRUPTED_NAME, MAX_SAVEGAMES } from "../constants";
-import { ISavegame } from "../types/ISavegame";
-
 // TODO essentially disables cache clearing since we can as many screenshots as the max of
 // savegames we will display.
 // The reason being that the thumbnails on the list weren't rerendered after having been removed
