@@ -48,10 +48,6 @@ import {
 import { getSafe } from "../../util/storeHelper";
 import { batchDispatch, truthy } from "../../util/util";
 import { resolveCategoryName } from "../category_management";
-<<<<<<< HEAD
-=======
-import { AlreadyDownloaded, DownloadIsHTML } from "../download_management/DownloadManager";
->>>>>>> v2.0.2
 import { SITE_ID } from "../gamemode_management/constants";
 import type { IGameStoredExt } from "../gamemode_management/types/IGameStored";
 import { setUpdatingMods } from "../mod_management/actions/session";
