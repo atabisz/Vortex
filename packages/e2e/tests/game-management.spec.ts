@@ -5,10 +5,7 @@ import { setupFakeGame, cleanupFakeGame, GAME_CONFIGS } from "../fixtures/game-s
  * Covers test cases: #8.1A, #8.8A
  */
 import { test, expect } from "../fixtures/vortex-app";
-<<<<<<< HEAD
 import { manageGame, type ManagedGame } from "../helpers/games";
-=======
->>>>>>> v2.0.2
 import { navigateToGames } from "../helpers/navigation";
 import { NavBar } from "../selectors/navbar";
 
