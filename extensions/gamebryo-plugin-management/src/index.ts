@@ -1,16 +1,9 @@
 import { access, constants } from "fs";
-<<<<<<< HEAD
 import { stat as fsStat } from "fs/promises";
-=======
->>>>>>> v2.0.2
 import * as path from "path";
 import * as nodeUtil from "util";
 
 import Promise from "bluebird";
-<<<<<<< HEAD
-=======
-import ESPFile from "esptk";
->>>>>>> v2.0.2
 import I18next from "i18next";
 import * as Redux from "redux";
 import { createSelector } from "reselect";
@@ -28,10 +21,7 @@ import {
 import { clearUserlist, removeGroupRule, setGroup } from "./actions/userlist";
 import { openGroupEditor, setCreateRule } from "./actions/userlistEdit";
 import LootInterface from "./autosort";
-<<<<<<< HEAD
 import { ESPFile } from "./esp/ESPFile";
-=======
->>>>>>> v2.0.2
 import { loadOrderReducer } from "./reducers/loadOrder";
 import { pluginsReducer } from "./reducers/plugins";
 import { settingsReducer } from "./reducers/settings";
@@ -244,11 +234,7 @@ function updatePluginListImpl(
                 blueprintIds = new Set<string>();
                 for (const pluginId of Object.keys(pluginStates)) {
                   try {
-<<<<<<< HEAD
                     const esp = await ESPFile.open(pluginStates[pluginId].filePath, gameId);
-=======
-                    const esp = new ESPFile(pluginStates[pluginId].filePath, gameId);
->>>>>>> v2.0.2
                     if (esp.isBlueprint) {
                       blueprintIds.add(pluginId);
                     }
@@ -394,11 +380,7 @@ function register(
     return flag || masterExts.indexOf(path.extname(filePath).toLowerCase()) !== -1;
   };
 
-<<<<<<< HEAD
   const isMediumMaster = async (filePath: string, flag: boolean, gameMode: string) => {
-=======
-  const isMediumMaster = (filePath: string, flag: boolean, gameMode: string): boolean => {
->>>>>>> v2.0.2
     if (path.extname(filePath) === GHOST_EXT) {
       filePath = path.basename(filePath, GHOST_EXT);
     }
@@ -613,7 +595,6 @@ function register(
         }
       });
   });
-<<<<<<< HEAD
 
   context.registerAction("gamebryo-plugin-icons", 300, "undo", {}, "Reset Plugin Rules", () => {
     context.api
@@ -645,8 +626,6 @@ function register(
         }
       });
   });
-=======
->>>>>>> v2.0.2
 
   context.registerActionCheck(
     "GAMEBRYO_SET_PLUGIN_MANAGEMENT_ENABLED",
