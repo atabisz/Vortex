@@ -76,11 +76,7 @@ export const SpineProvider: FC = ({ children }: { children: ReactNode }) => {
   // restart. Typed as `any` because this path lives in the gamebryo-plugin-
   // management extension and isn't in core IState.
   const pluginManagementEnabled = useSelector(
-<<<<<<< HEAD
     (state: IStateWithPlugins) => state.settings.plugins?.pluginManagementEnabled,
-=======
-    (state: IState) => (state as any).settings?.plugins?.pluginManagementEnabled,
->>>>>>> v2.0.2
   );
 
   // Tracks the gameId that was active when the user navigated to home.
