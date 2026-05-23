@@ -184,7 +184,6 @@ function queryPurge(
   });
 }
 
-<<<<<<< HEAD
 /**
  * Detect whether a deployment manifest was created by a Wine/Proton-based
  * Vortex instance. Returns true only on Linux when the manifest's stagingPath
@@ -199,10 +198,6 @@ function isWineEraManifest(manifest: IDeploymentManifest): boolean {
     winDriveLetter.test(manifest.stagingPath ?? "") ||
     winDriveLetter.test(manifest.targetPath ?? "")
   );
-=======
-function readManifestFile(filePath: string): Promise<any> {
-  return Promise.resolve(fs.readFileAsync(filePath, "utf8")).then((data) => readManifest(data));
->>>>>>> v2.0.2
 }
 
 function queryPurgeWineEra(
@@ -494,7 +489,6 @@ export function loadActivation(
   return getManifestImpl(api, instanceId, tagFilePath, tagBackupPath, tagBackup2Path).then(
     (tagObject) => {
       let result: Promise<IDeployedFile[]>;
-<<<<<<< HEAD
       if (isWineEraManifest(tagObject) && tagObject.files.length > 0) {
         result = queryPurgeWineEra(api, deployPath, tagObject.files)
           .then(() =>
@@ -510,9 +504,6 @@ export function loadActivation(
           )
           .then(() => Promise.resolve([]));
       } else if (tagObject.instance !== instanceId && tagObject.files.length > 0) {
-=======
-      if (tagObject.instance !== instanceId && tagObject.files.length > 0) {
->>>>>>> v2.0.2
         let safe = true;
         if (tagObject.deploymentMethod !== undefined) {
           const previousActivator = getActivator(tagObject.deploymentMethod);
