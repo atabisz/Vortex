@@ -1,0 +1,20 @@
+[
+  {
+    "conclusion": "failure",
+    "name": "build (windows-latest)",
+    "status": "completed",
+    "url": "https://github.com/atabisz/Vortex/actions/runs/26322685477/job/77496288343"
+  },
+  {
+    "conclusion": "cancelled",
+    "name": "build (ubuntu-latest)",
+    "status": "completed",
+    "url": "https://github.com/atabisz/Vortex/actions/runs/26322685477/job/77496288358"
+  },
+  {
+    "conclusion": "skipped",
+    "name": "api",
+    "status": "completed",
+    "url": "https://github.com/atabisz/Vortex/actions/runs/26322685477/job/77496612065"
+  }
+]
