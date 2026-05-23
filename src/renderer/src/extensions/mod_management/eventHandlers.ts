@@ -3,10 +3,7 @@ import * as path from "path";
 import { getErrorCode, getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
 import * as _ from "lodash";
 import type { RuleType } from "modmeta-db";
-<<<<<<< HEAD
 import turbowalk from "turbowalk";
-=======
->>>>>>> v2.0.2
 
 import { startActivity, stopActivity } from "../../actions/session";
 import type { IDialogResult } from "../../types/IDialog";
@@ -931,14 +928,6 @@ export function onRemoveMods(
               });
             }
             await api.emitAndAwait("did-remove-mod", gameId, mod.id, forwardOptions);
-<<<<<<< HEAD
-
-            // Tell the deployment flow this removal is expected, so the
-            // next external-changes scan auto-resolves the now-srcdeleted
-            // manifest entries instead of surfacing a confusing dialog.
-            installManager.markRecentRemoval(mod.installationPath);
-=======
->>>>>>> v2.0.2
 
             // Tell the deployment flow this removal is expected, so the
             // next external-changes scan auto-resolves the now-srcdeleted
