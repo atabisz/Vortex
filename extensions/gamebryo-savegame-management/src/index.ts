@@ -283,17 +283,10 @@ function once(context: types.IExtensionContext, update: util.Debouncer) {
     },
   );
 
-<<<<<<< HEAD
   context.api.onAsync("did-remove-profile", async (res: undefined, profile: types.IProfile) => {
     if (gameSupported(profile.gameId) && (profile.features?.["local_saves"] ?? false)) {
       const savePath = profileSavePath(profile);
       const savesPath = path.join(await mygamesPath(profile.gameId), savePath);
-=======
-  context.api.onAsync("did-remove-profile", (res: undefined, profile: types.IProfile) => {
-    if (gameSupported(profile.gameId) && (profile.features?.["local_saves"] ?? false)) {
-      const savePath = profileSavePath(profile);
-      const savesPath = path.join(mygamesPath(profile.gameId), savePath);
->>>>>>> v2.0.2
       context.api
         .showDialog(
           "question",
@@ -356,11 +349,7 @@ function once(context: types.IExtensionContext, update: util.Debouncer) {
   }
 }
 
-<<<<<<< HEAD
 async function onLoadSaves(api: types.IExtensionApi, profileId: string) {
-=======
-function onLoadSaves(api: types.IExtensionApi, profileId: string): Promise<ISavegame[]> {
->>>>>>> v2.0.2
   const state = api.getState();
   const { profiles } = state.persistent;
   const currentProfile = selectors.activeProfile(state);
@@ -454,15 +443,11 @@ function onRestorePlugins(api: types.IExtensionApi, savegame: ISavegame) {
     });
 }
 
-<<<<<<< HEAD
 async function onRemoveSavegames(
   api: types.IExtensionApi,
   profileId: string,
   savegameIds: string[],
 ) {
-=======
-function onRemoveSavegames(api: types.IExtensionApi, profileId: string, savegameIds: string[]) {
->>>>>>> v2.0.2
   const state = api.getState();
   const { dispatch } = api.store;
 
@@ -567,11 +552,7 @@ async function onTransferSavegames(
       : profileSavePath(currentProfile, true),
   );
 
-<<<<<<< HEAD
   const destSavePath = path.resolve(await mygamesPath(gameId), profileSavePath(currentProfile));
-=======
-  const destSavePath = path.resolve(mygamesPath(gameId), profileSavePath(currentProfile));
->>>>>>> v2.0.2
 
   let allowErrorReport = true;
 
@@ -634,13 +615,9 @@ function init(context: IExtensionContextExt): boolean {
 
   context.registerAction("savegames-icons", 100, "refresh", {}, "Refresh", () => {
     const profile = selectors.activeProfile(context.api.store.getState());
-<<<<<<< HEAD
     getSavesPath(profile).then((savesPath) => {
       update.runNow(undefined, profile.id, savesPath);
     });
-=======
-    update.runNow(undefined, profile.id, getSavesPath(profile));
->>>>>>> v2.0.2
   });
 
   const onRefresh = () => {
