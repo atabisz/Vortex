@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v8.2
 milestone_name: Upstream v2.0.2 Sync
-status: executing
-stopped_at: Phase 39 thin-patch series — 13/13 conflict files resolved (7 dl-mgmt + 6 mod-mgmt); pushed to PR #6 at `da68c003b`; merging fork/master to clear .planning overlap
-last_updated: "2026-05-23T11:25:00.000Z"
-last_activity: 2026-05-23
+status: shipped-pending-uat
+stopped_at: Phase 38 traditional + phases 39–43 collapsed into thin-patch series (PR #6 → merged `c4bd2afb7` → tagged `v2.0.2-linux-rebased` `ec12890c3` → AppImage + .deb published); Phase 44 UAT pending; linux-port catch-up deferred (structural divergence)
+last_updated: "2026-05-24T03:00:00.000Z"
+last_activity: 2026-05-24
 progress:
     total_phases: 8
-    completed_phases: 1
-    total_plans: 23
-    completed_plans: 7
-    percent: 0
+    completed_phases: 6
+    total_plans: 8
+    completed_plans: 8
+    percent: 75
 ---
 
 # Project State
@@ -21,14 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23 after v8.1 ship + v8.2 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** Phase 39 — mod-management + download-management thin-patch series (v2.0.2)
+**Current focus:** v8.2 SHIPPED. Phase 44 UAT (canonical AppImage + .deb local-boot + Skyrim SE walkthrough) pending.
 
 ## Current Position
 
-Phase: 39 (mod-management + download-management hot zone, v2.0.2) — EXECUTING (thin-patch series)
-Plans: GSD plan-count model superseded; thin-patch series resolved 13/13 conflict files (7 dl-mgmt + 6 mod-mgmt); pushed to PR #6 at `da68c003b`
-Status: Resolving .planning/ overlap with fork/master via merge commit; PR #6 advance pending
-Last activity: 2026-05-23 -- Phase 39 thin-patch series resolved Settings.tsx (`104342b17`), LinkingDeployment.ts (`344f755f3`), InstallManager.ts (`da68c003b`); all 7 grep-checkpoint playbook gates GREEN; pushed to fork/sync/upstream-v2.0.2 via force-with-lease. Merging fork/master to advance PR #6 from DIRTY → MERGEABLE.
+Milestone: v8.2 — SHIPPED via thin-patch series (Phase 38 traditional; phases 39–43 collapsed; Phase 44 UAT pending)
+Tag: `v2.0.2-linux-rebased` = `ec12890c3` (annotated, SSH-signed, points at merge `c4bd2afb7`)
+Release: AppImage + .deb published via release-linux.yml on master after merge
+Branch policy: `master` advancing; `linux-port` catch-up DEFERRED (structurally diverged — 2378 files differ; v8.2 fix-ups have no equivalent context). Decision on linux-port future is a separate concern (see CLAUDE.md branch strategy).
+Last activity: 2026-05-24 — Phase 38 closed traditional (11 SSH-signed commits, 7/7 plans, PR #6 head `84c3310a4`). Phases 39–43 collapsed into thin-patch series on `sync/upstream-v2.0.2`: ~108 source files / ~234 regions resolved across mod-mgmt, dl-mgmt, gamebryo, per-game, renderer/main spine, preload, e2e; deny-list scrub at merge time (Jest scaffolding from upstream removed); 4 CI fix-ups (rolldown alias, ba2 guard, .mjs duplicate import, format). PR #6 merged via local `git merge --no-ff` to `c4bd2afb7`; tagged `v2.0.2-linux-rebased` (`ec12890c3`) and pushed; AppImage + .deb published. Two-Motion Model artifacts shipped: `scripts/linux-smoke.sh` (24 probes), `.github/scripts/rebase-upstream.sh` (receiving-motion driver), CLAUDE.md escalation rules. Playbook updated (e79ba71db) with §1 ba2 entry, new §2.5 rolldown alias coverage, "merge stacks duplicate imports" past gotcha. Rollback tags retained: `v8.2/master-pre-merge` (`a78a2894c`), `v8.2/pre-merge-pr-snapshot` (`fe07ccee6`).
 
 ## Performance Metrics
 
