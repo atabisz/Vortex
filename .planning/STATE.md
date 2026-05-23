@@ -4,14 +4,14 @@ milestone: v8.1
 milestone_name: Upstream v2.0.1 Sync
 status: completed
 stopped_at: Phase 35 closed; Phase 36 unblocked (push + FF-merge + tag)
-last_updated: "2026-05-23T00:00:00.000Z"
-last_activity: 2026-05-23 -- Phase 35 CLOSED on v8.1/config-bucket. 5 SSH-signed commits in Phase 35 range (e2127cecb..closeout); D-35-10 done-gate 7/7 GREEN; SYNC-35a..e all [x]; renderer-bucket flipped 9 → 0 via Wave 1 download_management drop; aggregate typecheck flipped 130 → 0 via Wave 2 packages/paths restore contingency-fix; orphan electron-builder.config.json removed Wave 6; per-bucket typecheck all 0; markers outside .planning/ = 0. Phase 36 owns push + FF-merge + tag (v2.0.1-linux-rebased) + cherry-pick to linux-port + release-linux.yml AppImage + .deb.
+last_updated: "2026-05-23T06:41:22.780Z"
+last_activity: 2026-05-23 -- Phase 35 CLOSED on v8.1/config-bucket. 5 SSH-signed commits in Phase 35 range (e2127cecb..closeout); D-35-10 done-gate 7/7 GREEN; SYNC-35a..e all [x]; renderer-bucket flipped 9 → 0 via Wave 1 download_management drop; aggregate typecheck flipped 130 → 0 via Wave 2 packages/paths restore contingency-fix; orphan electron-builder.config.json removed Wave 6; per-bucket typecheck all 0; markers outside .planning/ = 0. Phase 36 owns push + FF-merge + tag.
 progress:
     total_phases: 8
-    completed_phases: 5
+    completed_phases: 4
     total_plans: 34
-    completed_plans: 43
-    percent: 63
+    completed_plans: 36
+    percent: 50
 ---
 
 # Project State
@@ -226,9 +226,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-23T00:00:00.000Z
+Last session: 2026-05-23T06:41:22.769Z
 Stopped at: Phase 35 closed; Phase 36 unblocked (push + FF-merge + tag)
-Resume file: .planning/phases/35-build-verification-v2-0-1/35-08-SUMMARY.md
+Resume file: None
 
 ### Phase 33 close-out summary
 
