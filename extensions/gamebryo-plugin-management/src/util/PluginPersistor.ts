@@ -449,11 +449,7 @@ class PluginPersistor implements types.IPersistor {
     if (this.mPluginFormat === "original") {
       const loadOrderFile = path.join(this.mPluginPath, "loadorder.txt");
       phaseOne = fs.readFileAsync(loadOrderFile).then((data: Buffer) => {
-<<<<<<< HEAD
         const { keys } = this.filterFileData(data.toString("utf-8"), false);
-=======
-        const keys: string[] = this.filterFileData(data.toString("utf-8"), false);
->>>>>>> v2.0.2
         offset = this.initFromKeyList(newPlugins, keys, false, offset);
         return fs.readFileAsync(path.join(this.mPluginPath, "plugins.txt"));
       });
@@ -467,7 +463,6 @@ class PluginPersistor implements types.IPersistor {
           // TODO: This is just a workaround
           return this.deserialize(true);
         }
-<<<<<<< HEAD
         const { keys, foreignApp } = this.filterFileData(data.toString("latin1"), true);
         // If a foreign application (e.g. the game itself via Proton) has reset
         // plugins.txt to just a header comment with no plugin entries, recover
@@ -515,10 +510,6 @@ class PluginPersistor implements types.IPersistor {
         } else {
           this.initFromKeyList(newPlugins, keys, true, offset);
         }
-=======
-        const keys: string[] = this.filterFileData(data.toString("latin1"), true);
-        this.initFromKeyList(newPlugins, keys, true, offset);
->>>>>>> v2.0.2
       })
       .then(() => {
         if (skipUpdate) {
