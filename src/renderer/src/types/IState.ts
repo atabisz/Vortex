@@ -1,8 +1,5 @@
 import type { IParameters } from "@vortex/shared/cli";
-<<<<<<< HEAD
 import type { DownloadCheckpoint } from "@vortex/shared/download";
-=======
->>>>>>> v2.0.2
 
 import type { ICategoryDictionary } from "../extensions/category_management/types/ICategoryDictionary";
 import type { ICollectionInstallState } from "../extensions/collections_integration/types";
