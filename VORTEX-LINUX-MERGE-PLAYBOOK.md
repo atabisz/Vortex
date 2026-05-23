@@ -42,6 +42,7 @@ Previously skipped but now fixed (guards removed, CI rebuilds native deps):
 - `extensions/gamebryo-plugin-management/package.json` — guard removed `ba23aee71`; uses `copy-native-loot.mjs` for platform-aware native copy (libloot.so.0 on Linux, libloot.dll on Windows)
 - `extensions/gamebryo-bsa-support/package.json` — guard removed `833f02db0`; CI fetches bsatk source and rebuilds with node-gyp
 - `extensions/gamebryo-archive-support/package.json` — guard removed `833f02db0`; has no native deps (pure TS + lz4js), guard was never needed
+- `extensions/gamebryo-ba2-support/package.json` — guard removed `3452f94f1`; ba2tk is pure-TS (cb931f65e), no native deps to skip
 
 Sentinels: `extensions/skip-on-windows.mjs` and `extensions/skip-on-linux.mjs` must exist (gamestore-xbox still uses the latter).
 
@@ -63,6 +64,15 @@ allowlist: [
 ```
 
 Without this, `nodeExternals` silently beats the `resolve.alias` redirect to `winapi-shim.ts`, and `winapi.GetVolumePathName is not a function` only pops up when a user changes the mod staging folder.
+
+### 2.5. `rolldown.base.mjs` alias parameter for Linux winapi-shim
+
+```bash
+grep -n "alias" rolldown.base.mjs
+grep -n "linuxAlias" src/main/build.mjs
+```
+
+`createConfig` must keep its 6th `alias` parameter and the conditional `...(alias !== undefined && { resolve: { alias } })` spread. `src/main/build.mjs` passes `linuxAlias = process.platform === "linux" ? { "winapi-bindings": SHIM_PATH } : undefined` as the 6th arg to swap winapi-bindings → `winapi-shim.ts` at bundle time. Drop the param "as unused" (easy to do during smaller-diff conflict resolution — happened in `155f7a68d`, restored in `8519f6d29`) and rolldown errors `UNRESOLVED_IMPORT: './build/Release/winapi'` on Linux. Pair gotcha with §2: same Linux winapi-shim mechanism, different bundler — alias for the main bundle, externals allowlist for the renderer.
 
 ### 3. LOOT call-site casing
 
@@ -347,6 +357,10 @@ Two-part hazard that's bitten us once and will again. The 2026-05-09 collection-
 - **Cached success:** The mod got recorded in Vortex state with `installationPath` set (i.e. "installed"), so `doDownload` short-circuited every future re-install at `dep.mod != null`. The broken state was self-perpetuating — every remedy the user tried (re-run collection, install mod directly, deploy again) hit the short-circuit and bypassed the code that would have healed it.
 
 When writing any code that handles an irreversible side effect (extract, install, deploy, download), audit for both properties together: **can any error be silently swallowed?** AND **does a downstream system cache "done" based on state that could have been corrupted?** A "yes" on both is the shape of a bug class, not a specific bug. Add a loud-fail on the swallow path AND a integrity check before the downstream cache is trusted. One without the other only closes half the door.
+
+### Merges can stack identical imports into a duplicate-identifier SyntaxError
+
+After an upstream merge, `node --check` the top-level `.mjs` files (or run `pnpm install` end-to-end). A merge can concatenate identical imports from both sides into a duplicate-identifier SyntaxError that doesn't surface until runtime — `InstallAssets.mjs` post-merge `a918d52ef` carried two `import { glob } from "glob"` lines, fixed in `ff431e7c1`.
 
 ### Stray working-tree diffs will block cherry-picks
 
