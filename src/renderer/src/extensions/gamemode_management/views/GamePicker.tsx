@@ -395,15 +395,9 @@ class GamePicker extends ComponentEx<IProps, IComponentState> {
   }
 
   private openGameExtWiki = () => {
-<<<<<<< HEAD
     opn(
       "https://github.com/Nexus-Mods/Vortex/wiki/MODDINGWIKI-Developers-General-Creating-a-game-extension",
     ).catch(() => null);
-=======
-    opn("https://github.com/Nexus-Mods/Vortex/wiki/LEGACY-General-Creating-a-game-extension").catch(
-      () => null,
-    );
->>>>>>> v2.0.2
   };
 
   private setSortManaged = (value: { value: string; label: string }) => {
@@ -442,11 +436,7 @@ class GamePicker extends ComponentEx<IProps, IComponentState> {
   private applyGameFilter = (game: IGameStored): boolean => {
     const { currentFilterValue } = this.state;
     return (
-<<<<<<< HEAD
       !currentFilterValue || game.name?.toLowerCase().includes(currentFilterValue.toLowerCase())
-=======
-      game.name.toLowerCase().includes(currentFilterValue.toLowerCase()) || !currentFilterValue
->>>>>>> v2.0.2
     );
   };
 
