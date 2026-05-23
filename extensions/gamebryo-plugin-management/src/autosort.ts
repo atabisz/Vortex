@@ -502,16 +502,7 @@ class LootInterface {
       )
       .map((id) => path.basename(pluginList[id].filePath));
     try {
-<<<<<<< HEAD
       await loot.loadPluginsAsync(deployedPluginFileNames, false);
-=======
-      await loot.loadPluginsAsync(
-        plugins
-          .filter((id) => pluginList[id] !== undefined && pluginList[id].deployed)
-          .map((name) => name.toLowerCase()),
-        false,
-      );
->>>>>>> v2.0.2
       pluginsLoaded = true;
     } catch (err) {
       if (err.message.toLowerCase() === "already closed") {
@@ -555,11 +546,7 @@ class LootInterface {
             ? path.basename(pluginList[id].filePath)
             : pluginName;
         try {
-<<<<<<< HEAD
           const meta: PluginMetadata = await loot.getPluginMetadataAsync(lootKey);
-=======
-          const meta: PluginMetadata = await loot.getPluginMetadataAsync(pluginName);
->>>>>>> v2.0.2
           let info;
           try {
             if (pluginList[id] !== undefined && pluginList[id].deployed) {
