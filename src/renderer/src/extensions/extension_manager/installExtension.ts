@@ -6,11 +6,7 @@ import * as _ from "lodash";
 import type ZipT from "node-7z";
 import rimraf from "rimraf";
 
-<<<<<<< HEAD
-import { removeExtension } from "../../actions";
-=======
 import { forgetExtension, removeExtension } from "../../actions";
->>>>>>> v2.0.2
 import ExtensionManager from "../../ExtensionManager";
 import { log } from "../../logging";
 import type { ExtensionType, IExtension } from "../../types/extensions";
@@ -128,11 +124,7 @@ function sanitize(input: string): string {
   }
 }
 
-<<<<<<< HEAD
-function removeOldVersion(api: IExtensionApi, info: IExtension): PromiseBB<void> {
-=======
 function removeOldVersion(api: IExtensionApi, info: IExtension): PromiseBB<string[]> {
->>>>>>> v2.0.2
   const state: IState = api.store.getState();
   const { installed } = state.session.extensions;
 
@@ -331,8 +323,6 @@ function installExtension(
             () => undefined,
             () => undefined,
           )
-<<<<<<< HEAD
-=======
           .then((result: { code: number; errors: string[] }) => {
             // node-7z can resolve (not reject) with a non-zero exit code or
             // a populated errors array on partial/failed extraction. Without
@@ -358,7 +348,6 @@ function installExtension(
             }
             return PromiseBB.resolve();
           })
->>>>>>> v2.0.2
           .then(() => validateInstall(tempPath, info).then((guessedType) => (type = guessedType)))
           .then(() => readExtensionInfo(tempPath, false, info))
           // merge the caller-provided info with the stuff parsed from the info.json file because there
