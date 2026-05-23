@@ -72,11 +72,7 @@ export async function getConfiguredProtonName(
     const configData = await fs.readFileAsync(configPath, "utf8");
     const config = parse(configData.toString()) as any;
     const mapping = config?.InstallConfigStore?.Software?.Valve?.Steam?.CompatToolMapping;
-<<<<<<< HEAD
     return mapping?.[appId]?.name || mapping?.["0"]?.name;
-=======
-    return mapping?.[appId]?.name;
->>>>>>> v2.0.2
   } catch (err: any) {
     log("debug", "Could not read Steam config.vdf", { error: err?.message });
     return undefined;
