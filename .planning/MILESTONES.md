@@ -1,5 +1,22 @@
 # Milestones
 
+## v8.1 Upstream v2.0.1 Sync (Shipped: 2026-05-23)
+
+**Phases completed:** 7 phases (31–37)
+
+**Key accomplishments:**
+
+- Forward-sync 3-way merge (Path C) of upstream `v2.0.1` onto `v2.0.0-linux-rebased` via fork PR #5
+- Conflict surface (109 files / 365 regions) hand-resolved bucket-by-bucket per v8.0 playbook: config (31), mod-mgmt + download_management hot zone (32), gamebryo + per-game (33), renderer + main spine (34)
+- Phase 35 contingency-fix: `packages/paths{,-node}/src/` restored from master (backfilled v2.0.1 merge gap; aggregate typecheck flipped 130 → 0); `electron-builder.config.json` orphan dropped (`.cjs` is live); dead `DownloadManager`/`DownloadObserver` dropped (Wave 1; renderer-bucket 9 → 0)
+- bundledPlugins ≥ 130 floor invariant enforced (post-build = 132, margin 2)
+- Phase 36 land: rebase + FF-merge PR #5 + SSH-signed `v2.0.1-linux-rebased` tag + cherry-pick `--no-merges` to `linux-port` + AppImage/.deb release with SHA256 manifest
+- Phase 37 carry-forward: SYNC-37a real-usage Skyrim SE walkthrough on `linux-port` HEAD; SYNC-37b playbook v8.1 deltas commit (`b0037bf1e`) — Path C 3-way pattern, packages/paths master-restore, bundledPlugins floor, per-bucket typecheck idiom, cherry-pick `--no-merges` filter
+- All `VORTEX-LINUX-MERGE-PLAYBOOK.md` items preserved across resolution; bluebird-trap audit clean across 7 named risk files
+- Closing artifact: master at `855fb3e1a`; tag `v2.0.1-linux-rebased`; AppImage SHA `13aa29288...`; .deb SHA `3d82353963...`
+
+---
+
 ## v8.0 Upstream v2.0.0 Sync (Shipped: 2026-05-22)
 
 **Phases completed:** 7 phases (24–30), ~50 plans

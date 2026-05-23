@@ -11,6 +11,7 @@
 - ✅ **v7.0 First-Run Onboarding Wizard** — Phases 18–23 (shipped 2026-04-17) — [archive](milestones/v7.0-ROADMAP.md)
 - ✅ **v8.0 Upstream v2.0.0 Sync** — Phases 24–30 (shipped 2026-05-22) — [scope](milestones/v8.0-SCOPE-PROPOSAL.md)
 - ✅ **v8.1 Upstream v2.0.1 Sync** — Phases 31–37 (shipped 2026-05-23; tag `v2.0.1-linux-rebased`)
+- ⏳ **v8.2 Upstream v2.0.2 Sync** — Phases 38–44 (in planning; source `fork/sync/upstream-v2.0.2` PR #6)
 
 ## Phases
 

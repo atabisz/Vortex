@@ -1,34 +1,34 @@
 ---
 gsd_state_version: 1.0
-milestone: v8.1
-milestone_name: Upstream v2.0.1 Sync
-status: completed
-stopped_at: Phase 37 complete; v8.1 milestone CLOSED (canonical artefacts UAT'd; playbook v8.1 deltas landed; Phase 36 STATE carry-forward included)
-last_updated: "2026-05-23T11:00:00.000Z"
-last_activity: 2026-05-23 -- Phase 37 CLOSED on master. v8.1 milestone (Upstream v2.0.1 Sync) SHIPPED. D-37-10 done-gate 5/5 GREEN; SYNC-37a + SYNC-37b ticked; canonical AppImage SHA `13aa29288...` + .deb SHA `3d82353963...` matched Phase 36 SYNC-36d manifest; SYNC-37b playbook commit `b0037bf1e` SSH-signed on master with 5 D-37-06 deltas + commit-index refresh; lint:ci exit 0; Phase 36 STATE carry-forward picked up here (closeout commit `855fb3e1a` shipped 2026-05-23 but its STATE/ROADMAP flips were deferred). Two-commit landing per RESEARCH.md v8.0 precedent (Commit A done-gate+summary, Commit B metadata flips); both pushed to fork/master via inline SSH URL.
+milestone: v8.2
+milestone_name: Upstream v2.0.2 Sync
+status: planning
+stopped_at: v8.2 milestone init — PROJECT.md/STATE.md flipped; REQUIREMENTS + ROADMAP next
+last_updated: "2026-05-23T08:35:00.000Z"
+last_activity: 2026-05-23 -- v8.2 milestone (Upstream v2.0.2 Sync) initialized. PR #6 conflict surface probed: 41 upstream commits, 108 source files / ~234 regions across v8.0/v8.1 conflict buckets. Locked 7-phase shape (38 config → 39 mod-mgmt+download → 40 gamebryo+per-game → 41 renderer+spine+nexus+e2e → 42 build verify → 43 land+tag → 44 carry-forward UAT). Branch `v8.2/sync-upstream-v2.0.2` to be cut from master `855fb3e1a`. Source of truth: `fork/sync/upstream-v2.0.2` HEAD `314ca807c`; conflict tree `3c032384cca696a9f578f392a6807ba3b0681675`.
 progress:
-    total_phases: 8
-    completed_phases: 6
-    total_plans: 34
-    completed_plans: 36
-    percent: 75
+    total_phases: 7
+    completed_phases: 0
+    total_plans: 0
+    completed_plans: 0
+    percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-22 after v8.0 ship + v8.1 milestone start)
+See: .planning/PROJECT.md (updated 2026-05-23 after v8.1 ship + v8.2 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** Phase 34 — renderer + main spine (v8.1)
+**Current focus:** v8.2 milestone init — REQUIREMENTS + ROADMAP for phases 38–44
 
 ## Current Position
 
-Phase: 35 — COMPLETE
-Plan: 35-08 — COMPLETE (Wave 7 done-gate; STATE + ROADMAP + REQUIREMENTS + master closeout SUMMARY + 8 wave plans)
-Status: Phase 36 unblocked (push v8.1/config-bucket → fork; FF-merge PR #5; SSH-signed tag v2.0.1-linux-rebased; cherry-pick to linux-port; release-linux.yml AppImage + .deb)
-Last activity: 2026-05-23 -- Phase 35 CLOSED on v8.1/config-bucket. 5 SSH-signed commits in Phase 35 range (e2127cecb..closeout); D-35-10 done-gate 7/7 GREEN; SYNC-35a..e all [x]; renderer-bucket flipped 9 → 0 via Wave 1 download_management drop; aggregate typecheck flipped 130 → 0 via Wave 2 packages/paths restore contingency-fix; orphan electron-builder.config.json removed Wave 6; per-bucket typecheck all 0; markers outside .planning/ = 0. Phase 36 owns push + FF-merge + tag.
+Phase: 38 — NOT STARTED (config bucket — workspace + lockfile + root configs parse)
+Plan: — (REQUIREMENTS + ROADMAP next)
+Status: v8.2 init in progress; PROJECT.md + STATE.md flipped; awaiting REQUIREMENTS.md draft + gsd-roadmapper for 7-phase plan
+Last activity: 2026-05-23 -- v8.2 milestone init: PROJECT.md current-milestone block flipped to v8.2; v8.1 archived to Previous Milestones. Conflict surface probed via merge-tree against `fork/sync/upstream-v2.0.2` (HEAD `314ca807c`, 41 upstream commits): 108 source files / ~234 regions, smaller than v8.1's 109/365. Locked 7-phase shape per v8.1 playbook. Branch to be cut: `v8.2/sync-upstream-v2.0.2` from master `855fb3e1a`.
 
 ## Performance Metrics
 
@@ -226,8 +226,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-23T06:41:22.769Z
-Stopped at: Phase 35 closed; Phase 36 unblocked (push + FF-merge + tag)
+Last session: 2026-05-23T08:35:00.000Z
+Stopped at: v8.2 milestone init — PROJECT.md + STATE.md flipped; REQUIREMENTS + ROADMAP next
 Resume file: None
 
 ### Phase 33 close-out summary
