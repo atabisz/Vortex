@@ -30,11 +30,7 @@ describe("View", () => {
         { id: "2", name: "b", value: 20 },
       ];
       const conn = createMockConnection(rows);
-<<<<<<< HEAD
       const view = new View<TestRow>(conn, "test_table");
-=======
-      const view = new View<TestRow>(conn as unknown as DuckDBConnection, "test_table");
->>>>>>> v2.0.2
 
       const result = await view.all();
 
@@ -44,11 +40,7 @@ describe("View", () => {
 
     it("returns empty array for empty table", async () => {
       const conn = createMockConnection([]);
-<<<<<<< HEAD
       const view = new View<TestRow>(conn, "test_table");
-=======
-      const view = new View<TestRow>(conn as unknown as DuckDBConnection, "test_table");
->>>>>>> v2.0.2
 
       const result = await view.all();
 
@@ -60,11 +52,7 @@ describe("View", () => {
     it("filters by a single column", async () => {
       const rows = [{ id: "1", name: "a", value: 10 }];
       const conn = createMockConnection(rows);
-<<<<<<< HEAD
       const view = new View<TestRow>(conn, "test_table");
-=======
-      const view = new View<TestRow>(conn as unknown as DuckDBConnection, "test_table");
->>>>>>> v2.0.2
 
       const result = await view.where({ name: "a" });
 
@@ -77,11 +65,7 @@ describe("View", () => {
 
     it("filters by multiple columns with AND", async () => {
       const conn = createMockConnection([]);
-<<<<<<< HEAD
       const view = new View<TestRow>(conn, "test_table");
-=======
-      const view = new View<TestRow>(conn as unknown as DuckDBConnection, "test_table");
->>>>>>> v2.0.2
 
       await view.where({ name: "a", value: 10 });
 
@@ -93,11 +77,7 @@ describe("View", () => {
 
     it("returns all rows when no filter keys provided", async () => {
       const conn = createMockConnection([{ id: "1", name: "a", value: 10 }]);
-<<<<<<< HEAD
       const view = new View<TestRow>(conn, "test_table");
-=======
-      const view = new View<TestRow>(conn as unknown as DuckDBConnection, "test_table");
->>>>>>> v2.0.2
 
       await view.where({});
 
@@ -109,11 +89,7 @@ describe("View", () => {
     it("returns first matching row", async () => {
       const row = { id: "1", name: "a", value: 10 };
       const conn = createMockConnection([row]);
-<<<<<<< HEAD
       const view = new View<TestRow>(conn, "test_table");
-=======
-      const view = new View<TestRow>(conn as unknown as DuckDBConnection, "test_table");
->>>>>>> v2.0.2
 
       const result = await view.findOne({ id: "1" });
 
@@ -126,11 +102,7 @@ describe("View", () => {
 
     it("returns null when no match", async () => {
       const conn = createMockConnection([]);
-<<<<<<< HEAD
       const view = new View<TestRow>(conn, "test_table");
-=======
-      const view = new View<TestRow>(conn as unknown as DuckDBConnection, "test_table");
->>>>>>> v2.0.2
 
       const result = await view.findOne({ id: "missing" });
 
@@ -145,11 +117,7 @@ describe("View", () => {
         { id: "2", name: "b", value: 20 },
       ];
       const conn = createMockConnection(rows);
-<<<<<<< HEAD
       const view = new View<TestRow>(conn, "test_table");
-=======
-      const view = new View<TestRow>(conn as unknown as DuckDBConnection, "test_table");
->>>>>>> v2.0.2
 
       const collected: TestRow[] = [];
       for await (const row of view) {
