@@ -52,11 +52,7 @@ class Tracking {
       description: laterT("Tracked on Nexus"),
       icon: "track",
       customRenderer: (mod: IMod, detail: boolean, t: TFunction) =>
-<<<<<<< HEAD
         mod.attributes?.source === "nexus" ? <TrackedIcon t={t} mod={mod} /> : null,
-=======
-        mod.attributes?.source === "nexus" ? <TrackedIcon mod={mod} t={t} /> : null,
->>>>>>> v2.0.2
       calc: (mod: IMod) => {
         if (mod.attributes?.source === "nexus") {
           const gameMode = activeGameId(this.mApi.getState());
@@ -129,12 +125,6 @@ class Tracking {
       return (
         <IconButton
           className="btn-embed"
-<<<<<<< HEAD
-          stroke={!this.mTrackedMods[nexusId]?.has?.(mod.attributes?.modId?.toString())}
-          hollow={!this.mTrackedMods[nexusId]?.has?.(mod.attributes?.modId?.toString())}
-          tooltip={t("Mod Tracked")}
-=======
->>>>>>> v2.0.2
           data-modid={mod.attributes?.modId}
           hollow={!this.mTrackedMods[nexusId]?.has?.(mod.attributes?.modId?.toString())}
           icon="track"
