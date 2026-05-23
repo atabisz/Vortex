@@ -5,6 +5,11 @@
   "sortTailwindcss": {
     "stylesheet": "./src/stylesheets/tailwind-v4.css"
   },
-  "ignorePatterns": ["etc/**", "src/renderer/src/index.html", "CLAUDE.md"],
+  "ignorePatterns": [
+    "etc/**",
+    "src/renderer/src/index.html",
+    "CLAUDE.md",
+    "src/renderer/src/extensions/mod_management/InstallManager.ts"
+  ],
   "embeddedLanguageFormatting": "auto"
 }

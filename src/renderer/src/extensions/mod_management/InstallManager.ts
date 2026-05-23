@@ -205,6 +205,72 @@ interface IDeploymentDetails {
 }
 
 // Function to get current download manager free slots
+function getDownloadFreeSlots(api: IExtensionApi): Promise<number> {
+  return new Promise((resolve) => {
+    api.events.emit("get-download-free-slots", (freeSlots: number) => {
+      resolve(freeSlots);
+    });
+  });
+}
+
+// Dynamic concurrency limiter that respects download manager's free slots
+class DynamicDownloadConcurrencyLimiter {
+  private mQueue: Array<{
+    cb: () => PromiseLike<any>;
+    resolve: (value: any) => void;
+    reject: (reason: any) => void;
+  }> = [];
+  private mRunning = 0;
+  private mApi: IExtensionApi;
+
+  constructor(api: IExtensionApi) {
+    this.mApi = api;
+  }
+
+  public do<T>(cb: () => PromiseLike<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      this.mQueue.push({ cb, resolve, reject });
+      void this.process();
+    });
+  }
+
+  private async process(): Promise<void> {
+    if (this.mQueue.length === 0) {
+      return;
+    }
+
+    const freeSlots = await getDownloadFreeSlots(this.mApi);
+    const availableSlots = Math.max(0, freeSlots);
+
+    const toProcess = Math.min(availableSlots, this.mQueue.length);
+
+    for (let i = 0; i < toProcess; i++) {
+      const item = this.mQueue.shift();
+      if (!item) {
+        break; // Queue was emptied by another process
+      }
+
+      const { cb, resolve, reject } = item;
+      this.mRunning++;
+
+      // Process each item concurrently
+      Promise.resolve(cb())
+        .then(resolve)
+        .catch(reject)
+        .finally(() => {
+          this.mRunning--;
+          // Process next items after a short delay to allow state to update
+          setTimeout(() => void this.process(), 100);
+        });
+    }
+
+    // If we still have items queued but no slots, check again later
+    // Also periodically check for paused downloads that might need to be resumed
+    if (this.mQueue.length > 0 && toProcess === 0) {
+      setTimeout(() => void this.process(), 500);
+    }
+  }
+}
 
 type ReplaceChoice = "replace" | "variant";
 interface IReplaceChoice {
@@ -487,6 +553,7 @@ class InstallManager {
   private mInstallers: IModInstaller[] = [];
   private mGetInstallPath: (gameId: string) => string;
   private mDependencyInstalls: { [modId: string]: () => void } = {};
+  private mDependencyDownloadsLimit: DynamicDownloadConcurrencyLimiter;
   private mNotificationAggregator: NotificationAggregator;
   private mNotificationAggregationTimeoutMS: number = 5000;
 
