@@ -1,22 +1,14 @@
 import * as path from "path";
 
-<<<<<<< HEAD:src/renderer/src/extensions/gamemode_management/util/ProcessMonitor.test.ts
 import { it, expect, vi } from "vitest";
 
-=======
->>>>>>> v2.0.2:src/renderer/src/extensions/gamemode_management/__tests__/ProcessMonitor.test.ts
 import { setToolPid, setToolStopped } from "../../../actions";
 import { makeExeId } from "../../../reducers/session";
 import type { IDiscoveredTool } from "../../../types/IDiscoveredTool";
 import type { IExtensionApi } from "../../../types/IExtensionContext";
 import type { IState } from "../../../types/IState";
-<<<<<<< HEAD:src/renderer/src/extensions/gamemode_management/util/ProcessMonitor.test.ts
 import ProcessMonitor from "./ProcessMonitor";
 import type { IProcessInfo, IProcessProvider } from "./processProvider";
-=======
-import ProcessMonitor from "../util/ProcessMonitor";
-import type { IProcessInfo, IProcessProvider } from "../util/processProvider";
->>>>>>> v2.0.2:src/renderer/src/extensions/gamemode_management/__tests__/ProcessMonitor.test.ts
 
 const gameId = "test-game";
 const profileId = "profile-1";
