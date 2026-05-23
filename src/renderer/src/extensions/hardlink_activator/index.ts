@@ -5,10 +5,7 @@ import { getErrorCode, getErrorMessageOrDefault, unknownToError } from "@vortex/
 import PromiseBB from "bluebird";
 import type { TFunction } from "i18next";
 import turbowalk from "turbowalk";
-<<<<<<< HEAD
 import type { IEntry } from "turbowalk";
-=======
->>>>>>> v2.0.2
 import * as winapi from "winapi-bindings";
 
 import { setSettingsPage } from "../../actions/session";
@@ -27,7 +24,6 @@ import type {
   IUnavailableReason,
 } from "../mod_management/types/IDeploymentMethod";
 
-<<<<<<< HEAD
 /**
  * On Linux, turbowalk's JS fallback does not provide linkCount or idStr.
  * Enrich each entry with lstat data so inode-based purge works correctly.
@@ -48,8 +44,6 @@ async function enrichLinuxEntries(entries: IEntry[]): Promise<void> {
   );
 }
 
-=======
->>>>>>> v2.0.2
 export class FileFound extends Error {
   constructor(name: string) {
     super(name);
@@ -312,14 +306,9 @@ class DeploymentMethod extends LinkingDeployment {
       return turbowalk(
         dataPath,
         (entries) => {
-<<<<<<< HEAD
           queue = queue.then(async () => {
             await enrichLinuxEntries(entries);
             return PromiseBB.map(entries, (entry) => {
-=======
-          queue = queue.then(() =>
-            PromiseBB.map(entries, (entry) => {
->>>>>>> v2.0.2
               if (entry.linkCount > 1 && entry.idStr !== undefined && inos.has(entry.idStr)) {
                 ++purged;
                 if (purged % 1000 === 0) {
