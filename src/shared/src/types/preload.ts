@@ -97,6 +97,9 @@ export interface Api {
 
   /** Downloader APIs */
   downloader: DownloaderApi;
+
+  /** Diagnostic APIs */
+  diag: Diag;
 }
 
 export interface Example {
@@ -113,6 +116,13 @@ export interface Shell {
 
   /** Register listener for shell.openExternal failure events from main process. */
   onOpenUrlFailed(callback: (url: string) => void): void;
+}
+
+export interface Diag {
+  /** Synchronously append one line to vortex.log. Blocks until main has
+   *  flushed the line, so it survives the caller dying or main crashing in
+   *  the same message-loop tick. Sync IPC; reserve for fatal diagnostics. */
+  fatal(message: string): void;
 }
 
 export interface Dialog {

@@ -1,6 +1,7 @@
 import { createAction } from "redux-act";
 
 import { log } from "../../../logging";
+import type { IChunk } from "../types/IChunk";
 
 export interface IDictionary {
   [key: string]: any;
@@ -24,10 +25,11 @@ export const initDownload = createAction(
  */
 export const downloadProgress = createAction(
   "DOWNLOAD_PROGRESS",
-  (id: string, received: number, total: number, urls: string[]) => ({
+  (id: string, received: number, total: number, chunks: IChunk[], urls: string[]) => ({
     id,
     received,
     total,
+    chunks,
     urls,
   }),
 );

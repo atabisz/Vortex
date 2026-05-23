@@ -124,12 +124,12 @@ class Tracking {
 
       return (
         <IconButton
-          icon="track"
           className="btn-embed"
-          stroke={!this.mTrackedMods[nexusId]?.has?.(mod.attributes?.modId?.toString())}
-          hollow={!this.mTrackedMods[nexusId]?.has?.(mod.attributes?.modId?.toString())}
-          tooltip={t("Mod Tracked")}
           data-modid={mod.attributes?.modId}
+          hollow={!this.mTrackedMods[nexusId]?.has?.(mod.attributes?.modId?.toString())}
+          icon="track"
+          stroke={!this.mTrackedMods[nexusId]?.has?.(mod.attributes?.modId?.toString())}
+          tooltip={t("Mod Tracked")}
           onClick={this.toggleTracked}
         />
       );
@@ -137,7 +137,7 @@ class Tracking {
   }
 
   private fetch() {
-    if (this.mNexus.getValidationResult() === null) {
+    if (this.mNexus.getValidationResult() == null) {
       return;
     }
 

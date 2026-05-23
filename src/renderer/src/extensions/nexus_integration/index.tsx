@@ -356,6 +356,13 @@ const requestLog = {
   },
 };
 
+export interface IExtensionContextExt extends IExtensionContext {
+  registerDownloadProtocol: (
+    schema: string,
+    handler: (inputUrl: string, name: string) => PromiseBB<{ urls: string[]; meta: any }>,
+  ) => void;
+}
+
 function retrieveCategories(api: IExtensionApi, isUpdate: boolean) {
   let askUser: PromiseBB<boolean>;
   if (isUpdate) {

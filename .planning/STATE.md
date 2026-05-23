@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v8.2
 milestone_name: Upstream v2.0.2 Sync
-status: planning
-stopped_at: v8.2 milestone init — PROJECT.md/STATE.md flipped; REQUIREMENTS + ROADMAP next
-last_updated: "2026-05-23T08:35:00.000Z"
-last_activity: 2026-05-23 -- v8.2 milestone (Upstream v2.0.2 Sync) initialized. PR #6 conflict surface probed: 41 upstream commits, 108 source files / ~234 regions across v8.0/v8.1 conflict buckets. Locked 7-phase shape (38 config → 39 mod-mgmt+download → 40 gamebryo+per-game → 41 renderer+spine+nexus+e2e → 42 build verify → 43 land+tag → 44 carry-forward UAT). Branch `v8.2/sync-upstream-v2.0.2` to be cut from master `855fb3e1a`. Source of truth: `fork/sync/upstream-v2.0.2` HEAD `314ca807c`; conflict tree `3c032384cca696a9f578f392a6807ba3b0681675`.
+status: executing
+stopped_at: Phase 39 thin-patch series — 13/13 conflict files resolved (7 dl-mgmt + 6 mod-mgmt); pushed to PR #6 at `da68c003b`; merging fork/master to clear .planning overlap
+last_updated: "2026-05-23T11:25:00.000Z"
+last_activity: 2026-05-23
 progress:
-    total_phases: 7
-    completed_phases: 0
-    total_plans: 0
-    completed_plans: 0
+    total_phases: 8
+    completed_phases: 1
+    total_plans: 23
+    completed_plans: 7
     percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23 after v8.1 ship + v8.2 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** v8.2 milestone init — REQUIREMENTS + ROADMAP for phases 38–44
+**Current focus:** Phase 39 — mod-management + download-management thin-patch series (v2.0.2)
 
 ## Current Position
 
-Phase: 38 — NOT STARTED (config bucket — workspace + lockfile + root configs parse)
-Plan: — (REQUIREMENTS + ROADMAP next)
-Status: v8.2 init in progress; PROJECT.md + STATE.md flipped; awaiting REQUIREMENTS.md draft + gsd-roadmapper for 7-phase plan
-Last activity: 2026-05-23 -- v8.2 milestone init: PROJECT.md current-milestone block flipped to v8.2; v8.1 archived to Previous Milestones. Conflict surface probed via merge-tree against `fork/sync/upstream-v2.0.2` (HEAD `314ca807c`, 41 upstream commits): 108 source files / ~234 regions, smaller than v8.1's 109/365. Locked 7-phase shape per v8.1 playbook. Branch to be cut: `v8.2/sync-upstream-v2.0.2` from master `855fb3e1a`.
+Phase: 39 (mod-management + download-management hot zone, v2.0.2) — EXECUTING (thin-patch series)
+Plans: GSD plan-count model superseded; thin-patch series resolved 13/13 conflict files (7 dl-mgmt + 6 mod-mgmt); pushed to PR #6 at `da68c003b`
+Status: Resolving .planning/ overlap with fork/master via merge commit; PR #6 advance pending
+Last activity: 2026-05-23 -- Phase 39 thin-patch series resolved Settings.tsx (`104342b17`), LinkingDeployment.ts (`344f755f3`), InstallManager.ts (`da68c003b`); all 7 grep-checkpoint playbook gates GREEN; pushed to fork/sync/upstream-v2.0.2 via force-with-lease. Merging fork/master to advance PR #6 from DIRTY → MERGEABLE.
 
 ## Performance Metrics
 
@@ -226,8 +226,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-23T08:35:00.000Z
-Stopped at: v8.2 milestone init — PROJECT.md + STATE.md flipped; REQUIREMENTS + ROADMAP next
+Last session: 2026-05-23T11:25:00.000Z
+Stopped at: Phase 39 thin-patch series complete (13/13 conflict files resolved, 6 mod-mgmt + 7 dl-mgmt); pushed to PR #6 at `da68c003b`; merging fork/master to clear .planning overlap
 Resume file: None
 
 ### Phase 33 close-out summary
@@ -248,7 +248,7 @@ Resume file: None
 
 ## Phase 34 — renderer + main spine merge resolution v2.0.1
 
-**Status:** COMPLETE @ 2026-05-23
+**Status:** Ready to execute
 **Branch:** v8.1/config-bucket
 **Commits:** 131 in v8.1/config-bucket~131..HEAD (114 work commits — `resolve|chore|regen` + 7 `docs(phase-34)` wave SUMMARYs + 9 `chore(state)` per-plan markers + 1 misc; `<state-counter>` + `<closeout summary>` + `<state+roadmap>` from this wave inclusive)
 

@@ -934,11 +934,6 @@ export function onRemoveMods(
             // manifest entries instead of surfacing a confusing dialog.
             installManager.markRecentRemoval(mod.installationPath);
 
-            // Tell the deployment flow this removal is expected, so the
-            // next external-changes scan auto-resolves the now-srcdeleted
-            // manifest entries instead of surfacing a confusing dialog.
-            installManager.markRecentRemoval(mod.installationPath);
-
             batched.push(removeMod(gameId, mod.id));
             if (batched.length >= 10 || completedCount + 1 === totalCount) {
               batchDispatch(store, batched);

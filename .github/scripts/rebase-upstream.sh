@@ -62,6 +62,21 @@ if ! git merge "${UPSTREAM_TAG}" --no-edit -m "merge upstream ${UPSTREAM_TAG} in
   git commit --no-edit -m "merge upstream ${UPSTREAM_TAG} (conflicts)" || true
 fi
 
+# Step 5b: Linux smoke test (Hyrum gate from the council).
+# Probes the binary checks from VORTEX-LINUX-MERGE-PLAYBOOK.md. We never block
+# the PR on smoke results — the human reviewer needs the PR open either way —
+# but we record the outcome in the PR body so escalation is one glance away.
+SMOKE_STATUS="not run"
+SMOKE_DETAIL=""
+if [[ -x scripts/linux-smoke.sh ]]; then
+  if SMOKE_OUT=$(bash scripts/linux-smoke.sh --quiet 2>&1); then
+    SMOKE_STATUS="pass"
+  else
+    SMOKE_STATUS="fail — escalate"
+  fi
+  SMOKE_DETAIL=$(echo "$SMOKE_OUT" | tail -1 | sed 's/\x1b\[[0-9;]*m//g')
+fi
+
 # Step 6: Restore our fork's .github/workflows/ before pushing.
 # GITHUB_TOKEN cannot push workflow file changes — and we don't want upstream's
 # CI config overwriting ours anyway. Restoring from master keeps our workflows
@@ -93,6 +108,9 @@ if [[ "${HAS_CONFLICTS}" == "true" ]]; then
 ${CONFLICT_FILES}
 \`\`\`
 
+**Linux smoke gate:** ${SMOKE_STATUS}
+\`${SMOKE_DETAIL}\`
+
 ---
 Fork: https://github.com/atabisz/Vortex"
 else
@@ -101,6 +119,8 @@ else
 **Upstream tag:** \`${UPSTREAM_TAG}\`
 **Upstream release:** https://github.com/Nexus-Mods/Vortex/releases/tag/${UPSTREAM_TAG}
 **Conflict status:** Clean merge
+**Linux smoke gate:** ${SMOKE_STATUS}
+\`${SMOKE_DETAIL}\`
 **Commits from fork base to upstream tag:** ${COMMIT_COUNT}
 
 ### Upstream commits

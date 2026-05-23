@@ -8,7 +8,7 @@
 
 **Target features:**
 
-- Phase 38 — Config bucket (workspace + lockfile + root configs parse)
+- Phase 38 ✅ Config bucket — workspace + lockfile + root configs parse; pushed to PR #6 at `84c3310a4` (2026-05-23)
 - Phase 39 — Mod-management + download-management hot zone (bucket D)
 - Phase 40 — Gamebryo + per-game extensions resolution (buckets E + F)
 - Phase 41 — Renderer + main spine + nexus + e2e (buckets G + H + I + J)

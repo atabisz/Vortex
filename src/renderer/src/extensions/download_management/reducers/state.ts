@@ -176,7 +176,7 @@ export const stateReducer: IReducerSpec = {
     },
     [action.setDownloadSpeed as any]: (state, payload) => {
       const temp = setSafe(state, ["speed"], payload);
-      let speeds = Array.isArray(state.speedHistory) ? state.speedHistory.slice() : [];
+      let speeds = state.speedHistory !== undefined ? state.speedHistory.slice() : [];
       speeds.push(payload);
       if (speeds.length > NUM_SPEED_DATA_POINTS) {
         speeds = speeds.slice(speeds.length - NUM_SPEED_DATA_POINTS);
