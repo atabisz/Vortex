@@ -203,49 +203,49 @@ ONBRD-04 UAT checklist (code-complete Phase 21; hardware UAT pending):
 
 ## Progress
 
-| Phase                                                     | Milestone | Plans Complete | Status   | Completed  |
-| --------------------------------------------------------- | --------- | -------------- | -------- | ---------- |
-| 1. Runtime Environment                                    | v1.0      | 1/1            | Complete | 2026-03-30 |
-| 2. winapi-bindings Shim                                   | v1.0      | 2/2            | Complete | 2026-03-30 |
-| 3. Native Addon Compilation                               | v1.0      | 3/3            | Complete | 2026-03-30 |
-| 4. FOMOD Installer Integration                            | v1.0      | 2/2            | Complete | 2026-03-31 |
-| 5. IPC and Elevation Audit                                | v1.0      | 2/2            | Complete | 2026-03-31 |
-| 6. Steam/Proton Detection                                 | v2.0      | 3/3            | Complete | 2026-04-01 |
-| 7. Linux Packaging                                        | v2.0      | 2/2            | Complete | 2026-04-01 |
-| 8. NXM Protocol Handler                                   | v2.0      | 2/2            | Complete | 2026-04-01 |
-| 9. Native Addon Fix + Elevation Foundation                | v3.0      | 2/2            | Complete | 2026-04-01 |
-| 10. Save UI Validation + SteamOS + Polkit                 | v3.0      | 2/2            | Complete | 2026-04-01 |
-| 11. Persistent Elevation Token                            | v4.0      | 1/1            | Complete | 2026-04-07 |
-| 12. Elevation End-to-End Validation + Steam Deck Error UX | v4.0      | 1/1            | Complete | 2026-04-07 |
-| 13. Save Transfer                                         | v4.0      | 1/1            | Complete | 2026-04-07 |
-| 14. Linux Case-Folding fs Wrapper                         | v4.0      | 2/2            | Complete | 2026-04-07 |
-| 15. fomod-installer Linux Fixes + Vortex Cleanup          | v5.0      | 3/3            | Complete | 2026-04-09 |
-| 16. chattr+F Filesystem Layer                             | v6.0      | 1/1            | Complete | 2026-04-15 |
-| 17. Upstream Rebase CI Workflow                           | v6.0      | 1/1            | Complete | 2026-04-15 |
-| 18. First-Run Dashboard Foundation                        | v7.0      | 2/2            | Complete | 2026-04-16 |
-| 19. Staging Directory Wiring                              | v7.0      | 3/3            | Complete | 2026-04-16 |
-| 20. Windows String Purge                                  | v7.0      | 2/2            | Complete | 2026-04-16 |
-| 21. Mod Install Round-Trip Validation                     | v7.0      | 2/2            | Complete | 2026-04-16 |
-| 22. Steam Deck Layout                                     | v7.0      | 1/1            | Complete | 2026-04-17 |
-| 23. Help Links                                            | v7.0      | 2/2            | Complete | 2026-04-17 |
-| 24. Config bucket                                         | v8.0      | —              | Complete | 2026-05-22 |
-| 25. Restore dropped scaffolding                           | v8.0      | —              | Complete | 2026-05-22 |
-| 26. Mod-management hot zone                               | v8.0      | —              | Complete | 2026-05-22 |
-| 27. Gamebryo + per-game extensions                        | v8.0      | —              | Complete | 2026-05-22 |
-| 28. Renderer + main spine                                 | v8.0      | —              | Complete | 2026-05-22 |
-| 29. Build verification                                    | v8.0      | —              | Complete | 2026-05-22 |
-| 30. Land + tag (v2.0.0-linux-rebased)                     | v8.0      | —              | Complete | 2026-05-22 |
-| 31. Config bucket (v2.0.1)                                | v8.1      | 8/8            | Complete | 2026-05-22 |
-| 32. Mod-management hot zone (v2.0.1)                      | v8.1      | 7/6            | Complete | 2026-05-22 |
-| 33. Gamebryo + per-game extensions (v2.0.1)               | v8.1      | 10/10          | Complete | 2026-05-23 |
-| 34. Renderer + main spine (v2.0.1)                        | v8.1      | 10/10          | Complete | 2026-05-23 |
-| 35. Build verification (v2.0.1)                           | v8.1      | 8/8            | Complete | 2026-05-23 |
-| 36. Land + tag (v2.0.1-linux-rebased)                     | v8.1      | 4/4            | Complete | 2026-05-23 |
-| 37. Carry-forward UAT (v2.0.1)                            | v8.1      | 4/4            | Complete | 2026-05-23 |
-| 38. Config bucket (v2.0.2)                                | v8.2      | 7/7            | Complete | 2026-05-23 |
-| 39. Mod-management + download-management (v2.0.2)         | v8.2      | —              | Pending  | —          |
-| 40. Gamebryo + per-game extensions (v2.0.2)               | v8.2      | —              | Pending  | —          |
-| 41. Renderer + main spine + nexus + e2e (v2.0.2)          | v8.2      | —              | Pending  | —          |
-| 42. Build verification (v2.0.2)                           | v8.2      | —              | Pending  | —          |
-| 43. Land + tag (v2.0.2-linux-rebased)                     | v8.2      | —              | Pending  | —          |
-| 44. Carry-forward UAT (v2.0.2)                            | v8.2      | —              | Pending  | —          |
+| Phase                                                     | Milestone | Plans Complete | Status      | Completed  |
+| --------------------------------------------------------- | --------- | -------------- | ----------- | ---------- |
+| 1. Runtime Environment                                    | v1.0      | 1/1            | Complete    | 2026-03-30 |
+| 2. winapi-bindings Shim                                   | v1.0      | 2/2            | Complete    | 2026-03-30 |
+| 3. Native Addon Compilation                               | v1.0      | 3/3            | Complete    | 2026-03-30 |
+| 4. FOMOD Installer Integration                            | v1.0      | 2/2            | Complete    | 2026-03-31 |
+| 5. IPC and Elevation Audit                                | v1.0      | 2/2            | Complete    | 2026-03-31 |
+| 6. Steam/Proton Detection                                 | v2.0      | 3/3            | Complete    | 2026-04-01 |
+| 7. Linux Packaging                                        | v2.0      | 2/2            | Complete    | 2026-04-01 |
+| 8. NXM Protocol Handler                                   | v2.0      | 2/2            | Complete    | 2026-04-01 |
+| 9. Native Addon Fix + Elevation Foundation                | v3.0      | 2/2            | Complete    | 2026-04-01 |
+| 10. Save UI Validation + SteamOS + Polkit                 | v3.0      | 2/2            | Complete    | 2026-04-01 |
+| 11. Persistent Elevation Token                            | v4.0      | 1/1            | Complete    | 2026-04-07 |
+| 12. Elevation End-to-End Validation + Steam Deck Error UX | v4.0      | 1/1            | Complete    | 2026-04-07 |
+| 13. Save Transfer                                         | v4.0      | 1/1            | Complete    | 2026-04-07 |
+| 14. Linux Case-Folding fs Wrapper                         | v4.0      | 2/2            | Complete    | 2026-04-07 |
+| 15. fomod-installer Linux Fixes + Vortex Cleanup          | v5.0      | 3/3            | Complete    | 2026-04-09 |
+| 16. chattr+F Filesystem Layer                             | v6.0      | 1/1            | Complete    | 2026-04-15 |
+| 17. Upstream Rebase CI Workflow                           | v6.0      | 1/1            | Complete    | 2026-04-15 |
+| 18. First-Run Dashboard Foundation                        | v7.0      | 2/2            | Complete    | 2026-04-16 |
+| 19. Staging Directory Wiring                              | v7.0      | 3/3            | Complete    | 2026-04-16 |
+| 20. Windows String Purge                                  | v7.0      | 2/2            | Complete    | 2026-04-16 |
+| 21. Mod Install Round-Trip Validation                     | v7.0      | 2/2            | Complete    | 2026-04-16 |
+| 22. Steam Deck Layout                                     | v7.0      | 1/1            | Complete    | 2026-04-17 |
+| 23. Help Links                                            | v7.0      | 2/2            | Complete    | 2026-04-17 |
+| 24. Config bucket                                         | v8.0      | —              | Complete    | 2026-05-22 |
+| 25. Restore dropped scaffolding                           | v8.0      | —              | Complete    | 2026-05-22 |
+| 26. Mod-management hot zone                               | v8.0      | —              | Complete    | 2026-05-22 |
+| 27. Gamebryo + per-game extensions                        | v8.0      | —              | Complete    | 2026-05-22 |
+| 28. Renderer + main spine                                 | v8.0      | —              | Complete    | 2026-05-22 |
+| 29. Build verification                                    | v8.0      | —              | Complete    | 2026-05-22 |
+| 30. Land + tag (v2.0.0-linux-rebased)                     | v8.0      | —              | Complete    | 2026-05-22 |
+| 31. Config bucket (v2.0.1)                                | v8.1      | 8/8            | Complete    | 2026-05-22 |
+| 32. Mod-management hot zone (v2.0.1)                      | v8.1      | 7/6            | Complete    | 2026-05-22 |
+| 33. Gamebryo + per-game extensions (v2.0.1)               | v8.1      | 10/10          | Complete    | 2026-05-23 |
+| 34. Renderer + main spine (v2.0.1)                        | v8.1      | 10/10          | Complete    | 2026-05-23 |
+| 35. Build verification (v2.0.1)                           | v8.1      | 8/8            | Complete    | 2026-05-23 |
+| 36. Land + tag (v2.0.1-linux-rebased)                     | v8.1      | 4/4            | Complete    | 2026-05-23 |
+| 37. Carry-forward UAT (v2.0.1)                            | v8.1      | 4/4            | Complete    | 2026-05-23 |
+| 38. Config bucket (v2.0.2)                                | v8.2      | 7/7            | Complete    | 2026-05-23 |
+| 39. Mod-management + download-management (v2.0.2)         | v8.2      | 1/16           | In Progress |            |
+| 40. Gamebryo + per-game extensions (v2.0.2)               | v8.2      | —              | Pending     | —          |
+| 41. Renderer + main spine + nexus + e2e (v2.0.2)          | v8.2      | —              | Pending     | —          |
+| 42. Build verification (v2.0.2)                           | v8.2      | —              | Pending     | —          |
+| 43. Land + tag (v2.0.2-linux-rebased)                     | v8.2      | —              | Pending     | —          |
+| 44. Carry-forward UAT (v2.0.2)                            | v8.2      | —              | Pending     | —          |

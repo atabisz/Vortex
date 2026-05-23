@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v8.2
 milestone_name: Upstream v2.0.2 Sync
-status: completed
+status: executing
 stopped_at: Phase 39 plans authored (16 plans, plan-checker PASS); ready to execute
-last_updated: "2026-05-23T10:36:20.156Z"
-last_activity: "2026-05-23 -- Phase 38 CLOSED on `v8.2/sync-upstream-v2.0.2`. 11 SSH-signed commits in `4d5822adb..84c3310a4` (8 hand-resolved Bucket A files + lockfile regen + playwright catalog pin follow-up + setup commit). Pushed to `fork/sync/upstream-v2.0.2` PR #6 via force-with-lease (no race detected). D-38-17 5-criterion done-gate GREEN. Phase 39 owns bucket D."
+last_updated: "2026-05-23T10:42:13.652Z"
+last_activity: 2026-05-23
 progress:
     total_phases: 8
     completed_phases: 0
     total_plans: 23
-    completed_plans: 3
+    completed_plans: 4
     percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23 after v8.1 ship + v8.2 milestone start)
 
 **Core value:** A Linux user can install Vortex, detect their Steam/Proton games, download mods via NXM link, and manage save games — without leaving the Vortex UI.
-**Current focus:** Phase 39 — mod-management + download-management hot zone (v8.2 bucket D)
+**Current focus:** Phase 39 — mod-management-download-management-hot-zone-v2-0-2
 
 ## Current Position
 
-Phase: 38 — COMPLETE
-Plan: 38-07 — COMPLETE (force-with-lease push to PR #6 — `84c3310a4` landed; PR #6 `headRefOid` matches local HEAD)
-Status: Phase 39 unblocked. Bucket D resolution (`InstallManager.ts`, `LinkingDeployment.ts`, `externalChanges.ts`, `mod_management/{index,eventHandlers}.ts`, `stagingDirectory.ts`, `util/deploy.ts`, `views/ModList.tsx`, `download_management/`). Decision points carried in from v8.1: Path C 3-way pattern, bluebird-trap audit, casing/SteamOS/elevation §6/§7/externalChanges sites preserved.
-Last activity: 2026-05-23 -- Phase 38 CLOSED on `v8.2/sync-upstream-v2.0.2`. 11 SSH-signed commits in `4d5822adb..84c3310a4` (8 hand-resolved Bucket A files + lockfile regen + playwright catalog pin follow-up + setup commit). Pushed to `fork/sync/upstream-v2.0.2` PR #6 via force-with-lease (no race detected). D-38-17 5-criterion done-gate GREEN. Phase 39 owns bucket D.
+Phase: 39 (mod-management-download-management-hot-zone-v2-0-2) — EXECUTING
+Plan: 2 of 16
+Status: Ready to execute
+Last activity: 2026-05-23
 
 ## Performance Metrics
 
@@ -226,9 +226,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-05-23T10:36:20.137Z
+Last session: 2026-05-23T10:42:13.635Z
 Stopped at: Phase 39 plans authored (16 plans, plan-checker PASS); ready to execute
-Resume file: .planning/phases/39-mod-management-download-management-hot-zone-v2-0-2/39-01-PLAN.md
+Resume file: None
 
 ### Phase 33 close-out summary
 
@@ -248,7 +248,7 @@ Resume file: .planning/phases/39-mod-management-download-management-hot-zone-v2-
 
 ## Phase 34 — renderer + main spine merge resolution v2.0.1
 
-**Status:** COMPLETE @ 2026-05-23
+**Status:** Ready to execute
 **Branch:** v8.1/config-bucket
 **Commits:** 131 in v8.1/config-bucket~131..HEAD (114 work commits — `resolve|chore|regen` + 7 `docs(phase-34)` wave SUMMARYs + 9 `chore(state)` per-plan markers + 1 misc; `<state-counter>` + `<closeout summary>` + `<state+roadmap>` from this wave inclusive)
 
