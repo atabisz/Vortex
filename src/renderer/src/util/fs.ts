@@ -13,13 +13,9 @@
  * - ignoring ENOENT error when deleting a file.
  */
 
-<<<<<<< HEAD
 import { execFile as execFileNative } from "child_process";
 import * as net from "net";
 import * as fsPromises from "node:fs/promises";
-=======
-import * as net from "net";
->>>>>>> v2.0.2
 import * as path from "path";
 
 import {
@@ -41,18 +37,12 @@ import { generate as shortid } from "shortid";
 import * as tmp from "tmp";
 import type * as whoLocksT from "wholocks";
 
-<<<<<<< HEAD
 import type { INotification } from "../types/INotification";
-=======
->>>>>>> v2.0.2
 import { ProcessCanceled, SelfCopyCheckError, UserCanceled } from "./CustomErrors";
 import { runElevated } from "./elevated";
 import { createErrorReport, getVisibleWindow } from "./errorHandling";
 import type { TFunction } from "./i18n";
-<<<<<<< HEAD
 import { getIPCPath } from "./ipc";
-=======
->>>>>>> v2.0.2
 import lazyRequire from "./lazyRequire";
 import { log } from "./log";
 import { decodeSystemError } from "./nativeErrors";
@@ -732,7 +722,6 @@ const moveAsync: (src: string, dest: string, options?: fs.MoveOptions) => Promis
 const openAsync: (path: string, flags: string | number, mode?: number) => PromiseBB<number> =
   genFSWrapperAsync(fs.open);
 const readdirAsync: (path: string) => PromiseBB<string[]> = genFSWrapperAsync(fs.readdir);
-<<<<<<< HEAD
 const readFileAsyncRaw: (...args: any[]) => PromiseBB<any> = genFSWrapperAsync(fs.readFile);
 const readFileAsync: (...args: any[]) => PromiseBB<any> = (...args: any[]) => {
   const filePath = args[0];
@@ -753,10 +742,6 @@ const statAsync: (path: string) => PromiseBB<fs.Stats> = (filePath: string) => {
   }
   return statAsyncRaw(filePath);
 };
-=======
-const readFileAsync: (...args: any[]) => PromiseBB<any> = genFSWrapperAsync(fs.readFile);
-const statAsync: (path: string) => PromiseBB<fs.Stats> = genFSWrapperAsync(fs.stat);
->>>>>>> v2.0.2
 const statSilentAsync: (path: string) => PromiseBB<fs.Stats> = (statPath: string) =>
   PromiseBB.resolve(fs.stat(statPath));
 const symlinkAsync: (srcpath: string, dstpath: string, type?: string) => PromiseBB<void> =
@@ -770,7 +755,6 @@ const writeAsync: <BufferT>(
 ) => PromiseBB<{ bytesWritten: number; buffer: BufferT }> = genFSWrapperAsync(fs.write) as any;
 const readAsync: <BufferT>(...args: any[]) => PromiseBB<{ bytesRead: number; buffer: BufferT }> =
   genFSWrapperAsync(fs.read) as any;
-<<<<<<< HEAD
 const writeFileAsyncRaw: (
   file: string,
   data: any,
@@ -790,10 +774,6 @@ const writeFileAsync: (
   }
   return writeFileAsyncRaw(...(args as [string, any, fs.WriteFileOptions?]));
 };
-=======
-const writeFileAsync: (file: string, data: any, options?: fs.WriteFileOptions) => PromiseBB<void> =
-  genFSWrapperAsync(fs.writeFile);
->>>>>>> v2.0.2
 const appendFileAsync: (file: string, data: any, options?: fs.WriteFileOptions) => PromiseBB<void> =
   genFSWrapperAsync(fs.appendFile);
 // tslint:enable:max-line-length
@@ -956,7 +936,6 @@ export function copyAsync(
   },
 ): PromiseBB<void> {
   const stackErr = new Error();
-<<<<<<< HEAD
   const resolvedSrc = isWinePrefixPath(src)
     ? PromiseBB.resolve(resolveCaseIfWinePrefix(src))
     : PromiseBB.resolve(src);
@@ -967,13 +946,6 @@ export function copyAsync(
       .then(() => copyInt(resolved, dest, options || undefined, stackErr, NUM_RETRIES))
       .catch((err) => PromiseBB.reject(restackErr(err, stackErr)));
   });
-=======
-  // fs.copy in fs-extra has a bug where it doesn't correctly avoid copying files onto themselves
-  const check = options?.noSelfCopy ? PromiseBB.resolve() : selfCopyCheck(src, dest);
-  return check
-    .then(() => copyInt(src, dest, options || undefined, stackErr, NUM_RETRIES))
-    .catch((err) => PromiseBB.reject(restackErr(err, stackErr)));
->>>>>>> v2.0.2
 }
 
 type CopyOptionsEx = fs.CopyOptions & {
@@ -1065,14 +1037,11 @@ function unlinkInt(
 }
 
 export function renameAsync(sourcePath: string, destinationPath: string): PromiseBB<void> {
-<<<<<<< HEAD
   if (isWinePrefixPath(sourcePath)) {
     return PromiseBB.resolve(resolveCaseIfWinePrefix(sourcePath)).then((resolved) =>
       renameInt(resolved, destinationPath, new Error(), NUM_RETRIES),
     );
   }
-=======
->>>>>>> v2.0.2
   return renameInt(sourcePath, destinationPath, new Error(), NUM_RETRIES);
 }
 
