@@ -9,7 +9,8 @@
     "etc/**",
     "src/renderer/src/index.html",
     "CLAUDE.md",
-    "src/renderer/src/extensions/mod_management/InstallManager.ts"
+    "src/renderer/src/extensions/mod_management/InstallManager.ts",
+    ".github/actions/fingerprints/dist/**"
   ],
   "embeddedLanguageFormatting": "auto"
 }

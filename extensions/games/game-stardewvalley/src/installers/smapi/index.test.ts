@@ -9,7 +9,6 @@ import { describe, expect, test } from "vitest";
 import "./fixtures/vortexApi.mock";
 import { types } from "vortex-api";
 
-
 import {
   isSMAPIModType,
   linuxSMAPIPlatform,
