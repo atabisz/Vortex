@@ -198,6 +198,8 @@ cd extensions/gamebryo-plugin-management && pnpm exec node ../copy-extension.mjs
 cd extensions/gamebryo-bsa-support && pnpm exec node ../copy-extension.mjs
 ```
 
+> Build-time invariant — verified by AppImage/.deb CI, not `scripts/linux-smoke.sh`. Smoke runs on a fresh checkout before any build, so probing for `dist/*.node` would always skip; if a binary goes missing the failure surfaces loudly at `pnpm start` (dlopen error) or in the packaging job. The source-side risk lives in `scripts/manage-node-modules.js` and the extension `package.json` platform guards, both of which §1 already covers.
+
 ## §11 Deliberate test-runner divergences
 
 Renderer uses Vitest exclusively. Upstream Jest scaffolding is dropped on every
