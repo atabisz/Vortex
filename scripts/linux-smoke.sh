@@ -76,6 +76,20 @@ else
   probe "winapi-bindings in nodeExternals allowlist" FAIL "not found in src/renderer/webpack.config.cjs"
 fi
 
+# §2.5 — rolldown.base.mjs alias param + linuxAlias wiring (winapi-shim swap)
+section 2.5 "rolldown winapi-shim alias"
+if grep -qE "^\s*alias\s*=\s*undefined" rolldown.base.mjs 2>/dev/null \
+   && grep -qF '...(alias !== undefined && { resolve: { alias } })' rolldown.base.mjs 2>/dev/null; then
+  probe "createConfig keeps 6th alias param + conditional spread" PASS
+else
+  probe "createConfig keeps 6th alias param + conditional spread" FAIL "rolldown.base.mjs missing alias param or spread"
+fi
+if grep -q "linuxAlias" src/main/build.mjs 2>/dev/null; then
+  probe "build.mjs passes linuxAlias to createConfig" PASS
+else
+  probe "build.mjs passes linuxAlias to createConfig" FAIL "linuxAlias not wired in src/main/build.mjs"
+fi
+
 # §3 — LOOT call-site casing
 section 3 "LOOT filePath usage"
 if grep -q "filePath" extensions/gamebryo-plugin-management/src/autosort.ts 2>/dev/null; then
