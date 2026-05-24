@@ -387,29 +387,11 @@ Vortex is an Electron-based mod manager for Nexus Mods, currently Windows-only. 
 
 ## Branch Strategy
 
-This fork maintains two branches:
+Single-branch fork. **`master`** is the only maintained branch — all work happens here: Linux port changes, GSD planning artifacts, AppImage/deb build config, GitHub Actions distribution CI, and any fork-specific work.
 
-- **`master`** — primary development branch. All work happens here — Linux port changes, GSD planning artifacts, AppImage/deb build config, GitHub Actions distribution CI, and any fork-specific work.
-- **`linux-port`** — clean Linux-only history. A curated export of Linux compatibility commits from `master`: platform guards, Linux code paths, devcontainer support, native addon work. No `.planning/` docs, no distribution CI, no fork tooling.
+The Linux delta is canonically represented by [`VORTEX-LINUX-MERGE-PLAYBOOK.md`](VORTEX-LINUX-MERGE-PLAYBOOK.md) (spec) and [`scripts/linux-smoke.sh`](scripts/linux-smoke.sh) (executable). No second branch is needed to track it.
 
-### Workflow rule
-
-**All work:** Develop and test in `master` first. This ensures full CI, AppImage/deb builds, and GSD tooling are available during development.
-**linux-port:** Cherry-pick Linux compatibility commits from `master` to `linux-port` to keep a clean, focused history of Linux-only changes. Exclude `.planning/`, CI, and fork-only commits.
-**Fork-only work (distribution, planning, internal tooling):** Never cherry-pick to `linux-port`.
-
-### What belongs where
-
-| Change type                            | Branch                                                |
-| -------------------------------------- | ----------------------------------------------------- |
-| Platform guards, Linux code paths      | cherry-pick to `linux-port` after merging in `master` |
-| Bug fixes with Linux platform guards   | cherry-pick to `linux-port` after merging in `master` |
-| Devcontainer Linux support             | cherry-pick to `linux-port` after merging in `master` |
-| Native addon / build tooling for Linux | cherry-pick to `linux-port` after merging in `master` |
-| GSD `.planning/` docs                  | `master` only                                         |
-| AppImage / deb build config            | `master` only                                         |
-| GitHub Actions distribution CI         | `master` only                                         |
-| Fork-specific IDE config               | `master` only                                         |
+> **History:** A `linux-port` branch existed through v8.2 to maintain a clean Linux-only history for potential upstreaming. It was retired 2026-05-24 — the playbook + smoke script obsoleted its purpose, and upstream Nexus-Mods/Vortex isn't accepting PRs from this fork. Final HEAD is preserved as the `linux-port-final-v2.0.0-linux-rebased` tag. If upstream PR policy changes, regenerate the branch on demand from master via a scripted filter (exclude `.planning/`, fork-only CI, playbook, smoke script).
 
 ## Upstream Sync — Two-Motion Model
 
