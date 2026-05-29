@@ -210,6 +210,14 @@ else
   probe "sass NOT in buildOnlyNative deletion list" PASS
 fi
 
+# §15 — Renderer webpack output aligns with electron-builder pack dir
+section 15 "renderer.js packs into asar"
+if grep -qE 'path\.resolve\(__dirname,\s*"\.\.",\s*"main",\s*"build"\)' src/renderer/webpack.config.cjs 2>/dev/null; then
+  probe "webpack writes renderer.js to src/main/build/" PASS
+else
+  probe "webpack writes renderer.js to src/main/build/" FAIL "webpack output path != src/main/build — renderer.js missing from app.asar, splash → blank window"
+fi
+
 # §11 — Deliberate test-runner divergences (NEGATIVE gates)
 section 11 "Vitest-only renderer (no Jest scaffolding)"
 [[ ! -f src/renderer/jest.config.mjs ]] \

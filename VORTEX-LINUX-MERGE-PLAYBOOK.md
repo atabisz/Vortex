@@ -313,6 +313,20 @@ dart-sass (`1.97.3`) is pure JS. The original commit lumped it in with the genui
 
 ---
 
+## §15 Renderer webpack output aligns with electron-builder pack dir
+
+```bash
+grep -n "output" -A 5 src/renderer/webpack.config.cjs | grep "main"
+```
+
+`src/renderer/webpack.config.cjs`'s `output.path` MUST resolve to `src/main/build/`. Rolldown writes `main.cjs`, `preload.cjs`, and `bootstrap.mjs` to `src/main/build/`; `electron-builder.config.cjs` sets `directories.app: "./build"` and packs that exact directory; `InstallAssets.mjs` populates `src/main/build/` with `index.html`, locales, assets, and `splash.html`. If webpack writes `renderer.js` anywhere else (e.g. upstream's split `dist`/`out` scheme based on `NODE_ENV`), the deb/AppImage builds successfully but `app.asar` ships with `index.html` referencing a `renderer.js` that isn't there. Vortex shows the splash for ~150ms (main.cjs already loaded) then logs `Cannot find module './renderer.js'` from `app.asar/index.html` and the BrowserWindow stays blank.
+
+Failure mode is silent: `pnpm package` exits 0, `verify-asar-unpacked.cjs` doesn't probe for renderer.js, and the local `src/main/build/` already contains a stale `renderer.js` from a prior dev run, so a developer test on the build machine looks fine. The bug only surfaces on a clean install on another machine.
+
+The upstream-wins resolution at `488f84097` swapped to `mode === "production" ? "dist" : "out"`, which is generic upstream build-infrastructure refactor with no Linux delta interaction — exactly the silent revert this playbook exists to catch. Pin webpack output to `src/main/build/` and probe the source line directly.
+
+---
+
 ## What we've learned the hard way
 
 These are the non-obvious things that cost real time during the 2026-05-08 merge, written down so they don't cost the same time twice.

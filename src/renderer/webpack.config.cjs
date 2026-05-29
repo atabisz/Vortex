@@ -35,7 +35,7 @@ const config = {
     output: {
         libraryTarget: "commonjs2",
         filename: "[name].js",
-        path: path.resolve(__dirname, "..", "main", mode === "production" ? "dist" : "out"),
+        path: path.resolve(__dirname, "..", "main", "build"),
     },
     plugins: plugins,
     resolve: {

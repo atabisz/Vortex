@@ -98,6 +98,49 @@ if (nodeFiles.length === 0) {
     }
 }
 
+// 3. Assert renderer.js is bundled into app.asar itself.
+// Failure mode: webpack writes renderer.js to a path electron-builder doesn't
+// pack; index.html ships, splash shows for ~150ms, then the BrowserWindow stays
+// blank with `Cannot find module './renderer.js'` from app.asar/index.html.
+// Caught silently by upstream merges that swap webpack output to dist/out.
+const asarFile = path.join(unpackedStaging, "resources", "app.asar");
+const REQUIRED_ASAR_ENTRIES = [
+    "renderer.js",
+    "index.html",
+    "main.cjs",
+    "preload.cjs",
+    "splash.html",
+];
+if (!fs.existsSync(asarFile)) {
+    failures.push(`  MISSING  resources/app.asar at ${asarFile}`);
+} else {
+    try {
+        const fd = fs.openSync(asarFile, "r");
+        const sizeBuf = Buffer.alloc(4);
+        fs.readSync(fd, sizeBuf, 0, 4, 12);
+        const headerSize = sizeBuf.readUInt32LE(0);
+        const headerBuf = Buffer.alloc(headerSize);
+        fs.readSync(fd, headerBuf, 0, headerSize, 16);
+        fs.closeSync(fd);
+        // Trim trailing zero padding before JSON parse.
+        let endIdx = headerBuf.length;
+        while (endIdx > 0 && headerBuf[endIdx - 1] === 0) endIdx--;
+        const header = JSON.parse(headerBuf.slice(0, endIdx).toString("utf8"));
+        const rootKeys = Object.keys(header.files || {});
+        for (const entry of REQUIRED_ASAR_ENTRIES) {
+            if (rootKeys.includes(entry)) {
+                passes.push(`  OK  app.asar contains ${entry}`);
+            } else {
+                failures.push(
+                    `  MISSING  app.asar entry: ${entry} — webpack/rolldown output path likely diverged from electron-builder pack dir`,
+                );
+            }
+        }
+    } catch (err) {
+        failures.push(`  ERROR  failed to parse app.asar header: ${err.message}`);
+    }
+}
+
 // --- Report ---
 console.log(`\nChecking: ${asarUnpacked}\n`);
 for (const line of passes) {
