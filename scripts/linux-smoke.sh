@@ -202,6 +202,14 @@ for sym in findAllLinuxSteamPaths steamRoots; do
   fi
 done
 
+# §14 — dart-sass not in beforePack deletion list
+section 14 "dart-sass survives beforePack"
+if grep -qE '^\s*"sass",' src/main/electron-builder.config.cjs 2>/dev/null; then
+  probe "sass NOT in buildOnlyNative deletion list" FAIL "sass listed in src/main/electron-builder.config.cjs beforePack — startup crash"
+else
+  probe "sass NOT in buildOnlyNative deletion list" PASS
+fi
+
 # §11 — Deliberate test-runner divergences (NEGATIVE gates)
 section 11 "Vitest-only renderer (no Jest scaffolding)"
 [[ ! -f src/renderer/jest.config.mjs ]] \

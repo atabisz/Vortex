@@ -301,6 +301,18 @@ Pair note: the workflows themselves (`.github/workflows/fingerprint-*.yml`) are 
 
 ---
 
+## §14 dart-sass survives `beforePack` deletion list
+
+```bash
+grep -n '"sass"' src/main/electron-builder.config.cjs
+```
+
+`src/main/electron-builder.config.cjs`'s Linux-only `beforePack` hook strips packages whose native deps cause electron-builder EEXIST conflicts (`@parcel/watcher*`, `@tailwindcss/*`). The list MUST NOT include `"sass"`. `src/main/src/stylesheetCompiler.ts` imports dart-sass at module top to register the `styles:compile` IPC handler the renderer calls for runtime theme compilation — rolldown leaves the import external, so the bundled `main.cjs` calls `require("sass")` at startup and the app crashes immediately if the dep was deleted from `node_modules` before packing.
+
+dart-sass (`1.97.3`) is pure JS. The original commit lumped it in with the genuine native build-only deps because the comment author's mental model was "sass is build-time only". It isn't — it ran at build (in the `assets` script for the loading screen CSS) AND at runtime (theme compilation). The smoke probe greps the deletion list directly because the failure surface is the AppImage/deb artifact, not the source tree, and probing the artifact requires a full package run.
+
+---
+
 ## What we've learned the hard way
 
 These are the non-obvious things that cost real time during the 2026-05-08 merge, written down so they don't cost the same time twice.

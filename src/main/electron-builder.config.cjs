@@ -109,9 +109,15 @@ const config = {
         }
 
         // Remove build-only packages that have native .node binaries but aren't
-        // needed at runtime. These get installed because sass/@tailwindcss/cli are
-        // listed in dependencies (used at build time for stylesheet compilation)
-        // but their native file-watcher deps cause EEXIST conflicts in electron-builder.
+        // needed at runtime. @tailwindcss/cli is listed as a runtime dep but only
+        // ever shells out at build time (`pnpm tailwindcss -i ...` in the assets
+        // script), and its @parcel/watcher native deps cause EEXIST conflicts in
+        // electron-builder.
+        //
+        // sass is intentionally NOT in this list. dart-sass IS a runtime dep —
+        // src/main/src/stylesheetCompiler.ts imports it at module top to register
+        // the styles:compile IPC handler the renderer calls for theme compilation.
+        // Stripping it here causes "Cannot find module 'sass'" at app startup.
         const buildOnlyNative = [
             "@parcel/watcher",
             "@parcel/watcher-linux-x64-glibc",
@@ -119,7 +125,6 @@ const config = {
             "@tailwindcss/cli",
             "@tailwindcss/oxide",
             "@tailwindcss/oxide-linux-x64-gnu",
-            "sass",
         ];
         const searchDirs = [
             path.join(__dirname, "build", "node_modules"),
