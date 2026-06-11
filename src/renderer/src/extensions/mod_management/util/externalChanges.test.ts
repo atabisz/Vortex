@@ -29,6 +29,7 @@ vi.mock("../../../logging", () => {
 // markRecentInstall / markRecentRemoval / consumeRecentChanges flow against
 // the live implementation (rather than re-stating the resulting Set inline).
 vi.mock("../util/dependencies");
+<<<<<<< HEAD
 // Empty factory: the default automock would still load util/api.ts to
 // introspect its exports, which transitively constructs the Steam singleton
 // at module load and crashes with "ApplicationData: Not yet initialized!"
@@ -36,6 +37,9 @@ vi.mock("../util/dependencies");
 // InstallManager doesn't import from util/api at runtime, so an empty stub
 // is enough.
 vi.mock("../../../util/api", () => ({}));
+=======
+vi.mock("../../../util/api");
+>>>>>>> v2.1.0
 
 // Capture every payload passed to showExternalChanges so each test can assert
 // what would have been surfaced to the user.

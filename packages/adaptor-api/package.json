@@ -8,8 +8,8 @@
     "build": "pnpm tsdown",
     "typecheck": "pnpm tsc -p ./tsconfig.json",
     "test": "pnpm vitest run",
-    "lint": "pnpm eslint --concurrency auto .",
-    "lint:quiet": "pnpm eslint --concurrency auto --quiet ."
+    "lint": "pnpm eslint --quiet --concurrency auto .",
+    "lint:verbose": "pnpm eslint --concurrency auto ."
   },
   "peerDependencies": {
     "rolldown": "catalog:"

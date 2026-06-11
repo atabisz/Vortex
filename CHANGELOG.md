@@ -4,6 +4,171 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<<<<<<< HEAD
+=======
+## [2.1.0] - 2026-06-10
+
+_Stable 2.1 release. See the beta entries below for the full list of changes since 2.0._
+
+### Fixed
+
+- State backup restore potentially wiping state on large profiles ([#23438](https://github.com/Nexus-Mods/Vortex/pull/23438))
+
+## [2.1.0-beta.8] - 2026-06-08
+
+### **Changed**
+
+- Scoped the `2.1` download-path migration so it no longer runs for users who were never affected by the beta.4 regression (e.g. fresh 2.1-stable installs), avoiding unnecessary file relocation ([#23423](https://github.com/Nexus-Mods/Vortex/pull/23423))
+
+### **Fixed**
+
+- LOOT sort failing with `The group "..." does not exist` when a collection-assigned plugin group was later dropped from the masterlist; the dangling references now reset to the default group and re-sort ([#23428](https://github.com/Nexus-Mods/Vortex/pull/23428))
+- BodySlide tool detection for Skyrim, Skyrim SE, and Fallout 4 after BodySlide 5.8.0 dropped `BodySlide x64.exe` and ships only `BodySlide.exe` ([#23417](https://github.com/Nexus-Mods/Vortex/pull/23417))
+- Auto-update failing to install when a transient installer file lock (`spawn EBUSY`, e.g. antivirus still scanning) interrupted the launch; the install is now retried on lock errors ([#23326](https://github.com/Nexus-Mods/Vortex/pull/23326))
+- Outdated community extension updates not removed correctly, causing duplicate game listings and repeated update notifications ([#23316](https://github.com/Nexus-Mods/Vortex/pull/23316))
+
+## [2.1.0-beta.7] - 2026-06-03
+
+### **Changed**
+
+- Error fingerprinting now uses the error type name as an additional discriminator, so distinct errors that happen to share a stack trace are no longer merged into a single report ([#23387](https://github.com/Nexus-Mods/Vortex/pull/23387))
+- Increased the default IPC callback timeout to 45 seconds so underlying callbacks complete before the caller times out ([#23382](https://github.com/Nexus-Mods/Vortex/pull/23382))
+
+## [2.1.0-beta.6] - 2026-06-02
+
+### **Fixed**
+
+- Download callbacks now propagate the underlying error instead of a generic message, so download failures surface the actual cause ([#23366](https://github.com/Nexus-Mods/Vortex/pull/23366))
+
+## [2.1.0-beta.5] - 2026-05-28
+
+### **Fixed**
+
+- Beta.4 download-path regression causing `ENOENT` on auto-install of mod requirements; a 2.1 migration relocates affected files ([#23344](https://github.com/Nexus-Mods/Vortex/pull/23344))
+
+## [2.1.0-beta.4] - 2026-05-27
+
+_First public beta of the 2.1 release._
+
+### **Known Issues**
+
+- Old extension version folders are not deleted on extension update, causing duplicate game listings and repeated update notifications ([#23295](https://github.com/Nexus-Mods/Vortex/issues/23295))
+
+### **Changed**
+
+- Added diagnostic logging in the FOMOD init path ([#23330](https://github.com/Nexus-Mods/Vortex/pull/23330))
+
+### **Fixed**
+
+- FOMOD installer initialisation failing due to a `fomod-native` build issue; bumped to the fixed upstream version ([#23332](https://github.com/Nexus-Mods/Vortex/pull/23332))
+- Registered the `nxm://` handler without the `--user-data` switch (matching v1 behaviour), so cold-start downloads (opening an `nxm://` link while Vortex is closed) use the default user-data location ([#23322](https://github.com/Nexus-Mods/Vortex/pull/23322))
+
+## [2.1.0-beta.3] - 2026-05-26
+
+### **Changed**
+
+- Removed the `BrowserWindow` close-handler workaround now that Electron 42 ships the upstream fix for the `NonClientHitTest` use-after-free ([#23258](https://github.com/Nexus-Mods/Vortex/pull/23258))
+
+### **Fixed**
+
+- Witcher 3: `md5cache.json` was not bundled with the extension ([#23306](https://github.com/Nexus-Mods/Vortex/pull/23306))
+- `nxm://` re-launches ignored the userdata directory in the registry — the embedded `--userData` flag was silently dropped because the CLI parser only accepts `--user-data` ([#23305](https://github.com/Nexus-Mods/Vortex/pull/23305))
+- Cancelling a collection install via the free-user download dialog now cleanly tears down the install pipeline, driver state, and notification, instead of leaving canceled sibling downloads as failures in the dialog ([#23304](https://github.com/Nexus-Mods/Vortex/pull/23304))
+- Modern UI: missing sidebar icons (Bethesda plugins, save games) and help menu icons (feedback, bug report) ([#23263](https://github.com/Nexus-Mods/Vortex/pull/23263))
+- Unauthenticated `401` errors from the NXM download resolver now surface as a non-reportable "You are not logged in to Nexus Mods!" notification instead of a `TypeError` crash on undefined OAuth config ([#23262](https://github.com/Nexus-Mods/Vortex/pull/23262))
+
+## [2.1.0-beta.2] - 2026-05-19
+
+### **Changed**
+
+- Notifications with actions now persist until the user acts on or dismisses them, matching the documented `INotification` contract (both classic and modern UI) ([#23226](https://github.com/Nexus-Mods/Vortex/pull/23226))
+- Games remain manageable when extension dependencies are missing or fail to load ([#23226](https://github.com/Nexus-Mods/Vortex/pull/23226))
+- Modern UI notification popover now auto-opens for notifications dispatched during startup ([#23226](https://github.com/Nexus-Mods/Vortex/pull/23226))
+- Extension install failures now surface the underlying 7z error text instead of the generic "needs to include index.js and info.json on top-level" message ([#23209](https://github.com/Nexus-Mods/Vortex/pull/23209))
+- Added diagnostic logging in the External Changes path to help triage spurious ECD reports ([#23208](https://github.com/Nexus-Mods/Vortex/pull/23208))
+- nexus-api now refreshes the OAuth access token proactively when within 30s of expiry; concurrent refreshes coalesce into a single `/oauth/token` call, with the 401-driven fallback retained for clock skew and server-side revocation ([#23178](https://github.com/Nexus-Mods/Vortex/pull/23178))
+
+### **Fixed**
+
+- Missing or failed-to-load extension dependencies left games un-manageable; the install, profile-management, notifications, and modtype-enb paths were all hardened against this state ([#23226](https://github.com/Nexus-Mods/Vortex/pull/23226))
+- Download failure when the target game's downloads folder did not yet exist, affecting mods that are compatible across multiple game domains (Skyrim/Enderal/Nehrim, site-domain mods); the folder is now created on demand when the download is queued ([#23213](https://github.com/Nexus-Mods/Vortex/pull/23213))
+- "Game not discovered" dialog incorrectly shown on `--game` restart/relaunch while async discovery was still in flight ([#23210](https://github.com/Nexus-Mods/Vortex/pull/23210))
+- Crash on first install of a collection with binary patches caused by `node:worker_threads` not being supported in the Electron renderer; the bsdiff worker now uses a DOM Worker in renderer contexts ([#23186](https://github.com/Nexus-Mods/Vortex/pull/23186))
+- Main-process access violation when destroying a `BrowserWindow` with the mouse over it; added synchronous renderer diagnostics that survive teardown crashes ([#23179](https://github.com/Nexus-Mods/Vortex/pull/23179))
+- Tracked-mods fetch crashing when the Nexus client lacked OAuth configuration ([#23173](https://github.com/Nexus-Mods/Vortex/pull/23173))
+- Improved scrollbar visibility for the table component ([#23125](https://github.com/Nexus-Mods/Vortex/pull/23125))
+- "Tools" dashlet now shows in the classic UI only and is hidden in the modern UI ([#23166](https://github.com/Nexus-Mods/Vortex/pull/23166))
+- Removed spurious logs spam ([#23130](https://github.com/Nexus-Mods/Vortex/pull/23130), [#23132](https://github.com/Nexus-Mods/Vortex/pull/23132))
+- Conflict Editor "Before All" / "After All" silently doing nothing when a filter was applied to the source mod name ([#23136](https://github.com/Nexus-Mods/Vortex/pull/23136))
+- Fixed inability to manage certain bundled game extensions (Blade and Sorcery, BattleTech, Daggerfall, DragonAge, NWN, Elder Scrolls Online and a few others) ([#23131](https://github.com/Nexus-Mods/Vortex/pull/23131))
+
+## [2.1.0-beta.1] - 2026-05-13
+
+_First beta of the 2.1 release._
+
+### **Added**
+
+- Persist download checkpoints in the new download manager ([#22678](https://github.com/Nexus-Mods/Vortex/pull/22678))
+- Cookie support in the new downloader ([#22429](https://github.com/Nexus-Mods/Vortex/pull/22429))
+- Custom request header support in the new downloader ([#22406](https://github.com/Nexus-Mods/Vortex/pull/22406))
+- Bandwidth throttling for downloads ([#22277](https://github.com/Nexus-Mods/Vortex/pull/22277))
+- Resuming interrupted downloads ([#22251](https://github.com/Nexus-Mods/Vortex/pull/22251))
+- Pausing downloads with checkpointing ([#22099](https://github.com/Nexus-Mods/Vortex/pull/22099))
+- Cancellation support for downloads via `AbortController` ([#22084](https://github.com/Nexus-Mods/Vortex/pull/22084))
+- New downloader uses `If-Match` header when a strong ETag is available ([#22008](https://github.com/Nexus-Mods/Vortex/pull/22008))
+- Typed download errors in the new downloader ([#22005](https://github.com/Nexus-Mods/Vortex/pull/22005))
+- Pull-based download progress reporting ([#22001](https://github.com/Nexus-Mods/Vortex/pull/22001))
+
+### **Changed**
+
+- Replaced the native `crash-dump` C++ addon with Electron's built-in `crashReporter` (Crashpad), so crash dumps now use Crashpad's directory layout instead of the old flat `crash-{process}-{timestamp}.dmp` naming ([#23034](https://github.com/Nexus-Mods/Vortex/pull/23034))
+- Upgraded Electron from 41.2.0 to 42.0.0 ([#23025](https://github.com/Nexus-Mods/Vortex/pull/23025))
+- Replaced the native `exe-version` addon with a pure-TypeScript PE-header parser (workspace package), removing a native dependency ([#22914](https://github.com/Nexus-Mods/Vortex/pull/22914))
+- Removed the `native-errors` C++ addon ([#22907](https://github.com/Nexus-Mods/Vortex/pull/22907))
+- Replaced the native `diskusage` addon with Node's `fs.statfsSync` ([#22906](https://github.com/Nexus-Mods/Vortex/pull/22906))
+- Replaced the native `bsdiff-node` addon with WASM bsdiff/bspatch running in a worker-thread pool, removing the last native C++ dependency from the collections extension ([#22878](https://github.com/Nexus-Mods/Vortex/pull/22878))
+- Ported the BSA archive reader (`bsatk`) from native C++ to pure TypeScript, merged BSA/BA2 support into a single `gamebryo-archive-support` extension, and added LZ4-frame decompression for Skyrim SE BSAs ([#22872](https://github.com/Nexus-Mods/Vortex/pull/22872))
+- Upgraded Electron from 39 to 41 and Node from 22 to 24 ([#22869](https://github.com/Nexus-Mods/Vortex/pull/22869))
+- Stopped using Electron's `did-start-download` event in the new downloader ([#22860](https://github.com/Nexus-Mods/Vortex/pull/22860))
+- New downloader now parses `redownload` and `allowInstall` args from `nxm://` URLs ([#22855](https://github.com/Nexus-Mods/Vortex/pull/22855))
+- `AlreadyDownloaded` errors thrown by the new downloader now carry the offending `downloadId` ([#22851](https://github.com/Nexus-Mods/Vortex/pull/22851))
+- Ported the ESP/ESM plugin parser (`esptk`) from native C++ to pure TypeScript; plugin parsing is now async and runs in parallel via `Promise.all` ([#22840](https://github.com/Nexus-Mods/Vortex/pull/22840))
+- Removed the legacy downloader so the new download manager is the only path for starting downloads ([#22821](https://github.com/Nexus-Mods/Vortex/pull/22821))
+- Replaced the native `ba2tk` C++ addon with a pure-TypeScript BA2 archive parser supporting GNRL and DX10 archive types across v1 and v8 formats ([#22700](https://github.com/Nexus-Mods/Vortex/pull/22700))
+- Replaced the native `vortexmt` MD5 addon with Node's built-in `crypto.createHash('md5')` plus streaming file reads ([#22697](https://github.com/Nexus-Mods/Vortex/pull/22697))
+- Replaced the native `gamebryo-savegame` C++ parser with pure-TypeScript parsers for all six Gamebryo savegame formats (Oblivion, Skyrim, Skyrim SE, Fallout 3, Fallout NV, Fallout 4), removing the node-gyp/CMake/MSVC build toolchain requirement for the savegame extension ([#22688](https://github.com/Nexus-Mods/Vortex/pull/22688))
+- New download adapter dispatches redux actions ([#22653](https://github.com/Nexus-Mods/Vortex/pull/22653))
+- Download IPC adapter now tracks state, progress, pause/resume, and speed ([#22651](https://github.com/Nexus-Mods/Vortex/pull/22651))
+- New IPC download adapter (env-var-toggleable while it was being introduced; now permanent after the old downloader was removed) ([#22615](https://github.com/Nexus-Mods/Vortex/pull/22615))
+- IPC handlers added for download channels ([#22614](https://github.com/Nexus-Mods/Vortex/pull/22614))
+- New download manager tracks all downloads centrally ([#22516](https://github.com/Nexus-Mods/Vortex/pull/22516))
+- Download API exposed via the preload script ([#22510](https://github.com/Nexus-Mods/Vortex/pull/22510))
+- Moved download types into a shared workspace package ([#22475](https://github.com/Nexus-Mods/Vortex/pull/22475))
+- Added callback IPC channels used by the new downloader ([#22469](https://github.com/Nexus-Mods/Vortex/pull/22469))
+- New downloader detects HTML responses and shares its download error types across processes ([#22404](https://github.com/Nexus-Mods/Vortex/pull/22404))
+- Added timeout and retry resilience to the new downloader ([#22330](https://github.com/Nexus-Mods/Vortex/pull/22330))
+- Adapted Tools changes from v2.0 ([#22293](https://github.com/Nexus-Mods/Vortex/pull/22293))
+- New downloader can use range requests for single-chunk downloads when the chunker returns zero chunks ([#22292](https://github.com/Nexus-Mods/Vortex/pull/22292))
+- DuckDB extensions are now bundled and loaded from a local cache, removing the runtime `FORCE INSTALL ... FROM 'https://...'` so Vortex no longer touches the network for DuckDB extension loading at startup ([#22046](https://github.com/Nexus-Mods/Vortex/pull/22046))
+- Reworked the downloader around a new manager class, simplifying it to standalone functions ([#22036](https://github.com/Nexus-Mods/Vortex/pull/22036))
+- Reworked the Tools page (refactor with assorted fixes) ([#22007](https://github.com/Nexus-Mods/Vortex/pull/22007))
+- Product-version check for Baldur's Gate 3 ([#21998](https://github.com/Nexus-Mods/Vortex/pull/21998))
+
+### **Fixed**
+
+- Tailwind utility classes stripped from the compiled renderer CSS after the stylesheet output moved, leaving Spine and other UIv2 components unstyled ([#23158](https://github.com/Nexus-Mods/Vortex/pull/23158))
+- Suppress action on suppressible notifications shown with a cog/gear icon instead of a suppress icon ([#23152](https://github.com/Nexus-Mods/Vortex/pull/23152))
+- Toolbar dragging and toolbar popup issues ([#22994](https://github.com/Nexus-Mods/Vortex/pull/22994))
+- bsdiff WASM worker bundling and stale references after the WASM port ([#22896](https://github.com/Nexus-Mods/Vortex/pull/22896))
+- New downloader: filename selection differed from the old downloader, callbacks fired before the download finished, and metadata was not being set ([#22817](https://github.com/Nexus-Mods/Vortex/pull/22817))
+- Remaining instances of `app.quit` causing application crashes (CLI-relaunch path and Vortex tray-icon close) ([#22091](https://github.com/Nexus-Mods/Vortex/pull/22091))
+- Long profile names overflowing the header and profile cards (and now capped at 64 characters) ([#22079](https://github.com/Nexus-Mods/Vortex/pull/22079))
+- Elevation script closing prematurely during collection installation (timer extended from 5 seconds to 5 minutes) ([#22029](https://github.com/Nexus-Mods/Vortex/pull/22029))
+- Duplicate React key warning in the new-UI notifications panel ([#22023](https://github.com/Nexus-Mods/Vortex/pull/22023))
+- Health check passing invalid `modId` to the Nexus API for external requirements ([#22019](https://github.com/Nexus-Mods/Vortex/pull/22019))
+- "External changes" dialog still being raised after batch reinstalls or updates in some scenarios; new fix is timing-independent and avoids a race that could stall collection installation ([#22016](https://github.com/Nexus-Mods/Vortex/pull/22016))
+
+>>>>>>> v2.1.0
 ## [2.0.2] - 2026-05-19
 
 ### Changed
@@ -1796,6 +1961,18 @@ _Yanked due to critical issue found with file overrides_
 - When providing feedback, users are treated as logged out if using OAuth
 - Changelog dashlet was incorrectly displaying markdown
 
+<<<<<<< HEAD
+=======
+[2.1.0]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.1.0
+[2.1.0-beta.8]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.1.0-beta.8
+[2.1.0-beta.7]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.1.0-beta.7
+[2.1.0-beta.6]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.1.0-beta.6
+[2.1.0-beta.5]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.1.0-beta.5
+[2.1.0-beta.4]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.1.0-beta.4
+[2.1.0-beta.3]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.1.0-beta.3
+[2.1.0-beta.2]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.1.0-beta.2
+[2.1.0-beta.1]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.1.0-beta.1
+>>>>>>> v2.1.0
 [2.0.2]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.0.2
 [2.0.1]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.0.1
 [2.0.0]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.0.0
