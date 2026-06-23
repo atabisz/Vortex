@@ -8,9 +8,12 @@ import * as tmp from "tmp";
 import * as winapi from "winapi-bindings";
 
 import { log } from "../logging";
+<<<<<<< HEAD
 import type { INotification } from "../types/INotification";
 import { UserCanceled } from "./CustomErrors";
 import { getIPCPath } from "./ipc";
+=======
+>>>>>>> v2.1.1
 import { getRealNodeModulePaths } from "./webpack-hacks";
 
 type SpawnerFn = (cmd: string, args: string[]) => ChildProcess;

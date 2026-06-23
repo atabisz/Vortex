@@ -208,6 +208,13 @@ export const test = base.extend<VortexTestFixtures, VortexWorkerFixtures>({
         timeout: 60_000,
       });
 
+      // Prevent Vortex from handing OAuth (and other external) URLs to the OS
+      // default browser. Tests read the OAuth URL from Vortex's in-app field
+      // and drive login in their own Playwright Chromium context.
+      await sharedVortexApp.evaluate(({ shell }) => {
+        shell.openExternal = async () => undefined;
+      });
+
       await use(mainWindow);
     },
     { scope: "worker", timeout: 180_000 },

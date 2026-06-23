@@ -13,9 +13,16 @@ This is a list of all modules leaked by Vortex to extensions. Any module listed 
 | @headlessui/react | 1.7.19 |
 | @mdi/js | 7.4.47 |
 | @msgpack/msgpack | 2.8.0 |
+<<<<<<< HEAD
 | @nexusmods/fomod-installer-ipc | 0.12.0 |
 | @nexusmods/fomod-installer-native | 0.12.0 |
 | @nexusmods/nexus-api | 1.5.2 |
+=======
+| @nexusmods/adaptor-api | link:../../packages/adaptor-api |
+| @nexusmods/fomod-installer-ipc | 0.13.1 |
+| @nexusmods/fomod-installer-native | 0.13.1 |
+| @nexusmods/nexus-api | 1.6.0 |
+>>>>>>> v2.1.1
 | @opentelemetry/api | 1.9.1 |
 | @opentelemetry/context-async-hooks | 2.6.1 |
 | @opentelemetry/context-zone | 2.7.0 |
@@ -34,12 +41,18 @@ This is a list of all modules leaked by Vortex to extensions. Any module listed 
 | commander | 4.1.1 |
 | content-disposition | 0.5.4 |
 | content-type | 1.0.5 |
+<<<<<<< HEAD
 | crash-dump | 2.0.2 |
+=======
+>>>>>>> v2.1.1
 | d3 | 5.16.0 |
 | date-fns | 2.30.0 |
 | dayjs | 1.11.20 |
 | dequal | 2.0.3 |
+<<<<<<< HEAD
 | diskusage | 2.0.1 |
+=======
+>>>>>>> v2.1.1
 | dnd-core | 9.5.1 |
 | draggabilly | 2.4.1 |
 | drivelist | 10.0.2 |
@@ -47,12 +60,20 @@ This is a list of all modules leaked by Vortex to extensions. Any module listed 
 | electron-redux | 1.4.9-sync |
 | electron-updater | 4.6.5 |
 | encoding-down | 6.3.0 |
+<<<<<<< HEAD
 | exe-version | 2.3.0 |
+=======
+| exe-version | link:../../packages/exe-version |
+>>>>>>> v2.1.1
 | feedparser | 2.3.0 |
 | fs-extra | 9.1.0 |
 | fuzzball | 1.4.0 |
 | glob | 11.1.0 |
+<<<<<<< HEAD
 | got | 14.6.6 |
+=======
+| got | 15.0.2 |
+>>>>>>> v2.1.1
 | graphlib | 2.1.8 |
 | i18next | 19.9.2 |
 | i18next-fs-backend | 2.6.1 |
@@ -71,8 +92,12 @@ This is a list of all modules leaked by Vortex to extensions. Any module listed 
 | minimatch | 3.1.5 |
 | mixpanel-browser | 2.77.0 |
 | modmeta-db | 0.9.3 |
+<<<<<<< HEAD
 | native-errors | 2.0.3 |
 | node-7z | 0.7.9 |
+=======
+| node-7z | 0.8.1 |
+>>>>>>> v2.1.1
 | normalize-url | 6.1.0 |
 | numeral | 2.0.6 |
 | p-queue | 9.1.0 |
@@ -113,11 +138,18 @@ This is a list of all modules leaked by Vortex to extensions. Any module listed 
 | string-template | 1.0.0 |
 | tailwindcss | 4.2.2 |
 | tmp | 0.1.0 |
+<<<<<<< HEAD
+=======
+| tough-cookie | 6.0.1 |
+>>>>>>> v2.1.1
 | turbowalk | 3.1.1 |
 | universal-analytics | 0.4.23 |
 | uuid | 3.4.0 |
 | vortex-parse-ini | 0.4.0 |
+<<<<<<< HEAD
 | vortexmt | 0.3.0 |
+=======
+>>>>>>> v2.1.1
 | wholocks | 1.1.0 |
 | winapi-bindings | 2.7.3 |
 | winston | 2.4.7 |

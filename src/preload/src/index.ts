@@ -1,11 +1,15 @@
+import { rehydrateSerializedError, serializeError } from "@vortex/shared";
 import type {
   AppInitMetadata,
   RendererChannels,
   InvokeChannels,
   MainChannels,
+  CallbackChannels,
   SerializableArgs,
   AssertSerializable,
   Serializable,
+  SerializedError,
+  WireResult,
 } from "@vortex/shared/ipc";
 import type { PreloadWindow } from "@vortex/shared/preload";
 import type { PersistedHive } from "@vortex/shared/state";
@@ -20,6 +24,7 @@ const betterIpcRenderer = {
   send: rendererSend,
   on: rendererOn,
   off: rendererOff,
+  callback: rendererCallback,
 };
 
 try {
@@ -227,16 +232,21 @@ try {
       cancel: (downloadId) => betterIpcRenderer.invoke("download:cancel", downloadId),
       getState: (downloadId) => betterIpcRenderer.invoke("download:getState", downloadId),
       getStates: (downloadIds) => betterIpcRenderer.invoke("download:getStates", downloadIds),
-      onResolve: (handler) => {
-        const listener = (_event: Electron.IpcRendererEvent, collationId: number) => {
-          handler(collationId)
-            .then((result) => {
-              betterIpcRenderer.send("callback:download:resolve", collationId, result);
-            })
-            .catch((err) => console.error(err));
-        };
-        ipcRenderer.on("download:resolve", listener);
-        return () => ipcRenderer.removeListener("download:resolve", listener);
+      // A rejection here propagates back to main so download:start rejects
+      // immediately with the real reason instead of waiting out the callback
+      // timeout. Cancellation rejects too, but the install manager drops
+      // aborted downloads, so it won't be reported as a failure.
+      onResolve: (handler) => betterIpcRenderer.callback("download:resolve", handler),
+    },
+
+    diag: {
+      // Raw ipcRenderer because betterIpcRenderer has no sendSync helper.
+      fatal: (message: string) => {
+        try {
+          ipcRenderer.sendSync("diag:fatal", message);
+        } catch {
+          // diagnostic must never throw
+        }
       },
     },
 
@@ -266,11 +276,27 @@ function expose<K extends keyof PreloadWindow>(key: K, value: PreloadWindow[K]) 
   }
 }
 
-function rendererInvoke<C extends keyof InvokeChannels>(
+async function rendererInvoke<C extends keyof InvokeChannels>(
   channel: C,
   ...args: SerializableArgs<Parameters<InvokeChannels[C]>>
 ): Promise<AssertSerializable<Awaited<ReturnType<InvokeChannels[C]>>>> {
-  return ipcRenderer.invoke(channel, ...args);
+  type Result = WireResult<AssertSerializable<Awaited<ReturnType<InvokeChannels[C]>>>>;
+  const reply: unknown = await ipcRenderer.invoke(channel, ...args);
+  if (isWireResult(reply)) {
+    const result = reply as Result;
+    if (result.ok) return result.value;
+    throw rehydrateSerializedError(result.error as unknown as SerializedError);
+  }
+  return reply as AssertSerializable<Awaited<ReturnType<InvokeChannels[C]>>>;
+}
+
+function isWireResult(value: unknown): value is WireResult<unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "ok" in value &&
+    typeof (value as { ok: unknown }).ok === "boolean"
+  );
 }
 
 function rendererSend<C extends keyof RendererChannels>(
@@ -298,4 +324,40 @@ function rendererOff<C extends keyof MainChannels>(
   ) => void,
 ): void {
   ipcRenderer.off(channel, listener);
+}
+
+// Registers a handler for a callback channel. Main sends a request on `channel`
+// with a collation id; the handler produces (or rejects with) a value, which is
+// sent back on `callback:${channel}` wrapped in a WireCallbackResult. Rejections
+// are serialized so main can rehydrate the real error instead of waiting out the
+// callback timeout. Returns an unsubscribe function. This is the renderer-side
+// counterpart to betterIpcMain.callback.
+function rendererCallback<C extends keyof CallbackChannels>(
+  channel: C,
+  handler: (
+    collationId: number,
+    ...args: SerializableArgs<Parameters<CallbackChannels[C]>>
+  ) => Promise<Awaited<ReturnType<CallbackChannels[C]>>>,
+): () => void {
+  const listener = (
+    _event: Electron.IpcRendererEvent,
+    collationId: number,
+    ...args: SerializableArgs<Parameters<CallbackChannels[C]>>
+  ) => {
+    handler(collationId, ...args)
+      .then((value) => {
+        ipcRenderer.send(`callback:${channel}`, collationId, {
+          ok: true,
+          value,
+        });
+      })
+      .catch((err: unknown) => {
+        ipcRenderer.send(`callback:${channel}`, collationId, {
+          ok: false,
+          error: serializeError(err),
+        });
+      });
+  };
+  ipcRenderer.on(channel, listener);
+  return () => ipcRenderer.removeListener(channel, listener);
 }

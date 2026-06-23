@@ -125,6 +125,13 @@ export interface Diag {
   fatal(message: string): void;
 }
 
+export interface Diag {
+  /** Synchronously append one line to vortex.log. Blocks until main has
+   *  flushed the line, so it survives the caller dying or main crashing in
+   *  the same message-loop tick. Sync IPC; reserve for fatal diagnostics. */
+  fatal(message: string): void;
+}
+
 export interface Dialog {
   /** Show open file/folder dialog */
   showOpen(options: OpenDialogOptions): Promise<OpenDialogReturnValue>;

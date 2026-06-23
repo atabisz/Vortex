@@ -30,6 +30,7 @@ import FlexLayout from "../../controls/FlexLayout";
 import Icon from "../../controls/Icon";
 import Image from "../../controls/Image";
 import LazyComponent from "../../controls/LazyComponent";
+import { log } from "../../logging";
 import type { IComponentContext } from "../../types/IComponentContext";
 import type { IExtensionApi, IExtensionContext } from "../../types/IExtensionContext";
 import type { IModLookupResult } from "../../types/IModLookupResult";
@@ -46,7 +47,6 @@ import Debouncer from "../../util/Debouncer";
 import * as fs from "../../util/fs";
 import getVortexPath from "../../util/getVortexPath";
 import type { LogLevel } from "../../util/log";
-import { log } from "../../util/log";
 import { showError } from "../../util/message";
 import opn from "../../util/opn";
 import { activeGameId, downloadPathForGame, gameById, knownGames } from "../../util/selectors";
@@ -62,6 +62,7 @@ import {
 } from "../../util/util";
 import { MainContext } from "../../views/MainWindow";
 import type { ICategoryDictionary } from "../category_management/types/ICategoryDictionary";
+import { getCollectionActiveSession } from "../collections_integration/selectors";
 import type { IDownload } from "../download_management/types/IDownload";
 import type { IResolvedURL } from "../download_management/types/ProtocolHandlers";
 import { SITE_ID } from "../gamemode_management/constants";
@@ -1645,6 +1646,21 @@ function makeNXMProtocol(api: IExtensionApi, onAwaitLink: AwaitLinkCB) {
         newError.stack = err.stack;
         return PromiseBB.reject(newError);
       })
+      .catch(HTTPError, (err) => {
+        // A 401 here means the Nexus client could not authenticate the
+        // request and could not (or did not) refresh its token. Reachable
+        // when persisted state says we have OAuth credentials but the live
+        // Nexus instance does not (e.g. updateToken never ran on startup,
+        // forced-logout migration path), when the refresh token has been
+        // revoked server-side, or on a resume after logout. Surface as a
+        // ProcessCanceled so reportDownloadError shows a friendly,
+        // non-reportable notification instead of letting the raw 401 fall
+        // through to the generic else branch with the Report button.
+        if (err.statusCode === 401) {
+          return PromiseBB.reject(new ProcessCanceled("You are not logged in to Nexus Mods!"));
+        }
+        return PromiseBB.reject(err);
+      })
       .catch(RateLimitError, (err) => {
         api.showErrorNotification("Rate limit exceeded", err, {
           allowReport: false,
@@ -1698,9 +1714,17 @@ function makeNXMProtocol(api: IExtensionApi, onAwaitLink: AwaitLinkCB) {
           }
         })
         .catch((err) => {
+          const message = getErrorMessageOrDefault(err);
+          // Cancellation must propagate; otherwise sibling deps whose in-flight
+          // mod-info queries get aborted re-enter freeUserDownload, repopulate
+          // the queue, and the dialog re-opens behind the one the user just
+          // dismissed.
+          if (err instanceof UserCanceled || err instanceof ProcessCanceled) {
+            return PromiseBB.reject(err);
+          }
           // If we can't query mod info, fall back to free user flow
           log("warn", "failed to query mod info for direct download check", {
-            error: err.message,
+            error: message,
           });
           return freeUserDownload(input, url);
         });
@@ -1801,6 +1825,14 @@ function onCancelImpl(api: IExtensionApi, inputUrl: string): boolean {
     copy.forEach((item) => {
       item.rej(new UserCanceled(false));
     });
+    // Rejecting freeDLQueue items dismisses the dialog but doesn't stop the
+    // install pipeline (its UserCanceled doesn't survive IPC). pause-collection
+    // routes through the collections plugin for the full cleanup: stop queuing,
+    // reset the driver, dismiss the install notification.
+    const session = getCollectionActiveSession(api.getState());
+    if (session?.collectionId && session.gameId) {
+      api.events.emit("pause-collection", session.gameId, session.collectionId);
+    }
     return true;
   } else {
     api.store.dispatch(removeFreeUserDLItem(inputUrl));

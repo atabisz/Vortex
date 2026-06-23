@@ -7,6 +7,7 @@ packages:
   - ./src/preload
   - ./src/main
   - ./src/renderer
+  - ./src/stylesheets
   - ./extensions/*
   - ./extensions/games/*
 
@@ -17,7 +18,6 @@ allowBuilds:
   ba2tk: true
   bsatk: true
   core-js: true
-
   drivelist: true
   electron: true
   esbuild: true
@@ -25,6 +25,7 @@ allowBuilds:
   gamebryo-savegame: true
   leveldown: true
   loot: true
+  node: true
   nx: false
   protobufjs: true
   unrs-resolver: true
@@ -39,7 +40,11 @@ catalog:
   "@babel/preset-typescript": 7.16.7
   "@babel/register": 7.16.8
   "@duckdb/node-api": 1.5.1-r.1
+<<<<<<< HEAD
   "@electron/rebuild": 4.0.3
+=======
+  "@electron/rebuild": ^4.0.4
+>>>>>>> v2.1.1
   "@electron/remote": ^2.0.12
   "@eslint-react/eslint-plugin": 2.3.7
   "@eslint/js": 9.39.1
@@ -50,8 +55,13 @@ catalog:
   "@microsoft/api-extractor": ^7.57.6
   "@msgpack/msgpack": ^2.7.0
   "@nexusmods/fomod-installer-ipc": ^0.13.1
+<<<<<<< HEAD
   "@nexusmods/fomod-installer-native": ^0.13.1
   "@nexusmods/nexus-api": git+https://github.com/Nexus-Mods/node-nexus-api#2d92fd2bdc4aa6b9813a1e7043d412e13f4aa1d7
+=======
+  "@nexusmods/fomod-installer-native": ^0.13.2
+  "@nexusmods/nexus-api": git+https://github.com/Nexus-Mods/node-nexus-api#99a97cd1359527dbf5c46c93723d1846538badfe
+>>>>>>> v2.1.1
   "@opentelemetry/api": ^1.9.0
   "@opentelemetry/context-async-hooks": ^2.5.1
   "@opentelemetry/context-zone": ^2.5.1
@@ -77,8 +87,6 @@ catalog:
   "@types/d3": ~7.4.3
   "@types/draggabilly": 2.1.3
   "@types/encoding-down": ~5.0.5
-  "@types/enzyme": ~3.10.19
-  "@types/enzyme-adapter-react-16": ~1.0.9
   "@types/feedparser": ~2.2.8
   "@types/fs-extra": ~11.0.4
   "@types/graphlib": ~2.1.12
@@ -106,7 +114,6 @@ catalog:
   "@types/react-router": ^2.0.41
   "@types/react-select": ^1.2.0
   "@types/react-sortable-tree": ^0.3.11
-  "@types/react-test-renderer": ^16.9.1
   "@types/react-transition-group": ^4.2.3
   "@types/redux": ^3.6.0
   "@types/redux-devtools-log-monitor": ^1.0.34
@@ -144,7 +151,6 @@ catalog:
   content-disposition: ^0.5.3
   content-type: ^1.0.4
   copyfiles: ^2.4.1
-
   crc-32: ^1.2.1
   cross-env: ^10.1.0
   cross-fetch: ^3.1.5
@@ -162,12 +168,10 @@ catalog:
   electron: 42.0.0
   electron-builder: 24.13.3
   electron-context-menu: ^3.1.1
-  electron-devtools-installer: ^3.2.0
+  electron-extension-installer: ^2.0.1
   electron-redux: git+https://github.com/TanninOne/electron-redux#66bbd9d389579806e8c4ebd87bd513a668cc64a8
   electron-updater: ^4.2.0
   encoding-down: ^6.3.0
-  enzyme: ^3.10.0
-  enzyme-adapter-react-16: ^1.15.1
   eslint: 9.39.1
   eslint-config-prettier: 10.1.8
   eslint-import-resolver-typescript: ^4.4.4
@@ -209,7 +213,12 @@ catalog:
   minimist: ^1.2.8
   mixpanel-browser: ^2.71.0
   modmeta-db: git+https://github.com/Nexus-Mods/modmeta-db#daa8935b6e38e255ec192c908adfce35d47c0336
+<<<<<<< HEAD
   nexus-api: git+https://github.com/Nexus-Mods/node-nexus-api#2d92fd2bdc4aa6b9813a1e7043d412e13f4aa1d7
+=======
+  nexus-api: git+https://github.com/Nexus-Mods/node-nexus-api#99a97cd1359527dbf5c46c93723d1846538badfe
+  node: runtime:24.15.0
+>>>>>>> v2.1.1
   node-7z: git+https://github.com/Nexus-Mods/node-7z#b75def8d0d7d81a03f4526c52b8ada9a34a06479
   normalize-url: ^6.0.1
   numeral: ^2.0.6
@@ -290,6 +299,7 @@ catalog:
   xxhash-addon: ^2.0.3
   zod: ^4.3.5
 
+blockExoticSubdeps: false
 catalogMode: strict
 cleanupUnusedCatalogs: true
 
@@ -298,10 +308,15 @@ dedupePeers: true
 engineStrict: true
 failIfNoMatch: true
 
+minimumReleaseAge: 2880
+minimumReleaseAgeIgnoreMissingTime: true
+minimumReleaseAgeStrict: false # TODO: set true after they fixed their shit
+
 overrides:
   "@types/react": "16"
   "@types/react-dom": "16"
   node-addon-api: 8.5.0
+  node-gyp: 12.3.0
 patchedDependencies:
   bsatk@2.1.0: patches/bsatk@2.1.0.patch
   loot@6.2.2: patches/loot@6.2.2.patch
