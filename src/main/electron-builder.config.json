@@ -67,7 +67,14 @@
     "assets/*.exe",
     "assets/css/**",
     "**/*.node",
-    "duckdb-extensions"
+    "duckdb-extensions/**",
+    "node_modules/@nexusmods/fomod-installer-native/prebuilds/linux-x64/ModInstaller.Native.so",
+    "node_modules/@nexusmods/fomod-installer-ipc/dist/ModInstallerIPC",
+    "assets/dotnetprobe",
+    "node_modules/modmeta-db/**",
+    "node_modules/leveldown/**",
+    "node_modules/levelup/**",
+    "node_modules/encoding-down/**"
   ],
   "buildDependenciesFromSource": false,
   "npmRebuild": false

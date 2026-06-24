@@ -1,5 +1,5 @@
 import { createWriteStream, existsSync } from "node:fs";
-import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { chmod, copyFile, cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
@@ -65,6 +65,24 @@ async function prepareLinux() {
     replaceWithWinapiStub(resolve(DIST_DIR, "node_modules", "winapi-bindings")),
     replaceWithWinapiStub(resolve(MAIN_DIR, "node_modules", "winapi-bindings")),
   ]);
+
+  const bluebirdSrc = resolve(DIST_DIR, "node_modules", "bluebird");
+  const bluebirdDest = resolve(DIST_DIR, "node_modules", "modmeta-db", "node_modules", "bluebird");
+  if (existsSync(bluebirdSrc) && !existsSync(bluebirdDest)) {
+    await cp(bluebirdSrc, bluebirdDest, { recursive: true });
+  }
+
+  const fomodIpcBinary = resolve(
+    DIST_DIR,
+    "node_modules",
+    "@nexusmods",
+    "fomod-installer-ipc",
+    "dist",
+    "ModInstallerIPC",
+  );
+  if (existsSync(fomodIpcBinary)) {
+    await chmod(fomodIpcBinary, 0o755);
+  }
 }
 
 async function main() {
