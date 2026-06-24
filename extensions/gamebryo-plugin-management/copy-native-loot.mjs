@@ -47,17 +47,25 @@ function replaceOrFail(file, find, replacement) {
   fs.writeFileSync(file, newContent);
 }
 
+function replaceIfPresent(file, find, replacement) {
+  const oldContent = fs.readFileSync(file, "utf8");
+  const newContent = oldContent.replace(find, replacement);
+  if (newContent !== oldContent) {
+    fs.writeFileSync(file, newContent);
+  }
+}
+
 const asyncPath = path.join(dist, "async.js");
 replaceOrFail(asyncPath, "./build/Release/node-loot", "./node-loot");
 
 if (isLinux) {
-  replaceOrFail(
+  replaceIfPresent(
     asyncPath,
     "const client = net.connect(`\\\\\\\\?\\\\pipe\\\\loot-ipc-${process.argv[2]}`, (arg) => {",
     "const lootIpcPath = process.platform === 'linux' ? `/tmp/loot-ipc-${process.argv[2]}` : `\\\\\\\\?\\\\pipe\\\\loot-ipc-${process.argv[2]}`;\nconst client = net.connect(lootIpcPath, (arg) => {",
   );
 
-  replaceOrFail(
+  replaceIfPresent(
     path.join(dist, "index.cjs"),
     "this.ipc.listen(`\\\\\\\\?\\\\pipe\\\\loot-ipc-${this.id}`, () => {",
     "this.ipc.listen(process.platform === 'linux' ? `/tmp/loot-ipc-${this.id}` : `\\\\\\\\?\\\\pipe\\\\loot-ipc-${this.id}`, () => {",

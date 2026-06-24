@@ -152,7 +152,22 @@ try {
 // libloot.so.0 is the versioned shared library; liblibloot.so is a symlink to it.
 const soDestVersioned = path.join(lootApiDir, "libloot.so.0");
 const soDestPath = path.join(lootApiDir, "liblibloot.so");
+
+function ensureLinkerInput() {
+    if (fs.existsSync(soDestPath)) {
+        fs.unlinkSync(soDestPath);
+    }
+    try {
+        fs.symlinkSync("libloot.so.0", soDestPath);
+        console.log("postinstall-libloot: liblibloot.so symlink created -> libloot.so.0");
+    } catch (err) {
+        fs.copyFileSync(soDestVersioned, soDestPath);
+        console.log("postinstall-libloot: liblibloot.so copied from libloot.so.0");
+    }
+}
+
 if (fs.existsSync(soDestVersioned)) {
+    ensureLinkerInput();
     console.log("postinstall-libloot: libloot.so.0 already present, skipping build");
     process.exit(0);
 }
@@ -229,13 +244,9 @@ try {
     fs.copyFileSync(soSrcPath, soVersionedDest);
     console.log(`postinstall-libloot: libloot.so.0 installed to ${soVersionedDest}`);
 
-    // Create liblibloot.so as a symlink → libloot.so.0. The linker looks for
+    // Create liblibloot.so as a symlink -> libloot.so.0. The linker looks for
     // liblibloot.so when given -llibloot (prepends "lib", appends ".so").
-    if (fs.existsSync(soDestPath)) {
-        fs.unlinkSync(soDestPath);
-    }
-    fs.symlinkSync("libloot.so.0", soDestPath);
-    console.log(`postinstall-libloot: liblibloot.so symlink created → libloot.so.0`);
+    ensureLinkerInput();
 } catch (err) {
     console.error("postinstall-libloot: build failed:", err.message || err);
     console.warn("WARNING: libloot.so build failed — loot addon will not be available on Linux");

@@ -7,6 +7,7 @@ on:
 
 jobs:
   sync-tag:
+    if: github.repository_owner == 'Nexus-Mods'
     runs-on: ubuntu-latest
 
     steps:
