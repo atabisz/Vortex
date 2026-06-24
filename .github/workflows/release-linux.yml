@@ -114,12 +114,13 @@ jobs:
           if [ -f ./dist/vortex-setup.AppImage ]; then
             exit 0
           fi
-          appimage="$(find ./dist -maxdepth 1 -type f -iname '*.AppImage' -print -quit)"
-          if [ -z "$appimage" ]; then
-            ls -la ./dist
+          shopt -s nullglob
+          appimages=(./dist/*.AppImage ./dist/*.appimage)
+          if [ "${#appimages[@]}" -eq 0 ]; then
+            ls -la ./dist || true
             exit 1
           fi
-          mv "$appimage" ./dist/vortex-setup.AppImage
+          mv "${appimages[0]}" ./dist/vortex-setup.AppImage
 
       # On master branch pushes, force-move the rolling latest-linux tag to this commit
       # so the GitHub release always points to the most recent build.
