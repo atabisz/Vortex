@@ -1,5 +1,5 @@
-import { createWriteStream } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { createWriteStream, existsSync } from "node:fs";
+import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
@@ -8,6 +8,10 @@ const MAIN_DIR = resolve(import.meta.dirname);
 const MAIN_PACKAGE_PATH = resolve(MAIN_DIR, "package.json");
 const DIST_DIR = resolve(MAIN_DIR, "build");
 const DIST_PACKAGE_PATH = resolve(DIST_DIR, "package.json");
+const WINAPI_STUB_DIR = [
+  resolve(MAIN_DIR, "../../../build/linux/winapi-bindings-stub"),
+  resolve(MAIN_DIR, "../../build/linux/winapi-bindings-stub"),
+].find((dir) => existsSync(dir));
 
 async function resolveDepVersions(deps, nodeModulesDir) {
   if (!deps) return deps;
@@ -46,6 +50,23 @@ async function prepareWin() {
   );
 }
 
+async function replaceWithWinapiStub(dir) {
+  if (!WINAPI_STUB_DIR) throw new Error("winapi-bindings Linux stub not found");
+  await rm(dir, { recursive: true, force: true });
+  await mkdir(dir, { recursive: true });
+  const files = await readdir(WINAPI_STUB_DIR);
+  await Promise.all(
+    files.map((file) => copyFile(resolve(WINAPI_STUB_DIR, file), resolve(dir, file))),
+  );
+}
+
+async function prepareLinux() {
+  await Promise.all([
+    replaceWithWinapiStub(resolve(DIST_DIR, "node_modules", "winapi-bindings")),
+    replaceWithWinapiStub(resolve(MAIN_DIR, "node_modules", "winapi-bindings")),
+  ]);
+}
+
 async function main() {
   const json = await readFile(MAIN_PACKAGE_PATH, "utf8");
   const mainPkg = JSON.parse(json);
@@ -63,6 +84,8 @@ async function main() {
 
   if (process.platform === "win32") {
     await prepareWin();
+  } else if (process.platform === "linux") {
+    await prepareLinux();
   }
 }
 
