@@ -60,11 +60,42 @@ async function replaceWithWinapiStub(dir) {
   );
 }
 
+async function findPackageDirs(root, packageName) {
+  const dirs = [];
+  async function walk(dir) {
+    let entries;
+    try {
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    await Promise.all(
+      entries
+        .filter((entry) => entry.isDirectory())
+        .map(async (entry) => {
+          const full = resolve(dir, entry.name);
+          if (entry.name === packageName) {
+            dirs.push(full);
+          } else {
+            await walk(full);
+          }
+        }),
+    );
+  }
+  await walk(root);
+  return dirs;
+}
+
 async function prepareLinux() {
-  await Promise.all([
-    replaceWithWinapiStub(resolve(DIST_DIR, "node_modules", "winapi-bindings")),
-    replaceWithWinapiStub(resolve(MAIN_DIR, "node_modules", "winapi-bindings")),
-  ]);
+  const nodeModulesRoots = [resolve(DIST_DIR, "node_modules"), resolve(MAIN_DIR, "node_modules")];
+  const winapiDirs = new Set(
+    (
+      await Promise.all(nodeModulesRoots.map((root) => findPackageDirs(root, "winapi-bindings")))
+    ).flat(),
+  );
+  winapiDirs.add(resolve(DIST_DIR, "node_modules", "winapi-bindings"));
+  winapiDirs.add(resolve(MAIN_DIR, "node_modules", "winapi-bindings"));
+  await Promise.all([...winapiDirs].map((dir) => replaceWithWinapiStub(dir)));
 
   const bluebirdSrc = resolve(DIST_DIR, "node_modules", "bluebird");
   const bluebirdDest = resolve(DIST_DIR, "node_modules", "modmeta-db", "node_modules", "bluebird");
