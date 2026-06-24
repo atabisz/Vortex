@@ -2,21 +2,11 @@ const Promise = require("bluebird");
 const path = require("path");
 const winapi = require("winapi-bindings");
 const { fs, util } = require("vortex-api");
-const { app, remote } = require("electron");
 
 const executable = process.platform == "linux" ? "PrisonArchitect" : "Prison Architect64.exe";
 
 const MODS_LOCAL = path.resolve(
   util.getVortexPath("appData"),
-  "..",
-  "Local",
-  "Introversion",
-  "Prison Architect",
-  "mods",
-);
-
-const MODS_LOCAL = path.resolve(
-  appUni.getPath("appData"),
   "..",
   "Local",
   "Introversion",

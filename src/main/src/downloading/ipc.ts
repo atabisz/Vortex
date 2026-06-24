@@ -1,9 +1,8 @@
+import { downloadErrorToWire } from "@vortex/shared";
 import type { DownloadState, ResolvedEndpoint, ResolvedResource } from "@vortex/shared/download";
 import { staticChunker } from "@vortex/shared/download";
-import type { DownloadError } from "@vortex/shared/errors";
 import type {
   WireDownloadCheckpoint,
-  WireDownloadError,
   WireEndpoint,
   WireResolvedResource,
 } from "@vortex/shared/ipc";
@@ -12,13 +11,6 @@ import type { WebContents } from "electron";
 import { betterIpcMain } from "../ipc";
 import { log } from "../logging";
 import type { DownloadManager } from "./manager";
-
-function downloadErrorToWire(err: DownloadError): WireDownloadError {
-  const { payload } = err;
-  const wirePayload =
-    "url" in payload ? { ...payload, url: payload.url.toString() } : { ...payload };
-  return { payload: wirePayload, message: err.message };
-}
 
 function wireToResolvedEndpoint(wire: WireEndpoint): ResolvedEndpoint {
   return { url: new URL(wire.url), headers: wire.headers };
@@ -42,7 +34,9 @@ function resourceToUrl(resource: ResolvedResource): string {
 }
 
 export function init(manager: DownloadManager): void {
-  const timeout = 30_000;
+  // Our network timeouts are 30 seconds, which means that we will fail
+  // with the callback before the network could. Give it a bit of extra time to avoid spurious failures.
+  const timeout = 45_000;
 
   const webContentsByDownloadId = new Map<string, WebContents>();
 

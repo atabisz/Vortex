@@ -11,8 +11,7 @@
   },
   "scripts": {
     "_assets": "copyfiles -u 1 -f ./assets/* dist && copyfiles -u 1 -f ./tools/* dist/tools",
-    "_build": "node build.mjs && pnpm run _assets && pnpm extractInfo",
-    "build": "pnpm run _build && node ../../copy-extension.mjs",
+    "build": "node build.mjs && pnpm run _assets && pnpm extractInfo",
     "test": "vitest run --config vitest.config.ts"
   },
   "devDependencies": {
@@ -21,5 +20,26 @@
   },
   "dependencies": {
     "lru-cache": "catalog:"
+  },
+  "nx": {
+    "tags": [
+      "vortex:extension"
+    ],
+    "targets": {
+      "build": {
+        "inputs": [
+          "default",
+          "typescript",
+          "vortex-api"
+        ]
+      },
+      "typecheck": {
+        "inputs": [
+          "default",
+          "typescript",
+          "vortex-api"
+        ]
+      }
+    }
   }
 }

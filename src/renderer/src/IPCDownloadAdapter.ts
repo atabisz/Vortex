@@ -1,17 +1,11 @@
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { access, rename, rm } from "node:fs/promises";
+import { access, mkdir, rename, rm } from "node:fs/promises";
 import * as path from "node:path";
 import { pipeline } from "node:stream/promises";
 
-import { unknownToError } from "@vortex/shared";
-import {
-  AlreadyDownloaded,
-  DownloadIsHTML,
-  HTTPError,
-  UserCanceled,
-  DownloadError,
-} from "@vortex/shared/errors";
+import { unknownToError, wireToDownloadError } from "@vortex/shared";
+import { AlreadyDownloaded, UserCanceled } from "@vortex/shared/errors";
 import type { WireDownloadState, WireResolvedResource } from "@vortex/shared/ipc";
 import { z } from "zod";
 
@@ -39,7 +33,9 @@ import {
   setDownloadSpeed,
 } from "./extensions/download_management/actions/state";
 import { downloadPathForGame } from "./extensions/download_management/selectors";
+import { knownGames } from "./extensions/gamemode_management/selectors";
 import { nexusIdsFromDownloadId } from "./extensions/nexus_integration/selectors";
+import { convertGameIdReverse } from "./extensions/nexus_integration/util/convertGameId";
 import { makeModAndFileUIDs } from "./extensions/nexus_integration/util/UIDs";
 import { activeGameId } from "./extensions/profile_management/selectors";
 import { log } from "./logging";
@@ -49,18 +45,7 @@ import { batchDispatch, flatten } from "./util/util";
 function rehydrateDownloadError(state: WireDownloadState): Error | null {
   if (state.status === "canceled") return new UserCanceled();
   if (state.status !== "failed" || state.error === null) return null;
-  const { payload, message } = state.error;
-  switch (payload.code) {
-    case "is-html":
-      return new DownloadIsHTML(payload.url);
-    case "network-bad-status":
-      return new HTTPError(payload.statusCode, message, payload.url);
-    default:
-      return new DownloadError(
-        "url" in payload ? { ...payload, url: new URL(payload.url) } : { ...payload },
-        message,
-      );
-  }
+  return wireToDownloadError(state.error);
 }
 
 type ProtocolHandler = (
@@ -79,6 +64,19 @@ type EncodedUrl = {
 function parseEncodedUrl(raw: string): EncodedUrl {
   const [rawUrl, referer] = raw.split("<");
   return { url: new URL(rawUrl), referer };
+}
+
+/**
+ * Callers can supply a game id as either a Nexus domain (e.g. "skyrimspecialedition")
+ * or an internal id (e.g. "skyrimse"). The on-disk download layout and `download.game`
+ * records are keyed on the internal id (the install handler also converts before
+ * stat'ing), so the IPC adapter normalizes here. Returns the original id when no
+ * mapping is found, including for the SITE pseudo-domain.
+ */
+function toInternalGameId(api: IExtensionApi, gameId: string | undefined): string | undefined {
+  if (gameId === undefined) return undefined;
+  const state = api.getState();
+  return convertGameIdReverse(knownGames(state), gameId) || gameId;
 }
 
 type StoredDownloadInfo = {
@@ -230,6 +228,13 @@ export class IPCDownloadAdapter {
     const download = state.persistent.downloads.files?.[downloadId];
     const isCollection = nexusIds.collectionSlug !== undefined && nexusIds.revisionId !== undefined;
 
+    // Mod downloads triggered by a collection install carry the parent collection's id
+    // under `modInfo.nexus.parentCollectionId` (see InstallManager.downloadURL).
+    // Cast narrows away the `[key: string]: any` index signature on nexus.
+    const parentCollectionId = download?.modInfo?.nexus?.parentCollectionId as string | undefined;
+    const modCollectionId =
+      isCollection || parentCollectionId === undefined ? null : parentCollectionId;
+
     if (eventType === "started") {
       if (isCollection || nexusIds.modId === undefined || nexusIds.fileId === undefined) return;
       const { modUID, fileUID } = makeModAndFileUIDs(
@@ -245,7 +250,7 @@ export class IPCDownloadAdapter {
           nexusIds.numericGameId,
           modUID,
           fileUID,
-          null,
+          modCollectionId,
         ),
       );
       return;
@@ -281,7 +286,7 @@ export class IPCDownloadAdapter {
             fileUID,
             file_size,
             duration_ms,
-            null,
+            modCollectionId,
           ),
         );
       }
@@ -312,7 +317,7 @@ export class IPCDownloadAdapter {
             nexusIds.numericGameId,
             modUID,
             fileUID,
-            null,
+            modCollectionId,
           ),
         );
       }
@@ -348,7 +353,7 @@ export class IPCDownloadAdapter {
             fileUID,
             "",
             message,
-            null,
+            modCollectionId,
           ),
         );
       }
@@ -364,7 +369,7 @@ export class IPCDownloadAdapter {
     const download = reduxState.persistent.downloads.files?.[downloadId];
 
     if (download?.localPath !== undefined) {
-      const gameId = download.game?.[0] ?? activeGameId(reduxState);
+      const gameId = toInternalGameId(this.#api, download.game?.[0] ?? activeGameId(reduxState));
       const dlPath = downloadPathForGame(reduxState, gameId);
       const tempPath = path.join(dlPath, download.localPath);
 
@@ -438,7 +443,13 @@ export class IPCDownloadAdapter {
     const encodedUrl = parseEncodedUrl(rawUrl.toString());
 
     const state = this.#api.getState();
-    const dlPath = downloadPathForGame(state, modInfo.game ?? activeGameId(state));
+    const gameId = toInternalGameId(this.#api, modInfo.game ?? activeGameId(state));
+    const dlPath = downloadPathForGame(state, gameId);
+
+    // The per-game subfolder may not exist yet - ensureDownloadsDirectory only
+    // creates the active game's folder, but downloads can target any game
+    // (SITE_ID extension downloads, compatible domains, collection downloads, etc.).
+    await mkdir(dlPath, { recursive: true });
 
     // Check for an existing file using the caller-supplied name before queuing.
     // We can only do this when a name is provided; temp-named downloads are always new.
@@ -519,7 +530,6 @@ export class IPCDownloadAdapter {
       });
       log("debug", "download queued", { downloadId, collationId });
 
-      const gameId = modInfo.game ?? activeGameId(state);
       // Create the Redux record. nexus_integration's onChangeDownloads watches
       // downloads.files and triggers metadata enrichment when nexus.ids is present.
       this.#api.store.dispatch(initDownload(downloadId, rawUrls, modInfo, [gameId]));
@@ -562,7 +572,7 @@ export class IPCDownloadAdapter {
         const state = this.#api.getState();
         const download = state.persistent.downloads.files?.[downloadId];
         if (download?.localPath) {
-          const gameId = download.game?.[0] ?? activeGameId(state);
+          const gameId = toInternalGameId(this.#api, download.game?.[0] ?? activeGameId(state));
           const dlPath = downloadPathForGame(state, gameId);
           await rm(path.join(dlPath, download.localPath), { force: true });
         }

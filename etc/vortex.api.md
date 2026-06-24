@@ -17,6 +17,7 @@ import { ComplexActionCreator1 } from 'redux-act';
 import { ComplexActionCreator2 } from 'redux-act';
 import { ComplexActionCreator3 } from 'redux-act';
 import { ComplexActionCreator4 } from 'redux-act';
+import { ComplexActionCreator5 } from 'redux-act';
 import { ComplexActionCreator6 } from 'redux-act';
 import { constants } from 'fs';
 import { createReadStream } from 'original-fs';
@@ -877,11 +878,14 @@ const downloadPath: (state: IState) => string;
 // @public (undocumented)
 function downloadPathForGame(state: IState, gameId?: string): string;
 
+// Warning: (ae-forgotten-export) The symbol "IChunk" needs to be exported by the entry point api.d.ts
+//
 // @public
-const downloadProgress: ComplexActionCreator4<string, number, number, string[], {
+const downloadProgress: ComplexActionCreator5<string, number, number, IChunk[], string[], {
 id: string;
 received: number;
 total: number;
+chunks: IChunk[];
 urls: string[];
 }, {}>;
 
@@ -3089,6 +3093,13 @@ interface IOverlaysState {
 
 // @public
 interface IPersistor {
+    // (undocumented)
+    bulkRemoveItem?(keys: ReadonlyArray<PersistorKey>): PromiseLike<void>;
+    // (undocumented)
+    bulkSetItem?(items: ReadonlyArray<{
+        key: PersistorKey;
+        value: string;
+    }>): PromiseLike<void>;
     // (undocumented)
     getAllKeys(): PromiseLike<PersistorKey[]>;
     // (undocumented)

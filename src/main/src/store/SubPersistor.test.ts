@@ -19,14 +19,7 @@ function createWrappedWithBulk() {
     bulkSetItem,
     bulkRemoveItem,
   };
-  return {
-    wrapped,
-    setItem,
-    removeItem,
-    getAllKVs,
-    bulkSetItem,
-    bulkRemoveItem,
-  };
+  return { wrapped, setItem, removeItem, getAllKVs, bulkSetItem, bulkRemoveItem };
 }
 
 function createWrappedWithoutBulk(): IPersistor {

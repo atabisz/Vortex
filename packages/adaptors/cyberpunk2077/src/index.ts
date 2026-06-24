@@ -75,9 +75,9 @@ export class GamePathService implements IGamePathService<CyberpunkExtras> {
     return { game, saves, preferences };
   }
 
-  async getVersionSource(paths: CyberpunkPaths): Promise<VersionSource> {
+  getVersionSource(paths: CyberpunkPaths): Promise<VersionSource> {
     const rehydrated = rehydrateGamePaths(paths);
-    return peHeader(rehydrated.game.join("bin", "x64", "Cyberpunk2077.exe"));
+    return Promise.resolve(peHeader(rehydrated.game.join("bin", "x64", "Cyberpunk2077.exe")));
   }
 }
 

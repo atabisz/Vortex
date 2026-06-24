@@ -60,6 +60,11 @@ console.error = (...args) => {
 window.addEventListener("error", earlyErrHandler);
 window.addEventListener("unhandledrejection", earlyErrHandler);
 
+if (!process.env.NODE_ENV) {
+  const key = "NODE_ENV";
+  process.env[key] = "development";
+}
+
 if (process.env.NODE_ENV === "development") {
   process.traceProcessWarnings = true;
   const sourceMapSupport = require("source-map-support");
@@ -131,13 +136,13 @@ import { GameEntryNotFound } from "./types/IGameStore";
 import type { IState } from "./types/IState";
 import { relaunch } from "./util/commandLine";
 import { ProcessCanceled, UserCanceled } from "./util/CustomErrors";
-import { _setNotifier } from "./util/elevated";
 import { recordErrorSpan, setOutdated, terminate, toError } from "./util/errorHandling";
 import {} from "./util/extensionRequire";
-import { _setChattrNotifier, setTFunction } from "./util/fs";
+import { setTFunction } from "./util/fs";
 import GlobalNotifications from "./util/GlobalNotifications";
 import getI18n, { changeLanguage, fallbackTFunc, type TFunction } from "./util/i18n";
 import { showError } from "./util/message";
+import migrate from "./util/migrate";
 import { readStartupSettings } from "./util/startupSettings";
 import { getSafe } from "./util/storeHelper";
 import { bytesToString, getAllPropertyNames } from "./util/util";
@@ -189,6 +194,10 @@ function sanityCheckCB(err: StateError) {
 }
 
 let store: ThunkStore<IState>;
+// Captured between hydration and `applyAppMetadata` (which overwrites
+// state.app.appVersion with the running version). migrate() reads it to
+// gate version-keyed migrations during an upgrade.
+let priorAppVersion: string = "";
 
 const terminateFromError = (error: any, allowReport?: boolean) => {
   log("warn", "about to report an error", { stack: new Error().stack });
@@ -564,6 +573,12 @@ async function init(): Promise<ExtensionManager | null> {
     });
   }
 
+  // Capture the previously-persisted appVersion before applyAppMetadata
+  // overwrites it with the currently-running version. migrate() reads this
+  // value to decide which version-gated migrations need to run for an
+  // upgrade; once setApplicationVersion fires, the signal is gone.
+  priorAppVersion = store.getState().app?.appVersion ?? "";
+
   // Apply app init metadata (commandLine, version, etc.) before extensions
   // interact with the store — extensions depend on commandLine state
   if (appInitMetadata !== null) {
@@ -571,20 +586,6 @@ async function init(): Promise<ExtensionManager | null> {
   }
 
   extensions.setStore(store);
-
-  // Wire elevation failure notifications so SteamOS Game Mode errors
-  // are visible to the user (ELEV-06). Must be after setStore() which
-  // initializes sendNotification on the api.
-  _setNotifier((notification) => {
-    extensions.getApi().sendNotification?.(notification);
-  });
-
-  // Wire chattr+F casefold notification so EOPNOTSUPP-on-ext4 info
-  // message is visible to the user (CASE-11). Must be after setStore().
-  _setChattrNotifier((notification) => {
-    extensions.getApi().sendNotification?.(notification);
-  });
-
   setOutdated(extensions.getApi());
   extensions.applyExtensionsOfExtensions();
   log("debug", "renderer connected to store");
@@ -809,6 +810,20 @@ async function load(extensions: ExtensionManager): Promise<void> {
 
   extensions.setTranslation(i18n);
   await Promise.resolve(extensions.doOnce());
+
+  // Run version-gated migrations now that bundled extensions have registered
+  // their games (so knownGames is populated for domain → internal id lookups).
+  // Skipped in dev: package.json is pinned at 1.0.0, so without this guard a
+  // fresh profile's empty appVersion would trip every version-gated migration.
+  if (process.env.NODE_ENV !== "development") {
+    try {
+      await migrate(store, priorAppVersion);
+    } catch (err) {
+      log("warn", "migration sequence failed", {
+        err: getErrorMessageOrDefault(err),
+      });
+    }
+  }
 
   log("info", "activating language", {
     lang: store.getState().settings.interface.language,

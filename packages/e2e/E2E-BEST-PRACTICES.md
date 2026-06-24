@@ -332,14 +332,23 @@ pnpm -F @vortex/e2e run test:report
 
 Do not add code comments unless ABSOLUTELY needed for explaining vague code. If you want to add a comment, try to rewrite the code to be understandable without one.
 
-Run formatter, lint, and tests on the e2e package before committing:
+**Run these BEFORE every commit. The CI `format` job will block your PR if you skip them.**
 
 ```bash
-# Format (oxfmt) — config at oxfmtrc.json. Run on the files you touched.
-pnpm oxfmt packages/e2e/<paths-you-changed>
+# 1. Format every file you touched (oxfmt — config at oxfmtrc.json).
+#    Source files outside packages/e2e count too if you changed any.
+pnpm exec oxfmt <paths-you-changed>
 
-# Or format every staged file in one shot:
-pnpm run format:staged
+# 2. Verify nothing is still unformatted. This is what CI runs.
+pnpm run format:check
+
+# 3. Type-check the e2e package.
+pnpm -F @vortex/e2e exec tsc --noEmit
+
+# 4. Run the test you added/changed locally.
+pnpm -F @vortex/e2e exec playwright test <your-spec> --workers=1
+```
+
+If `format:check` reports any file, run `pnpm exec oxfmt <that-file>` and amend the commit. Don't push and rely on CI to tell you — it's a slow feedback loop.
 
 The repo formats with **oxfmt**, not prettier. There is no `.prettierrc`. oxfmt's default is double-quoted strings; some older files in this package still have single quotes from before the formatter switch — when you edit one of those files, oxfmt will convert it. Don't fight it.
-```

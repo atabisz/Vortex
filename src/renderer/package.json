@@ -5,11 +5,10 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "build": "pnpm cross-env NODE_ENV=development pnpm webpack --config ./webpack.config.cjs",
-    "dist": "pnpm cross-env NODE_ENV=production pnpm webpack --config ./webpack.config.cjs",
+    "build": "pnpm webpack --config ./webpack.config.cjs",
     "typecheck": "pnpm tsc -p tsconfig.json",
-    "lint": "pnpm eslint --concurrency auto .",
-    "lint:quiet": "pnpm eslint --concurrency auto --quiet .",
+    "lint": "pnpm eslint --quiet --concurrency auto .",
+    "lint:verbose": "pnpm eslint --concurrency auto .",
     "api": "pnpm rimraf ./lib && pnpm tsc -p tsconfig.api.json && pnpm api-extractor run --local"
   },
   "nx": {
@@ -17,6 +16,15 @@
       "api": {
         "dependsOn": [
           "^build"
+        ],
+        "cache": true,
+        "inputs": [
+          "default",
+          "typescript",
+          "{projectRoot}/api-extractor.json"
+        ],
+        "outputs": [
+          "{workspaceRoot}/packages/vortex-api/lib/api.d.ts"
         ]
       }
     }
@@ -54,8 +62,6 @@
     "@types/d3": "catalog:",
     "@types/draggabilly": "catalog:",
     "@types/encoding-down": "catalog:",
-    "@types/enzyme": "catalog:",
-    "@types/enzyme-adapter-react-16": "catalog:",
     "@types/fs-extra": "catalog:",
     "@types/graphlib": "catalog:",
     "@types/json-socket": "catalog:",
@@ -71,7 +77,6 @@
     "@types/react-redux": "catalog:",
     "@types/react-select": "catalog:",
     "@types/react-sortable-tree": "catalog:",
-    "@types/react-test-renderer": "catalog:",
     "@types/react-transition-group": "catalog:",
     "@types/redux": "catalog:",
     "@types/redux-devtools-log-monitor": "catalog:",
@@ -111,8 +116,6 @@
     "electron-redux": "catalog:",
     "electron-updater": "catalog:",
     "encoding-down": "catalog:",
-    "enzyme": "catalog:",
-    "enzyme-adapter-react-16": "catalog:",
     "exe-version": "workspace:*",
     "feedparser": "catalog:",
     "@nexusmods/fomod-installer-ipc": "catalog:",

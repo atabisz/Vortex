@@ -1,3 +1,4 @@
+import { rehydrateSerializedError, serializeError } from "@vortex/shared";
 import type {
   RendererChannels,
   MainChannels,
@@ -6,6 +7,7 @@ import type {
   AssertSerializable,
   CallbackChannels,
   MainCallbackChannels,
+  SerializedError,
 } from "@vortex/shared/ipc";
 import { ipcMain, type WebContents } from "electron";
 
@@ -101,11 +103,20 @@ function mainCallback<C extends keyof CallbackChannels>(
     const receivedCollationId = args[0];
     if (receivedCollationId !== collationId) return;
 
-    const result = args[1];
-    if (resolve) {
-      reject = undefined;
-      resolve(result as AssertSerializable<Awaited<ReturnType<CallbackChannels[C]>>>);
-      resolve = undefined;
+    // The timer may already have settled this promise; bail if so.
+    if (resolve === undefined || reject === undefined) return;
+    const res = resolve;
+    const rej = reject;
+    resolve = undefined;
+    reject = undefined;
+
+    const result = args[1] as unknown as
+      | { ok: true; value: unknown }
+      | { ok: false; error: SerializedError };
+    if ("error" in result) {
+      rej(rehydrateSerializedError(result.error));
+    } else {
+      res(result.value as AssertSerializable<Awaited<ReturnType<CallbackChannels[C]>>>);
     }
   });
 
@@ -126,11 +137,19 @@ function mainHandle<C extends keyof InvokeChannels>(
     | AssertSerializable<Awaited<ReturnType<InvokeChannels[C]>>>,
   logOptions: LogOptions = false,
 ): void {
-  ipcMain.handle(channel, (event, ...args: SerializableArgs<Parameters<InvokeChannels[C]>>) => {
-    ipcLogger(logOptions, channel, event, args);
-    assertTrustedSender(event);
-    return listener(event, ...args);
-  });
+  ipcMain.handle(
+    channel,
+    async (event, ...args: SerializableArgs<Parameters<InvokeChannels[C]>>) => {
+      ipcLogger(logOptions, channel, event, args);
+      try {
+        assertTrustedSender(event);
+        const value = await listener(event, ...args);
+        return { ok: true, value };
+      } catch (err) {
+        return { ok: false, error: serializeError(err) };
+      }
+    },
+  );
 }
 
 function mainSend<C extends keyof MainChannels>(

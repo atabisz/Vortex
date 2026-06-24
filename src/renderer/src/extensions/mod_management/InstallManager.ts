@@ -522,13 +522,37 @@ async function mapWithConcurrency<T, R>(
   items: T[],
   fn: (item: T, index: number) => Promise<R> | R,
   concurrency: number,
+  signal?: AbortSignal,
 ): Promise<R[]> {
   const results: R[] = new Array(items.length);
   let nextIdx = 0;
   async function worker() {
+    let abortPromise: Promise<never> | undefined;
+    if (signal !== undefined) {
+      abortPromise = new Promise<never>((_, reject) => {
+        if (signal.aborted) {
+          reject(new UserCanceled());
+          return;
+        }
+        signal.addEventListener("abort", () => reject(new UserCanceled()), { once: true });
+      });
+      // silences the unhandled-rejection warning
+      // that fires when Promise.race picks the fn result and the loser later
+      // rejects on a late abort
+      abortPromise.catch(() => undefined);
+    }
     while (nextIdx < items.length) {
+      if (signal?.aborted) return;
       const idx = nextIdx++;
-      results[idx] = await fn(items[idx], idx);
+      try {
+        results[idx] =
+          abortPromise === undefined
+            ? await fn(items[idx], idx)
+            : await Promise.race([Promise.resolve(fn(items[idx], idx)), abortPromise]);
+      } catch (err) {
+        if (signal?.aborted) return;
+        throw err;
+      }
     }
   }
   await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, () => worker()));
@@ -2541,8 +2565,15 @@ class InstallManager {
           const err = unknownToError(unknownError);
           this.mActiveInstalls.delete(installKey);
           const currentRetryCount = this.mDependencyRetryCount.get(installKey) || 0;
+          // A missing mDependencyInstalls entry means the install was torn down
+          // externally (cancel-dependency-install / clearQueued). Treat the
+          // late error as cancellation so it doesn't surface as a notification
+          // or trigger a retry for a download the user already canceled.
+          const installCanceled = !this.mDependencyInstalls[sourceModId];
           const isCanceled =
-            unknownError instanceof UserCanceled || unknownError instanceof ProcessCanceled;
+            installCanceled ||
+            unknownError instanceof UserCanceled ||
+            unknownError instanceof ProcessCanceled;
           const hasRetriesLeft = currentRetryCount < InstallManager.MAX_DEPENDENCY_RETRIES;
           if (!isCanceled && hasRetriesLeft) {
             this.mPendingInstalls.set(installKey, dep); // Re-queue for potential retry
@@ -5120,6 +5151,7 @@ class InstallManager {
               referenceTag,
               meta: lookupResult,
             };
+
             // Populate nexus.ids upfront so analytics events that fire before
             // finalize (e.g. ModsDownloadStartedClientEvent) can resolve modId/
             // fileId via nexusIdsFromDownloadId. Without this, the started gate
@@ -5142,6 +5174,7 @@ class InstallManager {
                 ...(hasNexusIds ? { ids: nexusIds } : {}),
                 ...(parentCollectionId !== undefined ? { parentCollectionId } : {}),
               };
+
             }
 
             if (
@@ -5546,6 +5579,12 @@ class InstallManager {
             const updatedDependency = { ...dep, mod: mods[modId] };
             return updatedDependency;
           } catch (innerErr: unknown) {
+            // After abort, doDownload's promise can still settle later (e.g.
+            // when a pending download:resolve IPC times out). Drop those so
+            // canceled downloads don't get reported as install failures.
+            if (abort.signal.aborted) {
+              return undefined;
+            }
             if (dep.extra?.onlyIfFulfillable) {
               this.dropUnfulfilled(api, dep, gameId, sourceModId, recommended);
               return undefined;
@@ -5696,6 +5735,7 @@ class InstallManager {
           }
         },
         10,
+        abort.signal,
       );
     } catch (outerErr: unknown) {
       if (outerErr instanceof ProcessCanceled) {
@@ -5814,6 +5854,7 @@ class InstallManager {
     };
 
     const queueDownload = (dep: IDependency): Promise<string> => {
+
       return this.mDependencyDownloadsLimit.do<string>(() => {
         if (dep.reference.tag !== undefined) {
           queuedDownloads.push(dep.reference);
@@ -5836,6 +5877,7 @@ class InstallManager {
               .catch((err: unknown) => {
                 const idx = queuedDownloads.indexOf(dep.reference);
                 queuedDownloads.splice(idx, 1);
+
 
                 const errMsg = unknownToError(err).message;
                 const errCode = getErrorCode(err);

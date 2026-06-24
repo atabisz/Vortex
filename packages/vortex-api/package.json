@@ -24,10 +24,30 @@
   },
   "nx": {
     "targets": {
+      "build": {
+        "executor": "nx:noop",
+        "dependsOn": [
+          {
+            "target": "api",
+            "projects": "@vortex/renderer"
+          }
+        ],
+        "cache": false,
+        "outputs": [
+          "{projectRoot}/lib/api.d.ts"
+        ]
+      },
       "typecheck": {
         "dependsOn": [
-          "^api"
-        ]
+          "build"
+        ],
+        "cache": true,
+        "inputs": [
+          "default",
+          "{projectRoot}/lib/api.d.ts",
+          "{projectRoot}/tsconfig.lib.json"
+        ],
+        "outputs": []
       }
     }
   },
@@ -36,7 +56,6 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/redux": "catalog:",
-    "@vortex/renderer": "workspace:*",
     "date-fns": "catalog:",
     "electron": "catalog:",
     "i18next": "catalog:",

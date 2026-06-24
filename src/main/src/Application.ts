@@ -14,7 +14,7 @@ import type { AppInitMetadata } from "@vortex/shared/ipc";
 import type { IWindow } from "@vortex/shared/state";
 import { currentStatePath } from "@vortex/shared/state";
 import { app, crashReporter, dialog, ipcMain, protocol, shell } from "electron";
-import type contextMenuType from "electron-context-menu";
+import contextMenu from "electron-context-menu";
 import isAdmin from "is-admin";
 import * as _ from "lodash";
 import permissions from "permissions";
@@ -34,6 +34,7 @@ import { log, setupLogging, changeLogPath } from "./logging";
 import MainWindow from "./MainWindow";
 import SplashScreen from "./SplashScreen";
 import DuckDBSingleton from "./store/DuckDBSingleton";
+import { flattenState } from "./store/flattenState";
 import LevelPersist, { DatabaseLocked, DatabaseOpenError } from "./store/LevelPersist";
 import {
   initMainPersistence,
@@ -118,8 +119,6 @@ class Application {
   private mAppMetadata: AppInitMetadata;
   private mFirstStart: boolean = false;
   private mStartupLogPath: string;
-  private mDeinitCrashDump: () => void;
-  private mPendingDownload: string | undefined;
 
   constructor(args: IParameters) {
     this.mArgs = args;
@@ -151,15 +150,6 @@ class Application {
   }
 
   private setupContextMenu() {
-    if (process.platform === "linux") {
-      // electron-context-menu requires('electron') at module load time,
-      // which resolves to the npm package (a string) via pnpm symlinks on
-      // Linux instead of the Electron built-in API, causing a crash.
-      // Context menus are not needed for Phase 1 boot on Linux.
-      return;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const contextMenu = require("electron-context-menu") as typeof contextMenuType;
     contextMenu({
       showCopyImage: false,
       showLookUpSelection: false,
@@ -220,11 +210,6 @@ class Application {
             this.mTray.close();
           }
           if (process.platform !== "darwin") {
-            // All windows are already destroyed at this point (via the
-            // destroy() workaround in MainWindow), so app.quit() won't
-            // attempt to close any windows — it just fires the before-quit
-            // / will-quit lifecycle events (needed by the autoupdater) and
-            // then exits cleanly.
             app.quit();
           }
         })
@@ -429,9 +414,6 @@ class Application {
     log("info", "Vortex Version", app.getVersion());
     log("info", "Parameters", process.argv.join(" "));
 
-    // Buffer cold-start NXM URL for application after UI is ready (PROT-01)
-    this.mPendingDownload = args.download;
-
     this.testUserEnvironment();
     await this.validateFiles();
 
@@ -482,6 +464,12 @@ class Application {
     log("debug", "checking if migration is required");
     await this.migrateIfNecessary(this.mAppMetadata.version);
 
+    // Install dev tools extensions before creating the main window so the
+    // extension content scripts are registered on the session before the
+    // renderer navigates — otherwise window.__REDUX_DEVTOOLS_EXTENSION__
+    // is undefined when the renderer builds its store enhancer.
+    await this.initDevel();
+
     log("debug", "starting user interface");
     await this.initMainWindow();
 
@@ -496,21 +484,10 @@ class Application {
     process.on("uncaughtException", handleError);
     process.on("unhandledRejection", handleError);
 
-    await this.initDevel();
-
     this.setupContextMenu();
 
     log("debug", "waiting for user interface");
     await this.awaitMainWindowReady();
-
-    // Apply buffered cold-start NXM URL now that renderer is ready (PROT-01)
-    if (this.mPendingDownload !== undefined) {
-      const pendingUrl = this.mPendingDownload;
-      this.mPendingDownload = undefined;
-      await this.applyArguments({ download: pendingUrl } as IParameters).catch((err: unknown) =>
-        log("warn", "failed to apply pending download", err),
-      );
-    }
 
     log("debug", "setting up tray icon");
     this.createTray();
@@ -573,18 +550,12 @@ class Application {
      *
      */
 
-    if (process.platform === "linux") {
-      // AppImage sets APPIMAGE env var; treat as "regular" (auto-updater enabled)
-      // Other installs (dev, zip, deb) are "managed" (no auto-updater)
-      this.mAppMetadata.installType = process.env.APPIMAGE ? "regular" : "managed";
-    } else {
-      try {
-        await stat(path.join(getVortexPath("application"), "Uninstall Vortex.exe"));
-        // Collect metadata - renderer will dispatch the action
-        this.mAppMetadata.installType = "regular";
-      } catch {
-        this.mAppMetadata.installType = "managed";
-      }
+    try {
+      await stat(path.join(getVortexPath("application"), "Uninstall Vortex.exe"));
+      // Collect metadata - renderer will dispatch the action
+      this.mAppMetadata.installType = "regular";
+    } catch {
+      this.mAppMetadata.installType = "managed";
     }
   }
 
@@ -761,9 +732,17 @@ class Application {
       throw new DataInvalid(`The state backup file is invalid: ${getErrorMessageOrDefault(err)}`);
     }
 
+    // Keep DuckDB positional-parameter counts bounded: a bulk set row uses 2
+    // params (key + value) and a bulk remove row uses 1, so 256 rows stays well
+    // under any limit. Matches ReduxPersistorIPC.BULK_CHUNK_SIZE. Restoring a
+    // large profile one key at a time took ~40 minutes and, if it crashed
+    // partway, left state half-cleared (see GH#23355) - bulk ops keep the
+    // destructive window small.
+    const CHUNK_SIZE = 256;
+
     // Wrap all operations in a single transaction so the import is atomic;
     // a partial backup restore on failure would leave state in a confusing
-    // mixed-version condition.
+    // mixed-version (and, with replace, half-cleared) condition.
     await persistor.beginTransaction();
     try {
       for (const [hive, hiveData] of Object.entries(backupData)) {
@@ -771,14 +750,30 @@ class Application {
 
         if (replace) {
           const existingKeys = await sub.getAllKeys();
-          for (const key of existingKeys) {
-            await sub.removeItem(key);
+          if (sub.bulkRemoveItem !== undefined) {
+            for (let i = 0; i < existingKeys.length; i += CHUNK_SIZE) {
+              await sub.bulkRemoveItem(existingKeys.slice(i, i + CHUNK_SIZE));
+            }
+          } else {
+            for (const key of existingKeys) {
+              await sub.removeItem(key);
+            }
           }
         }
 
-        const leaves = this.flattenState(hiveData, []);
-        for (const { key, value } of leaves) {
-          await sub.setItem(key, JSON.stringify(value));
+        const leaves = flattenState(hiveData);
+        if (sub.bulkSetItem !== undefined) {
+          for (let i = 0; i < leaves.length; i += CHUNK_SIZE) {
+            await sub.bulkSetItem(
+              leaves
+                .slice(i, i + CHUNK_SIZE)
+                .map((leaf) => ({ key: leaf.key, value: JSON.stringify(leaf.value) })),
+            );
+          }
+        } else {
+          for (const { key, value } of leaves) {
+            await sub.setItem(key, JSON.stringify(value));
+          }
         }
       }
       await persistor.commitTransaction();
@@ -788,22 +783,6 @@ class Application {
     }
 
     log("info", "state backup imported");
-  }
-
-  private flattenState(obj: unknown, prefix: string[]): Array<{ key: string[]; value: unknown }> {
-    if (obj === null || obj === undefined || typeof obj !== "object") {
-      return [{ key: prefix, value: obj }];
-    }
-
-    if (Array.isArray(obj)) {
-      return [{ key: prefix, value: obj }];
-    }
-
-    const result: Array<{ key: string[]; value: unknown }> = [];
-    for (const [key, value] of Object.entries(obj)) {
-      result.push(...this.flattenState(value, [...prefix, key]));
-    }
-    return result;
   }
 
   private createTray(): void {
