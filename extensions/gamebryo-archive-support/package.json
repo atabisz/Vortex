@@ -4,8 +4,9 @@
   "description": "Support for Gamebryo/Bethesda archives (BSA and BA2)",
   "scripts": {
     "_build": "node build.mjs && pnpm extractInfo",
-    "build": "node -e \"if(process.platform==='win32')process.exit(1)\" || (pnpm run _build)",
-    "typecheck": "pnpm tsc"
+    "build": "pnpm run _build && node ../copy-extension.mjs",
+    "typecheck": "pnpm tsc",
+    "dist": "pnpm run _build && node ../copy-extension.mjs"
   },
   "author": "Black Tree Gaming Ltd.",
   "license": "GPL-3.0",

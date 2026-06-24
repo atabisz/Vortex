@@ -1,41 +1,25 @@
 {
   "$schema": "https://www.schemastore.org/package.json",
   "name": "@vortex/main",
-<<<<<<< HEAD
-  "version": "1.16.8",
-=======
   "author": "Black Tree Gaming Ltd.",
   "license": "GPL-3.0-only",
-  "version": "1.0.0",
->>>>>>> v2.1.1
+  "version": "1.16.8",
   "private": true,
   "type": "commonjs",
   "main": "build/main.cjs",
   "scripts": {
-<<<<<<< HEAD
     "start": "LD_LIBRARY_PATH=$(pwd)/out/bundledPlugins/gamebryo-plugin-management${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} pnpm cross-env ELECTRON_RUN_AS_NODE= NODE_ENV=development pnpm electron . --no-sandbox",
-    "build": "pnpm cross-env NODE_ENV=development node ./build.mjs",
-    "dist": "pnpm cross-env NODE_ENV=production node ./build.mjs",
-=======
-    "start": "pnpm electron .",
     "postinstall": "pnpm exec electron-rebuild",
     "build": "node ./build.mjs",
->>>>>>> v2.1.1
     "typecheck": "pnpm tsc",
     "lint": "pnpm eslint --quiet --concurrency auto .",
     "lint:verbose": "pnpm eslint --concurrency auto .",
     "test": "pnpm vitest run --config ./vitest.config.ts",
     "test:downloader": "pnpm vitest run --config ./vitest.downloader.config.ts",
     "test:adaptor": "pnpm vitest run --config ./vitest.integration.config.ts",
-<<<<<<< HEAD
-    "package": "node ./prepare-dist-package.mjs && pnpm install --dir=./build && pnpm electron-builder --config ./electron-builder.config.cjs --config.win.forceCodeSigning=true --config.win.sign=./sign.cjs --publish never",
-    "package:nosign": "node ./prepare-dist-package.mjs && pnpm install --dir=./build && pnpm electron-builder --config ./electron-builder.config.cjs --publish never",
-    "prepare:win": "curl -L \"https://aka.ms/vs/17/release/vc_redist.x64.exe\" -o \"./build/VC_redist.x64.exe\" --create-dirs && curl -L \"https://aka.ms/dotnet/9.0/windowsdesktop-runtime-win-x64.exe\" -o \"./build/windowsdesktop-runtime-win-x64.exe\" --create-dirs"
-=======
     "publish": "pnpm exec rimraf ./dist && pnpm cross-env pnpm_config_inject_workspace_packages=true pnpm_config_node_linker=hoisted pnpm -F @vortex/main deploy ./dist && node ./dist/prepare-dist-package.mjs",
     "package": "cd ./dist && pnpm electron-builder --config ./electron-builder.config.json --config.win.forceCodeSigning=true --config.win.sign=./sign.cjs --publish never",
     "package:nosign": "cd ./dist && pnpm electron-builder --config ./electron-builder.config.json --publish never"
->>>>>>> v2.1.1
   },
   "nx": {
     "targets": {
@@ -229,9 +213,6 @@
     "memoize-one": "catalog:",
     "minimatch": "catalog:",
     "mixpanel-browser": "catalog:",
-    "encoding-down": "catalog:",
-    "leveldown": "catalog:",
-    "levelup": "catalog:",
     "modmeta-db": "catalog:",
     "node-7z": "catalog:",
     "normalize-url": "catalog:",

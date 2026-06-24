@@ -178,7 +178,6 @@ class MainWindow {
         if (details.reason !== "killed") {
           // workaround for electron issue #19887
           setImmediate(() => {
-            process.env.CRASH_REPORTING = Math.random() > 0.5 ? "vortex" : "electron";
             if (this.mWindow !== null) {
               this.mWindow
                 .loadURL(`file://${getVortexPath("base")}/index.html`)
@@ -418,21 +417,6 @@ class MainWindow {
       }
       this.mWindow.webContents.send("window:event:close");
       closeAllViews(this.mWindow);
-<<<<<<< HEAD
-      // hide() before destroy(): destroy's aura teardown synthesizes a Win32
-      // mouse move that SendMessage's WM_NCHITTEST back into
-      // WebContentsView::NonClientHitTest, which dereferences a null
-      // InspectableWebContents mid-teardown and faults inside
-      // electron::InspectableWebContents::GetView. ShowWindow(SW_HIDE) takes
-      // us out of screen hit-test so the message routes elsewhere.
-      try {
-        this.mWindow.hide();
-      } catch {
-        // webContents may already be gone
-      }
-      this.mWindow.destroy();
-=======
->>>>>>> v2.1.1
     });
     this.mWindow.on("closed", () => {
       this.mWindow = null;

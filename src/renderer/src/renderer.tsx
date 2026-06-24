@@ -136,17 +136,13 @@ import { GameEntryNotFound } from "./types/IGameStore";
 import type { IState } from "./types/IState";
 import { relaunch } from "./util/commandLine";
 import { ProcessCanceled, UserCanceled } from "./util/CustomErrors";
-import { _setNotifier } from "./util/elevated";
 import { recordErrorSpan, setOutdated, terminate, toError } from "./util/errorHandling";
 import {} from "./util/extensionRequire";
-import { _setChattrNotifier, setTFunction } from "./util/fs";
+import { setTFunction } from "./util/fs";
 import GlobalNotifications from "./util/GlobalNotifications";
 import getI18n, { changeLanguage, fallbackTFunc, type TFunction } from "./util/i18n";
 import { showError } from "./util/message";
-<<<<<<< HEAD
-=======
 import migrate from "./util/migrate";
->>>>>>> v2.1.1
 import { readStartupSettings } from "./util/startupSettings";
 import { getSafe } from "./util/storeHelper";
 import { bytesToString, getAllPropertyNames } from "./util/util";
@@ -590,20 +586,6 @@ async function init(): Promise<ExtensionManager | null> {
   }
 
   extensions.setStore(store);
-
-  // Wire elevation failure notifications so SteamOS Game Mode errors
-  // are visible to the user (ELEV-06). Must be after setStore() which
-  // initializes sendNotification on the api.
-  _setNotifier((notification) => {
-    extensions.getApi().sendNotification?.(notification);
-  });
-
-  // Wire chattr+F casefold notification so EOPNOTSUPP-on-ext4 info
-  // message is visible to the user (CASE-11). Must be after setStore().
-  _setChattrNotifier((notification) => {
-    extensions.getApi().sendNotification?.(notification);
-  });
-
   setOutdated(extensions.getApi());
   extensions.applyExtensionsOfExtensions();
   log("debug", "renderer connected to store");

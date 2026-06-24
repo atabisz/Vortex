@@ -5,18 +5,6 @@ const { fs, util } = require("vortex-api");
 
 const executable = process.platform == "linux" ? "PrisonArchitect" : "Prison Architect64.exe";
 
-<<<<<<< HEAD
-const MODS_LOCAL = path.resolve(
-  util.getVortexPath("appData"),
-  "..",
-  "Local",
-  "Introversion",
-  "Prison Architect",
-  "mods",
-);
-
-=======
->>>>>>> v2.1.1
 const MODS_LOCAL = path.resolve(
   util.getVortexPath("appData"),
   "..",

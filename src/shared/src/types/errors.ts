@@ -293,13 +293,6 @@ export class DownloadIsHTML extends Error {
 }
 
 /**
-<<<<<<< HEAD
- * Returns true if the error represents a user cancellation (e.g. the user
- * clicked Cancel on a dialog).
- */
-export function isUserCanceled(err: unknown): boolean {
-  return err instanceof UserCanceled;
-=======
  * Class-identity check that also survives the IPC boundary. An error that
  * crossed the wire is rebuilt as a plain `Error` (its prototype is lost), so
  * `instanceof` fails — but `error-serialization` preserves the original type on
@@ -312,5 +305,4 @@ export function isErrorOfType<T extends Error>(
   ctor: new (...args: never[]) => T,
 ): err is T {
   return err instanceof ctor || (err instanceof Error && err.name === ctor.name);
->>>>>>> v2.1.1
 }

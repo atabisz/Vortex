@@ -250,11 +250,7 @@ export class IPCDownloadAdapter {
           nexusIds.numericGameId,
           modUID,
           fileUID,
-<<<<<<< HEAD
-          null,
-=======
           modCollectionId,
->>>>>>> v2.1.1
         ),
       );
       return;
@@ -290,11 +286,7 @@ export class IPCDownloadAdapter {
             fileUID,
             file_size,
             duration_ms,
-<<<<<<< HEAD
-            null,
-=======
             modCollectionId,
->>>>>>> v2.1.1
           ),
         );
       }
@@ -325,11 +317,7 @@ export class IPCDownloadAdapter {
             nexusIds.numericGameId,
             modUID,
             fileUID,
-<<<<<<< HEAD
-            null,
-=======
             modCollectionId,
->>>>>>> v2.1.1
           ),
         );
       }
@@ -365,11 +353,7 @@ export class IPCDownloadAdapter {
             fileUID,
             "",
             message,
-<<<<<<< HEAD
-            null,
-=======
             modCollectionId,
->>>>>>> v2.1.1
           ),
         );
       }

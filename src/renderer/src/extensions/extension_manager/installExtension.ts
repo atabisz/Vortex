@@ -124,8 +124,6 @@ function sanitize(input: string): string {
   }
 }
 
-<<<<<<< HEAD
-=======
 /**
  * Clears the post-install `remove: true` flag for entries whose folder the new
  * install just renamed into place. Entries pointing at distinct, still-on-disk
@@ -149,7 +147,6 @@ export function clearStaleRemovalFlags(
   });
 }
 
->>>>>>> v2.1.1
 function removeOldVersion(api: IExtensionApi, info: IExtension): PromiseBB<string[]> {
   const state: IState = api.store.getState();
   const { installed } = state.session.extensions;
@@ -425,14 +422,7 @@ function installExtension(
           })
           .then(() => fs.renameAsync(tempPath, destPath))
           .then(() => {
-<<<<<<< HEAD
-            // New files are in place. Clear the `remove: true` flags
-            // dispatched by removeOldVersion so the next ExtensionManager
-            // construction doesn't wipe the freshly-installed folder.
-            removedKeys.forEach((key) => api.store.dispatch(forgetExtension(key)));
-=======
             clearStaleRemovalFlags(api, removedKeys, destPath);
->>>>>>> v2.1.1
             if (type === "translation") {
               return fs
                 .readdirAsync(destPath)

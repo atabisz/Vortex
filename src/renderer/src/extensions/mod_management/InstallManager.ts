@@ -5151,7 +5151,7 @@ class InstallManager {
               referenceTag,
               meta: lookupResult,
             };
-<<<<<<< HEAD
+
             // Populate nexus.ids upfront so analytics events that fire before
             // finalize (e.g. ModsDownloadStartedClientEvent) can resolve modId/
             // fileId via nexusIdsFromDownloadId. Without this, the started gate
@@ -5174,14 +5174,7 @@ class InstallManager {
                 ...(hasNexusIds ? { ids: nexusIds } : {}),
                 ...(parentCollectionId !== undefined ? { parentCollectionId } : {}),
               };
-=======
-            if (parentCollectionId !== undefined) {
-              // Tag the download with the parent collection's id for analytics only.
-              // Kept off `nexus.ids.collectionId` because the install attribute
-              // extractor copies that field onto the installed mod, which would
-              // make a regular mod look like a collection downstream.
-              startDownloadModInfo.nexus = { parentCollectionId };
->>>>>>> v2.1.1
+
             }
 
             if (
@@ -5861,7 +5854,7 @@ class InstallManager {
     };
 
     const queueDownload = (dep: IDependency): Promise<string> => {
-<<<<<<< HEAD
+
       return this.mDependencyDownloadsLimit.do<string>(() => {
         if (dep.reference.tag !== undefined) {
           queuedDownloads.push(dep.reference);
@@ -5884,29 +5877,7 @@ class InstallManager {
               .catch((err: unknown) => {
                 const idx = queuedDownloads.indexOf(dep.reference);
                 queuedDownloads.splice(idx, 1);
-=======
-      if (dep.reference.tag !== undefined) {
-        queuedDownloads.push(dep.reference);
-      }
-      return abort.signal.aborted
-        ? Promise.reject(new UserCanceled(false))
-        : this.downloadDependencyAsync(
-            dep.reference,
-            api,
-            dep.lookupResults[0].value,
-            () => abort.signal.aborted,
-            dep.extra?.fileName,
-            parentCollectionId,
-          )
-            .then((dlId) => {
-              const idx = queuedDownloads.indexOf(dep.reference);
-              queuedDownloads.splice(idx, 1);
-              return dlId;
-            })
-            .catch((err: unknown) => {
-              const idx = queuedDownloads.indexOf(dep.reference);
-              queuedDownloads.splice(idx, 1);
->>>>>>> v2.1.1
+
 
                 const errMsg = unknownToError(err).message;
                 const errCode = getErrorCode(err);

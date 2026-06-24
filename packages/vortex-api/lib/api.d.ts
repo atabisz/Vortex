@@ -85,6 +85,7 @@ import { ComplexActionCreator1 } from "redux-act";
 import { ComplexActionCreator2 } from "redux-act";
 import { ComplexActionCreator3 } from "redux-act";
 import { ComplexActionCreator4 } from "redux-act";
+import { ComplexActionCreator5 } from "redux-act";
 import { ComplexActionCreator6 } from "redux-act";
 import { EmptyActionCreator } from "redux-act";
 import * as reduxAct from "redux-act";
@@ -1309,15 +1310,17 @@ declare function downloadPathForGame(state: IState, gameId?: string): string;
 /**
  * set download progress (in percent)
  */
-declare const downloadProgress: ComplexActionCreator4<
+declare const downloadProgress: ComplexActionCreator5<
   string,
   number,
   number,
+  IChunk[],
   string[],
   {
     id: string;
     received: number;
     total: number;
+    chunks: IChunk[];
     urls: string[];
   },
   {}
@@ -5678,6 +5681,14 @@ declare interface IModInfo_3 {
       revisionId?: number;
       revisionNumber?: number;
     };
+    /**
+     * Id of the collection that triggered this download as a dependency, when the
+     * download is a mod installed as part of a collection. Kept distinct from
+     * `ids.collectionId` (which marks the download as being the collection archive
+     * itself) so it doesn't propagate into the installed mod's attributes via the
+     * install attribute extractor. Consumed by Mixpanel mod download analytics.
+     */
+    parentCollectionId?: string;
     [key: string]: any;
   };
   referenceTag?: string;
@@ -5850,7 +5861,7 @@ declare interface INexusAPIExtension {
     allowInstall?: boolean,
   ) => PromiseLike<string>;
   nexusGetCollection?: (slug: string) => PromiseLike<ICollection>;
-  nexusGetCollections?: (gameId: string) => PromiseLike<ICollection[]>;
+  nexusGetCollections?: (gameId: string) => PromiseLike<Partial<ICollection>[] | undefined>;
   nexusSearchCollections?: (
     options: ICollectionSearchOptions,
   ) => PromiseLike<ICollectionSearchResult>;
@@ -6295,6 +6306,13 @@ declare interface IPersistor {
       value: string;
     }>
   >;
+  bulkSetItem?(
+    items: ReadonlyArray<{
+      key: PersistorKey;
+      value: string;
+    }>,
+  ): PromiseLike<void>;
+  bulkRemoveItem?(keys: ReadonlyArray<PersistorKey>): PromiseLike<void>;
 }
 
 declare interface IPlugin {

@@ -4,11 +4,7 @@
   "description": "Provides discovery and launch support for Microsoft Store (Xbox Pass) games",
   "scripts": {
     "_build": "node build.mjs && pnpm extractInfo",
-<<<<<<< HEAD
     "build": "node ../skip-on-linux.mjs || (pnpm run _build && node ../copy-extension.mjs)",
-=======
-    "build": "node -e \"if(process.platform==='win32')process.exit(1)\" || (pnpm run _build)",
->>>>>>> v2.1.1
     "typecheck": "pnpm tsc"
   },
   "author": "Black Tree Gaming Ltd.",

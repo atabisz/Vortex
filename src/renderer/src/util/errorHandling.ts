@@ -3,11 +3,7 @@ import { inspect } from "util";
 
 import { type Span, context, ROOT_CONTEXT, SpanStatusCode, trace } from "@opentelemetry/api";
 import { isEnvironmentalError, unknownToError } from "@vortex/shared";
-<<<<<<< HEAD
-import { isUserCanceled } from "@vortex/shared/errors";
-=======
 import { isErrorOfType } from "@vortex/shared/errors";
->>>>>>> v2.1.1
 import { recordErrorOnSpan } from "@vortex/shared/telemetry";
 import type PromiseBB from "bluebird";
 import type { BrowserWindow } from "electron";
@@ -490,11 +486,7 @@ export function withTrackedActivity<T>(
       const result = await fun(
         (key, value) => span.setAttribute(key, value),
         (error) => {
-<<<<<<< HEAD
-          if (isEnvironmentalError(error) || isUserCanceled(error)) {
-=======
           if (isEnvironmentalError(error) || isErrorOfType(error, UserCanceled)) {
->>>>>>> v2.1.1
             return;
           }
           hasError = true;
@@ -510,11 +502,7 @@ export function withTrackedActivity<T>(
       // Environmental errors (write-protected folders, disk full, etc.) and
       // user cancellations leave the span status UNSET so
       // RingBufferSpanProcessor doesn't flush the trace.
-<<<<<<< HEAD
-      if (!isEnvironmentalError(err) && !isUserCanceled(err)) {
-=======
       if (!isEnvironmentalError(err) && !isErrorOfType(err, UserCanceled)) {
->>>>>>> v2.1.1
         span.setStatus({
           code: SpanStatusCode.ERROR,
           message: err?.message,
@@ -551,11 +539,7 @@ export function recordErrorSpan(
   error: Error,
   attributes?: Record<string, string | number | boolean>,
 ): void {
-<<<<<<< HEAD
-  if (isEnvironmentalError(error) || isUserCanceled(error)) {
-=======
   if (isEnvironmentalError(error) || isErrorOfType(error, UserCanceled)) {
->>>>>>> v2.1.1
     return;
   }
   const activeSpan = trace.getSpan(context.active());
