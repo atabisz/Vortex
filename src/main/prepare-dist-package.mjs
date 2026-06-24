@@ -97,9 +97,12 @@ async function prepareLinux() {
   winapiDirs.add(resolve(MAIN_DIR, "node_modules", "winapi-bindings"));
   await Promise.all([...winapiDirs].map((dir) => replaceWithWinapiStub(dir)));
 
-  const bluebirdSrc = resolve(DIST_DIR, "node_modules", "bluebird");
+  const bluebirdSrc = [
+    resolve(DIST_DIR, "node_modules", "bluebird"),
+    resolve(MAIN_DIR, "node_modules", "bluebird"),
+  ].find((dir) => existsSync(dir));
   const bluebirdDest = resolve(DIST_DIR, "node_modules", "modmeta-db", "node_modules", "bluebird");
-  if (existsSync(bluebirdSrc) && !existsSync(bluebirdDest)) {
+  if (bluebirdSrc && !existsSync(bluebirdDest)) {
     await cp(bluebirdSrc, bluebirdDest, { recursive: true });
   }
 
