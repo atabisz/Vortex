@@ -66,6 +66,7 @@ export const Spine: FC = () => {
         className="border-2"
         iconPath={mdiHome}
         isActive={selection.type === "home"}
+        title="Home"
         onClick={selectHome}
       />
 

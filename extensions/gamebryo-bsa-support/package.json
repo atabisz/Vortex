@@ -8,8 +8,12 @@
   "scripts": {
     "_native": "node ../copy-native.mjs ./node_modules/bsatk/build/Release/bsatk.node",
     "_build": "node build.mjs && pnpm run _native && pnpm extractInfo",
+<<<<<<< HEAD
     "build": "pnpm run _build && node ../copy-extension.mjs",
     "dist": "pnpm run _build && node ../copy-extension.mjs",
+=======
+    "build": "node -e \"if(process.platform==='win32')process.exit(1)\" || (pnpm run _build)",
+>>>>>>> v2.1.1
     "typecheck": "pnpm tsc"
   },
   "author": "Black Tree Gaming Ltd.",
@@ -29,5 +33,26 @@
     "rimraf": "catalog:",
     "tmp": "catalog:",
     "vortex-api": "workspace:*"
+  },
+  "nx": {
+    "tags": [
+      "vortex:extension"
+    ],
+    "targets": {
+      "build": {
+        "inputs": [
+          "default",
+          "typescript",
+          "vortex-api"
+        ]
+      },
+      "typecheck": {
+        "inputs": [
+          "default",
+          "typescript",
+          "vortex-api"
+        ]
+      }
+    }
   }
 }
