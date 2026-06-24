@@ -2,17 +2,13 @@ name: Main
 
 on:
   push:
-<<<<<<< HEAD
     branches: [master, rebase/*]
     paths-ignore:
       - ".planning/**"
       - "packaging/**"
       - "*.md"
-=======
-    branches: [master, release/*]
->>>>>>> v2.1.1
   pull_request:
-    branches: [master, release/*]
+    branches: [master]
   workflow_dispatch:
 
 concurrency:
@@ -43,6 +39,13 @@ jobs:
         uses: pnpm/action-setup@v6
         with:
           cache: true
+
+      - name: Configure node-gyp for VS 2022
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          echo "npm_config_msvs_version=2022" >> $env:GITHUB_ENV
+          echo "GYP_MSVS_VERSION=2022" >> $env:GITHUB_ENV
 
       # NOTE(erri120): fontconfig required by font-scanner required by theme-switcher
       # cmake and liblz4-dev required for native addon compilation on Linux
@@ -116,15 +119,11 @@ jobs:
           key: duckdb-ext-${{ runner.os }}-${{ hashFiles('pnpm-workspace.yaml', 'scripts/duckdb-extensions.json') }}
 
       - name: Build
-<<<<<<< HEAD
         run: pnpm run build:all
 
       - name: Lint
         if: runner.os == 'Linux'
         run: pnpm run lint:ci
-=======
-        run: pnpm run build
->>>>>>> v2.1.1
 
       - name: Test
         if: runner.os == 'Linux'
