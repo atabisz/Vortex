@@ -97,11 +97,16 @@ async function prepareLinux() {
   winapiDirs.add(resolve(MAIN_DIR, "node_modules", "winapi-bindings"));
   await Promise.all([...winapiDirs].map((dir) => replaceWithWinapiStub(dir)));
 
-  const bluebirdSrc = [
-    resolve(DIST_DIR, "node_modules", "bluebird"),
-    resolve(MAIN_DIR, "node_modules", "bluebird"),
-  ].find((dir) => existsSync(dir));
   const bluebirdDest = resolve(DIST_DIR, "node_modules", "modmeta-db", "node_modules", "bluebird");
+  const bluebirdSrc = (
+    await Promise.all([
+      findPackageDirs(resolve(DIST_DIR, "node_modules"), "bluebird"),
+      findPackageDirs(resolve(MAIN_DIR, "node_modules"), "bluebird"),
+    ])
+  )
+    .flat()
+    .find((dir) => dir !== bluebirdDest);
+  if (!bluebirdSrc) throw new Error("bluebird package not found for modmeta-db unpack injection");
   if (bluebirdSrc && !existsSync(bluebirdDest)) {
     await cp(bluebirdSrc, bluebirdDest, { recursive: true });
   }
