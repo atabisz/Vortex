@@ -1,15 +1,15 @@
 #!/usr/bin/env node
-import { execSync } from "node:child_process";
+
 import fs from "node:fs";
 import path from "node:path";
 
 const dist = "dist";
+const lootBase = "./node_modules/loot";
+const isLinux = process.platform === "linux";
+
 if (!fs.existsSync(dist)) {
   fs.mkdirSync(dist, { recursive: true });
 }
-
-const lootBase = "./node_modules/loot";
-const isLinux = process.platform === "linux";
 
 const files = [
   `${lootBase}/build/Release/node-loot.node`,
@@ -19,25 +19,47 @@ const files = [
     : [`${lootBase}/loot_api/libloot.dll`]),
 ];
 
-const missing = files.filter((f) => !fs.existsSync(f));
+const missing = files.filter((file) => !fs.existsSync(file));
 if (missing.length > 0) {
-  const allInDist = missing.every((f) => fs.existsSync(path.join(dist, path.basename(f))));
-  if (allInDist) {
-    console.log("Source binaries missing but dist/ already has them — skipping copy");
-    process.exit(0);
+  const allInDist = missing.every((file) => fs.existsSync(path.join(dist, path.basename(file))));
+  if (!allInDist) {
+    console.error("Missing native files:");
+    for (const file of missing) {
+      console.error(` - ${file}`);
+    }
+    process.exit(1);
   }
-  console.error("Missing native files:");
-  for (const f of missing) console.error(`  - ${f}`);
-  process.exit(1);
 }
 
 for (const file of files) {
-  const basename = path.basename(file);
-  fs.copyFileSync(file, path.join(dist, basename));
+  if (fs.existsSync(file)) {
+    fs.copyFileSync(file, path.join(dist, path.basename(file)));
+  }
 }
 
-// Rewrite async.js to load node-loot from the same directory
+function replaceOrFail(file, find, replacement) {
+  const oldContent = fs.readFileSync(file, "utf8");
+  const newContent = oldContent.replace(find, replacement);
+  if (newContent === oldContent) {
+    console.error(`Failed to rewrite ${file}: pattern not found`);
+    process.exit(1);
+  }
+  fs.writeFileSync(file, newContent);
+}
+
 const asyncPath = path.join(dist, "async.js");
-let content = fs.readFileSync(asyncPath, "utf8");
-content = content.replace("./build/Release/node-loot", "./node-loot");
-fs.writeFileSync(asyncPath, content);
+replaceOrFail(asyncPath, "./build/Release/node-loot", "./node-loot");
+
+if (isLinux) {
+  replaceOrFail(
+    asyncPath,
+    "const client = net.connect(`\\\\\\\\?\\\\pipe\\\\loot-ipc-${process.argv[2]}`, (arg) => {",
+    "const lootIpcPath = process.platform === 'linux' ? `/tmp/loot-ipc-${process.argv[2]}` : `\\\\\\\\?\\\\pipe\\\\loot-ipc-${process.argv[2]}`;\nconst client = net.connect(lootIpcPath, (arg) => {",
+  );
+
+  replaceOrFail(
+    path.join(dist, "index.cjs"),
+    "this.ipc.listen(`\\\\\\\\?\\\\pipe\\\\loot-ipc-${this.id}`, () => {",
+    "this.ipc.listen(process.platform === 'linux' ? `/tmp/loot-ipc-${this.id}` : `\\\\\\\\?\\\\pipe\\\\loot-ipc-${this.id}`, () => {",
+  );
+}
