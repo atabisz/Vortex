@@ -117,6 +117,7 @@ async function main() {
   mainPkg["name"] = "Vortex";
   mainPkg["main"] = mainPkg.main.replace(/^build\//, "");
   mainPkg["version"] = process.env.VORTEX_VERSION || "1.0.0";
+  mainPkg["homepage"] = mainPkg.homepage || "https://github.com/atabisz/Vortex";
 
   // NOTE(erri120): this is the minimal amount of bullshit required to get the piece of shit software called "electron-builder" to work with PNPM.
   const nodeModulesDir = resolve(MAIN_DIR, "node_modules");
