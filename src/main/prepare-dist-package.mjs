@@ -102,6 +102,8 @@ async function prepareLinux() {
     await Promise.all([
       findPackageDirs(resolve(DIST_DIR, "node_modules"), "bluebird"),
       findPackageDirs(resolve(MAIN_DIR, "node_modules"), "bluebird"),
+      findPackageDirs(resolve(MAIN_DIR, "../node_modules"), "bluebird"),
+      findPackageDirs(resolve(MAIN_DIR, "../../../node_modules"), "bluebird"),
     ])
   )
     .flat()
