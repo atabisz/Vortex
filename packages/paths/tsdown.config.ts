@@ -9,5 +9,8 @@ export default defineConfig({
     sourcemap: true,
   },
   exports: true,
+  checks: {
+    pluginTimings: false,
+  },
   platform: "neutral",
 });
