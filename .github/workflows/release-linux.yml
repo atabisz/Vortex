@@ -114,7 +114,7 @@ jobs:
           if [ -f ./dist/vortex-setup.AppImage ]; then
             exit 0
           fi
-          appimage="$(find ./dist -maxdepth 1 -type f -iname '*.AppImage' | head -n 1)"
+          appimage="$(find ./dist -maxdepth 1 -type f -iname '*.AppImage' -print -quit)"
           if [ -z "$appimage" ]; then
             ls -la ./dist
             exit 1
