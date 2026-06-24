@@ -1,5 +1,5 @@
 import { createWriteStream, existsSync } from "node:fs";
-import { chmod, copyFile, cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { chmod, copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
@@ -96,22 +96,6 @@ async function prepareLinux() {
   winapiDirs.add(resolve(DIST_DIR, "node_modules", "winapi-bindings"));
   winapiDirs.add(resolve(MAIN_DIR, "node_modules", "winapi-bindings"));
   await Promise.all([...winapiDirs].map((dir) => replaceWithWinapiStub(dir)));
-
-  const bluebirdDest = resolve(DIST_DIR, "node_modules", "modmeta-db", "node_modules", "bluebird");
-  const bluebirdSrc = (
-    await Promise.all([
-      findPackageDirs(resolve(DIST_DIR, "node_modules"), "bluebird"),
-      findPackageDirs(resolve(MAIN_DIR, "node_modules"), "bluebird"),
-      findPackageDirs(resolve(MAIN_DIR, "../node_modules"), "bluebird"),
-      findPackageDirs(resolve(MAIN_DIR, "../../../node_modules"), "bluebird"),
-    ])
-  )
-    .flat()
-    .find((dir) => dir !== bluebirdDest);
-  if (!bluebirdSrc) throw new Error("bluebird package not found for modmeta-db unpack injection");
-  if (bluebirdSrc && !existsSync(bluebirdDest)) {
-    await cp(bluebirdSrc, bluebirdDest, { recursive: true });
-  }
 
   const fomodIpcBinary = resolve(
     DIST_DIR,

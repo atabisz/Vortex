@@ -64,7 +64,6 @@ if (!fs.existsSync(asarUnpacked)) {
 // --- Required directory paths (relative to app.asar.unpacked/) ---
 const REQUIRED_DIRS = [
     "node_modules/modmeta-db",
-    "node_modules/modmeta-db/node_modules/bluebird", // injected by beforePack
     "node_modules/leveldown",
     "node_modules/levelup",
     "node_modules/encoding-down",
