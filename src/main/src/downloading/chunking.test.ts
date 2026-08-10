@@ -27,25 +27,25 @@ describe("staticChunker", () => {
   describe("coverage", () => {
     it("first chunk starts at byte 0", () => {
       const [first] = createChunks(100, 4);
-      expect(first.start).toBe(0);
+      expect(first!.start).toBe(0);
     });
 
     it("last chunk ends at the final byte", () => {
       const chunks = createChunks(100, 4);
-      expect(chunks.at(-1).end).toBe(99);
+      expect(chunks.at(-1)!.end).toBe(99);
     });
 
     it("covers every byte with no gaps", () => {
       const chunks = createChunks(100, 4);
       for (let i = 1; i < chunks.length; i++) {
-        expect(chunks[i].start).toBe(chunks[i - 1].end + 1);
+        expect(chunks[i]!.start).toBe(chunks[i - 1]!.end + 1);
       }
     });
 
     it("covers every byte with no gaps for an odd-sized file", () => {
       const chunks = createChunks(101, 4);
       for (let i = 1; i < chunks.length; i++) {
-        expect(chunks[i].start).toBe(chunks[i - 1].end + 1);
+        expect(chunks[i]!.start).toBe(chunks[i - 1]!.end + 1);
       }
     });
 
@@ -61,7 +61,7 @@ describe("staticChunker", () => {
     it("produces non-overlapping chunks", () => {
       const chunks = createChunks(100, 4);
       for (let i = 1; i < chunks.length; i++) {
-        expect(chunks[i].start).toBeGreaterThan(chunks[i - 1].end);
+        expect(chunks[i]!.start).toBeGreaterThan(chunks[i - 1]!.end);
       }
     });
 
@@ -97,12 +97,12 @@ describe("staticChunker", () => {
   describe("edge cases", () => {
     it("handles a single byte file", () => {
       const chunks = createChunks(1, 1);
-      expect(chunks[0].start).toBe(0);
-      expect(chunks[0].end).toBe(0);
+      expect(chunks[0]!.start).toBe(0);
+      expect(chunks[0]!.end).toBe(0);
     });
 
     it("throws when numChunks exceeds file size", () => {
-      expect(() => createChunks(3, 4)).toThrow();
+      expect(() => createChunks(3, 4)).toThrow("Cannot create 4 chunks from 3 bytes");
     });
 
     it("handles a file that divides evenly into chunks", () => {

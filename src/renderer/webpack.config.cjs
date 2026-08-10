@@ -1,97 +1,122 @@
-const webpack = require("webpack");
-const nodeExternals = require("webpack-node-externals");
+const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
+const ReactRefreshWebpackPlugin = require("@pmmmwh/react-refresh-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
-const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
+const nodeExternals = require("webpack-node-externals");
 const path = require("node:path");
+const webpack = require("webpack");
 
-const mode = process.env.NODE_ENV === "production" ? "production" : "development";
+module.exports = (env) => {
+    const mode = process.env.NODE_ENV === "production" ? "production" : "development";
+    const enableHMR = mode === "development" && env?.WEBPACK_WATCH === true;
 
-const plugins = [
-    new webpack.DefinePlugin({
-        "process.env.NODE_ENV": JSON.stringify(mode),
-    }),
-    new ForkTsCheckerWebpackPlugin(),
-];
+    const plugins = [new ForkTsCheckerWebpackPlugin()];
 
-const optimizer = new TerserPlugin({
-    parallel: true,
-    terserOptions: {
-        mangle: false,
-        sourceMap: true,
-        keep_fnames: true,
-    },
-});
+    if (enableHMR) {
+        plugins.push(
+            new webpack.HotModuleReplacementPlugin(),
+            // overlay needs a dev-server socket; updates arrive via custom poll client instead
+            new ReactRefreshWebpackPlugin({ overlay: false }),
+        );
+    }
 
-/**
- * @type {webpack.Configuration}
- * */
-const config = {
-    entry: {
-        renderer: path.resolve(__dirname, "src", "renderer.tsx"),
-        splash: path.resolve(__dirname, "src", "splash.ts"),
-    },
-    target: "electron-renderer",
-    output: {
-        libraryTarget: "commonjs2",
-        filename: "[name].js",
-        path: path.resolve(__dirname, "..", "main", "build"),
-    },
-    plugins: plugins,
-    resolve: {
-        plugins: [new TsconfigPathsPlugin()],
-        extensions: [".js", ".jsx", ".ts", ".tsx", ".json"],
-        ...(process.platform === "linux" && {
-            alias: {
-                "winapi-bindings": path.resolve(__dirname, "src", "util", "winapi-shim.ts"),
+    const optimizer = new TerserPlugin({
+        parallel: true,
+        terserOptions: {
+            mangle: false,
+            sourceMap: true,
+            keep_fnames: true,
+        },
+    });
+
+    const tsLoader = {
+        loader: "ts-loader",
+        options: {
+            configFile: path.resolve(__dirname, "tsconfig.json"),
+            compilerOptions: {
+                composite: false,
+                sourceMap: true,
+                inlineSourceMap: false,
+                inlineSources: false,
             },
-        }),
-    },
-    // NOTE(erri120): disable polyfills for browser because nodeIntegration is enabled
-    node: { __filename: false, __dirname: false },
-    module: {
-        rules: [
-            {
-                test: /\.[cm]?js$/,
-                include: path.resolve(__dirname, "src", "shared", "dist"),
-                enforce: "pre",
-                use: ["source-map-loader"],
-            },
-            {
-                test: /\.tsx?$/,
-                loader: "ts-loader",
-                exclude: /node_modules/,
-                options: {
-                    transpileOnly: true,
-                    configFile: path.resolve(__dirname, "tsconfig.json"),
-                    compilerOptions: {
-                        composite: false,
-                        sourceMap: true,
-                        inlineSourceMap: false,
-                        inlineSources: false,
-                    },
+            ...(enableHMR ? { transpileOnly: true } : {}),
+        },
+    };
+
+    const refreshLoader = {
+        loader: "babel-loader",
+        options: {
+            babelrc: false,
+            configFile: false,
+            plugins: ["react-refresh/babel"],
+        },
+    };
+
+    /**
+     * @type {webpack.Configuration}
+     * */
+    const config = {
+        mode,
+        entry: {
+            renderer: enableHMR
+                ? [
+                      path.resolve(__dirname, "src", "hmr-client.ts"),
+                      path.resolve(__dirname, "src", "renderer.tsx"),
+                  ]
+                : path.resolve(__dirname, "src", "renderer.tsx"),
+            splash: path.resolve(__dirname, "src", "splash.ts"),
+        },
+        target: "electron-renderer",
+        output: {
+            libraryTarget: "commonjs2",
+            filename: "[name].js",
+            path: path.resolve(__dirname, "..", "main", "build"),
+            // load hot-update chunks through node's require() relative to the
+            // bundle on disk (CSP-exempt, no server), like a target:"node" build
+            ...(enableHMR ? { chunkFormat: "commonjs", chunkLoading: "require" } : {}),
+        },
+        plugins: plugins,
+        resolve: {
+            plugins: [new TsconfigPathsPlugin()],
+            extensions: [".js", ".jsx", ".ts", ".tsx", ".json"],
+            ...(process.platform === "linux" && {
+                alias: {
+                    "winapi-bindings": path.resolve(__dirname, "src", "util", "winapi-shim.ts"),
                 },
-            },
-        ],
-    },
-    optimization: {
-        minimizer: mode === "development" ? [] : [optimizer],
-    },
-    // NOTE(erri120): can't use eval source maps due to CSP.
-    // Use full source-map for accurate breakpoint support in VSCode.
-    devtool: "source-map",
-    externals: [
-        nodeExternals({
-            // On Linux, winapi-bindings must be bundled (not externalized) so
-            // the resolve.alias redirect to winapi-shim.ts fires. Externalized
-            // modules bypass aliasing and go straight to Node's require(),
-            // which fails on Linux because the package is Windows-only.
-            allowlist: [
-                /@vortex\/shared/,
-                ...(process.platform === "linux" ? ["winapi-bindings"] : []),
+            }),
+        },
+        // NOTE(erri120): disable polyfills for browser because nodeIntegration is enabled
+        node: { __filename: false, __dirname: false },
+        module: {
+            rules: [
+                {
+                    test: /\.[cm]?js$/,
+                    include: path.resolve(__dirname, "src", "shared", "dist"),
+                    enforce: "pre",
+                    use: ["source-map-loader"],
+                },
+                {
+                    test: /\.tsx?$/,
+                    exclude: /node_modules/,
+                    use: enableHMR ? [refreshLoader, tsLoader] : [tsLoader],
+                },
             ],
-        }),
-    ],
-};
+        },
+        optimization: {
+            minimizer: mode === "development" ? [] : [optimizer],
+        },
+        // NOTE(erri120): can't use eval source maps due to CSP.
+        // Use full source-map for accurate breakpoint support in VSCode.
+        devtool: "source-map",
+        externals: [
+            nodeExternals({
+                allowlist: [
+                    /@vortex\/shared/,
+                    ...(process.platform === "linux" ? ["winapi-bindings"] : []),
+                ],
+            }),
+        ],
+    };
 
-module.exports = config;
+    return config;
+};

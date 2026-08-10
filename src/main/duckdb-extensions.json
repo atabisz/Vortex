@@ -1,0 +1,11 @@
+{
+  "platforms": ["windows_amd64", "linux_amd64"],
+  "outputDir": "build/duckdb-extensions",
+  "extensions": [
+    {
+      "name": "level_pivot",
+      "type": "http",
+      "repository": "https://nexus-mods.github.io/duckdb-level-pivot/current_release"
+    }
+  ]
+}

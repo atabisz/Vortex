@@ -14,66 +14,35 @@ import { activeGameId } from "../../../util/selectors";
 import { getSafe } from "../../../util/storeHelper";
 import { semverCoerce, truthy } from "../../../util/util";
 import type { IDependency, ILookupResultEx } from "../types/IDependency";
-import type { IDownloadHint, IFileListItem, IMod, IModReference, IModRule } from "../types/IMod";
+import type { IDownloadHint, IMod, IModReference, IModRule } from "../types/IMod";
+import { findModByRef } from "./findModByRef";
+import { isFuzzyVersion } from "./isFuzzyVersion";
+import { rulePhase } from "./rulePhase";
+import testModReference, {
+  isOptionalRule,
+  ruleInstallSpec,
+  testRefByIdentifiers,
+} from "./testModReference";
 import type { IModLookupInfo } from "./testModReference";
-import testModReference, { isFuzzyVersion, testRefByIdentifiers } from "./testModReference";
+
+/**
+ * The optional (recommends) members the user has SELECTED (ignored:false) that still need
+ * installing - not already installed with the wanted install spec. Drives the trailing optional
+ * phase from the LIVE rules so a mid-install "Stop Ignoring" is picked up (the start snapshot
+ * missed it). Keyed off the durable `ignored` flag, so it reflects the user's current choice.
+ */
+export function selectedOptionalRules(rules: IModRule[], mods: Record<string, IMod>): IModRule[] {
+  return (rules ?? []).filter(
+    (rule) =>
+      isOptionalRule(rule) &&
+      !rule.ignored &&
+      findModByRef(rule.reference, mods, undefined, ruleInstallSpec(rule)) === undefined,
+  );
+}
 
 interface IBrowserResult {
   url: string | (() => PromiseLike<string>);
   referer?: string | (() => PromiseLike<string>);
-}
-
-export function findModByRef(
-  reference: IModReference,
-  mods: { [modId: string]: IMod },
-  source?: { gameId: string; modId: string },
-): IMod {
-  if (!reference) {
-    log("error", "findModByRef called with undefined reference", {
-      source,
-      stack: new Error().stack,
-    });
-    return undefined;
-  }
-  const fuzzy = isFuzzyVersion(reference.versionMatch);
-  if (
-    reference["idHint"] !== undefined &&
-    testModReference(mods[reference["idHint"]], reference, source, fuzzy)
-  ) {
-    // fast-path if we have an id from a previous match
-    return mods[reference["idHint"]];
-  }
-
-  if (
-    reference.versionMatch !== undefined &&
-    isFuzzyVersion(reference.versionMatch) &&
-    reference.fileMD5 !== undefined &&
-    (reference.logicalFileName !== undefined || reference.fileExpression !== undefined)
-  ) {
-    reference = {
-      md5Hint: reference.fileMD5,
-      ...reference,
-    };
-    delete reference.fileMD5;
-  }
-
-  if (
-    reference["md5Hint"] !== undefined &&
-    reference.installerChoices === undefined &&
-    reference.patches === undefined &&
-    reference.fileList === undefined
-  ) {
-    const result = Object.keys(mods).find(
-      (dlId) => mods[dlId].attributes?.fileMD5 === reference["md5Hint"],
-    );
-    if (result !== undefined) {
-      return mods[result];
-    }
-  }
-
-  return Object.values(mods).find((mod: IMod): boolean =>
-    testModReference(mod, reference, source, fuzzy),
-  );
 }
 
 function newerSort(lhs: IDownload, rhs: IDownload): number {
@@ -132,17 +101,16 @@ function lookupDownloadHint(api: IExtensionApi, input: IDownloadHint): Promise<I
   }
 
   if (input.mode === "direct") {
-    let urlNorm: string = "";
     try {
-      urlNorm = normalizeUrl(input.url ?? "", { defaultProtocol: "https:" });
+      const urlNorm = normalizeUrl(input.url ?? "", { defaultProtocol: "https:" });
+      return Promise.resolve({ url: urlNorm });
     } catch (err) {
       return Promise.reject(
         new NotFound(`Invalid url set for external dependency: "${input.url ?? "<unset>"}"`),
       );
     }
-    return Promise.resolve({ url: urlNorm });
   } else if (input.mode === "browse" || (input.mode === "manual" && input.url)) {
-    let urlNorm: string = "";
+    let urlNorm: string;
     try {
       urlNorm = normalizeUrl(input.url ?? "", { defaultProtocol: "https:" });
     } catch (err) {
@@ -363,12 +331,18 @@ export function findDownloadByRef(
   }
 }
 
+/**
+ * Internal tree node used while GATHERING the transitive dependency graph. It is an
+ * IDependency plus the tree bookkeeping: child `dependencies`, a `redundant` flag set by
+ * tagDuplicates(), and a re-resolve callback. Once the graph is gathered it is flattened
+ * and these tree-only fields are stripped (see flatten() + the _.omit below), yielding the
+ * flat IDependency[] the installer consumes. Kept separate from IDependency on purpose so
+ * those graph-only fields never travel with a flat install unit; this type stays local to
+ * this module.
+ */
 interface IDependencyNode extends IDependency {
   dependencies: IDependencyNode[];
   redundant: boolean;
-  fileList?: IFileListItem[];
-  installerChoices?: any;
-  patches?: any;
   reresolveDownloadHint?: () => Promise<void>;
 }
 
@@ -398,16 +372,9 @@ async function gatherDependenciesGraph(
       fileSize: rule.reference.fileSize,
     });
   }
-  const modReference: IModReference = {
-    ...rule.reference,
-    fileList: rule.fileList,
-    patches: rule.extra?.patches ?? {},
-    installerChoices: rule.installerChoices ?? {},
-  };
-  const mod = findModByRef(modReference, mods);
+  const mod = findModByRef(rule.reference, mods, undefined, ruleInstallSpec(rule));
 
   let urlFromHint: IBrowserResult | undefined;
-  let lookupResults = [];
 
   const limit = new ConcurrencyLimiter(20);
 
@@ -422,7 +389,7 @@ async function gatherDependenciesGraph(
       }
     }
 
-    lookupResults = await api.lookupModReference(rule.reference, {
+    const lookupResults = await api.lookupModReference(rule.reference, {
       requireURL: true,
     });
 
@@ -446,14 +413,16 @@ async function gatherDependenciesGraph(
       download: downloadId,
       mod,
       reference: rule.reference,
-      lookupResults: lookupResults.map((iter) => makeLookupResult(iter, urlFromHint)),
+      lookupResults: lookupResults.map((iter) =>
+        makeLookupResult(iter as ILookupResult, urlFromHint),
+      ),
       dependencies: dependencies.filter(Boolean),
       redundant: false,
       extra: rule.extra,
-      patches: rule.extra?.patches ?? {},
+      patches: ruleInstallSpec(rule).patches ?? {},
       installerChoices: rule.installerChoices,
       fileList: rule.fileList,
-      phase: rule.extra?.["phase"] ?? 0,
+      phase: rulePhase(rule),
     };
 
     if (urlFromHint) {

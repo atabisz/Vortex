@@ -1,5 +1,7 @@
+import { DataInvalid, ProcessCanceled, UserCanceled } from "@vortex/shared/errors";
+
 import type * as types from "../../types/api";
-import * as util from "../../util/api";
+import { findRuleByRef } from "../mod_management/util/testModReference";
 import { activeGameId, lastActiveProfileForGame } from "../profile_management/selectors";
 import { setValidationResult } from "./actions/session";
 import { findGameEntry } from "./gameSupport";
@@ -11,7 +13,14 @@ import {
   LoadOrderSerializationError,
   LoadOrderValidationError,
   type ILoadOrderEntryExt,
+  type LockedState,
 } from "./types/types";
+
+// A load order entry is locked (pinned, not user-orderable) for any of the
+//  truthy LockedState values.
+export function isEntryLocked(locked: LockedState): boolean {
+  return locked === true || locked === "true" || locked === "always";
+}
 
 export const toExtendedLoadOrderEntry = (api: types.IExtensionApi) => {
   return (entry: types.ILoadOrderEntry, index: number) => {
@@ -23,11 +32,7 @@ export const toExtendedLoadOrderEntry = (api: types.IExtensionApi) => {
 };
 
 export function isModInCollection(collection: types.IMod, mod: types.IMod) {
-  if (collection.rules === undefined) {
-    return false;
-  }
-
-  return collection.rules.find((rule) => util.testModReference(mod, rule.reference)) !== undefined;
+  return findRuleByRef(collection.rules, mod) !== undefined;
 }
 
 export async function genCollectionLoadOrder(
@@ -38,10 +43,9 @@ export async function genCollectionLoadOrder(
   collection?: types.IMod,
 ): Promise<LoadOrder> {
   const state = api.getState();
-  let loadOrder: LoadOrder = [];
   try {
     const prev = currentLoadOrderForProfile(state, profileId);
-    loadOrder = await gameEntry.deserializeLoadOrder();
+    let loadOrder = await gameEntry.deserializeLoadOrder();
     loadOrder = loadOrder.filter((entry) =>
       collection !== undefined
         ? isValidMod(mods[entry.modId]) && isModInCollection(collection, mods[entry.modId])
@@ -52,11 +56,10 @@ export async function genCollectionLoadOrder(
     if (validRes !== undefined) {
       throw new LoadOrderValidationError(validRes, loadOrder);
     }
+    return Promise.resolve(loadOrder);
   } catch (err) {
     return Promise.reject(err);
   }
-
-  return Promise.resolve(loadOrder);
 }
 
 export function isValidMod(mod: types.IMod) {
@@ -80,9 +83,9 @@ export async function errorHandler(api: types.IExtensionApi, gameId: string, err
   const gameEntry: ILoadOrderGameInfoExt = findGameEntry(gameId);
   const allowReport =
     !gameEntry.isContributed &&
-    !(err instanceof util.ProcessCanceled) &&
-    !(err instanceof util.DataInvalid) &&
-    !(err instanceof util.UserCanceled);
+    !(err instanceof ProcessCanceled) &&
+    !(err instanceof DataInvalid) &&
+    !(err instanceof UserCanceled);
   if (err instanceof LoadOrderValidationError) {
     const invalLOErr = err as LoadOrderValidationError;
     const profileId = lastActiveProfileForGame(api.getState(), gameId);

@@ -7,9 +7,12 @@ import type {
   IModFile,
   IModFileQuery,
   IModInfo,
+  ICollection,
   IRevision,
   IRevisionQuery,
   IValidateKeyResponse,
+  IRating,
+  RatingOptions,
 } from "@nexusmods/nexus-api";
 import type NexusT from "@nexusmods/nexus-api";
 import { NexusError, RateLimitError, TimeoutError } from "@nexusmods/nexus-api";
@@ -27,7 +30,6 @@ import { setDownloadModInfo, setForcedLogout, setModAttribute } from "../../acti
 import type { IDialogResult } from "../../actions/notifications";
 import { showDialog } from "../../actions/notifications";
 import FlexLayout from "../../controls/FlexLayout";
-import Icon from "../../controls/Icon";
 import Image from "../../controls/Image";
 import LazyComponent from "../../controls/LazyComponent";
 import { log } from "../../logging";
@@ -36,6 +38,8 @@ import type { IExtensionApi, IExtensionContext } from "../../types/IExtensionCon
 import type { IModLookupResult } from "../../types/IModLookupResult";
 import type { IState } from "../../types/IState";
 import { getApplication } from "../../util/application";
+import { getCollectionActiveSession } from "../../util/collectionInstallSessionSelectors";
+import { markCollectionMemberSkipped } from "../../util/collectionSkip";
 import {
   DataInvalid,
   HTTPError,
@@ -62,7 +66,6 @@ import {
 } from "../../util/util";
 import { MainContext } from "../../views/MainWindow";
 import type { ICategoryDictionary } from "../category_management/types/ICategoryDictionary";
-import { getCollectionActiveSession } from "../collections_integration/selectors";
 import type { IDownload } from "../download_management/types/IDownload";
 import type { IResolvedURL } from "../download_management/types/ProtocolHandlers";
 import { SITE_ID } from "../gamemode_management/constants";
@@ -87,7 +90,7 @@ import {
   REVALIDATION_FREQUENCY,
 } from "./constants";
 import * as eh from "./eventHandlers";
-import NXMUrl from "./NXMUrl";
+import NXMUrl, { buildNXMModUrl } from "./NXMUrl";
 import { accountReducer } from "./reducers/account";
 import { persistentReducer } from "./reducers/persistent";
 import { sessionReducer } from "./reducers/session";
@@ -115,6 +118,7 @@ import {
 import { checkModVersion } from "./util/checkModsVersion";
 import { convertNXMIdReverse, nexusGameId } from "./util/convertGameId";
 import { fillNexusIdByMD5, guessFromFileName, queryResetSource } from "./util/guessModID";
+import { isStoragePathName } from "./util/healStoragePathNames";
 import retrieveCategoryList from "./util/retrieveCategories";
 import Tracking from "./util/tracking";
 import { makeFileUID } from "./util/UIDs";
@@ -131,6 +135,26 @@ export class APIDisabled extends Error {
   constructor(instruction: string) {
     super(`Network functionality disabled "${instruction}"`);
     this.name = this.constructor.name;
+  }
+}
+
+declare module "../../types/IExtensionContext" {
+  interface ApiEvents {
+    "nexus-download": (
+      gameId: string,
+      modId: number,
+      fileId: number,
+      fileName?: string,
+      allowInstall?: boolean,
+    ) => string;
+    "get-my-collections": (gameId: string, count?: number, offset?: number) => Partial<IRevision>[];
+    "get-nexus-collection": (slug: string) => ICollection;
+    "get-nexus-collection-revision": (collectionSlug: string, revisionNumber: number) => IRevision;
+    "resolve-collection-url": (apiLink: string) => IDownloadURL[];
+    "rate-nexus-collection-revision": (
+      revisionId: number,
+      vote: RatingOptions,
+    ) => { success: boolean; averageRating?: IRating };
   }
 }
 
@@ -357,13 +381,6 @@ const requestLog = {
   },
 };
 
-export interface IExtensionContextExt extends IExtensionContext {
-  registerDownloadProtocol: (
-    schema: string,
-    handler: (inputUrl: string, name: string) => PromiseBB<{ urls: string[]; meta: any }>,
-  ) => void;
-}
-
 function retrieveCategories(api: IExtensionApi, isUpdate: boolean) {
   let askUser: PromiseBB<boolean>;
   if (isUpdate) {
@@ -532,17 +549,6 @@ const ATTRIBUTES_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 function processAttributes(state: IState, input: any, quick: boolean): PromiseBB<any> {
   const nexusChangelog = input.nexus?.fileInfo?.changelog_html;
 
-  const modName = decodeHTML(
-    input.download?.modInfo?.nexus?.modInfo?.name ?? input.download?.modInfo?.name,
-  );
-  const fileName = decodeHTML(
-    input.download?.modInfo?.nexus?.fileInfo?.name ??
-      input.download?.localPath ??
-      input.meta?.fileName,
-  );
-  const fuzzRatio =
-    modName !== undefined && fileName !== undefined ? fuzz.ratio(modName, fileName) : 100;
-
   let fetchPromise: PromiseBB<IRemoteInfo> = PromiseBB.resolve(undefined);
 
   let gameId = input.download?.modInfo?.game || input.download?.modInfo?.nexus?.ids?.gameId;
@@ -643,6 +649,27 @@ function processAttributes(state: IState, input: any, quick: boolean): PromiseBB
     const nexusCollectionInfo: IRevision =
       info?.revisionInfo ?? input.download?.modInfo?.nexus?.revisionInfo;
 
+    // collections are identified by their revision info, not a downloaded file. Their
+    // display name is the collection name; the archive on disk is not a meaningful name.
+    const isCollection = nexusCollectionInfo !== undefined;
+    const collectionName = nexusCollectionInfo?.collection?.name;
+
+    // never accept a CDN storage path as a name (LAZ-807); `?? undefined`
+    // normalizes an explicit null, which would otherwise make decodeHTML
+    // return "" and defeat the fuzz-ratio guard below
+    const rawModName =
+      nexusModInfo?.name ?? collectionName ?? input.download?.modInfo?.name ?? undefined;
+    const modName = decodeHTML(isStoragePathName(rawModName) ? undefined : rawModName);
+    // for collections the "file name" is the collection name, never the archive/localPath:
+    // deriving logicalFileName/customFileName from the archive is what surfaced archive
+    // and storage-path names on collection cards
+    const rawFileName = isCollection
+      ? (collectionName ?? input.download?.modInfo?.name)
+      : (nexusFileInfo?.name ?? input.download?.localPath ?? input.meta?.fileName);
+    const fileName = decodeHTML(isStoragePathName(rawFileName) ? undefined : rawFileName);
+    const fuzzRatio =
+      modName !== undefined && fileName !== undefined ? fuzz.ratio(modName, fileName) : 100;
+
     const gameMode = activeGameId(state);
     const category = remapCategory(state, nexusModInfo?.category_id, gameId, gameMode);
 
@@ -653,7 +680,7 @@ function processAttributes(state: IState, input: any, quick: boolean): PromiseBB
       collectionId:
         input.download?.modInfo?.nexus?.ids?.collectionId ?? nexusCollectionInfo?.collection?.id,
       revisionId: input.download?.modInfo?.nexus?.ids?.revisionId ?? nexusCollectionInfo?.id,
-      collectionSlug: nexusIds?.collectionSlug ?? nexusCollectionInfo?.collection["slug"],
+      collectionSlug: nexusIds?.collectionSlug ?? nexusCollectionInfo?.collection?.["slug"],
       revisionNumber: nexusIds?.revisionNumber ?? nexusCollectionInfo?.revisionNumber,
       author: nexusModInfo?.author ?? nexusCollectionInfo?.collection?.user?.name,
       uploader: nexusModInfo?.uploaded_by ?? nexusCollectionInfo?.collection?.user?.name,
@@ -680,7 +707,6 @@ function processAttributes(state: IState, input: any, quick: boolean): PromiseBB
       newestVersion:
         nexusCollectionInfo?.collection?.latestPublishedRevision?.revisionNumber?.toString?.(),
       rating: nexusCollectionInfo?.rating,
-      requirements: nexusModInfo?.requirements,
     };
   });
 }
@@ -929,7 +955,7 @@ function makeRepositoryLookup(api: IExtensionApi, nexusConn: NexusT) {
           fileVersion: modFileInfo.version,
           gameId: modFileInfo.game.id.toString(),
           domainName: modFileInfo.game.domainName,
-          sourceURI: `nxm://${repoInfo.gameId}/mods/${modId}/files/${fileId}`,
+          sourceURI: buildNXMModUrl(repoInfo.gameId, modId, fileId),
           source: "nexus",
           logicalFileName: modFileInfo.name,
           archived: modFileInfo.categoryId === 7,
@@ -1065,7 +1091,7 @@ function extendAPI(api: IExtensionApi, nexus: NexusT): INexusAPIExtension {
     nexusDownloadUpdate: eh.onDownloadUpdate(api, nexus),
     nexusModFileContents: eh.onModFileContents(api, nexus),
     nexusGetModInfo: eh.onGetModInfo(api, nexus),
-    nexusGetModRequirements: eh.onGetModRequirements(api, nexus),
+    nexusGetModRequirements: eh.onGetModRequirements(nexus),
     nexusGetPreferences: eh.onGetPreferences(api, nexus),
     nexusGetUserKeyData: eh.onGetUserKeyData(api),
   };
@@ -1205,13 +1231,22 @@ function once(api: IExtensionApi, callbacks: Array<(nexus: NexusT) => void>) {
   }
 
   api.onAsync("check-mods-version", eh.onCheckModsVersion(api, nexus));
-  api.onAsync("nexus-download", eh.onNexusDownload(api, nexus));
-  api.onAsync("get-nexus-collection", eh.onGetNexusCollection(api, nexus));
+  api.onAsync<"nexus-download">("nexus-download", eh.onNexusDownload(api, nexus));
+  api.onAsync<"get-nexus-collection">("get-nexus-collection", eh.onGetNexusCollection(api, nexus));
   api.onAsync("get-nexus-collections", eh.onGetNexusCollections(api, nexus));
-  api.onAsync("get-my-collections", eh.onGetMyCollections(api, nexus));
-  api.onAsync("resolve-collection-url", eh.onResolveCollectionUrl(api, nexus));
-  api.onAsync("get-nexus-collection-revision", eh.onGetNexusCollectionRevision(api, nexus));
-  api.onAsync("rate-nexus-collection-revision", eh.onRateRevision(api, nexus));
+  api.onAsync<"get-my-collections">("get-my-collections", eh.onGetMyCollections(api, nexus));
+  api.onAsync<"resolve-collection-url">(
+    "resolve-collection-url",
+    eh.onResolveCollectionUrl(api, nexus),
+  );
+  api.onAsync<"get-nexus-collection-revision">(
+    "get-nexus-collection-revision",
+    eh.onGetNexusCollectionRevision(api, nexus),
+  );
+  api.onAsync<"rate-nexus-collection-revision">(
+    "rate-nexus-collection-revision",
+    eh.onRateRevision(api, nexus),
+  );
   api.onAsync("endorse-nexus-mod", eh.onEndorseDirect(api, nexus));
   api.onAsync("get-latest-mods", eh.onGetLatestMods(api, nexus));
   api.onAsync("get-trending-mods", eh.onGetTrendingMods(api, nexus));
@@ -1790,7 +1825,9 @@ function onSkip(api: IExtensionApi, inputUrl: string) {
           fileNames: Array.from(fileNames),
           fileIds: Array.from(fileIdSet),
         };
-        api.events.emit("free-user-skipped-download", itemIdentifiers);
+        // collections is now core, so the skip site dispatches the ignore directly against the
+        // active install session rather than emitting an event for the InstallDriver to handle
+        markCollectionMemberSkipped(api, { identifiers: itemIdentifiers });
         queueItem.rej(new UserCanceled(true));
       })
       .catch((err) => {
@@ -1831,7 +1868,7 @@ function onCancelImpl(api: IExtensionApi, inputUrl: string): boolean {
     // reset the driver, dismiss the install notification.
     const session = getCollectionActiveSession(api.getState());
     if (session?.collectionId && session.gameId) {
-      api.events.emit("pause-collection", session.gameId, session.collectionId);
+      api.events.emit("pause-collection", session.gameId, session.collectionId, "free-user-cancel");
     }
     return true;
   } else {

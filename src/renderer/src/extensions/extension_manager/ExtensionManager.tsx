@@ -1,12 +1,13 @@
 import * as path from "path";
 
 import type { EndorsedStatus } from "@nexusmods/nexus-api";
-import PromiseBB from "bluebird";
 import * as _ from "lodash";
 import * as React from "react";
 import { Alert, Button, Panel } from "react-bootstrap";
 import type * as Redux from "redux";
 import type { ThunkDispatch } from "redux-thunk";
+
+import { log } from "@/logging";
 
 import { setDialogVisible } from "../../actions";
 import { removeExtension, setExtensionEnabled, setExtensionEndorsed } from "../../actions/app";
@@ -18,11 +19,10 @@ import IconBar from "../../controls/IconBar";
 import type { ITableRowAction } from "../../controls/Table";
 import Table from "../../controls/Table";
 import ToolbarIcon from "../../controls/ToolbarIcon";
-import type { IExtension, IExtensionWithState } from "../../types/extensions";
+import type { IExtensionWithState } from "../../types/extensions";
 import type { IExtensionLoadFailure, IExtensionState, IState } from "../../types/IState";
 import type { ITableAttribute } from "../../types/ITableAttribute";
 import { relaunch } from "../../util/commandLine";
-import { log } from "../../util/log";
 import * as selectors from "../../util/selectors";
 import { getSafe } from "../../util/storeHelper";
 import MainPage from "../../views/MainPage";
@@ -35,15 +35,14 @@ export interface IExtensionManagerProps {
   localState: {
     reloadNecessary: boolean;
   };
-  updateExtensions: () => void;
+  updateExtensions: () => Promise<void>;
 }
 
 interface IConnectedProps {
-  extensionConfig: { [extId: string]: IExtensionState };
+  extensions: { [extId: string]: IExtensionState };
   downloads: { [dlId: string]: IDownload };
   downloadPath: string;
   loadFailures: { [extId: string]: IExtensionLoadFailure[] };
-  extensions: { [extId: string]: IExtension };
 }
 
 interface IActionProps {
@@ -55,7 +54,7 @@ interface IActionProps {
 type IProps = IExtensionManagerProps & IConnectedProps & IActionProps;
 
 interface IComponentState {
-  oldExtensionConfig: { [extId: string]: IExtensionState };
+  oldExtensions: { [extId: string]: IExtensionState };
   showBundled: boolean;
 }
 
@@ -67,7 +66,7 @@ class ExtensionManager extends ComponentEx<IProps, IComponentState> {
     super(props);
 
     this.initState({
-      oldExtensionConfig: props.extensionConfig,
+      oldExtensions: props.extensions,
       showBundled: false,
     });
 
@@ -76,7 +75,7 @@ class ExtensionManager extends ComponentEx<IProps, IComponentState> {
         icon: "delete",
         title: "Remove",
         action: this.removeExtension,
-        condition: (instanceId: string) => !this.props.extensions[instanceId].bundled,
+        condition: (instanceId: string) => !this.props.extensions[instanceId]?.bundled,
         singleRowAction: true,
       },
     ];
@@ -89,9 +88,9 @@ class ExtensionManager extends ComponentEx<IProps, IComponentState> {
         onSetExtensionEnabled(extId, enabled);
       },
       onToggleExtensionEnabled: (extName: string) => {
-        const { extensionConfig, extensions, onSetExtensionEnabled } = this.props;
+        const { extensions, onSetExtensionEnabled } = this.props;
         const extId = Object.keys(extensions).find((iter) => extensions[iter].name === extName);
-        const enabled = !getSafe(extensionConfig, [extId, "enabled"], true);
+        const enabled = !(extensions[extId]?.enabled ?? true);
         log("info", "user toggling extension manually", { extId, enabled });
         onSetExtensionEnabled(extId, enabled);
       },
@@ -124,10 +123,29 @@ class ExtensionManager extends ComponentEx<IProps, IComponentState> {
   }
 
   public render(): JSX.Element {
-    const { t, extensions, localState, extensionConfig } = this.props;
-    const { oldExtensionConfig, showBundled } = this.state;
+    const { t, extensions, localState } = this.props;
+    const { oldExtensions, showBundled } = this.state;
 
-    const extensionsWithState = this.mergeExt(extensions, extensionConfig, showBundled);
+    const bundled = (this.context?.api?.getLoadedExtensions?.() ?? [])
+      .filter((ext) => ext.dynamic && ext.info?.bundled)
+      .reduce<{ [extId: string]: IExtensionState }>((prev, ext) => {
+        prev[ext.name] = {
+          enabled: true,
+          version: ext.info?.version ?? "",
+          remove: false,
+          endorsed: "Undecided",
+          name: ext.info?.name ?? ext.name,
+          author: ext.info?.author ?? "Unknown",
+          description: ext.info?.description ?? "",
+          path: ext.path,
+          bundled: true,
+        };
+        return prev;
+      }, {});
+
+    const allExtensions = showBundled ? { ...extensions, ...bundled } : extensions;
+
+    const extensionsWithState = this.mergeExt(allExtensions, showBundled);
 
     // normalize extension config so they differ only if the effective configuration actually
     // differs, leaving out the endorsement state
@@ -163,7 +181,7 @@ class ExtensionManager extends ComponentEx<IProps, IComponentState> {
               <FlexLayout type="column">
                 <FlexLayout.Fixed>
                   {localState.reloadNecessary ||
-                  !_.isEqual(configId(extensionConfig), configId(oldExtensionConfig))
+                  !_.isEqual(configId(extensions), configId(oldExtensions))
                     ? this.renderReload()
                     : null}
                 </FlexLayout.Fixed>
@@ -213,52 +231,60 @@ class ExtensionManager extends ComponentEx<IProps, IComponentState> {
 
   private dropExtension = (type: DropType, extPaths: string[]): void => {
     const { downloads } = this.props;
-    let success = false;
     log("info", "installing extension(s) via drag and drop", { extPaths });
-    const prop: PromiseBB<void[]> =
-      type === "files"
-        ? PromiseBB.map(extPaths, (extPath) =>
-            installExtension(this.context.api, extPath)
-              .then(() => {
-                success = true;
-              })
-              .catch((err) => {
-                this.context.api.showErrorNotification("Failed to install extension", err, {
-                  allowReport: false,
-                });
-              }),
-          )
-        : PromiseBB.map(
-            extPaths,
-            (url) =>
-              new PromiseBB<void>((resolve, reject) => {
-                this.context.api.events.emit(
-                  "start-download",
-                  [url],
-                  undefined,
-                  (error: Error, id: string) => {
-                    const dlPath = path.join(this.props.downloadPath, downloads[id].localPath);
-                    installExtension(this.context.api, dlPath)
-                      .then(() => {
-                        success = true;
-                      })
-                      .catch((err) => {
-                        this.context.api.showErrorNotification("Failed to install extension", err, {
-                          allowReport: false,
-                        });
-                      })
-                      .finally(() => {
-                        resolve();
-                      });
-                  },
-                );
-              }),
+
+    let promises: Promise<boolean>[];
+
+    if (type === "files") {
+      promises = extPaths.map((extPath) =>
+        installExtension(this.context.api, extPath)
+          .then(() => true)
+          .catch((err) => {
+            this.context.api.showErrorNotification("Failed to install extension", err, {
+              allowReport: false,
+            });
+
+            return false;
+          }),
+      );
+    } else {
+      promises = extPaths.map(async (url) => {
+        const downloadId = await new Promise<string>((resolve, reject) => {
+          this.context.api.events.emit<"start-download">(
+            "start-download",
+            [url],
+            { game: SITE_ID },
+            undefined,
+            (err, downloadId) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+
+              resolve(downloadId);
+            },
           );
-    prop.then(() => {
-      if (success) {
-        this.props.updateExtensions();
+        });
+
+        const downloadPath = path.join(this.props.downloadPath, downloads[downloadId].localPath);
+        return await installExtension(this.context.api, downloadPath)
+          .then(() => true)
+          .catch((err) => {
+            this.context.api.showErrorNotification("Failed to install extension", err, {
+              allowReport: false,
+            });
+
+            return false;
+          });
+      });
+    }
+
+    void (async () => {
+      const results = await Promise.all(promises);
+      if (results.some((success) => success)) {
+        await this.props.updateExtensions();
       }
-    });
+    })();
   };
 
   private renderReload(): JSX.Element {
@@ -276,53 +302,45 @@ class ExtensionManager extends ComponentEx<IProps, IComponentState> {
   };
 
   private mergeExt(
-    extensions: { [id: string]: IExtension },
-    extensionConfig: { [id: string]: IExtensionState },
+    extensions: { [id: string]: IExtensionState },
     includeBundled: boolean,
   ): { [id: string]: IExtensionWithState } {
     const { loadFailures } = this.props;
     return Object.keys(extensions).reduce((prev, id) => {
-      if (!includeBundled && extensions[id].bundled) {
+      const state = extensions[id];
+
+      if (!includeBundled && state.bundled) {
         return prev;
       }
 
-      if (!getSafe(extensionConfig, [id, "remove"], false)) {
-        const enabled =
-          loadFailures[id] === undefined
-            ? getSafe(extensionConfig, [id, "enabled"], true)
-            : "failed";
-        const endorsed: EndorsedStatus = getSafe(extensionConfig, [id, "endorsed"], "Undecided");
-        prev[id] = {
-          ...extensions[id],
-          enabled,
-          endorsed,
-          loadFailures: loadFailures[id] || [],
-        };
+      if (state.remove) {
+        return prev;
       }
+
+      const enabled = loadFailures[id] === undefined ? (state.enabled ?? true) : "failed";
+
+      prev[id] = {
+        ...state,
+        enabled,
+        loadFailures: loadFailures[id] || [],
+      };
       return prev;
     }, {});
   }
 
   private removeExtension = (extIds: string[]) => {
     extIds.forEach((extId) => {
-      const ext = this.props.extensions[extId];
-      this.props.onRemoveExtension(path.basename(ext.path || extId));
+      this.props.onRemoveExtension(extId);
     });
   };
 }
 
-const emptyObject = {};
-
 function mapStateToProps(state: IState): IConnectedProps {
   return {
-    // TODO: don't use || {} in mapStateToProps because {} is always a new object and
-    //   thus causes constant re-drawing. but when removing this, make sure no access
-    //   to undefined can happen
-    extensionConfig: state.app.extensions || emptyObject,
+    extensions: state.app.extensions ?? ({} as { [extId: string]: IExtensionState }),
     loadFailures: state.session.base.extLoadFailures,
     downloads: state.persistent.downloads.files,
     downloadPath: selectors.downloadPath(state),
-    extensions: state.session.extensions.installed,
   };
 }
 

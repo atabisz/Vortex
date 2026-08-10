@@ -13,7 +13,7 @@ import {
 import type { AppInitMetadata } from "@vortex/shared/ipc";
 import type { IWindow } from "@vortex/shared/state";
 import { currentStatePath } from "@vortex/shared/state";
-import { app, crashReporter, dialog, ipcMain, protocol, shell } from "electron";
+import { app, dialog, ipcMain, protocol, shell } from "electron";
 import contextMenu from "electron-context-menu";
 import isAdmin from "is-admin";
 import * as _ from "lodash";
@@ -23,18 +23,21 @@ import uuidpkg from "uuid";
 const { v4: uuidv4 } = uuidpkg;
 import winapi from "winapi-bindings";
 
+import { shutdownBsdiffWorker } from "./bsdiff/host";
 import { parseCommandline, updateStartupSettings } from "./cli";
 import { installDevelExtensions } from "./devel";
 import { terminate, terminateAsync } from "./errorHandling";
-import { disableErrorReporting } from "./errorReporting";
+import { disableErrorReporting, reportCrash } from "./errorReporting";
 import { setupMainExtensions } from "./extensions";
 import { validateFiles } from "./fileValidation";
 import { getVortexPath, setVortexPath } from "./getVortexPath";
+import { shutdownHashWorker } from "./hash/host";
 import { log, setupLogging, changeLogPath } from "./logging";
 import MainWindow from "./MainWindow";
 import SplashScreen from "./SplashScreen";
 import DuckDBSingleton from "./store/DuckDBSingleton";
 import { flattenState } from "./store/flattenState";
+import { healInvalidKeys } from "./store/healInvalidKeys";
 import LevelPersist, { DatabaseLocked, DatabaseOpenError } from "./store/LevelPersist";
 import {
   initMainPersistence,
@@ -44,8 +47,10 @@ import {
   finalizeMainWrite,
 } from "./store/mainPersistence";
 import SubPersistor from "./store/SubPersistor";
-import { setTelemetryEnabled } from "./telemetry/state";
+import { isTelemetryEnabled, setTelemetryEnabled } from "./telemetry/state";
 import TrayIcon from "./TrayIcon";
+import { UnleashClient } from "./unleash/client";
+import { synchronizeFeatureFlags } from "./unleash/ipc";
 
 /** test if the running version is a major downgrade (downgrading by a major or minor version,
 / everything except a patch) compared to what was running last */
@@ -97,7 +102,7 @@ class Application {
         "net::ERR_HTTP2_PROTOCOL_ERROR",
         "net::ERR_INCOMPLETE_CHUNKED_ENCODING",
       ].includes(err.message) ||
-      ["ETIMEDOUT", "ECONNRESET", "EPIPE"].includes(code)
+      (code && ["ETIMEDOUT", "ECONNRESET", "EPIPE"].includes(code))
     ) {
       log("warn", "network error unhandled", err.stack);
       return true;
@@ -115,8 +120,8 @@ class Application {
   private mArgs: IParameters;
   private mMainWindow: MainWindow | undefined;
   private mMainWindowReady: Promise<Electron.WebContents | undefined> | undefined;
-  private mTray: TrayIcon;
-  private mAppMetadata: AppInitMetadata;
+  private mTray: TrayIcon | undefined;
+  private mAppMetadata: AppInitMetadata | undefined;
   private mFirstStart: boolean = false;
   private mStartupLogPath: string;
 
@@ -137,11 +142,6 @@ class Application {
     mkdirSync(path.join(tempPath, "dumps"), { recursive: true });
 
     this.mStartupLogPath = path.join(tempPath, "startup.log");
-
-    app.setPath("crashDumps", path.join(tempPath, "dumps"));
-    crashReporter.start({
-      uploadToServer: false,
-    });
 
     const enableLogging =
       process.env.NODE_ENV === "development" || process.env.VORTEX_ENABLE_LOGGING === "1";
@@ -166,7 +166,7 @@ class Application {
   private async initMainWindow(): Promise<void> {
     const windowSettings = await readPersistedValue<IWindow>("settings", ["window"]);
 
-    this.mMainWindow = new MainWindow(this.mArgs.inspector, windowSettings);
+    this.mMainWindow = new MainWindow(this.mArgs.inspector ?? false, windowSettings);
     log("debug", "creating main window");
 
     // Start window creation but don't wait for ready-to-show.
@@ -206,9 +206,10 @@ class Application {
         .then(() => {
           log("info", "clean application end");
           DuckDBSingleton.getInstance().close();
-          if (this.mTray !== undefined) {
-            this.mTray.close();
-          }
+          this.mTray?.close();
+          // Terminate the worker_thread pools so no idle worker lingers past quit.
+          void shutdownHashWorker();
+          void shutdownBsdiffWorker();
           if (process.platform !== "darwin") {
             app.quit();
           }
@@ -229,11 +230,38 @@ class Application {
       }
     });
 
-    app.on("second-instance", (_event: Event, secondaryArgv: string[]) => {
+    app.on("second-instance", (_event, secondaryArgv) => {
       log("debug", "getting arguments from second instance", secondaryArgv);
       this.applyArguments(parseCommandline(secondaryArgv, true)).catch((err: unknown) =>
         log("error", "error applying arguments", unknownToError(err)),
       );
+    });
+
+    app.on("child-process-gone", (_event, details) => {
+      log("error", "child process gone", {
+        type: details.type,
+        name: details.name,
+        reason: details.reason,
+        exitCode: details.exitCode,
+      });
+
+      // GPU/utility crashes never reach the JS error handlers
+      if (!["clean-exit", "killed"].includes(details.reason)) {
+        reportCrash(
+          "ChildProcessGone",
+          {
+            message: `${details.type} process gone: ${details.reason} (exit code ${details.exitCode})`,
+            code: details.reason,
+          },
+          undefined,
+          details.type.toLowerCase(),
+          isTelemetryEnabled(),
+        ).catch((err: unknown) => {
+          log("warn", "failed to report child process crash", {
+            error: getErrorMessageOrDefault(err),
+          });
+        });
+      }
     });
 
     const onReady = () => {
@@ -303,7 +331,6 @@ class Application {
   private attachWebView = (
     _event: Electron.Event,
     webPreferences: Electron.WebPreferences & { preloadURL?: string },
-    _params,
   ) => {
     // disallow creation of insecure webviews
 
@@ -455,14 +482,32 @@ class Application {
       }
     }
 
+    const unleashClient = new UnleashClient(app.getVersion(), {
+      cachePath: path.join(app.getPath("userData"), "flag-cache.json"),
+    });
+
+    // NOTE(erri120): Querying userId so that the first API call contains it.
+    // Otherwise renderer sets context on user changes.
+    const storedUserId = await readPersistedValue<number>("persistent", [
+      "nexus",
+      "userInfo",
+      "userId",
+    ]);
+
+    if (storedUserId !== undefined) {
+      unleashClient.setContext({ userId: String(storedUserId) });
+    }
+
+    synchronizeFeatureFlags(unleashClient);
+
     // Collect metadata before creating the main window — the renderer
     // fetches it via getInitMetadata() early in its boot.
     log("debug", "checking how Vortex was installed");
     await this.identifyInstallType();
-    this.mAppMetadata.version = app.getVersion();
+    this.mAppMetadata!.version = app.getVersion();
 
     log("debug", "checking if migration is required");
-    await this.migrateIfNecessary(this.mAppMetadata.version);
+    await this.migrateIfNecessary(this.mAppMetadata!.version);
 
     // Install dev tools extensions before creating the main window so the
     // extension content scripts are registered on the session before the
@@ -490,14 +535,17 @@ class Application {
     await this.awaitMainWindowReady();
 
     log("debug", "setting up tray icon");
-    this.createTray();
+    this.mTray = new TrayIcon();
 
     if (splash) {
       log("debug", "removing splash screen");
       await splash.fadeOut();
     }
 
-    this.connectTrayAndWindow();
+    const windowHandle = this.mMainWindow?.getHandle();
+    if (this.mTray.initialized && windowHandle) {
+      this.mTray.setMainWindow(windowHandle);
+    }
   }
 
   private isUACEnabled(): boolean {
@@ -553,9 +601,9 @@ class Application {
     try {
       await stat(path.join(getVortexPath("application"), "Uninstall Vortex.exe"));
       // Collect metadata - renderer will dispatch the action
-      this.mAppMetadata.installType = "regular";
+      this.mAppMetadata!.installType = "regular";
     } catch {
-      this.mAppMetadata.installType = "managed";
+      this.mAppMetadata!.installType = "managed";
     }
   }
 
@@ -597,7 +645,7 @@ class Application {
       app.quit();
     } else {
       // Collect metadata - renderer will dispatch the action
-      this.mAppMetadata.warnedAdmin = 1;
+      this.mAppMetadata!.warnedAdmin = 1;
     }
   }
 
@@ -674,8 +722,7 @@ class Application {
     try {
       const promises = setParameters.map(async (setParameter) => {
         const pathArray = this.splitPath(setParameter.key);
-        const newValue: string | undefined =
-          setParameter.value.length === 0 ? undefined : setParameter.value;
+        const newValue = setParameter.value.length === 0 ? null : setParameter.value;
         await persist.setItem(pathArray, newValue);
       });
 
@@ -783,18 +830,6 @@ class Application {
     }
 
     log("info", "state backup imported");
-  }
-
-  private createTray(): void {
-    // Pass null api since ExtensionManager is now renderer-only
-    //  and TrayIcon used to receive the api from there.
-    this.mTray = new TrayIcon();
-  }
-
-  private connectTrayAndWindow() {
-    if (this.mTray.initialized) {
-      this.mMainWindow.connectToTray(this.mTray);
-    }
   }
 
   private multiUserPath() {
@@ -964,6 +999,18 @@ class Application {
         await this.importBackup(finalPersistor, this.mArgs.restore, true);
       } else if (this.mArgs.merge !== undefined) {
         await this.importBackup(finalPersistor, this.mArgs.merge, false);
+      }
+
+      // 5b. Self-heal keys clobbered into non-UTF-8 bytes (LAZ-788). Such keys
+      // are unremovable through the normal delete path and otherwise re-trigger
+      // the state-corruption dialog on every launch. Do this before hydration so
+      // the renderer never sees them. Best-effort — never block startup on it.
+      try {
+        await healInvalidKeys(finalPersistor);
+      } catch (err) {
+        log("warn", "state heal failed", {
+          error: getErrorMessageOrDefault(err),
+        });
       }
 
       // 6. Initialize the IPC-based persistence system
@@ -1161,8 +1208,9 @@ class Application {
       return;
     }
 
-    if (args.download || args.install) {
-      this.mMainWindow.sendExternalURL(args.download || args.install, args.install !== undefined);
+    const url = args.download || args.install;
+    if (url) {
+      this.mMainWindow.sendExternalURL(url, args.install !== undefined);
     }
 
     if (args.installArchive) {

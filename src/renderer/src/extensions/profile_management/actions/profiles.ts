@@ -4,6 +4,7 @@ import * as reduxAct from "redux-act";
 import safeCreateAction from "../../../actions/safeCreateAction";
 import type { IExtensionApi } from "../../../types/IExtensionContext";
 import { batchDispatch } from "../../../util/util";
+import type { ModChangeReason } from "../../analytics/mixpanel/MixpanelEvents";
 import type { IProfile } from "../types/IProfile";
 
 /**
@@ -50,6 +51,14 @@ export interface IEnableOptions {
   installed?: boolean;
   allowAutoDeploy?: boolean;
   willBeReplaced?: boolean;
+
+  // why the mods are being enabled/disabled, for the mods_state_changed analytics event.
+  // Defaults to user_manual when unset. Programmatic callers should set it.
+  reason?: ModChangeReason;
+
+  // set by callers whose enable/disable is a mechanical step of another already-tracked
+  // operation (install completion, removal prep) so it doesn't emit a duplicate state-change.
+  skipStateChangeEvent?: boolean;
 }
 
 const setModsEnabled = (() => {
@@ -58,7 +67,7 @@ const setModsEnabled = (() => {
     modIds: string[],
     enabled: boolean,
     options: IEnableOptions,
-  ) => Bluebird<void>;
+  ) => Promise<void>;
 
   return (
     api: IExtensionApi,
@@ -97,7 +106,7 @@ const setModsEnabled = (() => {
       const willChange = modIdsIn.filter(
         (id) => (profile.modState?.[id]?.enabled ?? false) !== enableIn,
       );
-      return ppFunc(profileIdIn, willChange, enableIn, optionsIn).catch((err) => {
+      return Bluebird.resolve(ppFunc(profileIdIn, willChange, enableIn, optionsIn)).catch((err) => {
         api.showErrorNotification("Failed to enable/disable mod", err);
       });
     }

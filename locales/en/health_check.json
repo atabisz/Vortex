@@ -1,10 +1,34 @@
 {
+  "actions": {
+    "install_all": "1-click install all ({{count}})"
+  },
+  "divider": {
+    "and": "And",
+    "or": "Or"
+  },
+  "shared": {
+    "requires_files": "Requires {{ count }} additional mod file to be installed to work correctly:",
+    "requires_files_plural": "Requires {{ count }} additional mod files to be installed to work correctly:",
+    "requires_pick": "Requires {{ count }} additional mod file to be picked to work correctly:",
+    "requires_pick_plural": "Requires {{ count }} additional mod files to be picked to work correctly:",
+    "wrong_version_installed": "Requires installing a different version of this existing mod file to work correctly:",
+    "wrong_version_installed_plural": "Requires installing a different version of {{ count }} existing mod files to work correctly:",
+    "wrong_version_enabled": "Requires enabling a different version of this installed mod file to work correctly:",
+    "wrong_version_enabled_plural": "Requires enabling a different version of {{ count }} installed mod files to work correctly:",
+    "correct_version_uninstalled": "Requires installing this previously downloaded mod file to work correctly:",
+    "correct_version_uninstalled_plural": "Requires installing {{ count }} previously downloaded mod files to work correctly:"
+  },
   "listing": {
     "title": "Health Check",
     "subtitle": "Review your Loadout for any issues and learn how to resolve them if needed.",
+    "last_updated": "Last updated: {{time}}",
     "item": {
-      "title": "Additional mod may be required for: {{modName}}",
-      "description": "Missing mod: {{dependencyModName}}"
+      "title": "Additional mod file may be required for: {{modName}}",
+      "description": "Missing mod: {{dependencyModName}}",
+      "more_count": "+{{ count }} more",
+      "missing_for": "Missing required mod for: {{modName}}",
+      "missing_for_plural": "Missing required mods for: {{modName}}",
+      "or_join": "or"
     },
     "no_results_active": {
       "title": "Health check passed",
@@ -12,22 +36,55 @@
     },
     "no_results_hidden": {
       "title": "No hidden items"
+    },
+    "external_mod_install": "External mod install",
+    "install_one_click": "1-click install ({{count}})",
+    "install_uninstalled": "Install (downloaded)",
+    "pick_mod_install": "Pick mod install",
+    "premium_banner": {
+      "description": "Download requirements in 1-click. No page visits or waiting. <premiumLink>Go premium</premiumLink>"
     }
   },
   "detail": {
-    "title": "Health Check Suggestion",
-    "subtitle": "Suggestions may offer improvements to your experience.",
+    "title": {
+      "suggestion": "Suggestion",
+      "warning": "Warning",
+      "error": "Error"
+    },
+    "subtitle": {
+      "suggestion": "Changes that could improve your loadout.",
+      "warning": "Issues that may stop parts of your loadout from working.",
+      "error": "Issues will prevent your game from working. Fix before playing."
+    },
+    "was_this_helpful": {
+      "suggestion": "Was this suggestion helpful?",
+      "warning": "Was this warning helpful?",
+      "error": "Was this error helpful?"
+    },
     "item": {
-      "title": "Additional mod may be required for: {{modName}}",
-      "description": "Check <modLink>{{modName}} description</modLink> for details.",
-      "missing_mod": "Missing mod",
-      "author_note": "Author note",
-      "check_the_description": "Check the description before installing.",
-      "open_mod_page": "Open mod page",
+      "title": "Possible missing required mod for: {{modName}}",
+      "may_require_file": "May require this additional mod file to be installed to work correctly:",
+      "author_note": "Author note: {{note}}",
+      "mod_page_source_note": "This requirement was identified from the mod page rather than the file-level requirement system, so it may not be required for your specific configuration. <modLink>View the mod page to get full details</modLink>.",
       "open_external_mod_page": "Open external mod page",
-      "install_in_app": "Install in app",
+      "external_hosted_note": "This mod is hosted outside Nexus Mods. Check the description before installing.",
       "after_installing": "After installing, click Confirm install. We can’t automatically detect external mod installations.",
-      "confirm_install": "Confirm install"
+      "confirm_install": "Confirm install",
+      "missing_for": "Missing required mod for: <modLink>{{modName}}</modLink>",
+      "missing_for_plural": "Missing required mods for: <modLink>{{modName}}</modLink>",
+      "install_via_mod_page": "Install via mod page",
+      "install_one_click": "1-click install",
+      "downloading": "Downloading...",
+      "installing": "Installing...",
+      "pick_one": "Pick one of these",
+      "install_required": "Install required",
+      "different_version_required": "Different version install required",
+      "current_version": "Current version",
+      "required_version": "Required version:",
+      "enable_required": "Enable required version",
+      "view_in_mods": "View in Mods",
+      "enable_this_version": "Enable this version",
+      "install_uninstalled": "Install (downloaded)"
     },
     "feedback_modal": {
       "title": "Thanks for letting us know",
@@ -47,27 +104,32 @@
   "settings": {
     "title": "Health Check (Beta)",
     "description": "Detect issues with your mod list and suggest fixes. More checks are coming soon.",
-    "mod_requirements": "Missing mod requirements suggestions"
+    "mod_requirements": "Missing mod requirements suggestions",
+    "file_requirements": "Missing file requirements warnings"
   },
   "premium": {
-    "banner": {
-      "title": "Unlock 1-click installs with Premium.",
-      "subtitle": "Skip the website and install instantly.",
-      "button": "Unlock with Premium"
-    },
     "modal": {
-      "title": "Skip the website and install instantly.",
-      "description": "Downloading mods directly in Vortex requires Premium.",
+      "title": {
+        "single": "Skip the website and install instantly.",
+        "all": "Skip the website and install all requirements instantly."
+      },
+      "description": {
+        "single": "1-click in app installs are a Premium feature.\n\nFree users download through the website mod pages where ads help keep the platform running.",
+        "all": "1-click in app installs are a Premium feature.\n\nFree users download through the website mod pages where ads help keep the platform running."
+      },
       "benefits_title": "With Premium you get:",
       "benefits": {
-        "downloads": "Seamless in app mod downloads and updates",
+        "downloads": "1-click in app downloads and mod updates",
         "collections": "1-click collection installs",
         "speed": "Uncapped download speeds",
         "ad_free": "Ad-free for life, even if you cancel later"
       },
       "buttons": {
-        "download": "Download via website (free)",
-        "premium": "Unlock with Premium"
+        "primary": "Unlock 1-click installs",
+        "secondary": {
+          "single": "Go to mod page (free)",
+          "all": "Return and open mod pages"
+        }
       }
     }
   }

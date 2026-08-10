@@ -5,14 +5,38 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "build": "pnpm webpack --config ./webpack.config.cjs",
-    "typecheck": "pnpm tsc -p tsconfig.json",
-    "lint": "pnpm eslint --quiet --concurrency auto .",
-    "lint:verbose": "pnpm eslint --concurrency auto .",
-    "api": "pnpm rimraf ./lib && pnpm tsc -p tsconfig.api.json && pnpm api-extractor run --local"
+    "build": "pnpm exec webpack --config ./webpack.config.cjs",
+    "typecheck": "pnpm exec tsc -p tsconfig.json",
+    "lint": "pnpm exec eslint --quiet --concurrency auto .",
+    "lint:verbose": "pnpm exec eslint --concurrency auto .",
+    "api": "pnpm exec rimraf ./lib && pnpm exec tsc -p tsconfig.api.json && pnpm exec api-extractor run --local",
+    "test": "pnpm exec vitest run"
   },
   "nx": {
     "targets": {
+      "build": {
+        "outputs": [
+          "{workspaceRoot}/src/main/build/renderer.js",
+          "{workspaceRoot}/src/main/build/renderer.js.map",
+          "{workspaceRoot}/src/main/build/splash.js",
+          "{workspaceRoot}/src/main/build/splash.js.map"
+        ]
+      },
+      "watch": {
+        "cache": false,
+        "continuous": true,
+        "dependsOn": [
+          "^build",
+          {
+            "projects": "@vortex/main",
+            "target": "build"
+          }
+        ],
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "pnpm -F @vortex/renderer exec node ./dev.mjs"
+        }
+      },
       "api": {
         "dependsOn": [
           "^build"
@@ -24,12 +48,14 @@
           "{projectRoot}/api-extractor.json"
         ],
         "outputs": [
-          "{workspaceRoot}/packages/vortex-api/lib/api.d.ts"
+          "{workspaceRoot}/packages/vortex-api/lib/api.d.ts",
+          "{workspaceRoot}/etc/vortex.api.md"
         ]
       }
     }
   },
   "devDependencies": {
+    "@babel/core": "catalog:",
     "@babel/polyfill": "catalog:",
     "@babel/preset-env": "catalog:",
     "@babel/preset-react": "catalog:",
@@ -37,16 +63,21 @@
     "@babel/register": "catalog:",
     "@electron/remote": "catalog:",
     "@headlessui/react": "catalog:",
+    "@hot-updater/bsdiff": "catalog:",
     "@mdi/js": "catalog:",
     "@microsoft/api-extractor": "catalog:",
     "@msgpack/msgpack": "catalog:",
     "@nexusmods/adaptor-api": "workspace:*",
+    "@nexusmods/file-dependency-resolver": "workspace:*",
+    "@nexusmods/fomod-installer-ipc": "catalog:",
+    "@nexusmods/fomod-installer-native": "catalog:",
     "@nexusmods/nexus-api": "catalog:",
     "@opentelemetry/api": "catalog:",
     "@opentelemetry/context-zone": "catalog:",
     "@opentelemetry/resources": "catalog:",
     "@opentelemetry/sdk-trace-base": "catalog:",
     "@opentelemetry/semantic-conventions": "catalog:",
+    "@pmmmwh/react-refresh-webpack-plugin": "catalog:",
     "@tailwindcss/cli": "catalog:",
     "@testing-library/dom": "catalog:",
     "@testing-library/jest-dom": "catalog:",
@@ -65,6 +96,7 @@
     "@types/fs-extra": "catalog:",
     "@types/graphlib": "catalog:",
     "@types/json-socket": "catalog:",
+    "@types/jsonwebtoken": "catalog:",
     "@types/lodash": "catalog:",
     "@types/node-7z": "catalog:",
     "@types/numeral": "catalog:",
@@ -93,8 +125,10 @@
     "@types/ws": "catalog:",
     "@types/xml2js": "catalog:",
     "@vitejs/plugin-react": "catalog:",
+    "@vortex/nexus-api-v3": "workspace:*",
     "@vortex/shared": "workspace:*",
     "@welldone-software/why-did-you-render": "catalog:",
+    "babel-loader": "catalog:",
     "bbcode-to-react": "catalog:",
     "big.js": "catalog:",
     "bluebird": "catalog:",
@@ -103,6 +137,7 @@
     "commander": "catalog:",
     "content-disposition": "catalog:",
     "content-type": "catalog:",
+    "crc-32": "catalog:",
     "csstype": "catalog:",
     "d3": "catalog:",
     "date-fns": "catalog:",
@@ -118,13 +153,12 @@
     "encoding-down": "catalog:",
     "exe-version": "workspace:*",
     "feedparser": "catalog:",
-    "@nexusmods/fomod-installer-ipc": "catalog:",
-    "@nexusmods/fomod-installer-native": "catalog:",
     "fs-extra": "catalog:",
     "fuzzball": "catalog:",
     "glob": "catalog:",
     "graphlib": "catalog:",
     "happy-dom": "catalog:",
+    "icon-extract": "workspace:*",
     "i18next": "catalog:",
     "i18next-fs-backend": "catalog:",
     "iconv-lite": "catalog:",
@@ -142,6 +176,7 @@
     "node-7z": "catalog:",
     "normalize-url": "catalog:",
     "numeral": "catalog:",
+    "p-queue": "catalog:",
     "packery": "catalog:",
     "permissions": "catalog:",
     "prop-types": "catalog:",
@@ -159,6 +194,7 @@
     "react-markdown": "catalog:",
     "react-overlays": "catalog:",
     "react-redux": "catalog:",
+    "react-refresh": "catalog:",
     "react-resize-detector": "catalog:",
     "react-select": "catalog:",
     "react-sortable-tree": "catalog:",
@@ -192,5 +228,8 @@
     "xml2js": "catalog:",
     "xxhash-addon": "catalog:",
     "zod": "catalog:"
+  },
+  "dependencies": {
+    "@cyclonedx/cyclonedx-library": "catalog:"
   }
 }

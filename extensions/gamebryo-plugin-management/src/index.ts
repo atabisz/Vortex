@@ -3,11 +3,11 @@ import { stat as fsStat } from "fs/promises";
 import * as path from "path";
 import * as nodeUtil from "util";
 
+import { actions, fs, log, selectors, types, util } from "@nexusmods/vortex-api";
 import Promise from "bluebird";
 import I18next from "i18next";
 import * as Redux from "redux";
 import { createSelector } from "reselect";
-import { actions, fs, log, selectors, types, util } from "vortex-api";
 
 /* eslint-disable */
 import { setPluginEnabled, setPluginOrder, updatePluginOrder } from "./actions/loadOrder";
@@ -936,7 +936,7 @@ function startSync(api: types.IExtensionApi): Promise<void> {
           .then(() => true)
           .catch(() => false)
           .then((exists) => {
-            const pluginId = fileName.toLowerCase();
+            const pluginId = toPluginId(fileName);
             const state = store.getState();
             const known =
               state.loadOrder[pluginId] !== undefined &&
@@ -1702,6 +1702,20 @@ function notifyMultiplePlugins(
   });
 }
 
+// Backstop for how long onDidDeploy waits for a plugin-details refresh before giving up. This runs
+// inside the awaited 'did-deploy' event, so it must never wait forever (see usage). 30s clears the
+// legitimate worst case (full-load-order LOOT operations on large modlists run ~20s+; sortPlugins
+// alone has been seen at 23s) and matches the health-check timeout, so it only trips on a genuine
+// stall (e.g. LOOT being torn down by a concurrent game switch never invoking the callback).
+const PLUGIN_DETAILS_TIMEOUT = 30000;
+
+// Whether the collections install flow has flagged this profile as still owing a plugin sort (set
+// when a collection install begins, cleared once a sort succeeds). Lives in the cross-extension
+// transactions slice; read here and by the profile-did-change drain.
+function hasPendingPluginSort(state: types.IState, profileId: string): boolean {
+  return Object.keys(state.persistent.transactions.pendingPluginSort?.[profileId] ?? {}).length > 0;
+}
+
 function onDidDeploy(api: types.IExtensionApi, profileId: string): Promise<void> {
   const state: types.IState = api.getState();
   const profile = state.persistent.profiles[profileId];
@@ -1713,7 +1727,29 @@ function onDidDeploy(api: types.IExtensionApi, profileId: string): Promise<void>
     ? updatePluginList(api.store, profile.modState, profile.gameId)
         .then(
           () =>
-            new Promise((resolve, reject) => {
+            new Promise<void>((resolve) => {
+              // This runs inside the awaited 'did-deploy' event, so it must never wait forever: if
+              // it did, the deployment's finally could not clear the "deployment" mod-activity and
+              // every later plugin update/sort would be deferred indefinitely.
+              let settled = false;
+              let timeout: ReturnType<typeof setTimeout>;
+              const done = () => {
+                if (settled) {
+                  return;
+                }
+                settled = true;
+                clearTimeout(timeout);
+                api.events.removeListener("profile-will-change", done);
+                api.events.removeListener("gamemode-activated", done);
+                resolve();
+              };
+              // Take the cue from a profile/game switch: LOOT for this game is being torn down, so
+              // the plugin-details callback may never fire. Stop waiting and let the deployment
+              // finish; the incoming game's activation (and the durable sort marker) re-runs the
+              // sort. The timeout is only a last-resort backstop for a stall with no switch.
+              api.events.once("profile-will-change", done);
+              api.events.once("gamemode-activated", done);
+              timeout = setTimeout(done, PLUGIN_DETAILS_TIMEOUT);
               const pluginList = util.getSafe(
                 api.getState(),
                 ["session", "plugins", "pluginList"],
@@ -1723,12 +1759,20 @@ function onDidDeploy(api: types.IExtensionApi, profileId: string): Promise<void>
                 "plugin-details",
                 profile.gameId,
                 Object.keys(pluginList ?? {}),
-                resolve,
+                done,
               );
             }),
         )
         .then(() => util.delay(500)) // wait a bit for the plugin details to be updated
-        .then(() => api.events.emit("autosort-plugins", false))
+        .then(() => {
+          // A collection install that hasn't been sorted yet leaves a per-profile "sort owed"
+          // marker. Such a sort must run even when the user disabled auto-sort (the collection
+          // would otherwise be left unsorted/unenabled), so force it; a normal deploy with no
+          // marker honours the auto-sort setting. doSort clears the marker on success. Read fresh
+          // state: the marker may have changed during the (bounded) wait above.
+          const force = hasPendingPluginSort(api.getState(), profileId);
+          return api.events.emit("autosort-plugins", force);
+        })
         .then(() => Promise.resolve())
     : Promise.resolve();
 }
@@ -1901,19 +1945,27 @@ function init(context: IExtensionContextExt) {
         );
 
         // this handles the case that the content of a profile changes
-        context.api.onAsync("did-deploy", (profileId, deployment, progressCB, deployOptions) => {
-          deploying = false;
-          if (pluginsChangedQueued) {
-            pluginsChangedQueued = false;
-            context.api.events.emit("trigger-test-run", "plugins-changed", 500);
-          }
-          const activeCollection = selectors.getCollectionActiveSession(context.api.getState());
-          if (activeCollection || deployOptions?.isCollectionPostprocessCall) {
-            // handled in 'collection-postprocess-complete' event
-            return Promise.resolve();
-          }
-          return onDidDeploy(context.api, profileId);
-        });
+        context.api.onAsync(
+          "did-deploy",
+          (
+            profileId: string,
+            deployment,
+            progressCB,
+            deployOptions?: { isCollectionPostprocessCall?: boolean },
+          ) => {
+            deploying = false;
+            if (pluginsChangedQueued) {
+              pluginsChangedQueued = false;
+              context.api.events.emit("trigger-test-run", "plugins-changed", 500);
+            }
+            const activeCollection = selectors.getCollectionActiveSession(context.api.getState());
+            if (activeCollection || deployOptions?.isCollectionPostprocessCall) {
+              // handled in 'collection-postprocess-complete' event
+              return Promise.resolve();
+            }
+            return onDidDeploy(context.api, profileId);
+          },
+        );
 
         context.api.onAsync("did-purge", (profileId: string) => {
           return onDidDeploy(context.api, profileId);
@@ -2085,6 +2137,23 @@ function init(context: IExtensionContextExt) {
               .catch((err) => {
                 context.api.showErrorNotification("Failed to change profile", err);
               });
+
+            // Durable recovery for an interrupted collection install. The collections extension
+            // sets a per-profile "sort owed" marker when a collection install begins and clears it
+            // only once a plugin sort actually succeeds (see autosort doSort). If a previous session
+            // crashed/quit before the post-install sort landed, the marker is still set when that
+            // profile next becomes active (this event also fires on startup). A startup deploy is
+            // skipped when nothing changed, so request a deployment explicitly; its 'did-deploy'
+            // handler refreshes the plugin list and sorts (no collection session is active here, so
+            // it is not suppressed) and clears the marker. Deploy-first means we never sort against
+            // an undeployed Data folder.
+            if (hasPendingPluginSort(store.getState(), newProfileId)) {
+              log("info", "draining pending collection plugin sort", {
+                profileId: newProfileId,
+                gameId: newProfile.gameId,
+              });
+              context.api.events.emit("deploy-mods", () => undefined);
+            }
           }
         });
 

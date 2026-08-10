@@ -1,9 +1,9 @@
 // IPC handler for forked child processes requesting Electron app info
 if (process.send) {
   process.on("message", (msg: unknown) => {
-    if (typeof msg === "object" && "type" in msg && msg.type === "get-app-info") {
+    if (typeof msg === "object" && msg && "type" in msg && msg.type === "get-app-info") {
       // You can expand this object with more info as needed
-      process.send({
+      process.send?.({
         type: "app-info",
         appPath: app.getAppPath(),
         userData: app.getPath("userData"),
@@ -19,13 +19,13 @@ if (process.send) {
 }
 
 import child_process from "node:child_process";
-import { appendFileSync } from "node:fs";
+import { appendFileSync, mkdirSync } from "node:fs";
 import { stat } from "node:fs/promises";
 import path from "node:path";
 import os from "os";
 
 import { DEBUG_PORT, getErrorMessageOrDefault, HTTP_HEADER_SIZE } from "@vortex/shared";
-import { app, dialog } from "electron";
+import { app, crashReporter, dialog } from "electron";
 import i18next from "i18next";
 import * as sourceMapSupport from "source-map-support";
 import winapi from "winapi-bindings";
@@ -47,7 +47,13 @@ import { parseCommandline } from "./cli";
 import { init as initDownloadIpc } from "./downloading/ipc";
 import { DownloadManager } from "./downloading/manager";
 import { terminateAsync } from "./errorHandling";
-import { reportCrash, errorToReportableError, sendReportFile } from "./errorReporting";
+import {
+  reportCrash,
+  errorToReportableError,
+  sendPendingCrashReport,
+  sendPendingNativeCrashReport,
+  sendReportFile,
+} from "./errorReporting";
 import { getVortexPath } from "./getVortexPath";
 import { init as initIpcHandlers } from "./ipcHandlers";
 import { log } from "./logging";
@@ -60,7 +66,7 @@ process.env["UV_THREADPOOL_SIZE"] = (os.cpus().length * 2).toString();
 const earlyErrHandler = (error: Error) => {
   // Show the dialog first — dialog.showErrorBox is synchronous in Electron
   // and blocks until the user dismisses it, giving the report time to send.
-  if (error.stack.includes("[as dlopen]")) {
+  if ("stack" in error && typeof error.stack === "string" && error.stack.includes("[as dlopen]")) {
     dialog.showErrorBox(
       "Vortex failed to start up",
       `An unexpected error occurred while Vortex was initialising:\n\n${error.message}\n\n` +
@@ -135,8 +141,11 @@ if (process.platform === "win32" && process.env.NODE_ENV !== "development") {
     );
   };
 
-  process.env["PATH_ORIG"] = process.env["PATH"].slice(0);
-  process.env["PATH"] = process.env["PATH"].split(";").filter(pathFilter).join(";");
+  const path = process.env.PATH;
+  if (path) {
+    process.env["PATH_ORIG"] = path.slice(0);
+    process.env["PATH"] = path.split(";").filter(pathFilter).join(";");
+  }
 }
 
 try {
@@ -258,6 +267,24 @@ async function main(): Promise<void> {
     return;
   }
 
+  // Start Crashpad as early as possible so even startup crashes produce a
+  // dump; sendPendingNativeCrashReport picks it up on the next start. Must
+  // run before the sweeps below — they read the crashDumps path.
+  const dumpsPath = path.join(app.getPath("userData"), "temp", "dumps");
+  try {
+    mkdirSync(dumpsPath, { recursive: true });
+  } catch {
+    // ignored
+  }
+  app.setPath("crashDumps", dumpsPath);
+  crashReporter.start({ uploadToServer: false });
+
+  // Reports left by previous sessions, sent as early as possible — this
+  // startup may crash before getting any further. Not awaited so
+  // they don't delay startup.
+  void sendPendingCrashReport();
+  void sendPendingNativeCrashReport();
+
   const NODE_OPTIONS = process.env.NODE_OPTIONS || "";
   process.env.NODE_OPTIONS =
     NODE_OPTIONS + ` --max-http-header-size=${HTTP_HEADER_SIZE}` + " --no-force-async-hooks-checks";
@@ -280,16 +307,17 @@ async function main(): Promise<void> {
   process.on("uncaughtException", handleError);
   process.on("unhandledRejection", handleError);
 
-  const downloadManager = new DownloadManager({ concurrency: 3 });
+  const downloadManager = new DownloadManager({ concurrency: 1 });
 
   initIpcHandlers();
   initDownloadIpc(downloadManager);
   initAdaptorHost().catch((err: unknown) => {
     log("warn", "Failed to initialize adaptor host", {
-      error: err instanceof Error ? err.message : String(err as string),
+      error: err instanceof Error ? err.message : "unknown error",
     });
   });
   initTelemetryIpcHandler();
+
   StylesheetCompiler.init();
 
   if (process.env.VORTEX_E2E === "1") {
@@ -321,11 +349,11 @@ async function main(): Promise<void> {
     app.commandLine.appendSwitch("remote-debugging-port", port);
   }
 
-  let fixedT = i18next.getFixedT("en");
+  const fixedT = i18next.getFixedT("en");
   try {
     fixedT("dummy");
   } catch {
-    fixedT = (input: unknown) => input;
+    /** ignored */
   }
 
   new Application(mainArgs);

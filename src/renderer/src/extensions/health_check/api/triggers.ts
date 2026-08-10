@@ -4,8 +4,8 @@ import { log } from "../../../logging";
 import type { IExtensionApi } from "../../../types/IExtensionContext";
 import type { IHealthCheckResult } from "../../../types/IHealthCheck";
 import { HealthCheckTrigger } from "../../../types/IHealthCheck";
+import { hasCollectionActiveSession } from "../../../util/collectionInstallSessionSelectors";
 import Debouncer from "../../../util/Debouncer";
-import { hasCollectionActiveSession } from "../../collections_integration/selectors";
 import type { IHealthCheckApi } from "../types";
 
 /**
@@ -68,13 +68,6 @@ export function setupAutomaticTriggers(api: IExtensionApi, healthCheckApi: IHeal
     api.events.on("collection-postprocess-complete", () => {
       log("debug", "Collection post-processing complete, triggering health checks");
       void triggerHealthChecks(api, healthCheckApi, HealthCheckTrigger.ModsChanged);
-    });
-
-    api.onStateChange?.(["session", "healthCheck", "lastFullRun"], (lastFullRun) => {
-      log("debug", "Triggering requirements change health checks", {
-        lastFullRun,
-      });
-      void triggerHealthChecks(api, healthCheckApi, HealthCheckTrigger.ResultsChanged);
     });
 
     log("debug", "Automatic triggers setup complete");

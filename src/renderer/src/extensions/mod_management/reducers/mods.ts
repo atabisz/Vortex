@@ -1,7 +1,9 @@
+import { isClobberedKeySegment } from "@vortex/shared/state";
 import * as _ from "lodash";
 import type { IRule } from "modmeta-db";
 
 import type { IReducerSpec } from "../../../types/IExtensionContext";
+import { VerifierDropParent } from "../../../types/IExtensionContext";
 import { log } from "../../../util/log";
 import { removeValue } from "../../../util/storeHelper";
 import {
@@ -15,6 +17,14 @@ import {
 import * as actions from "../actions/mods";
 import type { IMod } from "../types/IMod";
 import { referenceEqual } from "../util/testModReference";
+
+// A modId is unusable as a staging-folder name if it was clobbered by a bad
+// state write: the installationPath self-heal uses this to tell a recoverable
+// key from rubbish. Shares the "clobbered key" predicate with the main-process
+// heal (healInvalidKeys) so both agree on what's recoverable.
+function isUnusableModId(modId: string): boolean {
+  return isClobberedKeySegment(modId);
+}
 
 function reduceRule(input: IRule): IRule {
   if (input === undefined) {
@@ -114,7 +124,6 @@ export const modsReducer: IReducerSpec = {
         return state;
       }
       const filteredRef = _.omitBy(rule.reference, _.isUndefined);
-      let idx = -1;
 
       // mutually exclusive types replace each other, so if we add a "before"
       // rule we first remove any existing "after" rule with the same reference
@@ -127,7 +136,7 @@ export const modsReducer: IReducerSpec = {
         group = [rule.type];
       }
 
-      idx = getSafe(state, [gameId, modId, "rules"], []).findIndex((iterRule: IRule) => {
+      const idx = getSafe(state, [gameId, modId, "rules"], []).findIndex((iterRule: IRule) => {
         const typeMatch = group.indexOf(rule.type) !== -1;
         const filteredIter = _.omitBy(iterRule.reference, _.isUndefined);
         return typeMatch && referenceEqual(filteredRef, filteredIter);
@@ -213,12 +222,31 @@ export const modsReducer: IReducerSpec = {
           elements: {
             installationPath: {
               type: "string",
-              description: () => "Mod with invalid attribute will be reset.",
+              description: () =>
+                "Mod with invalid installationPath will be self-healed from its id.",
               noUndefined: true,
               noNull: true,
               noEmpty: true,
               required: true,
-              deleteBroken: "parent",
+              // Self-heal instead of discarding the whole mod (GH#23363/#23355).
+              // installationPath is the staging-folder name, which by convention
+              // equals the modId - and the modId is this record's map key, still
+              // present even when the installationPath leaf was lost to a partial
+              // write. Recovering it preserves the mod's archiveId, attributes and
+              // rules instead of orphaning the staging folder and splitting the
+              // mod from its download. Only drop the record if the modId itself is
+              // unusable - i.e. missing/empty, or corrupted by an external state
+              // clobber into a name that can't name a real staging folder (a torn
+              // write / bit-rot leaves U+FFFD replacement chars or control chars,
+              // producing a phantom that would otherwise nag "Mods changed on
+              // disk" every launch.
+              repair: (_input, _def, context) => {
+                const modId = context?.parentKey;
+                if (typeof modId === "string" && modId.length > 0 && !isUnusableModId(modId)) {
+                  return modId;
+                }
+                throw new VerifierDropParent();
+              },
             },
             attributes: {
               type: "object",

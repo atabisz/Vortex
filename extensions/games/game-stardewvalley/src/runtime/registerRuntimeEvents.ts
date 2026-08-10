@@ -1,12 +1,12 @@
 import path from "path";
 
+import { actions, log, selectors, util } from "@nexusmods/vortex-api";
+import type { types } from "@nexusmods/vortex-api";
 import { getErrorMessageOrDefault } from "@vortex/shared";
 /**
  * Registers runtime event handlers used by the Stardew Valley extension.
  */
 import type { IQuery, IServer } from "modmeta-db";
-import { actions, log, selectors, util } from "vortex-api";
-import type { types } from "vortex-api";
 
 import { GAME_ID } from "../common";
 import { updateConflictInfo } from "../compatibility/updateConflictInfo";
@@ -61,7 +61,7 @@ export function registerRuntimeEvents(context: types.IExtensionContext) {
         onWillEnableMods(context.api, profileId, modIds, enabled, options) as any,
     );
 
-    context.api.onAsync("did-deploy", async (profileId) => {
+    context.api.onAsync("did-deploy", async (profileId: string) => {
       const state = context.api.getState();
       const profile = selectors.profileById(state, profileId);
       if (profile?.gameId !== GAME_ID) {
@@ -79,7 +79,7 @@ export function registerRuntimeEvents(context: types.IExtensionContext) {
       }
     });
 
-    context.api.onAsync("did-purge", async (profileId) => {
+    context.api.onAsync("did-purge", async (profileId: string) => {
       const state = context.api.getState();
       const profile = selectors.profileById(state, profileId);
       if (profile?.gameId !== GAME_ID) {

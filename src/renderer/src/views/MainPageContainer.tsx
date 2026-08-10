@@ -20,7 +20,7 @@ import ExtensionGate from "../controls/ExtensionGate";
 import Icon from "../controls/Icon";
 import type { IMainPage } from "../types/IMainPage";
 import { getApplication } from "../util/application";
-import { didIgnoreError, isOutdated } from "../util/errorHandling";
+import { didIgnoreError, isOutdated, reportRenderError } from "../util/errorHandling";
 import { genHash } from "../util/genHash";
 import { log } from "../util/log";
 
@@ -56,6 +56,7 @@ class PageErrorBoundary extends Component<IErrorBoundaryProps, IErrorBoundarySta
   }
 
   public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    reportRenderError(error, errorInfo);
     this.setState({ error, errorInfo });
   }
 
@@ -157,19 +158,29 @@ export const MainPageContainer: React.FC<IBaseProps> = ({ page, active, secondar
   let content: JSX.Element;
   try {
     const props = page.propsFunc();
-    content = (
-      <PageHeaderProvider value={headerContextValue}>
-        <div className={classes.join(" ")} id={`page-${page.id}`}>
-          <div className="mainpage-header-container" ref={handleHeaderRef} />
+    if (page.newLayout) {
+      // Redesigned pages render their own Page, so we skip the legacy
+      // `.main-page` / header / body-container chrome to keep the subtree flat.
+      content = (
+        <ExtensionGate id={page.id}>
+          <page.component active={active} pageId={page.id} secondary={secondary} {...props} />
+        </ExtensionGate>
+      );
+    } else {
+      content = (
+        <PageHeaderProvider value={headerContextValue}>
+          <div className={classes.join(" ")} id={`page-${page.id}`}>
+            <div className="mainpage-header-container" ref={handleHeaderRef} />
 
-          <div className="mainpage-body-container">
-            <ExtensionGate id={page.id}>
-              <page.component active={active} secondary={secondary} {...props} />
-            </ExtensionGate>
+            <div className="mainpage-body-container">
+              <ExtensionGate id={page.id}>
+                <page.component active={active} secondary={secondary} {...props} />
+              </ExtensionGate>
+            </div>
           </div>
-        </div>
-      </PageHeaderProvider>
-    );
+        </PageHeaderProvider>
+      );
+    }
   } catch (err) {
     log("warn", "error rendering extension main page", err);
     content = (

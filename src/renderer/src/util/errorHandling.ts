@@ -7,7 +7,6 @@ import { isErrorOfType } from "@vortex/shared/errors";
 import { recordErrorOnSpan } from "@vortex/shared/telemetry";
 import type PromiseBB from "bluebird";
 import type { BrowserWindow } from "electron";
-import { ipcRenderer } from "electron";
 import * as fs from "fs-extra";
 import I18next from "i18next";
 import * as semver from "semver";
@@ -18,10 +17,11 @@ import { isTelemetryEnabled } from "../telemetry/selectors";
 import type { IErrorOptions, IExtensionApi, IState } from "../types/api";
 import type { IError } from "../types/IError";
 import { getApplication } from "./application";
-import { COMPANY_ID } from "./constants";
 import { UserCanceled } from "./CustomErrors";
+import { genHash } from "./genHash";
 import getVortexPath from "./getVortexPath";
 import { fallbackTFunc } from "./i18n";
+import { isContributed } from "./isContributed";
 import { log } from "./log";
 import { flatten, getAllPropertyNames, spawnSelf } from "./util";
 
@@ -49,6 +49,7 @@ export function createErrorReport(
 ) {
   const userData = getVortexPath("userData");
   const reportPath = path.join(userData, "crashinfo.json");
+  const consentGiven = state !== undefined && isTelemetryEnabled(state);
   fs.writeFileSync(
     reportPath,
     JSON.stringify({
@@ -58,11 +59,10 @@ export function createErrorReport(
       reportProcess: process.type,
       sourceProcess,
       userData,
+      consentGiven,
     }),
   );
-  if (state !== undefined && isTelemetryEnabled(state)) {
-    spawnSelf(["--report", reportPath]);
-  }
+  spawnSelf(["--report", reportPath]);
 }
 
 let outdated: boolean = false;
@@ -100,13 +100,6 @@ export function didIgnoreError(): boolean {
 export function disableErrorReport() {
   log("info", "user ignored error, disabling reporting");
   errorIgnored = true;
-}
-
-if (ipcRenderer !== undefined) {
-  ipcRenderer.on("did-ignore-error", () => {
-    log("info", "user ignored error, disabling reporting");
-    errorIgnored = true;
-  });
 }
 
 let defaultWindow: BrowserWindow | null = null;
@@ -205,6 +198,24 @@ async function showTerminateError(
 }
 
 /**
+ * Decides whether a terminating error may be reported. An explicit caller
+ * value wins; otherwise an error that opts out isn't reportable, and a crash
+ * from a first-party extension is reportable while a community one is not.
+ */
+export function resolveAllowReport(error: IError, allowReport?: boolean): boolean | undefined {
+  if (allowReport !== undefined) {
+    return allowReport;
+  }
+  if (error.allowReport === false) {
+    return false;
+  }
+  if (error.extension !== undefined) {
+    return !isContributed(error.extension);
+  }
+  return undefined;
+}
+
+/**
  * display an error message and quit the application
  * on confirmation.
  * Use this whenever the application state is unknown and thus
@@ -219,13 +230,7 @@ export function terminate(
   allowReport?: boolean,
   source?: string,
 ) {
-  if (allowReport === undefined && error.allowReport === false) {
-    allowReport = false;
-  }
-
-  if (allowReport === undefined && error.extension !== undefined) {
-    allowReport = error.extension === COMPANY_ID;
-  }
+  allowReport = resolveAllowReport(error, allowReport);
 
   log("error", "unrecoverable error", { error, process: process.type });
 
@@ -559,4 +564,34 @@ export function recordErrorSpan(
       },
     );
   }
+}
+
+// Hashes of render errors already reported via reportRenderError. React error
+// boundaries re-invoke componentDidCatch on every re-render of a failing tree,
+// so we dedupe to avoid flooding the log and telemetry with identical entries.
+const reportedRenderErrors = new Set<string>();
+
+/**
+ * Record a render-phase error caught by a React error boundary. Writes the
+ * error and its component stack to vortex.log (so user-supplied logs identify
+ * the failing component) and emits an OTel error span (so render crashes show
+ * up in Datadog). Deduped by error hash to survive boundary re-catches.
+ */
+export function reportRenderError(
+  error: Error,
+  errorInfo: { componentStack?: string | null },
+): void {
+  const hash = genHash(error);
+  if (reportedRenderErrors.has(hash)) {
+    return;
+  }
+  reportedRenderErrors.add(hash);
+
+  const componentStack = errorInfo?.componentStack ?? undefined;
+  log("error", "render failure", { error: error.stack, componentStack });
+  recordErrorSpan(
+    "Component render failure",
+    error,
+    componentStack ? { componentStack } : undefined,
+  );
 }

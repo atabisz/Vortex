@@ -1,10 +1,10 @@
 import type { IMethodMessage } from "@nexusmods/adaptor-api";
 import {
-  getErrorMessage,
   extractErrorFields,
   serializeCause,
   rehydrateSerializedError,
   MAX_CAUSE_DEPTH,
+  getErrorMessageOrDefault,
 } from "@vortex/shared";
 import type { SerializedError } from "@vortex/shared/ipc";
 
@@ -35,7 +35,7 @@ interface ErrorMessage {
 type RpcMessage = CallMessage | ResultMessage | ErrorMessage;
 
 function serialiseError(correlationId: string, err: unknown): ErrorMessage {
-  const message = getErrorMessage(err);
+  const message = getErrorMessageOrDefault(err);
   const base: ErrorMessage = { type: "error", correlationId, message };
   if (!(err instanceof Error)) return base;
 

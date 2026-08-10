@@ -5,14 +5,14 @@ import { defineConfig } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-export const baseConfig = (tsconfigRootDir) =>
+export const baseConfig = (tsconfigRootDir, files) =>
   defineConfig([
     {
       ignores: ["node_modules/**", "dist/**", "out/**", "temp/**", "coverage/**", "build/**"],
     },
 
     {
-      files: ["src/**/*.{ts,tsx}"],
+      files: files ?? ["src/**/*.{ts,tsx}"],
       extends: [
         eslint.configs.recommended,
         tseslint.configs.recommendedTypeChecked,
@@ -29,7 +29,6 @@ export const baseConfig = (tsconfigRootDir) =>
       },
       rules: {
         // Perfectionist
-        "perfectionist/sort-imports": "warn",
         "perfectionist/sort-exports": "warn",
 
         // Typescript
@@ -58,7 +57,6 @@ export const baseConfig = (tsconfigRootDir) =>
       plugins: { perfectionist },
       rules: {
         // Perfectionist
-        "perfectionist/sort-imports": "warn",
         "perfectionist/sort-exports": "warn",
       },
     },

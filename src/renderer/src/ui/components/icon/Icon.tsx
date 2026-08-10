@@ -1,10 +1,10 @@
 import React, { type SVGAttributes } from "react";
 
-import { joinClasses } from "../../utils/joinClasses";
+import { joinClasses } from "@/ui/utils/joinClasses";
 
-export type IconSize = "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "none";
+export type IIconSize = "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "none";
 
-const sizeMap: { [key in IconSize]: string | undefined } = {
+const sizeMap: { [key in IIconSize]: string | undefined } = {
   none: undefined,
   xs: "size-3",
   sm: "size-4",
@@ -22,16 +22,16 @@ export const Icon = ({
   ...props
 }: Omit<SVGAttributes<SVGSVGElement>, "size" | "path"> & {
   path: string;
-  size?: IconSize;
+  size?: IIconSize;
   title?: string;
 }) => (
   <svg
-    className={joinClasses([sizeMap[size], className])}
+    className={joinClasses(["shrink-0", sizeMap[size], className])}
     role={title ? "img" : "presentation"}
     viewBox="0 0 24 24"
     {...props}
   >
-    {title && <title>{title}</title>}
+    {!!title && <title>{title}</title>}
 
     <path d={path} fill="currentColor" />
   </svg>

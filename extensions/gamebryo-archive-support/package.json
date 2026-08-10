@@ -6,6 +6,7 @@
     "_build": "node build.mjs && pnpm extractInfo",
     "build": "pnpm run _build && node ../copy-extension.mjs",
     "typecheck": "pnpm tsc",
+    "test": "pnpm exec vitest run",
     "dist": "pnpm run _build && node ../copy-extension.mjs"
   },
   "author": "Black Tree Gaming Ltd.",
@@ -23,7 +24,7 @@
     "lz4js": "^0.2.0",
     "rimraf": "catalog:",
     "tmp": "catalog:",
-    "vortex-api": "workspace:*"
+    "@nexusmods/vortex-api": "workspace:*"
   },
   "nx": {
     "tags": [

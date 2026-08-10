@@ -5,16 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock modules before importing elevated.ts
 vi.mock("tmp", () => ({
-  file: (
-    _opts: Record<string, unknown>,
-    callback: (err: Error | null, path: string, fd: number, cleanup: () => void) => void,
-  ) => {
-    if (mockTmpFileReportError) {
-      return callback(new Error(mockTmpFileReportError), "", 0, () => undefined);
-    }
-    mockTmpFileCalls += 1;
-    callback(null, "/tmp/xyz", 42, () => undefined);
-  },
+  file: vi.fn(),
 }));
 
 vi.mock("fs", () => ({

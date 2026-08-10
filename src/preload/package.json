@@ -7,22 +7,21 @@
   "scripts": {
     "build": "node ./build.mjs",
     "typecheck": "pnpm tsc",
-    "lint": "pnpm eslint --quiet --concurrency auto .",
-    "lint:verbose": "pnpm eslint --concurrency auto ."
+    "lint": "pnpm exec oxlint --quiet",
+    "lint:verbose": "pnpm exec oxlint"
   },
   "nx": {
     "targets": {
       "build": {
         "outputs": [
-          "{workspaceRoot}/src/main/build/preload.*"
+          "{workspaceRoot}/src/main/build/preload.cjs",
+          "{workspaceRoot}/src/main/build/preload.cjs.map"
         ]
       }
     }
   },
   "devDependencies": {
+    "@vortex/shared": "workspace:*",
     "electron": "catalog:"
-  },
-  "dependencies": {
-    "@vortex/shared": "workspace:*"
   }
 }

@@ -6,20 +6,11 @@ import { getVortexPath } from "./getVortexPath";
 import { log } from "./logging";
 
 /**
- * Manages the tray icon and its interactions.
- * With the toasts system in place, the tray icon interactions are pretty much
- * useless.
- *
- * The extension manager refactor work also makes this class obsolete as we're
- * not forwarding the IExtensionApi anymore.
- *
- * However, we might want to enhance the tray icon functionality in the future, so
- * we'll keep this class for now.
- *
- * @deprecated
+ * Manages the system tray icon: clicking it toggles the main window
+ * visibility and its context menu offers quitting the app.
  */
 class TrayIcon {
-  private mTrayIcon: Electron.Tray;
+  private mTrayIcon: Tray | undefined;
   private mImagePath: string;
   private mInitialized: boolean = false;
 
@@ -55,7 +46,7 @@ class TrayIcon {
   }
 
   public setMainWindow(window: BrowserWindow) {
-    if (this.mTrayIcon.isDestroyed()) {
+    if (this.mTrayIcon === undefined || this.mTrayIcon.isDestroyed()) {
       return;
     }
     this.mTrayIcon.on("click", () => {
@@ -78,7 +69,6 @@ class TrayIcon {
 
     this.mTrayIcon.setContextMenu(
       Menu.buildFromTemplate([
-        { label: "Start Game", click: () => this.startGame() },
         {
           label: "Quit",
           click: () => {
@@ -91,22 +81,6 @@ class TrayIcon {
     );
 
     this.mInitialized = true;
-  }
-
-  private startGame() {}
-
-  private showNotification(title: string, content: string) {
-    const icon = path.join(getVortexPath("assets"), "images", "vortex.png");
-    if (!title || !content || this.mTrayIcon.isDestroyed()) {
-      return;
-    }
-    log("debug", "showing balloon", { title, content });
-    this.mTrayIcon.displayBalloon({
-      title,
-      content,
-      icon,
-      noSound: true,
-    });
   }
 }
 

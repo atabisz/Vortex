@@ -16,9 +16,12 @@ import type {
   TraceConfig,
   TraceCategoriesAndOptions,
 } from "./electron";
+import type { FeatureFlag } from "./flags";
+import type { FlagContext, FlagMetricsBucket } from "./ipc";
 import type {
   DiffOperation,
   AppInitMetadata,
+  HashAlgorithm,
   Serializable,
   UpdateStatus,
   VortexPaths,
@@ -98,8 +101,17 @@ export interface Api {
   /** Downloader APIs */
   downloader: DownloaderApi;
 
+  /** bsdiff binary patching APIs (run on a main-process worker_thread) */
+  bsdiff: BsdiffApi;
+
+  /** file hashing API (run on a main-process worker_thread) */
+  hash: HashApi;
+
   /** Diagnostic APIs */
   diag: Diag;
+
+  /** Feature flags API */
+  featureFlags: FeatureFlagsApi;
 }
 
 export interface Example {
@@ -113,16 +125,6 @@ export interface Shell {
 
   /** Opens the file using the default application for the file extension */
   openFile(filePath: string): void;
-
-  /** Register listener for shell.openExternal failure events from main process. */
-  onOpenUrlFailed(callback: (url: string) => void): void;
-}
-
-export interface Diag {
-  /** Synchronously append one line to vortex.log. Blocks until main has
-   *  flushed the line, so it survives the caller dying or main crashing in
-   *  the same message-loop tick. Sync IPC; reserve for fatal diagnostics. */
-  fatal(message: string): void;
 }
 
 export interface Diag {
@@ -365,6 +367,13 @@ export interface PersistApi {
   sendDiff(hive: PersistedHive, operations: DiffOperation[]): void;
 
   /**
+   * Synchronously send diff operations to main, blocking until they are queued.
+   * Used only on quit (from a beforeunload handler) so the final debounced batch
+   * is persisted before the renderer process is torn down (GH#23363).
+   */
+  sendDiffSync(hive: PersistedHive, operations: DiffOperation[]): void;
+
+  /**
    * Get all hydration data from main process at startup.
    * Returns persisted state for all hives.
    */
@@ -469,8 +478,11 @@ export interface DownloaderApi {
    * Enqueues a download. The caller must generate `collationId` and register
    * any resolve handler before calling this, so that the main-side resolve
    * callback cannot arrive before the handler is ready.
+   *
+   * Passing `downloadId` restores an existing download: the transfer starts from
+   * scratch under that id, replacing any previous attempt tracked for it.
    */
-  start(dest: string, collationId: number): Promise<{ downloadId: string }>;
+  start(dest: string, collationId: number, downloadId?: string): Promise<{ downloadId: string }>;
 
   /** Pauses an active download and returns a checkpoint for later resumption. */
   pause(downloadId: string): Promise<WireDownloadCheckpoint>;
@@ -487,12 +499,40 @@ export interface DownloaderApi {
   /** Returns the current state for multiple downloads in one call. Unknown IDs are omitted. */
   getStates(downloadIds: string[]): Promise<Record<string, WireDownloadState>>;
 
+  /** Updates concurrency and/or bandwidth limit on the main-process DownloadManager. */
+  configure(options: { concurrency?: number; bytesPerSecond?: number }): Promise<void>;
+
   /**
    * Registers a handler invoked by main when it needs the renderer to resolve a download URL.
    * The `collationId` maps to the download started via `start()`.
    * Returns an unsubscribe function.
    */
   onResolve(handler: (collationId: number) => Promise<WireResolvedResource>): () => void;
+}
+
+export interface BsdiffApi {
+  /** Create a BSDIFF40 patch file from oldPath and newPath. */
+  diff(oldPath: string, newPath: string, patchPath: string): Promise<void>;
+
+  /** Apply a BSDIFF40 patch file to oldPath, writing the result to outputPath. */
+  patch(oldPath: string, outputPath: string, patchPath: string): Promise<void>;
+}
+
+export interface HashApi {
+  /** Compute the hex digest of a file off the renderer thread. */
+  compute(algorithm: HashAlgorithm, filePath: string): Promise<{ hash: string; numBytes: number }>;
+}
+
+/** API for receiving feature flag updates pushed from the main process */
+export interface FeatureFlagsApi {
+  /** Registers a callback invoked whenever main pushes updated flags. Returns an unsubscribe function. */
+  onSynchronize(callback: (flags: FeatureFlag[]) => void): () => void;
+
+  /** Sends a completed evaluation metrics bucket to the main process for forwarding to Unleash. */
+  reportMetrics(bucket: FlagMetricsBucket): void;
+
+  /** Updates context data used for feature flag evaluation (e.g. userId after login). */
+  setContext(context: FlagContext): void;
 }
 
 /** API for forwarding telemetry spans from renderer to main for buffering/export */

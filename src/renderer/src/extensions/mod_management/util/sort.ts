@@ -1,37 +1,17 @@
 import * as path from "path";
 
+import { CycleError } from "@vortex/shared/errors";
 import { alg, Graph } from "graphlib";
 import * as _ from "lodash";
-import type { ILookupResult, IReference, IRule } from "modmeta-db";
+import type { ILookupResult, IRule } from "modmeta-db";
 
+import { log } from "../../../logging";
 import type { IExtensionApi } from "../../../types/IExtensionContext";
-import { log } from "../../../util/log";
 import { getSafe } from "../../../util/storeHelper";
 import { downloadPathForGame } from "../../download_management/selectors";
 import { setModAttribute } from "../actions/mods";
 import type { IMod } from "../types/IMod";
-import testModReference, { isFuzzyVersion } from "./testModReference";
-
-export class CycleError extends Error {
-  private mCycles: string[][];
-  constructor(cycles: string[][]) {
-    super("Rules contain cycles");
-    this.name = this.constructor.name;
-    this.mCycles = cycles;
-  }
-  public get cycles(): string[][] {
-    return this.mCycles;
-  }
-}
-
-function findByRef(
-  mods: IMod[],
-  reference: IReference,
-  source: { gameId: string; modId: string },
-): IMod {
-  const fuzzy = isFuzzyVersion(reference.versionMatch);
-  return mods.find((mod: IMod) => testModReference(mod, reference, source, fuzzy));
-}
+import { findModByRef } from "./findModByRef";
 
 let sortModsCache: {
   id: { gameId: string; mods: IMod[] };
@@ -62,6 +42,13 @@ function sortMods(gameId: string, mods: IMod[], api: IExtensionApi): Promise<IMo
   // counting only effective rules, for mods that are actually installed
   let numRules: number = 0;
 
+  // keyed by mod id so each rule resolves its target through the shared findModByRef (with its
+  // idHint/md5Hint fast-paths) instead of an O(mods) scan per rule. Reused for the final lookup.
+  const modsById: { [modId: string]: IMod } = {};
+  for (const mod of mods) {
+    modsById[mod.id] = mod;
+  }
+
   const modMapper = (mod: IMod) => {
     let downloadGame = getSafe(mod.attributes, ["downloadGame"], gameId);
     if (Array.isArray(downloadGame)) {
@@ -88,10 +75,7 @@ function sortMods(gameId: string, mods: IMod[], api: IExtensionApi): Promise<IMo
         }
         const rules = [].concat(getSafe(metaInfo, [0, "value", "rules"], []), mod.rules || []);
         rules.forEach((rule: IRule) => {
-          const ref = findByRef(mods, rule.reference, {
-            modId: mod.id,
-            gameId,
-          });
+          const ref = findModByRef(rule.reference, modsById, { gameId, modId: mod.id });
           if (ref !== undefined) {
             ++numRules;
             if (rule.type === "before") {
@@ -120,13 +104,9 @@ function sortMods(gameId: string, mods: IMod[], api: IExtensionApi): Promise<IMo
       try {
         const res = alg.topsort(dependencies);
         api.dismissNotification("mod-cycle-warning");
-        const lookup = mods.reduce((prev, mod) => {
-          prev[mod.id] = mod;
-          return prev;
-        }, {});
         const elapsed = Math.floor((Date.now() - startTime) / 100) / 10;
         log("info", "done sorting mods", { elapsed, numRules });
-        return Promise.resolve(res.map((id) => lookup[id]));
+        return Promise.resolve(res.map((id) => modsById[id]));
       } catch (err) {
         // exception type not included in typings
         if (err instanceof (alg.topsort as any).CycleException) {

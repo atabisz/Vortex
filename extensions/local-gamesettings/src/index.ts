@@ -1,8 +1,8 @@
 import * as path from "path";
 
+import { fs, log, selectors, types, util } from "@nexusmods/vortex-api";
 import PromiseBB from "bluebird";
 import * as Redux from "redux";
-import { fs, log, selectors, types, util } from "vortex-api";
 
 import {
   backupPath,
@@ -244,7 +244,13 @@ function bakeSettings(api: types.IExtensionApi, profile: types.IProfile): Promis
   return PromiseBB.resolve(
     util
       .sortMods(profile.gameId, mods, api)
-      .then((sortedMods) => api.emitAndAwait("bake-settings", profile.gameId, sortedMods, profile)),
+      .then((sortedMods) =>
+        PromiseBB.resolve(
+          api
+            .emitAndAwait("bake-settings", profile.gameId, sortedMods, profile)
+            .then(() => undefined),
+        ),
+      ),
   );
 }
 

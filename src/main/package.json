@@ -3,27 +3,52 @@
   "name": "@vortex/main",
   "author": "Black Tree Gaming Ltd.",
   "license": "GPL-3.0-only",
-  "version": "1.16.8",
+  "version": "1.0.0",
   "private": true,
   "type": "commonjs",
   "main": "build/main.cjs",
   "scripts": {
-    "start": "LD_LIBRARY_PATH=$(pwd)/out/bundledPlugins/gamebryo-plugin-management${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} pnpm cross-env ELECTRON_RUN_AS_NODE= NODE_ENV=development pnpm electron . --no-sandbox",
-    "postinstall": "pnpm exec electron-rebuild",
+    "start": "LD_LIBRARY_PATH=$(pwd)/build/bundledPlugins/gamebryo-plugin-management${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} pnpm cross-env ELECTRON_RUN_AS_NODE= NODE_ENV=development pnpm electron . --no-sandbox",
+    "start:debug": "pnpm electron . --inspect=9229 --remote-debugging-port=9222",
+    "postinstall": "node ./postinstall.mjs",
     "build": "node ./build.mjs",
     "typecheck": "pnpm tsc",
     "lint": "pnpm eslint --quiet --concurrency auto .",
     "lint:verbose": "pnpm eslint --concurrency auto .",
     "test": "pnpm vitest run --config ./vitest.config.ts",
-    "test:downloader": "pnpm vitest run --config ./vitest.downloader.config.ts",
-    "test:adaptor": "pnpm vitest run --config ./vitest.integration.config.ts",
+    "test:integration": "pnpm exec vitest run --config ./vitest.integration.config.ts",
     "publish": "pnpm exec rimraf ./dist && pnpm cross-env pnpm_config_inject_workspace_packages=true pnpm_config_node_linker=hoisted pnpm -F @vortex/main deploy ./dist && node ./dist/prepare-dist-package.mjs",
     "package": "cd ./dist && pnpm electron-builder --config ./electron-builder.config.json --config.win.forceCodeSigning=true --config.win.sign=./sign.cjs --publish never",
-    "package:nosign": "cd ./dist && pnpm electron-builder --config ./electron-builder.config.json --publish never"
+    "package:nosign": "cd ./dist && pnpm electron-builder --config ./electron-builder.config.json --publish never",
+    "sbom": "pnpm node ./sbom.mjs",
+    "download-duckdb-extensions": "pnpm tsx ./download-duckdb-extensions.ts",
+    "generate:unleash": "pnpm node src/unleash/trim-spec.mjs && pnpm exec openapi-typescript src/unleash/openapi-slim.json --immutable --output src/unleash/schema.d.ts && pnpm exec oxfmt ./src/unleash/*.json ./src/unleash/schema.d.ts"
   },
   "nx": {
     "targets": {
+      "dev": {
+        "cache": false,
+        "continuous": true,
+        "executor": "nx:noop",
+        "dependsOn": [
+          {
+            "projects": "@vortex/stylesheets",
+            "target": "tailwind:watch"
+          },
+          {
+            "projects": "@vortex/renderer",
+            "target": "watch"
+          }
+        ]
+      },
       "start": {
+        "continuous": true,
+        "cache": false,
+        "dependsOn": [
+          "build"
+        ]
+      },
+      "start:debug": {
         "continuous": true,
         "cache": false,
         "dependsOn": [
@@ -34,9 +59,28 @@
         "dependsOn": [
           "copy-assets",
           "copy-extensions",
-          "^build"
+          "download-duckdb-extensions",
+          "generate:unleash",
+          "^build",
+          {
+            "target": "build",
+            "projects": "@vortex/renderer"
+          },
+          {
+            "target": "build",
+            "projects": "@vortex/preload"
+          }
         ],
-        "cache": false
+        "cache": true,
+        "outputs": [
+          "{projectRoot}/build/main.cjs",
+          "{projectRoot}/build/main.cjs.map",
+          "{projectRoot}/build/bootstrap.mjs",
+          "{projectRoot}/build/bootstrap.mjs.map",
+          "{projectRoot}/build/bsdiff-worker.cjs",
+          "{projectRoot}/build/bsdiff-worker.cjs.map",
+          "{projectRoot}/build/hdiff.wasm"
+        ]
       },
       "publish": {
         "cache": false,
@@ -64,21 +108,6 @@
           "script": "package:nosign"
         }
       },
-      "dependency-report": {
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "node ./scripts/dependency-report.mjs",
-          "cwd": "{workspaceRoot}"
-        },
-        "cache": true,
-        "inputs": [
-          "default",
-          "{workspaceRoot}/scripts/dependency-report.mjs"
-        ],
-        "outputs": [
-          "{workspaceRoot}/assets/modules.json"
-        ]
-      },
       "copy-assets": {
         "executor": "nx:run-commands",
         "options": {
@@ -87,10 +116,18 @@
         },
         "dependsOn": [
           {
-            "target": "build",
+            "target": "sass",
             "projects": "@vortex/stylesheets"
           },
-          "dependency-report"
+          {
+            "target": "tailwind",
+            "projects": "@vortex/stylesheets"
+          },
+          {
+            "target": "build",
+            "projects": "@tools/dotnetprobe"
+          },
+          "sbom"
         ],
         "cache": true,
         "inputs": [
@@ -98,24 +135,47 @@
           {
             "dependentTasksOutputFiles": "**/dist/**"
           },
-          {
-            "dependentTasksOutputFiles": "**/assets/modules.json"
-          },
           "{projectRoot}/copy-assets.mjs",
           "{workspaceRoot}/src/stylesheets/**/*.scss",
           "{workspaceRoot}/src/renderer/src/index.html",
           "{workspaceRoot}/src/renderer/src/splash.html",
-          "{workspaceRoot}/src/queries/**/*",
-          "{workspaceRoot}/assets/**/*",
+          "{workspaceRoot}/src/queries/",
+          "{workspaceRoot}/assets/",
+          "{workspaceRoot}/locales/",
           "{workspaceRoot}/LICENSE.md"
         ],
         "outputs": [
           "{projectRoot}/build/assets/",
+          "{projectRoot}/build/locales/",
           "{projectRoot}/build/queries/",
           "{projectRoot}/build/index.html",
           "{projectRoot}/build/splash.html",
-          "{projectRoot}/build/LICENSE.md",
-          "{projectRoot}/build/modules.json"
+          "{projectRoot}/build/LICENSE.md"
+        ]
+      },
+      "sbom": {
+        "executor": "nx:run-script",
+        "options": {
+          "script": "sbom"
+        },
+        "cache": true,
+        "inputs": [
+          "default",
+          "{projectRoot}/sbom.mjs"
+        ],
+        "outputs": [
+          "{workspaceRoot}/assets/bom.json"
+        ]
+      },
+      "download-duckdb-extensions": {
+        "cache": true,
+        "inputs": [
+          "default",
+          "{projectRoot}/download-duckdb-extensions.ts",
+          "{projectRoot}/duckdb-extensions.json"
+        ],
+        "outputs": [
+          "{projectRoot}/build/duckdb-extensions/"
         ]
       },
       "copy-extensions": {
@@ -141,6 +201,22 @@
         "outputs": [
           "{projectRoot}/build/bundledPlugins/"
         ]
+      },
+      "test:integration": {
+        "dependsOn": [
+          "build"
+        ]
+      },
+      "generate:unleash": {
+        "cache": true,
+        "inputs": [
+          "default",
+          "{projectRoot}/src/unleash/openapi.json",
+          "{projectRoot}/src/unleash/trim-spec.mjs"
+        ],
+        "outputs": [
+          "{projectRoot}/src/unleash/schema.d.ts"
+        ]
       }
     }
   },
@@ -148,6 +224,7 @@
     "./build",
     "./nsis/",
     "./electron-builder.config.json",
+    "./postinstall.mjs",
     "./prepare-dist-package.mjs",
     "./sign.cjs"
   ],
@@ -155,9 +232,11 @@
     "@duckdb/node-api": "catalog:",
     "@electron/remote": "catalog:",
     "@headlessui/react": "catalog:",
+    "@hot-updater/bsdiff": "catalog:",
     "@mdi/js": "catalog:",
     "@msgpack/msgpack": "catalog:",
     "@nexusmods/adaptor-api": "workspace:*",
+    "@nexusmods/file-dependency-resolver": "workspace:*",
     "@nexusmods/fomod-installer-ipc": "catalog:",
     "@nexusmods/fomod-installer-native": "catalog:",
     "@nexusmods/nexus-api": "catalog:",
@@ -171,6 +250,8 @@
     "@tailwindcss/cli": "catalog:",
     "@types/bluebird": "catalog:",
     "@types/uuid": "catalog:",
+    "@vortex/nexus-api-v3": "workspace:*",
+    "@vortex/shared": "workspace:*",
     "bbcode-to-react": "catalog:",
     "big.js": "catalog:",
     "bluebird": "catalog:",
@@ -179,6 +260,7 @@
     "commander": "catalog:",
     "content-disposition": "catalog:",
     "content-type": "catalog:",
+    "crc-32": "catalog:",
     "d3": "catalog:",
     "date-fns": "catalog:",
     "dayjs": "catalog:",
@@ -199,6 +281,7 @@
     "graphlib": "catalog:",
     "i18next": "catalog:",
     "i18next-fs-backend": "catalog:",
+    "icon-extract": "workspace:*",
     "iconv-lite": "catalog:",
     "immutability-helper": "catalog:",
     "ini": "catalog:",
@@ -217,6 +300,7 @@
     "node-7z": "catalog:",
     "normalize-url": "catalog:",
     "numeral": "catalog:",
+    "openapi-fetch": "catalog:",
     "p-queue": "catalog:",
     "packery": "catalog:",
     "permissions": "catalog:",
@@ -271,6 +355,7 @@
   },
   "devDependencies": {
     "@electron/rebuild": "catalog:",
+    "@pmmmwh/react-refresh-webpack-plugin": "catalog:",
     "@types/bbcode-to-react": "catalog:",
     "@types/big.js": "catalog:",
     "@types/content-disposition": "catalog:",
@@ -303,13 +388,14 @@
     "@types/write-file-atomic": "catalog:",
     "@types/ws": "catalog:",
     "@types/xml2js": "catalog:",
-    "@vortex/adaptor-cyberpunk2077": "workspace:*",
-    "@vortex/shared": "workspace:*",
     "@welldone-software/why-did-you-render": "catalog:",
     "cross-env": "catalog:",
     "electron": "catalog:",
     "electron-builder": "catalog:",
     "electron-extension-installer": "catalog:",
-    "redux-freeze": "catalog:"
+    "openapi-typescript": "catalog:",
+    "react-refresh": "catalog:",
+    "redux-freeze": "catalog:",
+    "vitest-fetch-mock": "catalog:"
   }
 }

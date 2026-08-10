@@ -9,8 +9,9 @@
     "etc/**",
     "src/renderer/src/index.html",
     "CLAUDE.md",
+    "packages/vortex-api/lib/**",
     "src/renderer/src/extensions/mod_management/InstallManager.ts",
-    ".github/actions/fingerprints/dist/**"
+    ".github/actions/*/dist/**"
   ],
   "embeddedLanguageFormatting": "auto"
 }

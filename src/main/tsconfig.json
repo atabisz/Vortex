@@ -1,10 +1,11 @@
 {
   "$schema": "https://www.schemastore.org/tsconfig.json",
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.strict.json",
   "include": [
     "src/**/*",
     "../../typings.custom/electron.d.ts",
-    "../../typings.custom/promise.d.ts"
+    "../../typings.custom/promise.d.ts",
+    "./download-duckdb-extensions.ts"
   ],
   "compilerOptions": {
     "composite": true,

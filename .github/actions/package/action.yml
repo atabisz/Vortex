@@ -1,0 +1,184 @@
+name: Package Vortex
+description: Build, optionally sign, and validate the Vortex installer into ./dist
+
+inputs:
+  version:
+    description: >-
+      The version to build (eg: 'v1.0.0'). Leave empty to derive a throwaway
+      version from package.json plus today's date, as nightlies and PR
+      validation builds do.
+    required: false
+    default: ""
+  use-codesigning:
+    description: "Use codesigning?"
+    required: false
+    default: "true"
+
+outputs:
+  raw-version:
+    description: "Packaged version without a leading 'v' (eg: '2.4.0')."
+    value: ${{ steps.setOutputs.outputs.rawVersion }}
+  tag-version:
+    description: "Packaged version with a leading 'v' (eg: 'v2.4.0')."
+    value: ${{ steps.setOutputs.outputs.tagVersion }}
+  unpacked-artifact:
+    description: "Suggested artifact name for ./dist/win-unpacked."
+    value: ${{ steps.setOutputs.outputs.artifactNameUnpacked }}
+  installer-artifact:
+    description: "Suggested artifact name for the installer and latest.yml."
+    value: ${{ steps.setOutputs.outputs.artifactNameInstaller }}
+
+runs:
+  using: composite
+  steps:
+    - name: Show Inputs
+      shell: pwsh
+      run: |
+        Write-Output "version=${{ inputs.version }}"
+        Write-Output "use-codesigning=${{ inputs.use-codesigning }}"
+
+    - name: Set version
+      id: setOutputs
+      shell: pwsh
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+      run: |
+        $rawVersion = $env:INPUT_VERSION
+        if ([string]::IsNullOrWhiteSpace($rawVersion)) {
+          # No version given - derive a throwaway one so the build is still
+          # installable and its artifacts are distinguishable.
+          $pkg = Get-Content package.json | ConvertFrom-Json
+          $date = Get-Date -Format "yyyyMMdd"
+          $rawVersion = "$($pkg.version)-nightly.$date"
+        } elseif ($rawVersion.StartsWith('v')) {
+          $rawVersion = $rawVersion.Substring(1)
+        }
+        echo "tagVersion=v$rawVersion" >> $env:GITHUB_OUTPUT
+        echo "rawVersion=$rawVersion" >> $env:GITHUB_OUTPUT
+        echo "artifactNameUnpacked=vortex-setup-$rawVersion-unpacked" >> $env:GITHUB_OUTPUT
+        echo "artifactNameInstaller=vortex-setup-$rawVersion-installer" >> $env:GITHUB_OUTPUT
+
+    - uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: "9.0.x"
+
+    - name: Print dotnet info
+      shell: pwsh
+      run: dotnet --info
+
+    - name: Setup Python 3.11
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.11"
+
+    - name: Download CodeSignTool
+      if: ${{ inputs.use-codesigning == 'true' }}
+      shell: pwsh
+      run: .\download-codesigntool.ps1
+
+    - name: Read Node.js version from package.json
+      id: node-version
+      shell: pwsh
+      run: |
+        $packageJson = Get-Content package.json | ConvertFrom-Json
+        $nodeVersion = $packageJson.engines.node
+        echo "NODE_VERSION=$nodeVersion" >> $env:GITHUB_OUTPUT
+        echo "Using Node.js version: $nodeVersion"
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v6
+
+    - name: Use Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: ${{ steps.node-version.outputs.NODE_VERSION }}
+        cache: "pnpm"
+        registry-url: "https://registry.npmjs.org"
+
+    - name: Bump versions
+      shell: pwsh
+      run: pnpm -F "@vortex/main" -F "@nexusmods/vortex-api" version ${{ steps.setOutputs.outputs.rawVersion }} --no-git-tag-version --no-git-checks --allow-same-version
+
+    - name: Install dependencies
+      shell: pwsh
+      run: pnpm install --frozen-lockfile
+      env:
+        VORTEX_ELECTRON_REBUILD: "defer"
+
+    - name: Cache Electron native build headers
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.electron-gyp
+          ~/.cache/node-gyp
+        key: package-native-headers-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package.json', 'pnpm-lock.yaml', 'src/main/package.json') }}
+
+    - name: Build workspace
+      shell: pwsh
+      env:
+        NODE_ENV: production
+      run: pnpm run build
+
+    - name: Publish dist package
+      shell: pwsh
+      env:
+        NODE_ENV: production
+        VORTEX_ELECTRON_REBUILD: "skip"
+      run: pnpm nx run @vortex/main:publish
+
+    - name: Cache packaged Electron native rebuild outputs
+      id: packaged-native-cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          src/main/dist/node_modules/@nexusmods/fomod-installer-native/build
+          src/main/dist/node_modules/@nexusmods/fomod-installer-native/bin
+          src/main/dist/node_modules/drivelist/build
+          src/main/dist/node_modules/drivelist/bin
+          src/main/dist/node_modules/leveldown/build
+          src/main/dist/node_modules/leveldown/bin
+          src/main/dist/node_modules/winapi-bindings/build
+          src/main/dist/node_modules/winapi-bindings/bin
+          src/main/dist/node_modules/xxhash-addon/build
+          src/main/dist/node_modules/xxhash-addon/bin
+          src/main/dist/node_modules/@parcel/watcher/build
+          src/main/dist/node_modules/@parcel/watcher/bin
+        key: package-dist-electron-native-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml', 'src/main/package.json', 'src/main/postinstall.mjs') }}
+
+    - name: Rebuild packaged Electron native modules
+      if: steps.packaged-native-cache.outputs.cache-hit != 'true' # skip when cached
+      shell: pwsh
+      working-directory: src/main/dist
+      run: npx electron-rebuild
+
+    - name: Build Installer
+      shell: pwsh
+      run: |
+        $signingAvailable = -not [string]::IsNullOrWhiteSpace($env:ES_USERNAME)
+        $wantSigning = "${{ inputs.use-codesigning }}" -eq "true"
+        if ($wantSigning -and $signingAvailable) {
+          pnpm -F @vortex/main run package
+        } else {
+          if ($wantSigning -and -not $signingAvailable) {
+            Write-Warning "::warning::Codesigning requested but secrets unavailable - building unsigned"
+          }
+          pnpm -F @vortex/main run package:nosign
+        }
+
+    - name: Validate Package Creation
+      shell: pwsh
+      run: |
+        $installerExists = Test-Path "./dist/vortex-setup-*.*.*.exe"
+        $latestYmlExists = Test-Path "./dist/latest.yml"
+
+        if (-not $installerExists) {
+          Write-Error "Installer executable not found in ./dist/"
+          exit 1
+        }
+
+        if (-not $latestYmlExists) {
+          Write-Error "latest.yml not found in ./dist/"
+          exit 1
+        }
+
+        Write-Output "✅ Package validation successful - installer and metadata files created"

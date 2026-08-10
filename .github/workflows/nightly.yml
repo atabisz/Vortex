@@ -1,0 +1,45 @@
+name: Nightly Package
+
+on:
+  schedule:
+    - cron: "0 19 * * *" # Nightly at 19:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      NO_PARALLEL: true
+      DEBUG: electron-builder # gives electron more verbose logs
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: "recursive"
+
+      - name: Package Vortex nightly
+        id: package
+        uses: ./.github/actions/package
+        with:
+          use-codesigning: "false"
+
+      - name: Create Unpacked Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.package.outputs.unpacked-artifact }}
+          path: ./dist/win-unpacked
+          if-no-files-found: error
+          retention-days: 2
+
+      - name: Create Installer Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.package.outputs.installer-artifact }}
+          path: |
+            ./dist/vortex-setup-*.*.*.exe
+            ./dist/latest.yml
+          if-no-files-found: error
+          retention-days: 2

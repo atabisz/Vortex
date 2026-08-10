@@ -7,11 +7,12 @@ import type { IWindow } from "@vortex/shared/state";
 import { app, ipcMain, screen, webContents, BrowserWindow } from "electron";
 
 import { terminate } from "./errorHandling";
+import { reportCrash } from "./errorReporting";
 import { getVortexPath } from "./getVortexPath";
 import { log } from "./logging";
 import Debouncer from "./NodeDebouncer";
 import { openUrl } from "./open";
-import type TrayIcon from "./TrayIcon";
+import { isTelemetryEnabled } from "./telemetry/state";
 import { closeAllViews } from "./webview";
 
 const MIN_HEIGHT = 700;
@@ -70,8 +71,8 @@ class MainWindow {
   // timers used to prevent window resize/move from constantly causing writes to the
   // store
   private mResizeDebouncer: Debouncer;
-  private mMoveDebouncer: Debouncer;
-  private mShown: boolean;
+  private mMoveDebouncer: Debouncer<[number, number]>;
+  private mShown: boolean = false;
   private mInspector: boolean;
   private mInitialWindowSettings: IWindow | null = null;
   private mRendererPid: number | undefined;
@@ -95,7 +96,7 @@ class MainWindow {
       return Promise.resolve();
     }, 500);
 
-    this.mMoveDebouncer = new Debouncer((x: number, y: number) => {
+    this.mMoveDebouncer = new Debouncer((x, y) => {
       if (this.mWindow !== null) {
         this.sendWindowEvent("window:moved", x, y);
       }
@@ -175,6 +176,26 @@ class MainWindow {
           exitCode: details.exitCode,
           reason: details.reason,
         });
+
+        // hard renderer crashes never reach the JS error handlers, so this
+        // is the only place they can be reported
+        if (!["clean-exit", "killed"].includes(details.reason)) {
+          reportCrash(
+            "RenderProcessGone",
+            {
+              message: `Renderer process gone: ${details.reason} (exit code ${details.exitCode})`,
+              code: details.reason,
+            },
+            undefined,
+            "renderer",
+            isTelemetryEnabled(),
+          ).catch((err: unknown) => {
+            log("warn", "failed to report renderer crash", {
+              error: getErrorMessageOrDefault(err),
+            });
+          });
+        }
+
         if (details.reason !== "killed") {
           // workaround for electron issue #19887
           setImmediate(() => {
@@ -251,6 +272,11 @@ class MainWindow {
     });
 
     this.mWindow.webContents.on("will-navigate", (event, url) => {
+      if (url === this.mWindow?.webContents.getURL()) {
+        // page-initiated reload of the current page (e.g. the dev HMR
+        // fallback in tools/hmr-client.cjs); don't treat it as an external link
+        return;
+      }
       log("debug", "navigating to page", url);
       openUrl(new URL(url));
       event.preventDefault();
@@ -281,13 +307,6 @@ class MainWindow {
         });
       });
     });
-  }
-
-  public connectToTray(tray: TrayIcon) {
-    if (this.mWindow === null) {
-      return;
-    }
-    tray.setMainWindow(this.mWindow);
   }
 
   public show(maximized: boolean, startMinimized?: boolean) {
@@ -429,7 +448,8 @@ class MainWindow {
     this.mWindow.on("move", () => {
       if (this.mWindow?.isMaximized?.() === false) {
         const pos: number[] = this.mWindow.getPosition();
-        this.mMoveDebouncer.schedule(undefined, pos[0], pos[1]);
+        const [x, y] = pos;
+        this.mMoveDebouncer.schedule(undefined, x ?? 0, y ?? 0);
       }
     });
   }

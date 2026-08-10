@@ -1,23 +1,20 @@
 import { Listbox as HeadlessListbox } from "@headlessui/react";
 import { mdiUnfoldMoreHorizontal } from "@mdi/js";
-import React, { type ComponentProps } from "react";
+import React from "react";
 
-import { joinClasses } from "../../utils/joinClasses";
-import { Icon } from "../icon/Icon";
+import { Button, type IButtonProps } from "@/ui/components/button/Button";
 
-export const ListboxButton = ({
-  children,
-  className,
-  showChevron = true,
-  ...props
-}: ComponentProps<typeof HeadlessListbox.Button> & {
+export type IListboxButtonProps = IButtonProps & {
   showChevron?: boolean;
-}) => (
-  <HeadlessListbox.Button className={joinClasses(["nxm-dropdown-button", className])} {...props}>
-    {!!children && <span>{children}</span>}
+};
 
-    {showChevron && (
-      <Icon className="nxm-dropdown-button-icon" path={mdiUnfoldMoreHorizontal} size="none" />
-    )}
-  </HeadlessListbox.Button>
+export const ListboxButton = ({ showChevron = true, ...props }: IListboxButtonProps) => (
+  <HeadlessListbox.Button
+    appearance="moderate"
+    as={Button}
+    brand="neutral"
+    rightIconPath={showChevron ? mdiUnfoldMoreHorizontal : undefined}
+    size="sm"
+    {...props}
+  />
 );

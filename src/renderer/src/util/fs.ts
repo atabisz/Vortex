@@ -206,23 +206,46 @@ const showMessageBox = async (
   return window.api.dialog.showMessageBox(options);
 };
 
-export { constants, Stats, WriteStream } from "fs";
-export type { FSWatcher } from "fs";
+export {
+  /** @deprecated use node:fs directly */
+  constants,
+  /** @deprecated use node:fs directly */
+  Stats,
+  /** @deprecated use node:fs directly */
+  WriteStream,
+} from "fs";
+
+export type {
+  /** @deprecated use node:fs directly */
+  FSWatcher,
+} from "fs";
 
 // simple re-export of functions we don't touch (yet)
 export {
+  /** @deprecated use node:fs directly */
   accessSync,
+  /** @deprecated use node:fs directly */
   appendFileSync,
+  /** @deprecated use node:fs directly */
   closeSync,
+  /** @deprecated use node:fs directly */
   createReadStream,
+  /** @deprecated use node:fs directly */
   createWriteStream,
+  /** @deprecated use node:fs directly */
   linkSync,
+  /** @deprecated use node:fs directly */
   openSync,
+  /** @deprecated use node:fs directly */
   readdirSync,
+  /** @deprecated use node:fs directly */
   readFileSync,
+  /** @deprecated use node:fs directly */
   statSync,
+  /** @deprecated use node:fs directly */
   symlinkSync,
   writeFileSync,
+  /** @deprecated use node:fs directly */
   writeSync,
 } from "original-fs";
 
@@ -779,30 +802,50 @@ const appendFileAsync: (file: string, data: any, options?: fs.WriteFileOptions) 
 // tslint:enable:max-line-length
 
 export {
+  /** @deprecated use node:fs directly */
   appendFileAsync,
+  /** @deprecated use node:fs directly */
   chmodAsync,
+  /** @deprecated use node:fs directly */
   closeAsync,
+  /** @deprecated use node:fs directly */
   fsyncAsync,
+  /** @deprecated use node:fs directly */
   lstatAsync,
+  /** @deprecated use node:fs directly */
   mkdirAsync,
+  /** @deprecated use node:fs directly */
   mkdirsAsync,
+  /** @deprecated use node:fs directly */
   moveAsync,
+  /** @deprecated use node:fs directly */
   openAsync,
+  /** @deprecated use node:fs directly */
   readdirAsync,
+  /** @deprecated use node:fs directly */
   readAsync,
+  /** @deprecated use node:fs directly */
   readFileAsync,
+  /** @deprecated use node:fs directly */
   statAsync,
+  /** @deprecated use node:fs directly */
   statSilentAsync,
+  /** @deprecated use node:fs directly */
   symlinkAsync,
+  /** @deprecated use node:fs directly */
   utimesAsync,
+  /** @deprecated use node:fs directly */
   writeAsync,
+  /** @deprecated use node:fs directly */
   writeFileAsync,
 };
 
+/** @deprecated use node:fs directly */
 export function isDirectoryAsync(dirPath: string): PromiseBB<boolean> {
   return PromiseBB.resolve(fs.stat(dirPath)).then((stats) => stats.isDirectory());
 }
 
+/** @deprecated use node:fs directly */
 export function ensureDirSync(dirPath: string) {
   try {
     fs.ensureDirSync(dirPath);
@@ -811,6 +854,7 @@ export function ensureDirSync(dirPath: string) {
   }
 }
 
+/** @deprecated use node:fs directly */
 export function ensureFileAsync(filePath: string): PromiseBB<void> {
   const stackErr = new Error();
   return PromiseBB.resolve(fs.ensureFile(filePath)).catch((err) => {
@@ -818,6 +862,7 @@ export function ensureFileAsync(filePath: string): PromiseBB<void> {
   });
 }
 
+/** @deprecated use node:fs directly */
 export function ensureDirAsync(
   dirPath: string,
   onDirCreatedCB?: (created: string) => PromiseLike<void>,
@@ -926,6 +971,8 @@ export function moveRenameAsync(src: string, dest: string): PromiseBB<string> {
  * @param src file to copy
  * @param dest destination path
  * @param options copy options (see documentation for fs)
+ *
+ * @deprecated Use node:fs directly
  */
 export function copyAsync(
   src: string,
@@ -968,6 +1015,7 @@ function copyInt(
   );
 }
 
+/** @deprecated use node:fs directly */
 export function linkAsync(src: string, dest: string, options?: ILinkFileOptions): PromiseBB<void> {
   const stackErr = new Error();
   return linkInt(src, dest, stackErr, NUM_RETRIES, options).catch((err) =>
@@ -1036,6 +1084,7 @@ function unlinkInt(
   );
 }
 
+/** @deprecated use node:fs directly */
 export function renameAsync(sourcePath: string, destinationPath: string): PromiseBB<void> {
   if (isWinePrefixPath(sourcePath)) {
     return PromiseBB.resolve(resolveCaseIfWinePrefix(sourcePath)).then((resolved) =>
@@ -1091,6 +1140,7 @@ function rmdirInt(dirPath: string, stackErr: Error, tries: number): PromiseBB<vo
   });
 }
 
+/** @deprecated use node:fs directly */
 export function removeAsync(remPath: string, options?: IRemoveFileOptions): PromiseBB<void> {
   const stackErr = new Error();
   return removeInt(remPath, stackErr, NUM_RETRIES, options || {});
@@ -1129,6 +1179,7 @@ function rimrafAsync(remPath: string): PromiseBB<void> {
   });
 }
 
+/** @deprecated use node:fs directly */
 export function readlinkAsync(linkPath: string): PromiseBB<string> {
   const stackErr = new Error();
   return readlinkInt(linkPath, stackErr, NUM_RETRIES);

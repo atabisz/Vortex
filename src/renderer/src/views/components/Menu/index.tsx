@@ -46,7 +46,6 @@ const MenuContent: FC = () => {
   }, [scrollRef]);
 
   useLayoutEffect(() => {
-    // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
     setIsAnimating(true);
     const timer = setTimeout(() => setIsAnimating(false), 150);
 
@@ -76,6 +75,7 @@ const MenuContent: FC = () => {
           ) : (
             visiblePages.map((page) => (
               <MenuButton
+                Badge={page.menuBadge}
                 iconPath={page.mdi ?? getIconPath(page.icon)}
                 isActive={mainPage === page.id}
                 key={page.id}

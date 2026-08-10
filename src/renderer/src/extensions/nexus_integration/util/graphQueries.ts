@@ -5,6 +5,8 @@ import type {
   IModFileQuery,
 } from "@nexusmods/nexus-api";
 
+import { FlagService } from "@/FlagService";
+
 const revisionInfo: IRevisionQuery = {
   id: true,
   revisionNumber: true,
@@ -230,28 +232,43 @@ export const MOD_FILE_INFO: Partial<IModFileQuery> = {
   version: true,
 };
 
-export const MOD_REQUIREMENTS_INFO: IModRequirementsQuery = {
-  dlcRequirements: {
-    gameExpansion: { id: true, name: true },
-    notes: true,
-  },
-  nexusRequirements: {
-    nodes: {
-      id: true,
-      gameId: true,
-      modId: true,
-      modName: true,
+/**
+ * Get the mod requirements query object. The $filter property is only included
+ * when the file-level requirements feature flag is enabled, to prevent pulling in
+ * mod-to-mod requirements when they are disabled by file-to-file requirements.
+ */
+export function getModRequirementsInfo(): IModRequirementsQuery {
+  const flagEnabled =
+    FlagService.instance?.getFlag("vortex-file-requirements-health-check") !== undefined;
+
+  const baseQuery: IModRequirementsQuery = {
+    dlcRequirements: {
+      gameExpansion: { id: true, name: true },
       notes: true,
-      url: true,
-      externalRequirement: true,
     },
-    totalCount: true,
-  },
-  modsRequiringThisMod: {
-    nodes: { id: true, modId: true, modName: true },
-    totalCount: true,
-  },
-};
+    nexusRequirements: {
+      // count caps the page and multiplies its inner selection for complexity, so a
+      // low cap keeps the query cheap; mods realistically never have 10+ requirements.
+      $filter: { count: 10 },
+      nodes: {
+        id: true,
+        gameId: true,
+        modId: true,
+        modName: true,
+        notes: true,
+        url: true,
+        externalRequirement: true,
+      },
+      totalCount: true,
+    },
+  };
+
+  if (flagEnabled) {
+    baseQuery.$filter = { skipDisabledRequirements: true };
+  }
+
+  return baseQuery;
+}
 
 export const MY_COLLECTIONS_SEARCH_QUERY: ICollectionQuery = {
   revisions: {

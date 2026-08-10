@@ -7,6 +7,8 @@ export * from "./IComponentContext";
 export * from "./IDialog";
 export * from "./IExtensionContext";
 export * from "./IGame";
+export * from "./IHealthCheck";
+export * from "../extensions/mod_management/types/IInstallerSpec";
 export * from "./IModifiers";
 export * from "./INotification";
 export * from "./IState";
@@ -19,7 +21,7 @@ export type { ITool } from "./ITool";
 export type { TFunction } from "../util/i18n";
 export type { IDiscoveredTool } from "./IDiscoveredTool";
 export type { IExecInfo } from "./IExecInfo";
-export type { IStoreQuery } from "../util/GameStoreHelper";
+export type { IQueryArgEntry, IStoreQuery } from "../util/GameStoreHelper";
 export type { IGameStoreEntry } from "./IGameStoreEntry";
 export { GameEntryNotFound, GameStoreNotFound } from "./IGameStore";
 export type { ICustomExecutionInfo, IGameStore, GameLaunchType } from "./IGameStore.ts";
@@ -32,8 +34,8 @@ export type {
   ICollectionModInstallInfo,
   ICollectionInstallSession,
   CollectionModStatus,
-} from "../extensions/collections_integration/types";
-export type { IAvailableExtension, IExtension } from "./extensions";
+} from "./collections/ICollectionInstallSession";
+export type { IAvailableExtension, IExtension, ExtensionInfo } from "./extensions";
 export type {
   LoadOrder,
   LoadOrder as FBLOLoadOrder,
@@ -54,12 +56,20 @@ export type {
 export type { IDiscoveryResult } from "../extensions/gamemode_management/types/IDiscoveryResult";
 export type { IGameStored } from "../extensions/gamemode_management/types/IGameStored";
 export type { IDeploymentManifest } from "../extensions/mod_management/types/IDeploymentManifest";
-export type { IModLookupInfo } from "../extensions/mod_management/util/testModReference";
 export type {
+  IModLookupInfo,
+  IReferenceIdentifiers,
+} from "../extensions/mod_management/util/testModReference";
+export type {
+  IChoiceType,
+  IFileListItem,
   IMod,
+  IModInstallSpec,
+  IModPatches,
   IModReference,
   IModRepoId,
   IModRule,
+  IModRuleExtra,
 } from "../extensions/mod_management/types/IMod";
 export type { IRemoveModOptions } from "../extensions/mod_management/types/IRemoveModOptions";
 export type { IDeployOptions } from "../extensions/mod_management/types/IDeployOptions";
@@ -82,7 +92,10 @@ export type {
 } from "../extensions/history_management/types";
 export type { IProfile, IProfileMod } from "../extensions/profile_management/types/IProfile";
 export type { IEnableOptions } from "../extensions/profile_management/actions/profiles";
-export type { IValidateKeyData } from "../extensions/nexus_integration/types/IValidateKeyData";
+export type {
+  IMembership,
+  IValidateKeyData,
+} from "../extensions/nexus_integration/types/IValidateKeyData";
 export type {
   ILoadOrderDisplayItem,
   SortType,

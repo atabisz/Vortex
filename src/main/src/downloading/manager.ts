@@ -49,7 +49,6 @@ export const defaultTimeout: () => TimeoutOptions = () => ({
   lookup: 5_000,
   connect: 30_000,
   stall: 15_000,
-  request: 3 * 60 * 60_000,
 });
 
 export type DownloadManagerOptions = {
@@ -71,11 +70,12 @@ export type DownloadManagerOptions = {
 
 export class DownloadManager {
   readonly #downloadQueue: PQueue;
-  readonly #rateLimiter: RateLimiter | null;
   readonly #timeout: TimeoutOptions;
   readonly #userAgent: string | undefined;
   readonly #cookieJar: CookieJar | undefined;
   readonly #downloads: Map<string, DownloadHandle> = new Map();
+
+  #rateLimiter: RateLimiter | undefined;
 
   constructor(options: DownloadManagerOptions) {
     this.#downloadQueue = new PQueue({
@@ -92,7 +92,7 @@ export class DownloadManager {
         interval: "second",
       });
     } else {
-      this.#rateLimiter = null;
+      this.#rateLimiter = undefined;
     }
 
     this.#timeout = { ...defaultTimeout(), ...timeout };
@@ -122,6 +122,33 @@ export class DownloadManager {
    */
   getState(downloadId: string): DownloadState | undefined {
     return this.#downloads.get(downloadId)?.getState();
+  }
+
+  /**
+   * Updates concurrency and/or bandwidth limit at runtime.
+   * In-flight downloads are unaffected; new downloads use the updated settings.
+   */
+  configure(options: { concurrency?: number; bytesPerSecond?: number }): void {
+    if (options.concurrency !== undefined) {
+      log("info", "download concurrency changed", {
+        from: this.#downloadQueue.concurrency,
+        to: options.concurrency,
+      });
+      this.#downloadQueue.concurrency = options.concurrency;
+    }
+
+    if (options.bytesPerSecond !== undefined) {
+      if (options.bytesPerSecond > 0 && !isNaN(options.bytesPerSecond)) {
+        log("info", "download bandwidth limit changed", { bytesPerSecond: options.bytesPerSecond });
+        this.#rateLimiter = new RateLimiter({
+          tokensPerInterval: options.bytesPerSecond,
+          interval: "second",
+        });
+      } else {
+        log("info", "download bandwidth limit removed");
+        this.#rateLimiter = undefined;
+      }
+    }
   }
 
   /**
@@ -161,14 +188,22 @@ export class DownloadManager {
     );
   }
 
+  /**
+   * A caller-supplied `downloadId` restores an existing download: the transfer starts
+   * from scratch under that id, replacing any previous attempt tracked for it. Used
+   * when the previous attempt left nothing resumable (no checkpoint, or none with
+   * completed ranges). Restore is only issued for a settled (paused or failed) attempt,
+   * so the replaced handle is never mid-transfer.
+   */
   download<T>(
     resource: T,
     dest: string,
     resolver: Resolver<T>,
     chunker: Chunker<T> = staticChunker(),
     retry: RetryStrategy = defaultRetryStrategy(),
+    downloadId?: string,
   ): DownloadHandle<T> {
-    return this.#download(resource, dest, resolver, chunker, retry);
+    return this.#download(resource, dest, resolver, chunker, retry, undefined, downloadId);
   }
 
   #download<T>(
@@ -267,7 +302,11 @@ export class DownloadManager {
       }
 
       if (currentStatus !== "running") {
-        return { ...getState(), status: currentStatus, error: terminalError };
+        if (currentStatus === "failed") {
+          return { ...getState(), status: currentStatus, error: terminalError! };
+        }
+
+        return { ...getState(), status: currentStatus };
       }
 
       log("debug", "pausing download", { downloadId });
@@ -285,7 +324,7 @@ export class DownloadManager {
       const currentStatus = progressReporter.status;
 
       if (currentStatus === "failed") {
-        return { ...progress, status: currentStatus, error: terminalError };
+        return { ...progress, status: currentStatus, error: terminalError! };
       }
 
       return { ...progress, status: currentStatus };

@@ -1,7 +1,8 @@
+import { mdiCheck } from "@mdi/js";
 import React, { type InputHTMLAttributes, type PropsWithChildren } from "react";
 
-import { joinClasses } from "../../../utils/joinClasses";
-import { Icon } from "../../icon/Icon";
+import { Icon } from "@/ui/components/icon/Icon";
+import { joinClasses } from "@/ui/utils/joinClasses";
 
 export const Checkbox = ({
   checked,
@@ -29,7 +30,7 @@ export const Checkbox = ({
     />
 
     <span className="nxm-checkbox">
-      <Icon className="nxm-checkbox-icon" path="mdiCheck" size="sm" />
+      <Icon className="nxm-checkbox-icon" path={mdiCheck} size="none" />
     </span>
 
     <span className="nxm-checkbox-label">{children}</span>

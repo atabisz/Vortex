@@ -1,14 +1,14 @@
 import { mdiAlertCircleOutline, mdiOpenInNew } from "@mdi/js";
 import React, { type PropsWithChildren } from "react";
 
-import { joinClasses } from "../../utils/joinClasses";
-import { Button } from "../button/Button";
-import { Icon } from "../icon/Icon";
-import { Typography } from "../typography/Typography";
+import { Button } from "@/ui/components/button/Button";
+import { Icon } from "@/ui/components/icon/Icon";
+import { Typography } from "@/ui/components/typography/Typography";
+import { joinClasses } from "@/ui/utils/joinClasses";
 
-type Appearance = "default" | "success";
+type IAppearance = "default" | "success";
 
-const getIconClassName = (appearance: Appearance) => {
+const getIconClassName = (appearance: IAppearance) => {
   switch (appearance) {
     case "success":
       return "text-success-strong";
@@ -26,14 +26,14 @@ export const NoResults = ({
   message,
   title,
 }: PropsWithChildren<{
-  appearance?: Appearance;
+  appearance?: IAppearance;
   className?: string;
   iconPath?: string;
   isError?: boolean;
   message?: string;
   title: string;
 }>) => (
-  <div className={joinClasses(["mx-auto flex max-w-lg flex-col items-center gap-y-4", className])}>
+  <div className={joinClasses(["mx-auto flex max-w-md flex-col items-center gap-y-4", className])}>
     <div className="flex flex-col items-center gap-y-2">
       {(!!iconPath || isError) && (
         <Icon
@@ -56,8 +56,8 @@ export const NoResults = ({
       ? children
       : isError && (
           <Button
-            buttonType="tertiary"
-            filled="weak"
+            appearance="moderate"
+            brand="neutral"
             leftIconPath={mdiOpenInNew}
             size="sm"
             onClick={() =>

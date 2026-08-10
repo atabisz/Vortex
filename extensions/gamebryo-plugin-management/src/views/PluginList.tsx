@@ -1,19 +1,5 @@
 import * as path from "path";
 
-import Promise from "bluebird";
-import I18next, { TFunction } from "i18next";
-import update from "immutability-helper";
-import * as _ from "lodash";
-import { Message, PluginCleaningData } from "loot";
-import * as React from "react";
-import { Alert, Button, ListGroup, ListGroupItem, Panel } from "react-bootstrap";
-import { withTranslation } from "react-i18next";
-import ReactMarkdown from "react-markdown";
-import { connect } from "react-redux";
-import Select from "react-select";
-import * as Redux from "redux";
-import { ThunkDispatch } from "redux-thunk";
-import { generate as shortid } from "shortid";
 import {
   ComponentEx,
   FlexLayout,
@@ -33,7 +19,21 @@ import {
   types,
   Usage,
   util,
-} from "vortex-api";
+} from "@nexusmods/vortex-api";
+import Promise from "bluebird";
+import I18next, { TFunction } from "i18next";
+import update from "immutability-helper";
+import * as _ from "lodash";
+import { Message, PluginCleaningData } from "loot";
+import * as React from "react";
+import { Alert, Button, ListGroup, ListGroupItem, Panel } from "react-bootstrap";
+import { withTranslation } from "react-i18next";
+import ReactMarkdown from "react-markdown";
+import { connect } from "react-redux";
+import Select from "react-select";
+import * as Redux from "redux";
+import { ThunkDispatch } from "redux-thunk";
+import { generate as shortid } from "shortid";
 
 /* eslint-disable */
 import { setPluginEnabled } from "../actions/loadOrder";
@@ -46,6 +46,7 @@ import { ILoadOrder } from "../types/ILoadOrder";
 import { ILOOTList, ILOOTPlugin } from "../types/ILOOTList";
 import { IPluginCombined, IPluginLoot, IPluginParsed, IPlugins } from "../types/IPlugins";
 import GroupFilter from "../util/GroupFilter";
+import toPluginId from "../util/toPluginId";
 import DependencyIcon from "./DependencyIcon";
 import MasterList from "./MasterList";
 import PluginFlags from "./PluginFlags";
@@ -180,7 +181,7 @@ class GroupSelect extends React.PureComponent<IGroupSelectProps, IGroupSelectSta
 
     const isCustom: boolean =
       (userlist.plugins || []).find((plugin) => {
-        const refPlugin = plugins.find((iter) => iter.id === plugin.name.toLowerCase());
+        const refPlugin = plugins.find((iter) => iter.id === toPluginId(plugin.name));
         return refPlugin !== undefined && plugin.group !== undefined;
       }) !== undefined;
 
@@ -994,7 +995,7 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
 
     const pluginObjects: IPluginCombined[] = pluginIds.map((pluginId: string) => {
       const userlistEntry = (userlist.plugins || []).find(
-        (entry) => entry.name.toLowerCase() === pluginId,
+        (entry) => toPluginId(entry.name) === pluginId,
       );
       const res = {
         id: pluginId,
@@ -1134,12 +1135,12 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
 
     const updateSet = {};
     userlist.forEach((plugin) => {
-      const pluginId = plugin.name.toLowerCase();
+      const pluginId = toPluginId(plugin.name);
       if (pluginsCombined[pluginId] === undefined) {
         return;
       }
 
-      const pluginML: any = masterlist.find((iter) => iter.name.toLowerCase() === pluginId) || {};
+      const pluginML: any = masterlist.find((iter) => toPluginId(iter.name) === pluginId) || {};
 
       updateSet[pluginId] = {};
 
@@ -1500,7 +1501,7 @@ class PluginList extends ComponentEx<IProps, IComponentState> {
         customRenderer: (plugin: IPluginCombined) => {
           const grp = util.getSafe(plugin, ["group"], "") || "default";
           const ulEntry = (this.props.userlist.plugins || []).find(
-            (iter) => iter.name.toLowerCase() === plugin.id,
+            (iter) => toPluginId(iter.name) === plugin.id,
           );
           const isCustom = ulEntry !== undefined && ulEntry.group !== undefined;
 

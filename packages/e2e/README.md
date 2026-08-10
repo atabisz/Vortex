@@ -10,6 +10,24 @@ Automated E2E tests for Vortex using [Playwright for Electron](https://playwrigh
 pnpm -F @vortex/e2e exec playwright install chromium
 ```
 
+## Setup Environment
+
+E2E tests load env from `packages/e2e/.env` automatically. File is gitignored.
+Get Nexus creds from password manager, then add:
+
+```env
+E2E_NEXUS_FREE_USER_USERNAME=NXMMember
+E2E_NEXUS_FREE_USER_PASSWORD=...
+E2E_NEXUS_PREMIUM_USER_USERNAME=NXMPremium
+E2E_NEXUS_PREMIUM_USER_PASSWORD=...
+```
+
+Currently, for login to work, a VPN connection to the office network is required.
+Contact Platform Engineering if you need access credentials.
+
+Free-user creds cover login, upgrade, and some smoke tests. Premium-user creds
+are needed for specs that assert premium-only behaviour.
+
 ## Running Tests
 
 ```bash
@@ -31,6 +49,8 @@ pnpm -F @vortex/e2e exec playwright test --grep @smoke
 # Run tests matching a name pattern
 pnpm -F @vortex/e2e exec playwright test -g "Settings"
 ```
+
+Examples above assume `.env` has needed creds.
 
 ## Project Structure
 
@@ -117,7 +137,7 @@ No inline `page.screenshot()` in tests. Diagnostics are handled by the Playwrigh
 View reports after a run:
 
 ```bash
-pnpm -F @vortex/e2e run test:report
+pnpm e2e:report
 ```
 
 ### Fake Game Installations
@@ -141,7 +161,3 @@ E2E tests run as part of the `e2e.yml` GitHub Actions workflow:
 - **Windows**: required (blocks PRs on failure)
 - **Linux**: allowed to fail (`continue-on-error: true`)
 - Linux uses `xvfb-run` for a virtual display
-
-## Playwright Compatibility Patch
-
-Electron 30+ removed `--remote-debugging-port` as a CLI flag. A `pnpm patch` for `playwright-core` is applied automatically on install (see `patches/` directory). This can be removed once Playwright ships the fix in a stable release.

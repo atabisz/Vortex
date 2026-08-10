@@ -9,27 +9,28 @@ import numeral from "numeral";
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 
-import type { IExtensionApi } from "../../../types/IExtensionContext";
-import type { IState } from "../../../types/IState";
-import { Button } from "../../../ui/components/button/Button";
-import { CollectionTile } from "../../../ui/components/collectiontile/CollectionTile";
-import { CollectionTileSkeleton } from "../../../ui/components/collectiontile/CollectionTileSkeleton";
-import { Input } from "../../../ui/components/form/input/Input";
-import { Listing } from "../../../ui/components/listing/Listing";
-import { NoResults } from "../../../ui/components/no_results/NoResults";
-import { Pagination } from "../../../ui/components/pagination/Pagination";
-import { Picker } from "../../../ui/components/picker/Picker";
-import { TabButton } from "../../../ui/components/tabs/Tab";
-import { TabBar } from "../../../ui/components/tabs/TabBar";
-import { TabPanel } from "../../../ui/components/tabs/TabPanel";
-import { TabProvider } from "../../../ui/components/tabs/tabs.context";
-import { Typography } from "../../../ui/components/typography/Typography";
-import { UserCanceled } from "../../../util/api";
-import { activeGameId } from "../../../util/selectors";
-import MainPage from "../../../views/MainPage";
-import { CollectionsDownloadClickedEvent } from "../../analytics/mixpanel/MixpanelEvents";
-import { getGame } from "../../gamemode_management/util/getGame";
-import { nexusGameId } from "../../nexus_integration/util/convertGameId";
+import { CollectionsDownloadClickedEvent } from "@/extensions/analytics/mixpanel/MixpanelEvents";
+import { getGame } from "@/extensions/gamemode_management/util/getGame";
+import { buildNXMCollectionUrl } from "@/extensions/nexus_integration/NXMUrl";
+import { nexusGameId } from "@/extensions/nexus_integration/util/convertGameId";
+import type { IExtensionApi } from "@/types/IExtensionContext";
+import type { IState } from "@/types/IState";
+import { Button } from "@/ui/components/button/Button";
+import { CollectionTile } from "@/ui/components/collection_tile/CollectionTile";
+import { CollectionTileSkeleton } from "@/ui/components/collection_tile/CollectionTile.skeleton";
+import { Input } from "@/ui/components/form/input/Input";
+import { Listing } from "@/ui/components/listing/Listing";
+import { NoResults } from "@/ui/components/no_results/NoResults";
+import { Pagination } from "@/ui/components/pagination/Pagination";
+import { Picker } from "@/ui/components/picker/Picker";
+import { TabBar } from "@/ui/components/tabs/TabBar";
+import { TabButton } from "@/ui/components/tabs/TabButton";
+import { TabPanel } from "@/ui/components/tabs/TabPanel";
+import { TabProvider } from "@/ui/components/tabs/Tabs.context";
+import { Typography } from "@/ui/components/typography/Typography";
+import { UserCanceled } from "@/util/api";
+import { activeGameId } from "@/util/selectors";
+import MainPage from "@/views/MainPage";
 
 interface IBrowseNexusPageProps {
   api: IExtensionApi;
@@ -132,7 +133,11 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
   const handleAddCollection = (collection: ICollection) => {
     const revisionNumber = collection.latestPublishedRevision?.revisionNumber || "latest";
     // Use the game domain name from the collection data (already converted)
-    const nxmUrl = `nxm://${collection.game.domainName}/collections/${collection.slug}/revisions/${revisionNumber}`;
+    const nxmUrl = buildNXMCollectionUrl(
+      collection.game.domainName,
+      collection.slug,
+      revisionNumber,
+    );
 
     // Track the download click event
     api.events.emit(
@@ -248,13 +253,17 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
           tabListId="browse-nexus-tabs"
           onSetSelectedTab={setSelectedTab}
         >
-          <TabBar className="pl-6">
-            <TabButton count={allCollectionsTotal} name={t("collection:browse.tabs.collections")} />
+          <TabBar className="overflow-clip pl-6">
+            <TabButton
+              count={allCollectionsTotal}
+              name={t("collection:browse.tabs.collections")}
+              panelId="collections"
+            />
 
-            <TabButton name={t("collection:browse.tabs.mods")} />
+            <TabButton name={t("collection:browse.tabs.mods")} panelId="mods" />
           </TabBar>
 
-          <TabPanel name={t("collection:browse.tabs.collections")}>
+          <TabPanel id="collections">
             <div className="space-y-3 p-6">
               <form
                 className="flex items-center gap-x-2"
@@ -282,8 +291,8 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
                 />
 
                 <Button
-                  buttonType="tertiary"
-                  filled="weak"
+                  appearance="moderate"
+                  brand="neutral"
                   leftIconPath={mdiMagnify}
                   size="sm"
                   title={t("common:actions.search")}
@@ -294,15 +303,19 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
               <div className="flex justify-between">
                 <div className="flex items-center gap-x-2">
                   <Button
-                    buttonType="tertiary"
-                    filled="weak"
+                    appearance="moderate"
+                    brand="neutral"
                     leftIconPath={mdiRefresh}
                     size="sm"
                     title={t("collection:browse.refresh")}
                     onClick={handleRefresh}
                   />
 
-                  <Typography appearance="moderate" isTranslucent={true} typographyType="body-sm">
+                  <Typography
+                    appearance="moderate"
+                    brand="neutral-translucent"
+                    typographyType="body-sm"
+                  >
                     {t("collection:browse.resultsCount", {
                       total: numeral(totalCount).format("0,0"),
                     })}
@@ -329,8 +342,8 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
                 isLoading={loading}
                 noResultsChildren={
                   <Button
-                    buttonType="tertiary"
-                    filled="weak"
+                    appearance="moderate"
+                    brand="neutral"
                     leftIconPath={mdiOpenInNew}
                     size="sm"
                     onClick={() =>
@@ -373,7 +386,7 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
             </div>
           </TabPanel>
 
-          <TabPanel name={t("collection:browse.tabs.mods")}>
+          <TabPanel id="mods">
             <NoResults
               className="py-16"
               iconPath={mdiClockOutline}
@@ -381,8 +394,8 @@ function BrowseNexusPage(props: IBrowseNexusPageProps) {
               title={t("collection:browse.modsComingSoon.title")}
             >
               <Button
-                buttonType="tertiary"
-                filled="weak"
+                appearance="moderate"
+                brand="neutral"
                 leftIconPath={mdiOpenInNew}
                 size="sm"
                 onClick={() =>

@@ -102,7 +102,7 @@ describe("buildProtonEnvironment", () => {
 
   it("merges existingEnv and overrides with Proton keys", () => {
     const existing = { MY_VAR: "hello", STEAM_COMPAT_DATA_PATH: "old" };
-    const result = buildProtonEnvironment("/compat/data", "/steam", existing);
+    const result = buildProtonEnvironment("/compat/data", "/steam", undefined, existing);
     expect(result.MY_VAR).toBe("hello");
     expect(result.STEAM_COMPAT_DATA_PATH).toBe("/compat/data");
     expect(result.WINEPREFIX).toBe("/compat/data/pfx");

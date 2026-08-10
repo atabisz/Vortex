@@ -17,7 +17,7 @@ import { getNormalizeFunc } from "../../util/api";
 import { ProcessCanceled, SetupError, UserCanceled } from "../../util/CustomErrors";
 import EpicGamesLauncher from "../../util/EpicGamesLauncher";
 import * as fs from "../../util/fs";
-import GameStoreHelper from "../../util/GameStoreHelper";
+import GameStoreHelper, { normalizeStoreQuery } from "../../util/GameStoreHelper";
 import { log } from "../../util/log";
 import { activeProfile, discoveryByGame } from "../../util/selectors";
 import Steam from "../../util/Steam";
@@ -69,9 +69,7 @@ class GameModeManager {
     this.mStore = null;
     this.mKnownGames = extensionGames;
     this.mGameStubs = gameStubs;
-    this.mKnownGameStores = [Steam, EpicGamesLauncher, ...gameStoreExtensions].filter(
-      (s): s is IGameStore => s != null,
-    );
+    this.mKnownGameStores = [Steam, EpicGamesLauncher, ...gameStoreExtensions].filter(Boolean);
     this.mActiveSearch = null;
     this.mOnGameModeActivated = onGameModeActivated;
   }
@@ -79,7 +77,7 @@ class GameModeManager {
   /**
    * attach this manager to the specified store
    *
-   * @param {Redux.Store<IStateEx>} store
+   * @param {Redux.Store<IState>} store
    *
    * @memberOf GameModeManager
    */
@@ -259,13 +257,12 @@ class GameModeManager {
       .then((result) => {
         this.postDiscovery();
 
-        // D-09: One-shot retry on Linux when no games detected.
-        // Handles race where Vortex starts before Steam finishes loading its library.
+        // Steam may still be populating its library when Vortex starts on
+        // Linux. If the first pass found nothing, retry once after a short
+        // delay rather than leaving the game list empty until restart.
         if (process.platform === "linux") {
           const discovered = this.mStore.getState().settings.gameMode.discovered;
-          const hasGames = Object.keys(discovered).some(
-            (gameId) => discovered[gameId].path !== undefined,
-          );
+          const hasGames = Object.values(discovered).some((game) => game.path !== undefined);
           if (!hasGames) {
             log("debug", "no games found on Linux, retrying after delay");
             PromiseBB.delay(2000)
@@ -278,12 +275,8 @@ class GameModeManager {
                   this.onDiscoveredTool,
                 ),
               )
-              .then(() => {
-                this.postDiscovery();
-              })
-              .catch((err) => {
-                log("debug", "Steam retry failed", err);
-              });
+              .then(() => this.postDiscovery())
+              .catch((err) => log("debug", "Steam retry failed", err));
           }
         }
 
@@ -391,10 +384,10 @@ class GameModeManager {
     }
   }
 
-  private postDiscovery(): PromiseBB<void> {
+  private postDiscovery() {
     const { discovered } = this.mStore.getState().settings.gameMode;
     this.mStore.dispatch(clearGameDisabled());
-    return PromiseBB.map(Object.keys(discovered), (gameId) => {
+    PromiseBB.map(Object.keys(discovered), (gameId) => {
       if (discovered[gameId].path === undefined) {
         return PromiseBB.resolve();
       }
@@ -424,7 +417,7 @@ class GameModeManager {
           });
           return PromiseBB.resolve();
         });
-    }).then(() => undefined);
+    });
   }
 
   private ensureWritable(modPath: string): PromiseBB<void> {
@@ -463,6 +456,18 @@ class GameModeManager {
   }
 
   private storeGame = (game: IGame): IGameStored => {
+    const steamId = this.extractSteamId(game);
+
+    const environment = { ...game.environment };
+    if (steamId !== undefined && environment.SteamAPPId === undefined) {
+      environment.SteamAPPId = steamId;
+    }
+
+    const details = { ...game.details };
+    if (steamId !== undefined && details.steamAppId === undefined) {
+      details.steamAppId = +steamId;
+    }
+
     return {
       name: game.name,
       shortName: game.shortName,
@@ -474,13 +479,18 @@ class GameModeManager {
       supportedTools:
         game.supportedTools !== undefined ? game.supportedTools.map(this.storeTool) : [],
       executable: game.executable(),
-      environment: game.environment,
-      details: game.details,
+      environment,
+      details,
       shell: game.shell,
       contributed: game.contributed,
       final: game.final,
     };
   };
+
+  private extractSteamId(game: IGame): string | undefined {
+    const [first] = normalizeStoreQuery(game.queryArgs?.steam);
+    return first?.id;
+  }
 
   private storeTool(tool: ITool): IToolStored {
     const SKIPPED_TOOL_ATTRIBUTES = [

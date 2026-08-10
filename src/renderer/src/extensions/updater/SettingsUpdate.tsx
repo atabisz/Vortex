@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Alert, Button, ControlLabel, FormControl, FormGroup, InputGroup } from "react-bootstrap";
+import { FormGroup } from "react-bootstrap";
 import type * as Redux from "redux";
 import type { ThunkDispatch } from "redux-thunk";
 
@@ -8,6 +8,9 @@ import More from "../../controls/More";
 import type { UpdateChannel, IState } from "../../types/IState";
 import { UPDATE_CHANNELS } from "../../types/IState";
 import type { VortexInstallType } from "../../types/VortexInstallType";
+import { Button } from "../../ui/components/button/Button";
+import { Picker } from "../../ui/components/picker/Picker";
+import { Typography } from "../../ui/components/typography/Typography";
 import Debouncer from "../../util/Debouncer";
 import { log } from "../../util/log";
 import { setUpdateChannel } from "./actions";
@@ -60,55 +63,29 @@ class SettingsUpdate extends ComponentEx<IProps, ISettingsUpdateState> {
     this.checkUpdateDebouncer.schedule();
   };
 
+  private renderCallout(text: string, brand: "info" | "warning" = "info"): JSX.Element {
+    const bg = brand === "warning" ? "bg-warning-950" : "bg-info-950";
+    const border = brand === "warning" ? "border-warning-weak" : "border-info-weak";
+    return (
+      <div className={`rounded-lg border ${border} ${bg} p-3`}>
+        <Typography brand="neutral-translucent">{text}</Typography>
+      </div>
+    );
+  }
+
   public render(): JSX.Element {
     const { t, installType, updateChannel } = this.props;
 
     const { checkUpdateButtonDisabled } = this.state;
 
-    const renderDevelopmentAlert = () => {
-      if (process.env.NODE_ENV === "development")
-        return (
-          <div>
-            <ControlLabel>
-              <Alert>
-                {t(
-                  "Vortex is running in development mode. Updates will be checked and downloaded but can't be installed.",
-                )}
-              </Alert>
-            </ControlLabel>
-          </div>
-        );
-      return null;
-    };
-
-    const renderPreviewAlert = () => {
-      if (updateChannel === "next")
-        return (
-          <div>
-            <ControlLabel>
-              <Alert>
-                {t("Vortex is running in preview mode and using the hidden 'next' update channel.")}
-              </Alert>
-            </ControlLabel>
-          </div>
-        );
-      return null;
-    };
-
     // managed or development
     if (installType === "managed") {
       // managed and not development
       if (process.env.NODE_ENV !== "development") {
-        return (
-          <div>
-            <ControlLabel>
-              <Alert>
-                {t(
-                  "Vortex was installed through a third-party service which will take care of updating it.",
-                )}
-              </Alert>
-            </ControlLabel>
-          </div>
+        return this.renderCallout(
+          t(
+            "Vortex was installed through a third-party service which will take care of updating it.",
+          ),
         );
       }
 
@@ -119,55 +96,65 @@ class SettingsUpdate extends ComponentEx<IProps, ISettingsUpdateState> {
     return (
       <form>
         <FormGroup controlId="updateChannel">
-          {renderDevelopmentAlert()}
+          <div className="flex flex-col items-start gap-y-2">
+            {process.env.NODE_ENV === "development"
+              ? this.renderCallout(
+                  t(
+                    "Vortex is running in development mode. Updates will be checked and downloaded but can't be installed.",
+                  ),
+                )
+              : null}
 
-          <ControlLabel>
-            {t("Update")}
+            <Typography as="span">
+              {t("Update")}
 
-            <More id="more-update-channel" name={t("Update Channel")}>
-              {t(
-                "You can choose to either receive automatic updates only after they went through some " +
-                  "community testing (Stable) or to always get the newest features (Beta). Manual checking for updates is " +
-                  "restricted to every 10 minutes.",
-              )}
-            </More>
-          </ControlLabel>
+              <More id="more-update-channel" name={t("Update Channel")}>
+                {t(
+                  "You can choose to either receive automatic updates only after they went through some " +
+                    "community testing (Stable) or to always get the newest features (Beta). Manual checking for updates is " +
+                    "restricted to every 10 minutes.",
+                )}
+              </More>
+            </Typography>
 
-          <InputGroup>
-            <FormControl
-              componentClass="select"
-              value={updateChannel}
-              onChange={this.selectChannel}
-            >
-              <option value="stable">{t("Stable")}</option>
+            <div className="flex items-center gap-x-2">
+              <Picker<UpdateChannel>
+                options={[
+                  { label: t("Stable"), value: "stable" },
+                  { label: t("Beta"), value: "beta" },
+                  { label: t("No automatic updates"), value: "none" },
+                ]}
+                value={updateChannel}
+                onChange={this.selectChannel}
+              />
 
-              <option value="beta">{t("Beta")}</option>
+              <Button
+                brand="neutral"
+                disabled={checkUpdateButtonDisabled}
+                size="sm"
+                onClick={this.manualUpdateCheck}
+              >
+                {t("Check now")}
+              </Button>
+            </div>
 
-              <option value="none">{t("No automatic updates")}</option>
-            </FormControl>
+            {updateChannel === "next"
+              ? this.renderCallout(
+                  t(
+                    "Vortex is running in preview mode and using the hidden 'next' update channel.",
+                  ),
+                )
+              : null}
 
-            <Button
-              disabled={checkUpdateButtonDisabled}
-              key="manual-update-button"
-              onClick={this.manualUpdateCheck}
-            >
-              {t("Check now")}
-            </Button>
-          </InputGroup>
-
-          {renderPreviewAlert()}
-
-          <div>
-            <ControlLabel>
-              {updateChannel === "none" ? (
-                <Alert bsStyle="warning" key="manual-update-warning">
-                  {t(
+            {updateChannel === "none"
+              ? this.renderCallout(
+                  t(
                     "Very old versions of Vortex will be locked out of network features eventually " +
                       "so please do keep Vortex up-to-date.",
-                  )}
-                </Alert>
-              ) : null}
-            </ControlLabel>
+                  ),
+                  "warning",
+                )
+              : null}
           </div>
         </FormGroup>
       </form>
@@ -180,10 +167,9 @@ class SettingsUpdate extends ComponentEx<IProps, ISettingsUpdateState> {
     window.api.updater.checkForUpdates(channel, true);
   };
 
-  private selectChannel = (evt) => {
-    const target: HTMLSelectElement = evt.target as HTMLSelectElement;
-    if (UPDATE_CHANNELS.includes(target.value as UpdateChannel)) {
-      const newChannel = target.value as UpdateChannel;
+  private selectChannel = (value: UpdateChannel) => {
+    if (UPDATE_CHANNELS.includes(value)) {
+      const newChannel = value;
 
       if (newChannel === "beta") {
         this.context.api.showDialog(
@@ -230,7 +216,7 @@ Are you sure you want to turn off updates?`,
         );
       }
     } else {
-      log("error", "invalid channel", target.value);
+      log("error", "invalid channel", value);
     }
   };
 }

@@ -10,7 +10,7 @@ import type { ICustomCheckApi, ILegacyApi, IResultsApi } from "./api";
 /**
  * Known health check IDs
  */
-export type HealthCheckId = "check-nexus-mod-requirements";
+export type HealthCheckId = "check-nexus-mod-requirements" | "check-file-level-requirements";
 
 /**
  * A subset of IModRequiring representing the mod that requires a missing mod.
@@ -35,6 +35,11 @@ export interface IModRequirementExt extends Omit<IModRequirement, "modId" | "gam
   gameId: string;
   /** Url to view mod information; undefined if no URL could be derived (e.g., game has no Nexus domain mapping) */
   modUrl?: string;
+  /**
+   * The required mod's single main file, denormalized by the check so the detail
+   * view needs no separate fetch. Undefined for external requirements.
+   */
+  mainFile?: IModFileInfo;
 }
 
 /**
@@ -78,6 +83,28 @@ export interface IModFileInfo {
   isPrimary: boolean;
   /** Thumbnail URL if available */
   thumbnailUrl?: string;
+  /** Mod-level detail, denormalized onto each file (like thumbnailUrl): adult-content flag. */
+  adultContent?: boolean;
+  /** Mod-level detail, denormalized onto each file (like thumbnailUrl): mod summary. */
+  modSummary?: string;
+}
+
+/**
+ * Minimal mod details used by the health checks (mod-level requirement listing
+ * and file-level requirement candidates). Sourced from the batched modsByUid
+ * GraphQL query.
+ */
+export interface IModDetails {
+  /** Composite mod UID (game + mod id) */
+  modUID: string;
+  /** Display name of the mod */
+  modName: string;
+  /** Mod summary */
+  modSummary?: string;
+  /** Thumbnail URL if available */
+  thumbnailUrl?: string;
+  /** Whether the mod is flagged as adult content */
+  adultContent: boolean;
 }
 
 /**
@@ -108,16 +135,6 @@ export interface IModMissingRequirements {
   missingMods: IModRequirementExt[];
   /** List of DLC requirements (informational, cannot be auto-verified) */
   dlcRequirements: IMissingRequiredDlc[];
-}
-
-/**
- * Parameters for the check-nexus-mod-requirements check
- */
-export interface IModRequirementsCheckParams {
-  /** Skip API calls and only use cached requirements data */
-  cachedOnly?: boolean;
-  /** Limit the number of mods to check */
-  limit?: number;
 }
 
 /**

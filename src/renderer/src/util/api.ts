@@ -3,8 +3,17 @@
 // (excluding log, which is exported separately to give
 //  it a more accessible name)
 
-export * from "./message";
-export * from "./storeHelper";
+export type { Normalize } from "./getNormalizeFunc.ts";
+export {
+  calcDuration,
+  showError,
+  showActivity,
+  showInfo,
+  renderError,
+  showSuccess,
+  prettifyNodeErrorMessage,
+} from "./message";
+export type { IPrettifiedError, IErrorRendered } from "./message";
 
 import bbcodeToReact, { bbcodeToHTML, preProcess as bbcodePreProcess } from "../controls/bbcode";
 import { installIconSet } from "../controls/Icon";
@@ -12,31 +21,33 @@ import {
   resolveCategoryName,
   resolveCategoryPath,
 } from "../extensions/category_management/util/retrieveCategoryPath";
-import { generateCollectionSessionId, modRuleId } from "../extensions/collections_integration/util";
 import { readExtensibleDir } from "../extensions/extension_manager/util";
 import getDriveList from "../extensions/gamemode_management/util/getDriveList";
 import { getGame, getGames } from "../extensions/gamemode_management/util/getGame";
 import { getModType } from "../extensions/gamemode_management/util/modTypeExtensions";
 import deriveModInstallName from "../extensions/mod_management/modIdManager";
 import { getManifest } from "../extensions/mod_management/util/activationStore";
+import { coerceToSemver } from "../extensions/mod_management/util/coerceToSemver";
 import {
   findDownloadByRef,
-  findModByRef,
   lookupFromDownload,
 } from "../extensions/mod_management/util/dependencies";
 import {
   getActivator,
   getCurrentActivator,
 } from "../extensions/mod_management/util/deploymentMethods";
+import { findModByRef } from "../extensions/mod_management/util/findModByRef";
+import { isFuzzyVersion } from "../extensions/mod_management/util/isFuzzyVersion";
 import renderModName, { renderModReference } from "../extensions/mod_management/util/modName";
 import { makeModReference } from "../extensions/mod_management/util/modReference";
 import { getModSource, getModSources } from "../extensions/mod_management/util/modSource";
 import { removeMods } from "../extensions/mod_management/util/removeMods";
-import sortMods, { CycleError } from "../extensions/mod_management/util/sort";
+import { rulePhase } from "../extensions/mod_management/util/rulePhase";
+import sortMods from "../extensions/mod_management/util/sort";
 import testModReference, {
-  coerceToSemver,
+  findRuleByRef,
+  ruleInstallSpec,
   testRefByIdentifiers,
-  isFuzzyVersion,
 } from "../extensions/mod_management/util/testModReference";
 import {
   convertGameIdReverse,
@@ -46,11 +57,14 @@ import { getApplication } from "./application";
 import { Archive } from "./archives";
 import calculateFolderSize from "./calculateFolderSize";
 import { checksum, fileMD5 } from "./checksum";
+import { generateCollectionSessionId, modRuleId } from "./collectionInstallSession";
 import ConcurrencyLimiter from "./ConcurrencyLimiter";
 import copyRecursive from "./copyRecursive";
 import {
   ArgumentInvalid,
+  CycleError,
   DataInvalid,
+  GameNotFound,
   MissingInterpreter,
   NotFound,
   NotSupportedError,
@@ -67,7 +81,7 @@ import {
   withTrackedActivity,
 } from "./errorHandling";
 import extractExeIcon from "./exeIcon";
-import GameStoreHelper from "./GameStoreHelper";
+import GameStoreHelper, { normalizeStoreQuery } from "./GameStoreHelper";
 import { resolvePathCase } from "./resolvePathCase";
 
 /**
@@ -81,12 +95,19 @@ function makeRemoteCall(): never {
   );
 }
 
-import { copyFileAtomic, writeFileAtomic } from "./fsAtomic";
-import getNormalizeFunc, { makeNormalizingDict } from "./getNormalizeFunc";
-export type { Normalize } from "./getNormalizeFunc.ts";
 import LazyComponent from "../controls/LazyComponent";
+import {
+  buildCopyInstructions,
+  compileStopPatterns,
+  declareInstallers,
+  findCommonRootDir,
+  makeInstallerFromSpec,
+  matchesAnyStopPattern,
+} from "../extensions/mod_management/util/installerHelpers";
 import ReduxProp from "../ReduxProp";
 import { getReduxLog } from "../store/reduxLogger";
+import { copyFileAtomic, writeFileAtomic } from "./fsAtomic";
+import getNormalizeFunc, { makeNormalizingDict } from "./getNormalizeFunc";
 import getVortexPath from "./getVortexPath";
 import github from "./github";
 import type { TFunction } from "./i18n";
@@ -98,7 +119,7 @@ import onceCB from "./onceCB";
 import opn from "./opn";
 import relativeTime, { userFriendlyTime } from "./relativeTime";
 import StarterInfo from "./StarterInfo";
-import steam, { GameNotFound } from "./Steam";
+import steam from "./Steam";
 export type { ISteamEntry } from "./Steam.ts";
 import SevenZip from "node-7z";
 
@@ -114,6 +135,12 @@ import {
   CollectionsDraftedEvent,
   CollectionsDraftUploadedEvent,
   CollectionsDraftUpdateUploadedEvent,
+} from "../extensions/analytics/mixpanel/MixpanelEvents";
+// CollectionInstallOutcomeProps: props for the exported collection-install event constructors.
+// ModChangeReason: reason vocabulary referenced by IRemoveModOptions.reason / IEnableOptions.reason.
+export type {
+  CollectionInstallOutcomeProps,
+  ModChangeReason,
 } from "../extensions/analytics/mixpanel/MixpanelEvents";
 import getTextModManagement from "../extensions/mod_management/texts";
 import getTextProfileManagement from "../extensions/profile_management/texts";
@@ -146,7 +173,25 @@ import {
 import { Campaign, Section, Content, Overlayable } from "./util";
 import walk from "./walk";
 
-export * from "./network";
+export { request, rawRequest, upload, jsonRequest } from "./network";
+export type { IRequestOptions, Method } from "./network";
+export {
+  addUniqueSafe,
+  changeOrNop,
+  currentGame,
+  deleteOrNop,
+  getSafe,
+  getSafeCI,
+  merge,
+  mutateSafe,
+  pushSafe,
+  rehydrate,
+  removeValue,
+  removeValueIf,
+  setDefaultArray,
+  setOrNop,
+  setSafe,
+} from "./storeHelper";
 export {
   Archive,
   ArgumentInvalid,
@@ -154,16 +199,19 @@ export {
   bbcodePreProcess,
   bbcodeToHTML,
   bbcodeToReact,
+  buildCopyInstructions,
   bytesToString,
   calculateFolderSize,
   Campaign,
   checksum,
   convertGameIdReverse,
+  compileStopPatterns,
   copyFileAtomic,
   copyRecursive,
   ConcurrencyLimiter,
   Content,
   CycleError,
+  declareInstallers,
   DataInvalid,
   Debouncer,
   deBOM,
@@ -174,10 +222,13 @@ export {
   // extend is renderer-only, available via renderer/controls/ComponentEx
   extractExeIcon,
   fileMD5,
+  findCommonRootDir,
   findDownloadByRef,
   findModByRef,
+  findRuleByRef,
   GameNotFound,
   GameStoreHelper,
+  normalizeStoreQuery,
   generateCollectionSessionId,
   getActivator,
   getApplication,
@@ -204,6 +255,7 @@ export {
   lazyRequire,
   local,
   lookupFromDownload,
+  makeInstallerFromSpec,
   makeModReference,
   coerceToSemver,
   makeNormalizingDict,
@@ -227,13 +279,14 @@ export {
   ProcessCanceled,
   ReduxProp,
   readExtensibleDir,
-  resolvePathCase,
   relativeTime,
   removeMods,
   renderModName,
   renderModReference,
   resolveCategoryName,
   resolveCategoryPath,
+  ruleInstallSpec,
+  rulePhase,
   runElevated,
   runThreaded,
   sanitizeCSSId,

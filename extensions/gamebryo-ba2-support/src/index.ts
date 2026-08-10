@@ -1,6 +1,6 @@
+import { types, util } from "@nexusmods/vortex-api";
 import loadBA2, { BA2Archive } from "ba2tk";
 import Promise from "bluebird";
-import { types, util } from "vortex-api";
 
 const loadBA2async = Promise.promisify(loadBA2);
 

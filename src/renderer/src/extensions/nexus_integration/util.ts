@@ -72,15 +72,15 @@ import { setUserInfo } from "./actions/persistent";
 import { setLoginId, setOauthPending } from "./actions/session";
 import { OAUTH_CLIENT_ID, OAUTH_REDIRECT_URL, OAUTH_URL, getOAuthRedirectUrl } from "./constants";
 import NXMUrl from "./NXMUrl";
-import { isLoggedIn } from "./selectors";
-import type { IJWTAccessToken } from "./types/IJWTAccessToken";
-import type { IValidateKeyDataV2 } from "./types/IValidateKeyData";
-import { IAccountStatus } from "./types/IValidateKeyData";
+import { isLoggedIn, userInfo as userInfoSelector } from "./selectors";
+import { accessTokenSchema } from "./types/IJWTAccessToken";
+import type { IMembership, IValidateKeyDataV2 } from "./types/IValidateKeyData";
 import { checkModVersion, fetchRecentUpdates, ONE_DAY, ONE_MINUTE } from "./util/checkModsVersion";
 import { convertGameIdReverse, convertNXMIdReverse, nexusGameId } from "./util/convertGameId";
 import { endorseCollection, endorseMod } from "./util/endorseMod";
 import { FULL_REVISION_INFO, MOD_FILE_INFO } from "./util/graphQueries";
-import OAuth, { type ITokenReply } from "./util/oauth";
+import type { ITokenReply } from "./util/oauth";
+import OAuth from "./util/oauth";
 import { makeFileUID } from "./util/UIDs";
 
 const UPDATE_CHECK_DELAY = 60 * 60 * 1000;
@@ -104,8 +104,6 @@ interface IUserInfo {
   premium_expiry: number;
 }
 
-let cancelLogin: () => void;
-
 /**
  * Search for collections using the GraphQL API
  *
@@ -123,15 +121,6 @@ export function searchCollections(
 }
 
 export function onCancelLoginImpl(api: IExtensionApi) {
-  if (cancelLogin !== undefined) {
-    try {
-      cancelLogin();
-    } catch (err) {
-      // the only time we ever see this happen is a case where the websocket connection
-      // wasn't established yet so the cancelation failed because it wasn't necessary.
-      log("info", "login not canceled", getErrorMessageOrDefault(err));
-    }
-  }
   api.store.dispatch(setLoginId(undefined));
   api.events.emit("did-login", new UserCanceled());
 }
@@ -297,7 +286,7 @@ export function requestLogin(nexus: Nexus, api: IExtensionApi, callback: (err: E
 
   return oauth
     .sendRequest(
-      async (err: Error, token: ITokenReply) => {
+      (err: Error, token: ITokenReply) => {
         // received reply from site for this state
 
         void bringToFront();
@@ -310,11 +299,20 @@ export function requestLogin(nexus: Nexus, api: IExtensionApi, callback: (err: E
           return callback(err);
         }
 
-        const tokenDecoded = jwt.decode(token.access_token) as IJWTAccessToken;
-        //log('info', 'JWT Token', { token: token.access_token });
+        const parsed = accessTokenSchema.safeParse(jwt.decode(token.access_token));
+        if (!parsed.success) {
+          log("error", "OAuth login returned an unrecognized access token", {
+            error: parsed.error.message,
+          });
+          return callback(
+            new ProcessCanceled(
+              "Received an invalid access token from Nexus Mods, please try logging in again.",
+            ),
+          );
+        }
 
         api.store.dispatch(
-          setOAuthCredentials(token.access_token, token.refresh_token, tokenDecoded.fingerprint),
+          setOAuthCredentials(token.access_token, token.refresh_token, parsed.data.fingerprint),
         );
 
         callback(null);
@@ -551,6 +549,7 @@ export function getInfoGraphQL(
         id: true,
         name: true,
       },
+      name: true, // required, else modInfo.name is undefined
       pictureUrl: true,
       status: true,
       uid: true,
@@ -562,7 +561,7 @@ export function getInfoGraphQL(
     uid: true,
     uri: true,
     version: true,
-  } as any;
+  };
 
   // Ensure the nexus games cache is loaded before constructing UIDs,
   // as makeFileUID needs the games list to convert domain names to numeric IDs
@@ -671,7 +670,7 @@ function transformGraphQLFileToIFileInfo(file: Partial<IModFile>): IFileInfo {
     uploaded_timestamp: file.mod?.updatedAt ? new Date(file.mod.updatedAt).getTime() : file.date,
     uploaded_time: file.mod?.updatedAt || new Date(file.date).toString(),
     changelog_html: null, // Changelog HTML is not included in the GraphQL response
-    file_name: file.uri,
+    file_name: file.uri, // file.uri is the CDN storage path ("5c/d3/1f/<guid>")
     description: file.description || "",
     content_preview_link: "", // Default value
     external_virus_scan_url: "", // Default value
@@ -777,7 +776,7 @@ function startDownloadMod(
               fileInfo,
             },
           },
-          fileName ?? nexusFileInfo.file_name,
+          fileName ?? nexusFileInfo.name,
           (err, downloadId) => (truthy(err) ? reject(contextify(err)) : resolve(downloadId)),
           redownload,
           { allowInstall },
@@ -818,12 +817,7 @@ function startDownloadMod(
                   undefined,
                   (err: any, id: string) => {
                     if (err) {
-                      processInstallError(
-                        api,
-                        err,
-                        downloadId,
-                        fileName ?? nexusFileInfo.file_name,
-                      );
+                      processInstallError(api, err, downloadId, fileName ?? nexusFileInfo.name);
                     }
                   },
                 );
@@ -1219,7 +1213,7 @@ export function endorseDirectImpl(
 ): BluebirdPromise<string> {
   return endorseMod(nexus, gameId, nexusId, version, endorsedStatus).catch((err) => {
     reportEndorseError(api, err, "mod", gameId, nexusId, version);
-    return endorsedStatus as EndorsedStatus;
+    return endorsedStatus;
   });
 }
 
@@ -1399,8 +1393,9 @@ export function refreshEndorsements(store: Redux.Store<any>, nexus: Nexus) {
       return prev;
     }, {});
     const state: IState = store.getState();
-    Object.keys(state.session.extensions.installed).forEach((extId) => {
-      const modId = state.session.extensions.installed[extId].modId;
+    const extState = state.app.extensions ?? {};
+    Object.keys(extState).forEach((extId) => {
+      const modId = extState[extId].modId;
 
       if (modId !== undefined) {
         const endorsed = getSafe(endorseMap, [SITE_ID, modId], "Undecided");
@@ -1779,30 +1774,34 @@ function errorFromNexusError(err: NexusError): string {
   }
 }
 
-function getAccountStatus(apiUserInfo: IUserInfo): IAccountStatus {
-  if (apiUserInfo.group_id === 5) return IAccountStatus.Banned;
-  else if (apiUserInfo.group_id === 41) return IAccountStatus.Closed;
-  else if (apiUserInfo.membership_roles.includes("premium")) return IAccountStatus.Premium;
-  else if (
-    apiUserInfo.membership_roles.includes("supporter") &&
-    !apiUserInfo.membership_roles.includes("premium")
-  )
-    return IAccountStatus.Supporter;
-  else return IAccountStatus.Free;
+// Membership is encoded in the user payload / JWT as a set of role strings.
+// Keep those literals in one place so the checks below can't drift.
+const MEMBERSHIP_ROLE = {
+  premium: "premium",
+  supporter: "supporter",
+  lifetime: "lifetimepremium",
+} as const;
+
+/**
+ * Derive the membership-related fields of userInfo from a user payload (API
+ * response or decoded JWT). Single source of truth for the role checks, used by
+ * both transformUserInfoFromApi and updateUserInfoFromRefreshedToken.
+ */
+function deriveMembership(user: Pick<IUserInfo, "membership_roles">): IMembership {
+  return {
+    isPremium: user.membership_roles.includes(MEMBERSHIP_ROLE.premium),
+    isSupporter: user.membership_roles.includes(MEMBERSHIP_ROLE.supporter),
+    isLifetime: user.membership_roles.includes(MEMBERSHIP_ROLE.lifetime),
+  };
 }
 
 export function transformUserInfoFromApi(input: IUserInfo & { preferences: IPreference }) {
   const stateUserInfo: IValidateKeyDataV2 = {
     email: input.email,
-    isPremium: input.membership_roles.includes("premium"),
-    isSupporter: input.membership_roles.includes("supporter"),
     name: input.name,
     profileUrl: input.avatar,
     userId: Number.parseInt(input.sub),
-    isLifetime: input.membership_roles.includes("lifetimepremium"),
-    isBanned: input.group_id === 5,
-    isClosed: input.group_id === 41,
-    status: getAccountStatus(input),
+    ...deriveMembership(input),
     ...input.preferences,
   };
 
@@ -1811,15 +1810,49 @@ export function transformUserInfoFromApi(input: IUserInfo & { preferences: IPref
   return stateUserInfo;
 }
 
-function userInfoFromJWTToken(input: IJWTAccessToken) {
-  return {
-    email: "",
-    isPremium: input.user.membership_roles.includes("premium"),
-    isSupporter: input.user.membership_roles.includes("supporter"),
-    name: input.user.username,
-    profileUrl: "",
-    userId: input.user.id,
-  };
+/**
+ * Apply a background JWT refresh to the persisted userInfo without clearing it
+ * or hitting the network.
+ *
+ * nexus-api refreshes the OAuth token on its own (see ensureFreshToken) and
+ * invokes onJWTTokenRefresh, which writes the new credentials back into state.
+ * That state change must NOT trigger the full login validation cycle
+ * (setUserInfo(undefined) + updateToken): doing so makes the avatar / premium
+ * bar flicker and fires redundant requests that can trip Nexus rate limiting.
+ *
+ * The only thing that can meaningfully change across a refresh is the
+ * membership carried in the token, so we decode it locally and patch just the
+ * membership flags onto the existing userInfo. No request is made.
+ */
+export function updateUserInfoFromRefreshedToken(
+  api: IExtensionApi,
+  credentials: IOAuthCredentials,
+): void {
+  const existing = userInfoSelector(api.getState());
+  if (existing === undefined) {
+    // nothing persisted yet; a full login (handled elsewhere) will populate it
+    return;
+  }
+
+  // jwt.decode returns the JSON payload, or null/string for malformed or
+  // non-JSON tokens. safeParse validates the whole shape in one step and gives
+  // us a fully typed payload (or a failure we can bail on) with no cast.
+  const parsed = accessTokenSchema.safeParse(jwt.decode(credentials.token));
+  if (!parsed.success) {
+    return;
+  }
+
+  const membership = deriveMembership(parsed.data.user);
+
+  // avoid a needless dispatch (and re-render) when nothing membership-related changed
+  const unchanged = (Object.keys(membership) as (keyof IMembership)[]).every(
+    (key) => existing[key] === membership[key],
+  );
+  if (unchanged) {
+    return;
+  }
+
+  api.store.dispatch(setUserInfo({ ...existing, ...membership }));
 }
 
 export function getOAuthTokenFromState(api: IExtensionApi) {
@@ -1936,10 +1969,7 @@ export function updateToken(
     ),
   )
     .then(() => getUserInfo(api, nexus)) // update userinfo as we've set some new nexus credentials, either by launch, login or token refresh
-    .then(() => {
-      api.events.emit("did-login", null);
-      return BluebirdPromise.resolve(true);
-    })
+    .then(() => true)
     .catch((err) => {
       api.showErrorNotification("Authentication failed, please log in again", err, {
         allowReport: false,

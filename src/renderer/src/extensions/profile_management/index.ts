@@ -27,11 +27,7 @@ import type { IDialogResult } from "../../actions/notifications";
 import { addNotification, showDialog } from "../../actions/notifications";
 import { clearUIBlocker, setProgress, setUIBlocker } from "../../actions/session";
 import { log } from "../../logging";
-import type {
-  IExtension,
-  IExtensionDownloadInfo,
-  IRegisteredExtension,
-} from "../../types/extensions";
+import type { IExtensionDownloadInfo, IRegisteredExtension } from "../../types/extensions";
 import type { IExtensionApi, IExtensionContext, ThunkStore } from "../../types/IExtensionContext";
 import type { IGameStored, IState } from "../../types/IState";
 import { relaunch } from "../../util/commandLine";
@@ -55,7 +51,7 @@ import {
 } from "../../util/selectors";
 import { getSafe } from "../../util/storeHelper";
 import { batchDispatch, truthy } from "../../util/util";
-import { readExtensions } from "../extension_manager/util";
+import { emitGameManaged, emitGameUnmanaged } from "../analytics/mixpanel/gameManageAnalytics";
 import { getGame, getGameStubDownloadInfo } from "../gamemode_management/util/getGame";
 import { ensureStagingDirectory } from "../mod_management/stagingDirectory";
 import { purgeMods } from "../mod_management/util/deploy";
@@ -540,6 +536,7 @@ function manageGameDiscovered(api: IExtensionApi, gameId: string) {
         }),
       );
       api.store.dispatch(setNextProfile(profileId));
+      emitGameManaged(api, gameId);
     })
     .catch((err) => {
       const instPath = installPathForGame(api.store.getState(), gameId);
@@ -735,13 +732,19 @@ function removeProfileImpl(api: IExtensionApi, profileId: string) {
 
 function removeMod(api: IExtensionApi, gameId: string, modId: string): PromiseBB<void> {
   return new PromiseBB((resolve, reject) => {
-    api.events.emit("remove-mod", gameId, modId, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
+    api.events.emit(
+      "remove-mod",
+      gameId,
+      modId,
+      (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      },
+      { reason: "stop_managing_game" },
+    );
   });
 }
 
@@ -790,7 +793,9 @@ function unmanageGame(api: IExtensionApi, gameId: string, gameName?: string): Pr
             ),
           )
           .then(() => PromiseBB.map(profileIds, (profileId) => removeProfileImpl(api, profileId)))
-          .then(() => PromiseBB.resolve())
+          .then(() => {
+            emitGameUnmanaged(api, gameId);
+          })
           .catch((err) => {
             if (err instanceof UserCanceled) {
               return PromiseBB.resolve();
@@ -1110,35 +1115,31 @@ function init(context: IExtensionContext): boolean {
         // name, because at the time we download an extension we don't actually know
         // the game id yet.
 
-        readExtensions(false).then((extensions: { [extId: string]: IExtension }) => {
-          const extPathLookup = Object.values(extensions).reduce((prevExt, ext) => {
-            if (ext.path !== undefined) {
-              prevExt[ext.path] = ext.name;
-            }
-            return prevExt;
-          }, {});
+        const extState = context.api.getState().app.extensions ?? {};
+        const extPathLookup = Object.values(extState).reduce((prevExt, ext) => {
+          prevExt[ext.path] = ext.name;
+          return prevExt;
+        }, {});
 
-          const game = known.find(
-            (iter) =>
-              iter.id === commandLine.game ||
-              extPathLookup[iter.extensionPath] === commandLine.game,
-          );
+        const game = known.find(
+          (iter) =>
+            iter.id === commandLine.game || extPathLookup[iter.extensionPath] === commandLine.game,
+        );
 
-          if (game !== undefined) {
-            // Wait for discovery to populate before deciding undiscovered vs
-            // discovered; otherwise this races the fire-and-forget
-            // startQuickDiscovery in gamemode_management.once() and pops the
-            // "Game not discovered" dialog even though discovery would have
-            // succeeded.
-            context.api
-              .emitAndAwait("discover-game", game.id)
-              .then(() => manageGame(context.api, game.id));
-          } else {
-            log("warn", "game specified on command line not found", {
-              game: commandLine.game,
-            });
-          }
-        });
+        if (game !== undefined) {
+          // Wait for discovery to populate before deciding undiscovered vs
+          // discovered; otherwise this races the fire-and-forget
+          // startQuickDiscovery in gamemode_management.once() and pops the
+          // "Game not discovered" dialog even though discovery would have
+          // succeeded.
+          context.api
+            .emitAndAwait("discover-game", game.id)
+            .then(() => manageGame(context.api, game.id));
+        } else {
+          log("warn", "game specified on command line not found", {
+            game: commandLine.game,
+          });
+        }
       }
     }
 

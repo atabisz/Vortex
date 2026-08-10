@@ -7,19 +7,23 @@ import * as React from "react";
 import { Button, Panel, Popover } from "react-bootstrap";
 import { Provider } from "react-redux";
 
-import { connect, PureComponentEx } from "../../../controls/ComponentEx";
-import Icon from "../../../controls/Icon";
-import IconBar from "../../../controls/IconBar";
-import OverlayTrigger from "../../../controls/OverlayTrigger";
-import { IconButton } from "../../../controls/TooltipControls";
-import { nexusGames } from "../../../extensions/nexus_integration/util";
-import { nexusGameId } from "../../../extensions/nexus_integration/util/convertGameId";
-import type { IActionDefinition } from "../../../types/api";
-import type { IMod, IProfile, IState } from "../../../types/IState";
-import { getSafe } from "../../../util/storeHelper";
-import { countIf } from "../../../util/util";
+import { connect, PureComponentEx } from "@/controls/ComponentEx";
+import Icon from "@/controls/Icon";
+import IconBar from "@/controls/IconBar";
+import OverlayTrigger from "@/controls/OverlayTrigger";
+import { IconButton } from "@/controls/TooltipControls";
+import { gameTileImageURL } from "@/extensions/nexus_integration/util/gameTileImageURL";
+import type { IActionDefinition } from "@/types/api";
+import type { IMod, IProfile, IState } from "@/types/IState";
+import { Image } from "@/ui/components/image/Image";
+import { joinClasses } from "@/ui/utils/joinClasses";
+import { getSafe } from "@/util/storeHelper";
+import { countIf } from "@/util/util";
+
 import type { IGameStored } from "../types/IGameStored";
+import ActiveModCount from "./ActiveModCount";
 import GameInfoPopover from "./GameInfoPopover";
+import GameName from "./GameName";
 
 export interface IBaseProps {
   t: TFunction;
@@ -31,6 +35,14 @@ export interface IBaseProps {
   getBounds?: () => ClientRect;
   container?: HTMLElement;
   onLaunch?: () => void;
+  // artwork-only tile for tight spots like the Recently Managed dashlet:
+  // hides the name (exposed as a tooltip on the tile instead) and reduces
+  // the mod counter to icon and count
+  compact?: boolean;
+  /** Extra classes for the tile root (e.g. grid-specific sizing). */
+  className?: string;
+  /** Extra classes for the inner Image wrapper (e.g. border radius). */
+  imageClassName?: string;
 }
 
 interface IConnectedProps {
@@ -39,10 +51,6 @@ interface IConnectedProps {
 }
 
 type IProps = IBaseProps & IConnectedProps;
-
-function nop() {
-  // nop
-}
 
 /**
  * thumbnail + controls for a single game mode within the game picker
@@ -53,25 +61,21 @@ class GameThumbnail extends PureComponentEx<IProps, {}> {
   private mRef = null;
 
   public render(): JSX.Element {
-    const { t, active, discovered, game, mods, profile, type } = this.props;
+    const { t, active, className, compact, discovered, game, imageClassName, mods, profile, type } =
+      this.props;
 
     if (game === undefined) {
       return null;
     }
 
-    let logoPath: string | undefined =
-      game.extensionPath !== undefined && game.logo !== undefined
-        ? path.join(game.extensionPath, game.logo)
-        : game.imageURL;
-
-    // For adaptor-registered games (no local logo), resolve a Nexus thumbnail
+    // Prefer the Nexus "tile" art so it matches the website. Fall back to a
+    // local extension logo / imageURL when no Nexus tile can be resolved.
+    let logoPath: string | undefined = gameTileImageURL(game);
     if (logoPath == null) {
-      const domain = nexusGameId(game);
-      const numericId =
-        domain != null ? nexusGames().find((g) => g.domain_name === domain)?.id : undefined;
-      if (numericId !== undefined) {
-        logoPath = `https://images.nexusmods.com/images/games/v2/${numericId}/thumbnail.jpg`;
-      }
+      logoPath =
+        game.extensionPath !== undefined && game.logo !== undefined
+          ? path.join(game.extensionPath, game.logo)
+          : game.imageURL;
     }
 
     // Mod count should only be shown for Managed and Discovered games as
@@ -83,8 +87,6 @@ class GameThumbnail extends PureComponentEx<IProps, {}> {
             (id) => profile.modState[id].enabled && mods[id] !== undefined,
           )
         : undefined;
-
-    const nameParts = game.name.split("\t");
 
     const classes = [
       "game-thumbnail",
@@ -107,37 +109,48 @@ class GameThumbnail extends PureComponentEx<IProps, {}> {
     }
 
     return (
-      <Panel className={classes.join(" ")} bsStyle={active ? "primary" : "default"}>
+      <Panel
+        bsStyle={active ? "primary" : "default"}
+        className={joinClasses([...classes, className])}
+        title={compact ? game.name.replace(/\t/g, " ") : undefined}
+      >
         <Panel.Body className="game-thumbnail-body">
-          <img className={"thumbnail-img"} src={imgurl} />
-          <div className="bottom">
-            <div className="name">{game.name}</div>
-            {modCount !== undefined ? (
-              <div className="active-mods">
-                <Icon name="mods" />
-                <span>{t("{{ count }} active mod", { count: modCount })}</span>
-              </div>
+          <Image
+            alt={game.name}
+            className={joinClasses(["w-full", imageClassName])}
+            decoding="async"
+            fit="cover"
+            imageType="game"
+            loading="lazy"
+            src={imgurl}
+          >
+            <div className="bottom">
+              <GameName compact={compact} name={game.name} />
+
+              <ActiveModCount compact={compact} count={modCount} t={t} />
+            </div>
+
+            <div className="hover-menu">
+              {type === "launcher" ? this.renderLaunch() : this.renderMenu()}
+            </div>
+
+            {type !== "launcher" ? (
+              game.contributed ? (
+                <div
+                  className="game-thumbnail-tags"
+                  title={
+                    game.contributed
+                      ? t("Contributed by {{name}}", {
+                          replace: { name: game.contributed },
+                        })
+                      : null
+                  }
+                >
+                  {game.contributed ? "Community" : null}
+                </div>
+              ) : null
             ) : null}
-          </div>
-          <div className="hover-menu">
-            {type === "launcher" ? this.renderLaunch() : this.renderMenu()}
-          </div>
-          {type !== "launcher" ? (
-            game.contributed ? (
-              <div
-                className="game-thumbnail-tags"
-                title={
-                  game.contributed
-                    ? t("Contributed by {{name}}", {
-                        replace: { name: game.contributed },
-                      })
-                    : null
-                }
-              >
-                {game.contributed ? "Community" : null}
-              </div>
-            ) : null
-          ) : null}
+          </Image>
         </Panel.Body>
       </Panel>
     );
@@ -147,7 +160,7 @@ class GameThumbnail extends PureComponentEx<IProps, {}> {
     const { onLaunch } = this.props;
     return (
       <div className="hover-content hover-launcher">
-        <Button style={{ width: "100%", height: "100%" }} onClick={onLaunch} className="btn-embed">
+        <Button className="btn-embed" style={{ width: "100%", height: "100%" }} onClick={onLaunch}>
           <Icon name="launch-application" />
         </Button>
       </div>
@@ -157,61 +170,62 @@ class GameThumbnail extends PureComponentEx<IProps, {}> {
   private renderMenu(): JSX.Element[] {
     const { t, container, game, getBounds, onRefreshGameInfo, type } = this.props;
     const gameInfoPopover = (
-      <Popover id={`popover-info-${game.id}`} className="popover-game-info">
+      <Popover className="popover-game-info" id={`popover-info-${game.id}`}>
         <Provider store={this.context.api.store}>
           <IconBar
-            id={`game-thumbnail-${game.id}`}
-            className="buttons"
-            group={`game-${type}-buttons`}
-            instanceId={game.id}
-            staticElements={[]}
-            collapse={false}
             buttonType="text"
-            orientation="vertical"
+            className="buttons"
+            collapse={false}
             filter={this.lowPriorityButtons}
+            group={`game-${type}-buttons`}
+            id={`game-thumbnail-${game.id}`}
+            instanceId={game.id}
+            orientation="vertical"
+            staticElements={[]}
             t={t}
           />
+
           <GameInfoPopover
-            t={t}
             game={game}
-            onRefreshGameInfo={onRefreshGameInfo}
+            t={t}
             onChange={this.redraw}
+            onRefreshGameInfo={onRefreshGameInfo}
           />
         </Provider>
       </Popover>
     );
 
     return [
-      <div key="primary-buttons" className="hover-content">
+      <div className="hover-content" key="primary-buttons">
         <IconBar
-          id={`game-thumbnail-${game.id}`}
-          className="buttons"
-          group={`game-${type}-buttons`}
-          instanceId={game.id}
-          staticElements={[]}
-          collapse={false}
           buttonType="text"
-          orientation="vertical"
-          filter={this.priorityButtons}
+          className="buttons"
           clickAnywhere={true}
+          collapse={false}
+          filter={this.priorityButtons}
+          group={`game-${type}-buttons`}
+          id={`game-thumbnail-${game.id}`}
+          instanceId={game.id}
+          orientation="vertical"
+          staticElements={[]}
           t={t}
         />
       </div>,
       <OverlayTrigger
-        key="info-overlay"
-        overlay={gameInfoPopover}
-        triggerRef={this.setRef}
-        getBounds={getBounds || this.getWindowBounds}
         container={container}
+        getBounds={getBounds || this.getWindowBounds}
+        key="info-overlay"
         orientation="horizontal"
+        overlay={gameInfoPopover}
+        rootClose={true}
         shouldUpdatePosition={true}
         trigger="click"
-        rootClose={true}
+        triggerRef={this.setRef}
       >
         <IconButton
-          id={`btn-info-${game.id}`}
-          icon="game-menu"
           className="game-thumbnail-info btn-embed"
+          icon="game-menu"
+          id={`btn-info-${game.id}`}
           tooltip={t("Show Details")}
         />
       </OverlayTrigger>,

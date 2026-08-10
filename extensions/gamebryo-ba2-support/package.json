@@ -23,6 +23,6 @@
     "bluebird": "catalog:",
     "copyfiles": "catalog:",
     "rimraf": "catalog:",
-    "vortex-api": "workspace:*"
+    "@nexusmods/vortex-api": "workspace:*"
   }
 }

@@ -1,6 +1,7 @@
 import * as path from "path";
 
 import { getErrorCode, unknownToError } from "@vortex/shared";
+import { CycleError } from "@vortex/shared/errors";
 import * as _ from "lodash";
 import React from "react";
 import type * as Redux from "redux";
@@ -28,7 +29,7 @@ import type { INotification } from "../../types/INotification";
 import type { IDiscoveryResult, IState } from "../../types/IState";
 import type { ITableAttribute } from "../../types/ITableAttribute";
 import type { ITestResult } from "../../types/ITestResult";
-import { nxmMod } from "../../ui/icon-paths";
+import { nxmModOutline } from "../../ui/icon-paths";
 import { opn } from "../../util/api";
 import { ProcessCanceled, TemporaryError, UserCanceled } from "../../util/CustomErrors";
 import Debouncer from "../../util/Debouncer";
@@ -53,6 +54,8 @@ import {
 import { getSafe } from "../../util/storeHelper";
 import { batchDispatch, isChildPath, truthy, wrapExtCBAsync } from "../../util/util";
 import { waitForCondition } from "../../util/waitForCondition";
+import { emitModsDeployed } from "../analytics/mixpanel/deployAnalytics";
+import { emitModStateChanged } from "../analytics/mixpanel/modChangeAnalytics";
 import { setDownloadModInfo } from "../download_management/actions/state";
 import { getGame } from "../gamemode_management/util/getGame";
 import { getModType } from "../gamemode_management/util/modTypeExtensions";
@@ -111,7 +114,6 @@ import {
 import allTypesSupported from "./util/allTypesSupported";
 import * as basicInstaller from "./util/basicInstaller";
 import BlacklistSet from "./util/BlacklistSet";
-import { findModByRef } from "./util/dependencies";
 import { genSubDirFunc, purgeMods, purgeModsInPath } from "./util/deploy";
 import {
   getAllActivators,
@@ -123,12 +125,14 @@ import {
 import { NoDeployment } from "./util/exceptions";
 import extendApi from "./util/extendAPI";
 import { dealWithExternalChanges } from "./util/externalChanges";
+import { attributeExtractor, upgradeExtractor } from "./util/extractors";
 import { registerAttributeExtractor } from "./util/filterModInfo";
+import { findModByRef } from "./util/findModByRef";
 import { validateModInstallation } from "./util/installationValidation";
 import ModHistory from "./util/ModHistory";
 import renderModName from "./util/modName";
 import { getModSources, registerModSource } from "./util/modSource";
-import sortMods, { CycleError } from "./util/sort";
+import sortMods from "./util/sort";
 import { setResolvedCB } from "./util/testModReference";
 import ActivationButton from "./views/ActivationButton";
 import DeactivationButton from "./views/DeactivationButton";
@@ -862,6 +866,15 @@ function genUpdateModDeployment(installManager: InstallManager) {
             await bakeSettings(api, profile, sortedModList);
 
             api.store.dispatch(setDeploymentNecessary(game.id, false));
+
+            emitModsDeployed(api, {
+              gameId,
+              deploymentMethod: activator.name,
+              fileCount: Object.values(newDeployment).reduce((sum, files) => sum + files.length, 0),
+              enabledModCount,
+              manual,
+              isCollectionPostprocess: deployOptions?.isCollectionPostprocessCall ?? false,
+            });
           } catch (unknownErr) {
             const err = unknownToError(unknownErr);
             if (err instanceof UserCanceled) {
@@ -1117,31 +1130,6 @@ function genValidActivatorCheck(api: IExtensionApi) {
     });
 }
 
-function attributeExtractor(input: any) {
-  return Promise.resolve({
-    version: getSafe(input.meta, ["fileVersion"], undefined),
-    logicalFileName: getSafe(input.meta, ["logicalFileName"], undefined),
-    rules: getSafe(input.meta, ["rules"], undefined),
-    source: input.meta?.source,
-    category: getSafe(input.meta, ["details", "category"], undefined),
-    description: getSafe(input.meta, ["details", "description"], undefined),
-    author: getSafe(input.meta, ["details", "author"], undefined),
-    homepage: getSafe(input.meta, ["details", "homepage"], undefined),
-    variant: getSafe(input.custom, ["variant"], undefined),
-  });
-}
-
-function upgradeExtractor(input: any) {
-  return Promise.resolve({
-    category: getSafe(input.previous, ["category"], undefined),
-    customFileName: getSafe(input.previous, ["customFileName"], undefined),
-    variant: getSafe(input.previous, ["variant"], undefined),
-    notes: getSafe(input.previous, ["notes"], undefined),
-    icon: getSafe(input.previous, ["icon"], undefined),
-    color: getSafe(input.previous, ["color"], undefined),
-  });
-}
-
 function cleanupIncompleteInstalls(api: IExtensionApi) {
   const store: Redux.Store<IState> = api.store;
 
@@ -1195,6 +1183,15 @@ function onModsEnabled(api: IExtensionApi, deploymentTimer: Debouncer) {
       const notiId = `may-enable-${modId}`;
       if (notiIds.has(notiId)) {
         api.dismissNotification(notiId);
+      }
+      if (options?.skipStateChangeEvent !== true) {
+        emitModStateChanged(
+          api,
+          gameId,
+          modId,
+          enabled ? "enabled" : "disabled",
+          options?.reason ?? "user_manual",
+        );
       }
     });
     if (state.settings.automation.deploy && options?.allowAutoDeploy !== false) {
@@ -1493,19 +1490,6 @@ function once(api: IExtensionApi) {
 
   api.events.on("await-activation", (callback: (err: Error) => void) => {
     deploymentTimer.wait(callback);
-  });
-
-  api.events.on("did-install-mod", (gameId: string, archiveId: string, modId: string) => {
-    validateModInstallation(api, gameId, modId)
-      .then((result) => {
-        if (!result.valid) {
-          const count = result.discrepancies.filter((d) => d.severity === "error").length;
-          log("warn", "Post-install validation failed", { gameId, modId, count });
-        }
-      })
-      .catch(() => {
-        /* best-effort */
-      });
   });
 
   api.events.on("mods-enabled", onModsEnabled(api, deploymentTimer));
@@ -2100,7 +2084,7 @@ function init(context: IExtensionContext): boolean {
         modSources: getModSources(),
         onDropNonArchiveFiles,
       }),
-      mdi: nxmMod,
+      mdi: nxmModOutline,
     },
   );
 
@@ -2297,65 +2281,6 @@ function init(context: IExtensionContext): boolean {
   context.registerAction("mod-icons", 200, "history", {}, "History", () => {
     context.api.ext.showHistory?.("mods");
   });
-
-  context.registerAction(
-    "mods-action-icons",
-    200,
-    "inspect",
-    {},
-    "Validate Installation",
-    (instanceIds: string[]) => {
-      const state = context.api.getState();
-      const gameMode = activeGameId(state);
-      const validateAll = async () => {
-        for (const modId of instanceIds) {
-          const result = await validateModInstallation(context.api, gameMode, modId);
-          if (!result.valid) {
-            const count = result.discrepancies.filter((d) => d.severity === "error").length;
-            context.api.sendNotification({
-              type: "warning",
-              message: `Validation failed for mod "${modId}": ${count} issue(s) found`,
-              actions: [
-                {
-                  title: "Details",
-                  action: () => {
-                    const details = result.discrepancies
-                      .map((d) => `[${d.severity}] ${d.kind}: ${d.filePath}`)
-                      .join("\n");
-                    log("info", "Mod validation results", { modId, details });
-                    context.api.showDialog(
-                      "info",
-                      "Validation Results",
-                      {
-                        text: details,
-                      },
-                      [{ label: "Close" }],
-                    );
-                  },
-                },
-              ],
-            });
-          } else {
-            context.api.sendNotification({
-              type: "success",
-              message: `Mod "${modId}" validated successfully`,
-              displayMS: 4000,
-            });
-          }
-        }
-      };
-      void validateAll();
-    },
-    (instanceIds: string[]) => {
-      const state = context.api.getState();
-      const gameMode = activeGameId(state);
-      const mods = state.persistent.mods[gameMode] ?? {};
-      return (
-        instanceIds.every((id) => mods[id]?.state === "installed") ||
-        "Only installed mods can be validated"
-      );
-    },
-  );
 
   context.once(() => {
     once(context.api);

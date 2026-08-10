@@ -48,10 +48,12 @@ import { truthy } from "../../../util/util";
 import MainPage from "../../../views/MainPage";
 import type { IGameStored } from "../../gamemode_management/types/IGameStored";
 import type { IInstallOptions } from "../../mod_management/types/IInstallOptions";
+import { lookupFromDownload } from "../../mod_management/util/dependencies";
 import { convertGameIdReverse } from "../../nexus_integration/util/convertGameId";
 import { setShowDLDropzone, setShowDLGraph } from "../actions/settings";
 import { finishDownload, setDownloadTime } from "../actions/state";
 import type { IDownload } from "../types/IDownload";
+import { friendlyDownloadName } from "../util/downloadNames";
 import getDownloadGames from "../util/getDownloadGames";
 import DownloadGraph from "./DownloadGraph";
 
@@ -236,8 +238,6 @@ class DownloadView extends ComponentEx<IDownloadViewProps, IComponentState> {
       this.mColumns = this.props.columns(() => this.props);
     }
 
-    let content = null;
-
     let filteredIds = Object.keys(downloads);
 
     const { downloadGameFilter, useModernLayout } = this.props;
@@ -247,6 +247,7 @@ class DownloadView extends ComponentEx<IDownloadViewProps, IComponentState> {
       );
     }
 
+    let content;
     if (filteredIds.length === 0 && gameMode !== undefined) {
       content = this.renderDropzone();
     } else {
@@ -392,17 +393,14 @@ class DownloadView extends ComponentEx<IDownloadViewProps, IComponentState> {
     return (
       downloadIds.find((downloadId) => {
         const download = this.getDownload(downloadId);
-        const tag = download?.modInfo?.referenceTag;
-        const identifiers = this.extractIds(download);
-        if (!identifiers) {
+        if (download === undefined) {
           return false;
         }
         return (
-          getCollectionModByReference(this.context.api.store.getState(), {
-            tag,
-            fileId: identifiers.fileId,
-            modId: identifiers.modId,
-          }) != null
+          getCollectionModByReference(
+            this.context.api.store.getState(),
+            lookupFromDownload(download),
+          ) != null
         );
       }) == null // couldn't find it - allow actions
     );
@@ -601,7 +599,7 @@ class DownloadView extends ComponentEx<IDownloadViewProps, IComponentState> {
 
     const downloadNames = downloadIds
       .filter((downloadId) => this.getDownload(downloadId) !== undefined)
-      .map((downloadId: string) => this.getDownload(downloadId).localPath);
+      .map((downloadId: string) => friendlyDownloadName(this.getDownload(downloadId)));
 
     onShowDialog(
       "question",
@@ -710,8 +708,11 @@ class DownloadView extends ComponentEx<IDownloadViewProps, IComponentState> {
     }
   };
 
-  private inspect = (downloadId: string) => {
+  private inspect = (downloadIds: string[]) => {
     const { t, onShowDialog } = this.props;
+    // Row actions receive an array of instance ids (see IconBar); take the first.
+    // Passing the array on leaks it into the strictly-validated remove-download event.
+    const downloadId = downloadIds[0];
     const download = this.getDownload(downloadId);
     if (download === undefined) {
       // the download has been removed in the meantime?
@@ -822,10 +823,15 @@ class DownloadView extends ComponentEx<IDownloadViewProps, IComponentState> {
 
   private dropDownload = (type: DropType, dlPaths: string[]) => {
     if (type === "urls") {
+      // A pasted url can't be fetched reliably without a browser: some sites (mega.nz, google
+      // drive, ...) deliver the file through client-side JavaScript as a blob, others sit behind a
+      // challenge/login page. There's no dependable way to tell those apart from a plain download
+      // link up front, so every pasted url goes through the embedded browser. A direct file link
+      // resolves and closes it near-instantly; anything else lets the user complete the download.
       dlPaths.forEach((url) =>
-        this.context.api.events.emit("start-download", [url], {}, undefined, (err: Error) => {
-          this.reportDownloadError(err, false);
-        }),
+        this.context.api.events.emit("browse-download-url", url, (err: Error) =>
+          this.reportDownloadError(err, false),
+        ),
       );
     } else {
       this.context.api.events.emit("import-downloads", dlPaths);

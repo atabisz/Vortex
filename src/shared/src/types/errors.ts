@@ -1,3 +1,5 @@
+import { VortexError } from "../errors/base";
+
 export type DownloadErrorPayload =
   | { code: "cancellation" }
   | { code: "network-error"; url: URL }
@@ -39,36 +41,43 @@ export interface ReportableError {
 
 function captureStackTrace<T extends Error>(
   self: T,
-  constructor?: new (...args: unknown[]) => T,
+  constructor?: new (...args: never[]) => T,
 ): void {
   if ("captureStackTrace" in Error && typeof Error.captureStackTrace === "function") {
     Error.captureStackTrace(self, constructor);
   }
 }
 
-export class UserCanceled extends Error {
+/**
+ * @public
+ * @deprecated Use `VortexError` directly
+ */
+export class UserCanceled extends VortexError<"user-canceled"> {
   public skipped: boolean;
 
   constructor(skipped?: boolean) {
-    super("canceled by user");
-    this.name = this.constructor.name;
+    super("canceled by user", { kind: "user-canceled", skipped: skipped ?? false });
     this.skipped = skipped ?? false;
   }
 }
 
-export class DataInvalid extends Error {
+/**
+ * @public
+ * @deprecated Use `VortexError` directly
+ */
+export class DataInvalid extends VortexError<"data-invalid"> {
   constructor(message: string) {
-    super(message);
-    this.name = this.constructor.name;
+    super(message, { kind: "data-invalid" });
   }
 }
 
-export class NotSupportedError extends Error {
+/**
+ * @public
+ * @deprecated Use `VortexError` directly
+ */
+export class NotSupportedError extends VortexError<"not-supported"> {
   constructor() {
-    super("Not supported");
-    captureStackTrace(this, NotSupportedError);
-
-    this.name = this.constructor.name;
+    super("Not supported", { kind: "not-supported" });
   }
 }
 
@@ -106,23 +115,27 @@ export class InsufficientDiskSpace extends Error {
   }
 }
 
-export class ProcessCanceled extends Error {
-  private mExtraInfo: unknown;
+/**
+ * @public
+ * @deprecated Use `VortexError` directly
+ */
+export class ProcessCanceled extends VortexError<"process-canceled"> {
   constructor(message: string, extraInfo?: unknown) {
-    super(message);
-    this.name = this.constructor.name;
-    this.mExtraInfo = extraInfo;
+    super(message, { kind: "process-canceled", extraInfo });
   }
 
-  public get extraInfo(): any {
-    return this.mExtraInfo;
+  public get extraInfo(): unknown {
+    return this.data.extraInfo;
   }
 }
 
-export class ArgumentInvalid extends Error {
+/**
+ * @public
+ * @deprecated Use `VortexError` directly
+ */
+export class ArgumentInvalid extends VortexError<"argument-invalid"> {
   constructor(argument: string) {
-    super(`Invalid argument: "${argument}"`);
-    this.name = this.constructor.name;
+    super(`Invalid argument: "${argument}"`, { kind: "argument-invalid", argument });
   }
 }
 
@@ -140,16 +153,17 @@ export class DocumentsPathMissing extends Error {
   }
 }
 
-export class SetupError extends Error {
-  private mComponent: string | undefined;
+/**
+ * @public
+ * @deprecated Use `VortexError` directly
+ */
+export class SetupError extends VortexError<"setup-error"> {
   constructor(message: string, component?: string) {
-    super(message);
-    this.name = this.constructor.name;
-    this.mComponent = component;
+    super(message, { kind: "setup-error", component });
   }
 
   public get component(): string | undefined {
-    return this.mComponent;
+    return this.data.component;
   }
 }
 
@@ -185,23 +199,27 @@ export class HTTPError extends Error {
   }
 }
 
-export class MissingInterpreter extends Error {
-  private mURL: string | undefined;
+/**
+ * @public
+ * @deprecated Use `VortexError` directly
+ */
+export class MissingInterpreter extends VortexError<"missing-interpreter"> {
   constructor(message: string, url?: string) {
-    super(message);
-    this.name = this.constructor.name;
-    this.mURL = url;
+    super(message, { kind: "missing-interpreter", url });
   }
 
   public get url(): string | undefined {
-    return this.mURL;
+    return this.data.url;
   }
 }
 
-export class NotFound extends Error {
+/**
+ * @public
+ * @deprecated Use `VortexError` directly
+ */
+export class NotFound extends VortexError<"not-found"> {
   constructor(what: string) {
-    super(`Not found: "${what}"`);
-    this.name = this.constructor.name;
+    super(`Not found: "${what}"`, { kind: "not-found", resourceType: what });
   }
 }
 
@@ -260,7 +278,7 @@ export class AlreadyDownloaded extends Error {
   private mId: string | undefined;
   constructor(fileName: string, id?: string) {
     super("File already downloaded");
-    Error.captureStackTrace(this, this.constructor);
+    captureStackTrace(this, AlreadyDownloaded);
     this.name = this.constructor.name;
     this.mFileName = fileName;
     this.mId = id;
@@ -289,6 +307,34 @@ export class DownloadIsHTML extends Error {
 
   public get url(): string {
     return this.mUrl;
+  }
+}
+
+/**
+ * @public
+ * @deprecated Use `VortexError` directly
+ */
+export class CycleError extends VortexError<"cycle-error"> {
+  constructor(cycles: string[][]) {
+    super("Rules contain cycles", { kind: "cycle-error", cycles });
+  }
+
+  public get cycles(): string[][] {
+    return this.data.cycles;
+  }
+}
+
+/**
+ * @public
+ * @deprecated Use `VortexError` directly
+ */
+export class GameNotFound extends VortexError<"game-not-found"> {
+  constructor(search: string) {
+    super("Not in Steam library", { kind: "game-not-found", gameId: search });
+  }
+
+  public get search(): string {
+    return this.data.gameId;
   }
 }
 

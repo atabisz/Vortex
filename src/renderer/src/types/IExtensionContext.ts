@@ -52,6 +52,7 @@ import type { IBannerOptions } from "./IBannerOptions";
 import type { DialogType, IDialogResult } from "./IDialog";
 import type { IGame } from "./IGame";
 import type { IGameStore } from "./IGameStore";
+import type { IHealthCheck, IModHealthCheck } from "./IHealthCheck";
 import type { ILookupOptions, IModLookupResult } from "./IModLookupResult";
 import type { INotification, INotificationAction } from "./INotification";
 import type { IDiscoveryResult, IMod, IState } from "./IState";
@@ -78,7 +79,49 @@ export type {
 import type { PersistorKey, IPersistor } from "@vortex/shared/state";
 export type { PersistorKey, IPersistor };
 
-// tslint:disable-next-line:interface-name
+/**
+ * Open interface type registry for API events. Enhance using `declare module` syntax.
+ * @public
+ */
+export interface ApiEvents {
+  "start-download": (
+    rawUrls: string[],
+    modInfo: { game?: string; name?: string } & Record<string, unknown>,
+    fileName?: string,
+    callback?: (err: Error | null, id?: string) => void,
+    redownload?: "never" | "ask" | "replace" | "always",
+    options?: { allowInstall?: boolean | "force" },
+  ) => string;
+
+  "remove-download": (downloadId: string, callback?: (err: Error | null) => void) => void;
+
+  "pause-download": (downloadId: string, callback?: (err: Error | null) => void) => void;
+
+  "resume-download": (
+    downloadId: string,
+    callback?: (err: Error | null, id?: string) => void,
+    options?: { allowInstall?: boolean | "force" },
+  ) => void;
+}
+
+/** Represents all event names.
+ * @public
+ * */
+export type ApiEventName = keyof ApiEvents;
+/** Represents all event args.
+ * @public
+ * */
+export type ApiEventArgs<TEvent extends ApiEventName> = Readonly<Parameters<ApiEvents[TEvent]>>;
+/** Represents all event results.
+ * @public
+ * */
+export type ApiEventResult<TEvent extends ApiEventName> = ReturnType<ApiEvents[TEvent]>;
+
+/** Compat for NodeJS Event Map */
+export type ApiEventMap = {
+  [K in ApiEventName]: Parameters<ApiEvents[K]>;
+};
+
 export interface ThunkStore<S> extends Redux.Store<S> {
   dispatch: ThunkDispatch<S, null, Redux.Action>;
 }
@@ -161,12 +204,20 @@ export interface IMainPageOptions {
   group: "dashboard" | "global" | "per-game" | "support" | "hidden";
   isClassicOnly?: boolean;
   isModernOnly?: boolean;
+  /**
+   * Opt this page into the redesigned UI. When set, the page is rendered without
+   * the legacy `.main-page` / header / body-container wrappers and is expected
+   * to render its own Page as the flat subtree root.
+   */
+  newLayout?: boolean;
   priority?: number;
   props?: PropsCallback;
   badge?: ReduxProp<any>;
   activity?: ReduxProp<boolean>;
   onReset?: () => void;
   mdi?: string;
+  /** Self-subscribing status badge shown on this page's left-menu item. */
+  menuBadge?: React.ComponentType;
 }
 
 export type RegisterMainPage = (
@@ -406,6 +457,8 @@ export interface IRunOptions {
   // is set but in some cases (e.g. when the target process is run elevated) we don't know
   // the pid so this will be undefined.
   onSpawned?: (pid?: number) => void;
+  // called when the process exits, with its exit code (null when terminated by a signal).
+  onExit?: (code: number | null) => void;
 }
 
 /**
@@ -581,7 +634,7 @@ export interface IExtensionApi {
    * @type {NodeJS.EventEmitter}
    * @memberOf IExtensionApi
    */
-  events: NodeJS.EventEmitter;
+  events: NodeJS.EventEmitter<ApiEventMap & Record<string, any[]>>; // TODO: remove fallback definition
 
   /**
    * translation function
@@ -763,7 +816,15 @@ export interface IExtensionApi {
    * after all these Promises are resolved.
    * If the event handlers return a value, this returns an array of results
    */
-  emitAndAwait: <T = any>(eventName: string, ...args: any[]) => PromiseBB<T>;
+  emitAndAwait: (<TEvent extends ApiEventName>(
+    eventName: TEvent,
+    ...args: ApiEventArgs<TEvent>
+  ) => Promise<ApiEventResult<TEvent> extends void ? void : ApiEventResult<TEvent>[]>) &
+    // TODO: remove fallback definition
+    (<TResult = unknown, TArgs extends readonly unknown[] = unknown[]>(
+      eventName: string,
+      ...args: TArgs
+    ) => Promise<TResult[]>);
 
   /**
    * handle an event emitted with emitAndAwait. The listener can return a promise and the emitter
@@ -772,19 +833,32 @@ export interface IExtensionApi {
    * returns a rejected promise.
    * If errors do need to be reported they have to be part of the resolved valued
    */
-  onAsync: (eventName: string, listener: (...args: any[]) => PromiseLike<any>) => void;
+  onAsync: (<TEvent extends ApiEventName>(
+    eventName: TEvent,
+    listener: (...args: ApiEventArgs<TEvent>) => PromiseLike<ApiEventResult<TEvent>>,
+  ) => void) &
+    // TODO: remove fallback definition
+    (<TResult = unknown, TArgs extends readonly unknown[] = unknown[]>(
+      eventName: string,
+      listener: (...args: TArgs) => PromiseLike<TResult>,
+    ) => void);
 
   /**
-   * wraps a function such that it will emitAndAwait will-eventName and did-eventName events
+   * wraps a function such that it will emitAndAwait `will-${eventName}` and `did-${eventName}` events
    * before and after invoking the actual callback.
    * both these events receive the arguments passed to the callback, the did-event also receives
    * the result of the callback if any (the result is the first argument because the number
    * of arguments may be variable)
    */
-  withPrePost: <T>(
+  withPrePost: (<TEvent extends ApiEventName>(
     eventName: string,
-    callback: (...args: any[]) => PromiseBB<T>,
-  ) => (...args: any[]) => PromiseBB<T>;
+    callback: (...args: ApiEventArgs<TEvent>) => PromiseLike<ApiEventResult<TEvent>>,
+  ) => (...args: ApiEventArgs<TEvent>) => Promise<ApiEventResult<TEvent>>) &
+    // TODO: remove fallback definition
+    (<TResult, TArgs extends readonly unknown[] = unknown[]>(
+      eventName: string,
+      callback: (...args: TArgs) => PromiseLike<TResult>,
+    ) => (...args: TArgs) => Promise<TResult>);
 
   /**
    * returns true if the running version of Vortex is considered outdated. This is mostly used
@@ -838,6 +912,18 @@ export interface IExtensionApi {
   NAMESPACE: string;
 }
 
+// Context passed to a verifier's `repair` function, letting it recover a value
+// from the surrounding record's identity rather than only from the broken value.
+export interface IVerifierRepairContext {
+  // key under which the verified object lives in its parent (e.g. a modId for a
+  // mod record), even when the record's own id leaf was lost
+  parentKey?: string;
+  // the object that contains the element being repaired
+  parent?: unknown;
+  // the key of the element being repaired
+  key: string;
+}
+
 export interface IStateVerifier {
   // Human readable description of the problem, emitted if this verifier detects a problem
   description: (input: any) => string;
@@ -856,8 +942,11 @@ export interface IStateVerifier {
   // if set, delete this element or an ancestor element if this one doesn't
   // match the verifier.
   deleteBroken?: boolean | "parent";
-  // if set, this function is called to generate the "repaired" value
-  repair?: (input: any, def: any) => any;
+  // if set, this function is called to generate the "repaired" value. The
+  // optional `context` carries the surrounding record's key/parent so a repair
+  // can recover from identity (e.g. a mod recovering installationPath from its
+  // modId) - see mod_management/reducers/mods.ts.
+  repair?: (input: any, def: any, context?: IVerifierRepairContext) => any;
 }
 
 /**
@@ -1185,6 +1274,17 @@ export interface IExtensionContext {
   registerTest: (id: string, event: string, check: CheckFunction) => void;
 
   /**
+   * register a health check. Pass an IHealthCheck for whole-game checks, or
+   * an IModHealthCheck for per-mod checks (the registry iterates mods and
+   * aggregates per-mod results).
+   *
+   * Prefer this over the legacy `registerTest` for new code.
+   *
+   * @memberOf IExtensionContext
+   */
+  registerHealthCheck: (healthCheck: IHealthCheck | IModHealthCheck) => void;
+
+  /**
    * register a handler for archive types so the content of such archives is exposed to
    * the application (especially other extensions)
    *
@@ -1285,15 +1385,6 @@ export interface IExtensionContext {
    * In extreme cases you could instead throw an exception from the check (which would bubble up
    * through the dispatch call) which will likely crash Vortex.
    * That might be preferrable to corrupting state
-   * Further: Most actions are processed twice, once in the UI process where they got triggered and
-   *   in the main process where they get persisted to disk. If you stop an action in the UI
-   *   process it will not get forwarded to the main process, so this check only runs once. If you
-   *   allow it through though, this check is done a second time in the main process and you *need*
-   *   to generate the same result, you can't allow an action in the UI process and then reject it
-   *   in the main process!
-   *   Due to checks being run twice, if you write a log message that also will happen twice. You
-   *   can check "process.type === 'browser') to log only in the main (aka browser) process but
-   *   again: The result of the check *has to has to has to* be the same between all processes.
    * @param {string} actionType type of the action (like STORE_WINDOW_SIZE)
    * @param {SanityCheck} check the check to run for the specified action
    */

@@ -118,20 +118,22 @@ import {
 import { addNotification, setupNotificationSuppression } from "./actions/notifications";
 import { setMaximized, setWindowPosition, setWindowSize } from "./actions/window";
 import { ApplicationData } from "./applicationData";
+import { FlagsProvider } from "./contexts/FlagsContext";
 import ExtensionManager from "./ExtensionManager";
 import { ExtensionContext } from "./ExtensionProvider";
+import { FlagService } from "./FlagService";
 import { log } from "./logging";
 import { initApplicationMenu } from "./menu";
 import reducer, { buildReducerTree, Decision, sanitizeHydrationState } from "./reducers/index";
 import { fetchHydrationState } from "./store/hydration";
-import { persistDiffMiddleware } from "./store/persistDiffMiddleware";
+import { flushPendingDiffsSync, persistDiffMiddleware } from "./store/persistDiffMiddleware";
 import { reduxLogger } from "./store/reduxLogger";
 import { reduxSanity, type StateError } from "./store/reduxSanity";
 import { computeStateDiff } from "./store/stateDiff";
 import StyleManager from "./StyleManager";
 import { createRendererTelemetryProvider } from "./telemetry/setup";
 import type { IExtensionReducer } from "./types/extensions";
-import type { ThunkStore } from "./types/IExtensionContext";
+import type { ApiEventMap, IExtensionApi, ThunkStore } from "./types/IExtensionContext";
 import { GameEntryNotFound } from "./types/IGameStore";
 import type { IState } from "./types/IState";
 import { relaunch } from "./util/commandLine";
@@ -140,7 +142,7 @@ import { recordErrorSpan, setOutdated, terminate, toError } from "./util/errorHa
 import {} from "./util/extensionRequire";
 import { setTFunction } from "./util/fs";
 import GlobalNotifications from "./util/GlobalNotifications";
-import getI18n, { changeLanguage, fallbackTFunc, type TFunction } from "./util/i18n";
+import { init as getI18n, changeLanguage, fallbackTFunc, type TFunction } from "./util/i18n";
 import { showError } from "./util/message";
 import migrate from "./util/migrate";
 import { readStartupSettings } from "./util/startupSettings";
@@ -183,6 +185,15 @@ const middleware = [
   persistDiffMiddleware,
   reduxLogger(),
 ];
+
+// On quit, persistDiffMiddleware may still hold up to DEBOUNCE_MS of un-sent
+// state diffs. window-all-closed fires in main after the renderer is already
+// gone, so flush synchronously here while we're still alive - otherwise the
+// final writes are lost and affected mods reload missing fields (GH#23363).
+window.addEventListener("beforeunload", () => {
+  flushPendingDiffsSync();
+  FlagService.destroyIfInitialized();
+});
 
 function sanityCheckCB(err: StateError) {
   err["attachLogOnReport"] = true;
@@ -422,7 +433,9 @@ window.addEventListener("error", errorHandler);
 window.addEventListener("unhandledrejection", errorHandler);
 window.removeEventListener("error", earlyErrHandler);
 window.removeEventListener("unhandledrejection", earlyErrHandler);
-const eventEmitter: NodeJS.EventEmitter = new EventEmitter();
+const eventEmitter: IExtensionApi["events"] = new EventEmitter<
+  ApiEventMap & Record<string, any[]>
+>();
 
 let enhancer = null;
 
@@ -446,6 +459,7 @@ async function initGlobals(): Promise<void> {
   // Initialize application data asynchronously from main process cache
   // This replaces synchronous IPC calls that were in the preload script
   await ApplicationData.init();
+  FlagService.init();
   readStartupSettings();
 }
 
@@ -763,14 +777,10 @@ async function init(): Promise<ExtensionManager | null> {
 }
 
 async function load(extensions: ExtensionManager): Promise<void> {
-  const { i18n, tFunc, error } = await Promise.resolve(
-    getI18n("en", () => {
-      const state = store.getState();
-      return Object.values(state.session.extensions.installed).filter(
-        (ext) => ext.type === "translation",
-      );
-    }),
-  );
+  const { i18n, tFunc, error } = await getI18n("en", () => {
+    const state = store.getState();
+    return Object.values(state.app.extensions ?? {}).filter((ext) => ext.type === "translation");
+  });
 
   if (error) {
     showError(store.dispatch, "failed to initialize localization", error, {
@@ -836,16 +846,29 @@ async function load(extensions: ExtensionManager): Promise<void> {
   extensions.getApi().events.on("gamemode-activated", () => refresh());
   startupFinished();
   eventEmitter.emit("startup");
+
+  let lastUserId: number | undefined;
+  store.subscribe(() => {
+    const userId: number | undefined = (store.getState() as any).persistent?.nexus?.userInfo
+      ?.userId;
+    if (userId !== lastUserId) {
+      lastUserId = userId;
+      window.api.featureFlags.setContext(userId !== undefined ? { userId: String(userId) } : {});
+    }
+  });
+
   // render the page content
   ReactDOM.render(
     <Provider store={store}>
-      <DndProvider backend={HTML5Backend}>
-        <I18nextProvider i18n={i18n}>
-          <ExtensionContext.Provider value={extensions}>
-            <AppLayout className="full-height" />
-          </ExtensionContext.Provider>
-        </I18nextProvider>
-      </DndProvider>
+      <FlagsProvider>
+        <DndProvider backend={HTML5Backend}>
+          <I18nextProvider i18n={i18n}>
+            <ExtensionContext.Provider value={extensions}>
+              <AppLayout className="full-height" />
+            </ExtensionContext.Provider>
+          </I18nextProvider>
+        </DndProvider>
+      </FlagsProvider>
     </Provider>,
     document.getElementById("content"),
   );

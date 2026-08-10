@@ -1,3 +1,4 @@
+import { actions, ComponentEx, Dashlet, Icon, tooltip, types, util } from "@nexusmods/vortex-api";
 import memoizeOne from "memoize-one";
 import * as React from "react";
 import { Button, ListGroup, ListGroupItem } from "react-bootstrap";
@@ -5,7 +6,6 @@ import { withTranslation } from "react-i18next";
 import { connect } from "react-redux";
 import * as Redux from "redux";
 import { ThunkDispatch } from "redux-thunk";
-import { actions, ComponentEx, Dashlet, Icon, tooltip, types, util } from "vortex-api";
 
 import { NAMESPACE, NUM_DISPLAY_ITEMS } from "./constants";
 
@@ -244,7 +244,7 @@ function mapStateToProps(state: types.IState): IConnectedProps {
   return {
     extensionState: state.app.extensions,
     extensions: state.session.extensions.available,
-    installed: state.session.extensions.installed,
+    installed: state.app.extensions ?? {},
     downloads: state.persistent.downloads.files,
     user: util.getSafe(state, ["persistent", "nexus", "userInfo", "name"], undefined),
   };
