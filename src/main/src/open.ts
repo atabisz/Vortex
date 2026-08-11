@@ -1,14 +1,20 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { shell } from "electron";
+import { BrowserWindow, shell } from "electron";
 
+import { betterIpcMain } from "./ipc";
 import { log } from "./logging";
 
 /** Opens the file using the default application registered for the protocol */
 export function openUrl(url: URL): void {
   shell.openExternal(url.toString()).catch((err: unknown) => {
     log("error", "failed to open URL", { url: url.toString(), error: err });
+    for (const win of BrowserWindow.getAllWindows()) {
+      if (!win.isDestroyed()) {
+        betterIpcMain.send(win.webContents, "shell:openUrlFailed", url.toString());
+      }
+    }
   });
 }
 

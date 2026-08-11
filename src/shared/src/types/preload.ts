@@ -125,6 +125,9 @@ export interface Shell {
 
   /** Opens the file using the default application for the file extension */
   openFile(filePath: string): void;
+
+  /** Register a listener for shell.openExternal failure events from main. */
+  onOpenUrlFailed(callback: (url: string) => void): void;
 }
 
 export interface Diag {

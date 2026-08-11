@@ -77,6 +77,8 @@ try {
     shell: {
       openUrl: (url) => betterIpcRenderer.send("shell:openUrl", url),
       openFile: (filePath) => betterIpcRenderer.send("shell:openFile", filePath),
+      onOpenUrlFailed: (callback) =>
+        betterIpcRenderer.on("shell:openUrlFailed", (_, url) => callback(url)),
     },
 
     persist: {

@@ -8,8 +8,10 @@ const FATAL_MARKERS = [
   "Duplicate @vortex/shared error module detected in this process",
   "[MAIN] quitting with exception",
   "[MAIN] unrecoverable error",
+  "[ERRO] [RENDERER] Extension failed to initialize.",
 ];
 const STARTUP_TIMEOUT_MS = 60_000;
+const STARTUP_SETTLE_MS = 10_000;
 const POLL_INTERVAL_MS = 250;
 
 interface LaunchTarget {
@@ -112,7 +114,7 @@ async function main(): Promise<void> {
 
   const logPath = path.join(userData, "vortex.log");
   const deadline = Date.now() + STARTUP_TIMEOUT_MS;
-  let ready = false;
+  let readyAt: number | undefined;
 
   try {
     while (Date.now() < deadline) {
@@ -123,8 +125,10 @@ async function main(): Promise<void> {
       if (fatalMarker !== undefined) {
         throw new Error(`startup hit fatal marker: ${fatalMarker}\n${combined.slice(-8_000)}`);
       }
-      if (log.includes(READY_MARKER)) {
-        ready = true;
+      if (readyAt === undefined && log.includes(READY_MARKER)) {
+        readyAt = Date.now();
+      }
+      if (readyAt !== undefined && Date.now() - readyAt >= STARTUP_SETTLE_MS) {
         break;
       }
       if (child.exitCode !== null) {
@@ -136,7 +140,7 @@ async function main(): Promise<void> {
       await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
     }
 
-    if (!ready) {
+    if (readyAt === undefined) {
       const log = await readIfPresent(logPath);
       throw new Error(
         `Electron did not reach ${READY_MARKER} within ${STARTUP_TIMEOUT_MS}ms\n${log.slice(-8_000)}`,
@@ -148,7 +152,9 @@ async function main(): Promise<void> {
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
 
-  console.log(`Electron startup smoke passed: ${READY_MARKER}`);
+  console.log(
+    `Electron startup smoke passed: ${READY_MARKER} + ${STARTUP_SETTLE_MS}ms extension settle`,
+  );
 }
 
 const keepAlive = setInterval(() => undefined, 1_000);

@@ -21,7 +21,8 @@
     "react-i18next": "catalog:",
     "redux": "catalog:",
     "redux-act": "catalog:",
-    "@nexusmods/vortex-api": "workspace:*"
+    "@nexusmods/vortex-api": "workspace:*",
+    "@vortex/shared": "workspace:*"
   },
   "nx": {
     "tags": [

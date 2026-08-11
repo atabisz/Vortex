@@ -1,6 +1,7 @@
 import * as path from "path";
 
 import { types, util } from "@nexusmods/vortex-api";
+import type { PreloadWindow } from "@vortex/shared/preload";
 import * as React from "react";
 
 import { closeTutorials, setTutorialOpen } from "./actions/session";
@@ -124,7 +125,7 @@ export default function init(context: types.IExtensionContext) {
       }
     });
 
-    (window as any).api.shell.onOpenUrlFailed((url: string) => {
+    (window as unknown as PreloadWindow).api.shell.onOpenUrlFailed((url: string) => {
       context.api.sendNotification({
         type: "warning",
         id: "open-url-failed",
