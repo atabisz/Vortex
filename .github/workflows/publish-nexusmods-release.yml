@@ -30,6 +30,8 @@ permissions:
 
 jobs:
   publish:
+    # Fork releases must never publish to the official Nexus Mods listing.
+    if: github.repository == 'Nexus-Mods/Vortex'
     runs-on: ubuntu-latest
     env:
       FILE_ID_OVERRIDE: ${{ inputs.file-id }}

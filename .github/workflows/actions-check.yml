@@ -69,7 +69,8 @@ jobs:
 
   rebuild:
     name: Rebuild Bundles
-    if: ${{ github.event_name == 'push' }}
+    # Rebuild PRs use Nexus-owned GitHub App credentials and are upstream-only.
+    if: ${{ github.event_name == 'push' && github.repository == 'Nexus-Mods/Vortex' }}
     runs-on: ubuntu-latest
     steps:
       - name: Generate GitHub App token
