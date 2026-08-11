@@ -51,7 +51,7 @@ jobs:
       # cmake and liblz4-dev required for native addon compilation on Linux
       - name: Install Linux build dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev cmake liblz4-dev zlib1g-dev
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev cmake liblz4-dev zlib1g-dev xvfb
 
       # Rust toolchain required by libloot 0.29.1 (rewritten in Rust at 0.25+)
       # Must run before "Install dependencies" because postinstall-libloot.cjs
@@ -120,6 +120,10 @@ jobs:
 
       - name: Build
         run: pnpm run build:all
+
+      - name: Smoke-launch Electron
+        if: runner.os == 'Linux'
+        run: pnpm run smoke:startup
 
       - name: Lint
         if: runner.os == 'Linux'

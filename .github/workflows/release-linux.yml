@@ -35,7 +35,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install Linux build dependencies
-        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev cmake liblz4-dev
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev cmake liblz4-dev xvfb
 
       - name: Read Node.js version from package.json
         id: node-version
@@ -105,6 +105,9 @@ jobs:
 
       - name: Build AppImage and deb
         run: pnpm run package:nosign
+
+      - name: Smoke-launch packaged AppImage
+        run: pnpm run smoke:startup -- --appimage "$(find ./dist -maxdepth 1 -name 'vortex-setup*.AppImage' -print -quit)"
 
       - name: Verify asar-unpacked paths
         run: node scripts/verify-asar-unpacked.cjs

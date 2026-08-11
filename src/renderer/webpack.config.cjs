@@ -6,6 +6,11 @@ const nodeExternals = require("webpack-node-externals");
 const path = require("node:path");
 const webpack = require("webpack");
 
+// Keep workspace runtime contracts external so preload and renderer resolve the
+// same Node module instance. Linux's winapi shim is the sole exception: it must
+// enter webpack resolution for the alias below to replace the Windows addon.
+const rendererExternalsAllowlist = process.platform === "linux" ? ["winapi-bindings"] : [];
+
 module.exports = (env) => {
     const mode = process.env.NODE_ENV === "production" ? "production" : "development";
     const enableHMR = mode === "development" && env?.WEBPACK_WATCH === true;
@@ -110,13 +115,12 @@ module.exports = (env) => {
         devtool: "source-map",
         externals: [
             nodeExternals({
-                allowlist: [
-                    /@vortex\/shared/,
-                    ...(process.platform === "linux" ? ["winapi-bindings"] : []),
-                ],
+                allowlist: rendererExternalsAllowlist,
             }),
         ],
     };
 
     return config;
 };
+
+module.exports.rendererExternalsAllowlist = rendererExternalsAllowlist;

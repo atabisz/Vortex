@@ -33,6 +33,7 @@
     "lint:ci": "pnpm run lint",
     "lint:verbose": "pnpm nx run-many -t lint:verbose",
     "test": "pnpm nx run-many -t test test:integration --exclude @vortex/e2e",
+    "smoke:startup": "pnpm tsx scripts/smoke-launch-electron.ts",
     "api": "pnpm nx run vortex-api:build",
     "format": "pnpm oxfmt",
     "format:check": "pnpm oxfmt --check",
