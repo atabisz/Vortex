@@ -45,7 +45,7 @@ const Panel = ({
   </div>
 );
 
-export const ToolsPage: FC<{ active?: boolean }> = ({ active }) => {
+export const ToolsPage: FC<React.PropsWithChildren<{ active?: boolean }>> = ({ active }) => {
   const { t } = useTranslation();
   const {
     gameMode,
@@ -169,7 +169,6 @@ export const ToolsPage: FC<{ active?: boolean }> = ({ active }) => {
                   appearance="moderate"
                   brand="neutral"
                   leftIconPath={mdiPlus}
-                  size="sm"
                   title={t("Add tool")}
                   onClick={addNewTool}
                 />

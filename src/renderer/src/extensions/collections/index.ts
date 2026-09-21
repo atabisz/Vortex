@@ -565,7 +565,9 @@ function genAttributeExtractor(api: IExtensionApi) {
     const revisionId = modInfo.download?.modInfo?.nexus?.ids?.revisionId;
     const collectionSlug = modInfo.download?.modInfo?.nexus?.ids?.collectionSlug;
     const revisionNumber = modInfo.download?.modInfo?.nexus?.ids?.revisionNumber;
-    const referenceTag = modInfo.download?.modInfo?.referenceTag;
+    // the rule being installed names the tag for this collection's copy; the download may have been
+    // fetched by another collection and carry its tag first
+    const referenceTag = modInfo.modReference?.tag ?? modInfo.download?.modInfo?.referenceTag;
 
     const result: { [key: string]: any } = {
       collectionId,
@@ -1099,7 +1101,7 @@ function register(context: IExtensionContext, collectionsCB: ICallbackMap) {
     clone: (gameId: string, collection: ICollection, from: IMod, to: IMod) => Promise<void>,
     title: (t: TFunction) => string,
     condition?: (state: IState, gameId: string) => boolean,
-    editComponent?: React.ComponentType<IExtendedInterfaceProps>,
+    editComponent?: React.ComponentType<React.PropsWithChildren<IExtendedInterfaceProps>>,
   ) => {
     addExtension({
       id,

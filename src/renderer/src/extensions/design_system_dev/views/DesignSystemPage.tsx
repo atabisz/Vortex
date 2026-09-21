@@ -7,6 +7,7 @@
 import React, { useState } from "react";
 
 import type { IExtensionApi } from "@/types/IExtensionContext";
+import { AlertDemo } from "@/ui/components/alert/Alert.demo";
 import { BulletDemo } from "@/ui/components/bullet/Bullet.demo";
 import { ButtonDemo } from "@/ui/components/button/Button.demo";
 import { CollectionTileDemo } from "@/ui/components/collection_tile/CollectionTile.demo";
@@ -29,6 +30,7 @@ import { TabPanel } from "@/ui/components/tabs/TabPanel";
 import { TabProvider } from "@/ui/components/tabs/Tabs.context";
 import { TabsDemo } from "@/ui/components/tabs/Tabs.demo";
 import { ToolbarDemo } from "@/ui/components/toolbar/Toolbar.demo";
+import { TooltipDemo } from "@/ui/components/tooltip/Tooltip.demo";
 import { TypographyDemo } from "@/ui/components/typography/Typography.demo";
 import { TypographyLinkDemo } from "@/ui/components/typography/TypographyLink.demo";
 import { Page } from "@/views/components/Page/Page";
@@ -82,6 +84,10 @@ export const DesignSystemPage = ({ active, api }: { active?: boolean; api: IExte
             <TabButton name="Collection Tile" panelId="collection-tile" />
 
             <TabButton name="Toolbar" panelId="toolbar" />
+
+            <TabButton name="Tooltip" panelId="tooltip" />
+
+            <TabButton name="Alert" panelId="alert" />
           </TabBar>
 
           <div className="mt-6">
@@ -237,6 +243,14 @@ export const DesignSystemPage = ({ active, api }: { active?: boolean; api: IExte
 
             <TabPanel id="toolbar">
               <ToolbarDemo />
+            </TabPanel>
+
+            <TabPanel id="tooltip">
+              <TooltipDemo />
+            </TabPanel>
+
+            <TabPanel id="alert">
+              <AlertDemo />
             </TabPanel>
           </div>
         </TabProvider>

@@ -2,10 +2,10 @@ import { useCallback, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 
 import { onDownloadRequirement } from "@/extensions/health_check/utils/modRequirements/onDownloadRequirement";
+import { shouldShowPremiumAd } from "@/extensions/nexus_integration/selectors";
 import type { IExtensionApi } from "@/types/IExtensionContext";
-import { opn } from "@/util/api";
+import opn from "@/util/opn";
 
-import { shouldShowPremiumAd } from "../../nexus_integration/selectors";
 import { setFeedbackGiven } from "../actions/persistent";
 import { feedbackGivenMap } from "../selectors";
 import type { IModRequirementExt } from "../types";
@@ -44,13 +44,17 @@ export function useModRequirementActions(
 
   // 1-click install is a Premium feature; free users get the upgrade prompt
   // (which routes them to the mod page) instead of an in-app download.
+  // onDownloadRequirement reports its own failures and never rejects, so the
+  // fire-and-forget call sites have nothing to catch; a failed install leaves the
+  // detail page open rather than navigating away from the issue.
   const installInApp = useCallback(async () => {
     if (showPremiumAd) {
       setShowPremiumModal(true);
       return;
     }
-    await onDownloadRequirement(api, mod, undefined, identity);
-    onInstalled?.();
+    if (await onDownloadRequirement(api, mod, undefined, identity)) {
+      onInstalled?.();
+    }
   }, [api, mod, identity, showPremiumAd, onInstalled]);
 
   // Persistence only — EntryActions owns the feedback analytics, so both thumbs record

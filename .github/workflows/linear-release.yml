@@ -1,0 +1,79 @@
+name: Linear Release
+
+on:
+  release:
+    types: [prereleased, released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to sync (e.g. 'v2.6.0-beta.1'). Channel is inferred: tags with a '-' are pre-releases."
+        required: true
+        type: string
+      dry-run:
+        description: "Dry run? (scan commits and log actions without modifying Linear)"
+        type: boolean
+        default: true
+
+concurrency:
+  group: linear-release-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Sync issues to Linear release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          fetch-depth: 0
+
+      - name: Prepare release range
+        id: prepare
+        uses: ./.github/actions/linear-release
+        with:
+          mode: prepare
+          tag: ${{ github.event.release.tag_name || inputs.tag }}
+          # release event carries the flag; on dispatch a '-' in the tag means pre-release
+          prerelease: ${{ github.event_name == 'release' && github.event.release.prerelease || contains(inputs.tag, '-') }}
+
+      - name: Sync issues to release
+        id: sync
+        uses: linear/linear-release-action@v0
+        with:
+          access_key: ${{ secrets.LINEAR_ACCESS_KEY }}
+          command: sync
+          name: ${{ steps.prepare.outputs.tag }}
+          version: ${{ steps.prepare.outputs.tag }}
+          base_ref: ${{ steps.prepare.outputs.base }}
+          release_notes: ${{ steps.prepare.outputs.notes-file }}
+          dry_run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run }}
+          log_level: verbose
+
+      - name: Mark release as released
+        id: complete
+        uses: linear/linear-release-action@v0
+        with:
+          access_key: ${{ secrets.LINEAR_ACCESS_KEY }}
+          command: complete
+          version: ${{ steps.prepare.outputs.tag }}
+          dry_run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run }}
+          log_level: verbose
+
+      - name: Write run summary
+        if: ${{ always() && steps.prepare.outcome == 'success' }}
+        uses: ./.github/actions/linear-release
+        with:
+          mode: summary
+          tag: ${{ steps.prepare.outputs.tag }}
+          prevtag: ${{ steps.prepare.outputs.prevtag }}
+          base: ${{ steps.prepare.outputs.base }}
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run }}
+          sync-outcome: ${{ steps.sync.outcome }}
+          complete-outcome: ${{ steps.complete.outcome }}
+          notes-file: ${{ steps.prepare.outputs.notes-file }}
+          release-url: ${{ steps.sync.outputs.release-url }}

@@ -1,21 +1,25 @@
-import { Menu } from "@headlessui/react";
+import { MenuButton } from "@headlessui/react";
 import { mdiAccountCircle, mdiLogout, mdiMessageReplyText, mdiRefresh } from "@mdi/js";
-import React, { forwardRef, type ButtonHTMLAttributes, type FC, useCallback } from "react";
+import React, { type ButtonHTMLAttributes, forwardRef, type FC, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 
-import { setDialogVisible } from "../../../actions/session";
-import { useExtensionContext } from "../../../ExtensionProvider";
+import { setDialogVisible } from "@/actions";
+import { useExtensionContext } from "@/ExtensionProvider";
 import {
   clearOAuthCredentials,
   setUserAPIKey,
-} from "../../../extensions/nexus_integration/actions/account";
-import { NEXUS_BASE_URL } from "../../../extensions/nexus_integration/constants";
-import { Dropdown } from "../../../ui/components/dropdown/Dropdown";
-import { DropdownDivider } from "../../../ui/components/dropdown/DropdownDivider";
-import { DropdownItem } from "../../../ui/components/dropdown/DropdownItem";
-import { DropdownItems } from "../../../ui/components/dropdown/DropdownItems";
-import { Icon } from "../../../ui/components/icon/Icon";
+} from "@/extensions/nexus_integration/actions/account";
+import { NEXUS_BASE_URL } from "@/extensions/nexus_integration/constants";
+import { Button } from "@/ui/components/button/Button";
+import { Dropdown } from "@/ui/components/dropdown/Dropdown";
+import { DropdownDivider } from "@/ui/components/dropdown/DropdownDivider";
+import { DropdownItem } from "@/ui/components/dropdown/DropdownItem";
+import { DropdownItems } from "@/ui/components/dropdown/DropdownItems";
+import { Icon } from "@/ui/components/icon/Icon";
+import { Image } from "@/ui/components/image/Image";
+import { Tooltip } from "@/ui/components/tooltip/Tooltip";
+
 import { UserCanceled } from "../../../util/CustomErrors";
 import opn from "../../../util/opn";
 import {
@@ -23,28 +27,40 @@ import {
   userInfo as userInfoSelector,
 } from "../../../util/selectors";
 
-interface ActionButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  imageSrc?: string;
-  username?: string;
-}
-
-const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
-  ({ imageSrc, username, ...props }, ref) => (
-    <button
-      className="hover-overlay relative flex size-7 items-center justify-center overflow-hidden rounded-full"
-      ref={ref}
+/**
+ * The avatar, as the `as` target of a `MenuButton`. The avatar is passed as
+ * `leftIcon` rather than `leftIconPath` so the same slot holds either the user's
+ * picture or the fallback glyph, and `Button` styles both identically.
+ */
+const ActionButton = forwardRef<
+  HTMLButtonElement,
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
+    imageSrc?: string;
+    username?: string;
+  }
+>(({ "aria-label": ariaLabel, "aria-expanded": isOpen, imageSrc, username, ...props }, ref) => (
+  <Tooltip content={ariaLabel} disabled={!!isOpen} placement="bottom">
+    <Button
+      appearance="weak"
+      aria-expanded={isOpen}
+      aria-label={ariaLabel}
+      brand="neutral"
+      leftIcon={
+        imageSrc ? (
+          <Image alt={username ?? ""} className="size-5 rounded-full" fit="cover" src={imageSrc} />
+        ) : (
+          <Icon path={mdiAccountCircle} />
+        )
+      }
       {...props}
-    >
-      {imageSrc ? (
-        <img alt={username} className="size-6 rounded-full" src={imageSrc} />
-      ) : (
-        <Icon className="size-6 text-neutral-moderate" path={mdiAccountCircle} size="none" />
-      )}
-    </button>
-  ),
-);
+      ref={ref}
+    />
+  </Tooltip>
+));
 
-export const ProfileSection: FC = () => {
+ActionButton.displayName = "ProfileActionButton";
+
+export const ProfileSection: FC<React.PropsWithChildren<unknown>> = () => {
   const dispatch = useDispatch();
   const extensions = useExtensionContext();
   const api = extensions.getApi();
@@ -84,15 +100,15 @@ export const ProfileSection: FC = () => {
   }, []);
 
   if (!loggedIn || !userInfo) {
-    return <ActionButton title={t("Log in")} onClick={handleProfileClick} />;
+    return <ActionButton aria-label={t("Log in")} onClick={handleProfileClick} />;
   }
 
   return (
     <Dropdown>
-      <Menu.Button
+      <MenuButton
+        aria-label={userInfo.name ?? t("Profile")}
         as={ActionButton}
         imageSrc={userInfo.profileUrl}
-        title={userInfo.name ?? t("Profile")}
         username={userInfo.name}
       />
 

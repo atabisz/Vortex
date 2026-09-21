@@ -45,7 +45,6 @@ export const JumpToPage = ({
         max={totalPages}
         min={1}
         pattern="[0-9]*"
-        size="sm"
         type="number"
         value={page}
         onChange={(e) => {
@@ -55,13 +54,7 @@ export const JumpToPage = ({
         }}
       />
 
-      <Button
-        aria-disabled={!isValid}
-        brand="neutral"
-        appearance="moderate"
-        size="sm"
-        type="submit"
-      >
+      <Button aria-disabled={!isValid} brand="neutral" appearance="moderate" type="submit">
         Go
       </Button>
     </form>

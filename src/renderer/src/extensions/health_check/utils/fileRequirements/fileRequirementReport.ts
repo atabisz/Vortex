@@ -21,10 +21,7 @@ export type FileRequirementCategory =
   | "download"
   /** A wrong version is enabled and the correct one isn't owned: download a different version. */
   | "download-replace"
-  /**
-   * Correct version downloaded but not installed: install it. Reserved; not
-   * produced until uninstalled-state support lands (no resolver input yet).
-   */
+  /** Correct version downloaded but not installed: install it. */
   | "install-uninstalled"
   /** Correct version installed but disabled while a wrong one is enabled: switch the active version. */
   | "toggle"
@@ -64,13 +61,21 @@ export const categoryOf = (requirement: IFileRequirement): FileRequirementCatego
   }
 };
 
+/** One file to download, with the wrong version it replaces when it is a version change. */
+export interface IFileDownloadTarget {
+  candidate: IFileRequirementCandidate;
+  /** The wrong version currently enabled, disabled once the download installs. */
+  enabledFile?: IInstalledFile;
+}
+
 /** Files to download for a report; OR/toggle/install-uninstalled need a user choice or different action. */
-export const downloadCandidates = (requirements: IFileRequirement[]): IFileRequirementCandidate[] =>
+export const downloadTargets = (requirements: IFileRequirement[]): IFileDownloadTarget[] =>
   requirements.flatMap((requirement) => {
     switch (requirement.kind) {
       case "missing":
+        return [{ candidate: requirement.candidate }];
       case "wrong-version-installed":
-        return [requirement.candidate];
+        return [{ candidate: requirement.candidate, enabledFile: requirement.installedFile }];
       default:
         return [];
     }
@@ -100,8 +105,16 @@ export const switchTargets = (
   );
 
 /** The required mod's display name for one OR alternative. */
-const branchModName = (branch: IFileRequirementBranch): string =>
-  branch.kind === "download" ? branch.candidate.modName : branch.correctFile.modName;
+const branchModName = (branch: IFileRequirementBranch): string => {
+  switch (branch.kind) {
+    case "download":
+      return branch.candidate.modName;
+    case "install":
+      return branch.uninstalledFile.modName;
+    case "enable":
+      return branch.correctFile.modName;
+  }
+};
 
 /** The required mod's display name for a requirement (used in the listing summary). */
 export const requirementModName = (requirement: IFileRequirement, orJoin: string): string => {

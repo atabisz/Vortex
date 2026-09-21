@@ -7,6 +7,7 @@ import {
 } from "@/extensions/health_check/utils/fileRequirements/cardHelpers";
 import { viewInLoadout } from "@/extensions/health_check/utils/fileRequirements/fileRequirementActions";
 import type { IFileRequirement } from "@/extensions/health_check/utils/fileRequirements/mapRequirementsReport";
+import { requirementStateFor } from "@/extensions/health_check/utils/shared/tracking";
 import { Button } from "@/ui/components/button/Button";
 import { Typography } from "@/ui/components/typography/Typography";
 import { nxmModOutline } from "@/ui/icon-paths";
@@ -39,6 +40,7 @@ export const ToggleRows = ({
           correctFile={requirement.correctFile}
           ctx={ctx}
           enabledFile={requirement.enabledFile}
+          resolution={{ requirementState: requirementStateFor(requirement) }}
         />
       </div>
 
@@ -53,7 +55,6 @@ export const ToggleRows = ({
               appearance="subdued"
               brand="neutral"
               leftIconPath={nxmModOutline}
-              size="sm"
               onClick={handleViewInMods}
             >
               {t("detail::item::view_in_mods")}

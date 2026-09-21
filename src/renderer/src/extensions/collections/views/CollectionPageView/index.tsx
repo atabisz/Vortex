@@ -86,7 +86,7 @@ interface IConnectedProps {
   userInfo: any;
   showPremiumAd: boolean;
   votedSuccess: RatingOptions;
-  activity: { [id: string]: string };
+  activity: { [id: string]: string[] };
   language: string;
   overlays: { [id: string]: IOverlay };
   collectionInfo: ICollection;
@@ -1124,4 +1124,4 @@ function mapDispatchToProps(dispatch: Redux.Dispatch): IActionProps {
 export default connect(
   makeMapStateToProps,
   mapDispatchToProps,
-)(CollectionPage) as any as React.ComponentType<ICollectionPageProps>;
+)(CollectionPage) as any as React.ComponentType<React.PropsWithChildren<ICollectionPageProps>>;

@@ -31,7 +31,6 @@ const LayoutSwitcher = () => {
       brand="primary"
       className="fixed right-4 bottom-4 z-toast"
       leftIconPath={useModernLayout ? mdiMonitor : mdiMonitorShimmer}
-      size="sm"
       title={useModernLayout ? "Switch to Classic" : "Switch to Modern"}
       onClick={() => dispatch(setUseModernLayout(!useModernLayout))}
     />
@@ -42,7 +41,7 @@ export interface IBaseProps {
   className?: string;
 }
 
-export const AppLayout: FC<IBaseProps> = () => {
+export const AppLayout: FC<React.PropsWithChildren<IBaseProps>> = () => {
   const useModernLayout = useSelector((state: IState) => state.settings.window.useModernLayout);
 
   return (

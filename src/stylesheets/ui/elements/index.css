@@ -1,3 +1,4 @@
+@import "./alert.css";
 @import "./bullet.css";
 @import "./button.css";
 @import "./dropdown.css";
@@ -12,3 +13,4 @@
 @import "./table.css";
 @import "./tab.css";
 @import "./toolbar.css";
+@import "./tooltip.css";

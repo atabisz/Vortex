@@ -52,7 +52,7 @@ export const PopoverDemo = () => {
 
         <div className="flex flex-wrap gap-4">
           <Popover>
-            <PopoverButton appearance="subdued" brand="neutral" leftIconPath={mdiTune} size="sm" />
+            <PopoverButton appearance="subdued" brand="neutral" leftIconPath={mdiTune} />
 
             <PopoverPanel className="right-auto left-0">
               <div className="flex min-h-12 items-center justify-between gap-x-6 border-b border-stroke-weak px-4">
@@ -63,7 +63,7 @@ export const PopoverDemo = () => {
                 <Picker
                   button={{
                     leftIconPath: layout === "list" ? mdiViewList : mdiViewGrid,
-                    size: "xs",
+                    size: "sm",
                   }}
                   options={layoutOptions}
                   value={layout}
@@ -79,7 +79,7 @@ export const PopoverDemo = () => {
                 <Switch
                   aria-label="Show hidden items"
                   checked={showHidden}
-                  onChange={(e) => setShowHidden(e.target.checked)}
+                  onChange={setShowHidden}
                 />
               </div>
 

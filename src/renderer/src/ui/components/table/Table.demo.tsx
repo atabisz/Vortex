@@ -79,10 +79,10 @@ const ActionsCell = ({ mod }: { mod: IDemoMod }) => {
         <Switch
           aria-label={`${enabled ? "Disable" : "Enable"} ${mod.name}`}
           checked={enabled}
-          onChange={(event) => setEnabled(event.target.checked)}
+          onChange={setEnabled}
         />
       ) : (
-        <Button appearance="moderate" brand="primary" size="xs">
+        <Button appearance="moderate" brand="primary">
           Install
         </Button>
       )}
@@ -92,7 +92,6 @@ const ActionsCell = ({ mod }: { mod: IDemoMod }) => {
         aria-label={`More actions for ${mod.name}`}
         brand="neutral"
         leftIconPath={mdiDotsVertical}
-        size="xs"
       />
     </div>
   );

@@ -6,9 +6,9 @@
  */
 import { EventEmitter } from "events";
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { IExtensionApi } from "@/types/IExtensionContext";
 
@@ -19,20 +19,6 @@ import {
 } from "../../hooks/HealthCheckTracking.context";
 import type { IHealthCheckEntry } from "../../views/content/types";
 import { EntryActions } from "./EntryActions";
-
-// No i18n instance in the renderer test setup; keys are enough to find the controls.
-// Declared rather than inlined in the factory so it isn't read as a hook factory — and
-// a function declaration is hoisted, which a const wouldn't be when the factory runs.
-function fakeUseTranslation() {
-  return { t: (key: string) => key };
-}
-
-vi.mock("react-i18next", () => ({ useTranslation: fakeUseTranslation }));
-
-// RTL only auto-cleans when vitest runs with globals; this project doesn't, so without
-// this every render leaks into document.body and screen queries hit the previous test's
-// component — which silently sends its events to the previous test's emitter.
-afterEach(cleanup);
 
 const entry: IHealthCheckEntry = {
   id: "uid-42:toggle",
@@ -70,7 +56,7 @@ describe("EntryActions feedback analytics", () => {
   it("emits feedback_helpful carrying the ambient issue on thumbs-up", () => {
     const { events } = renderActions();
 
-    fireEvent.click(screen.getByRole("button", { name: "common:::helpful" }));
+    fireEvent.click(screen.getByTestId("health-check-feedback-helpful"));
 
     expect(events).toHaveLength(1);
     expect(events[0].eventName).toBe("health_check_feedback_helpful");
@@ -85,12 +71,10 @@ describe("EntryActions feedback analytics", () => {
   it("emits feedback_not_helpful with the reasons on submit", () => {
     const { events, onNotHelpful } = renderActions();
 
-    fireEvent.click(screen.getByRole("button", { name: "common:::not_helpful" }));
+    fireEvent.click(screen.getByTestId("health-check-feedback-not-helpful"));
     expect(events).toHaveLength(0);
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "detail::feedback_modal::buttons::confirm" }),
-    );
+    fireEvent.click(screen.getByTestId("health-check-feedback-confirm"));
 
     expect(events).toHaveLength(1);
     expect(events[0].eventName).toBe("health_check_feedback_not_helpful");
@@ -102,10 +86,8 @@ describe("EntryActions feedback analytics", () => {
   it("emits feedback_dismissed when the reasons modal is abandoned", () => {
     const { events, onNotHelpful } = renderActions();
 
-    fireEvent.click(screen.getByRole("button", { name: "common:::not_helpful" }));
-    fireEvent.click(
-      screen.getByRole("button", { name: "detail::feedback_modal::buttons::cancel" }),
-    );
+    fireEvent.click(screen.getByTestId("health-check-feedback-not-helpful"));
+    fireEvent.click(screen.getByTestId("health-check-feedback-cancel"));
 
     expect(events).toHaveLength(1);
     expect(events[0].eventName).toBe("health_check_feedback_dismissed");

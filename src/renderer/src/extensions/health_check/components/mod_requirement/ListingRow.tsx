@@ -63,7 +63,6 @@ export const ListingRow = ({ api, entry, isHidden, onOpen, onToggleHide }: IList
             <Button
               appearance="moderate"
               brand="neutral"
-              size="sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onOpen();
@@ -111,6 +110,7 @@ export const ListingRow = ({ api, entry, isHidden, onOpen, onToggleHide }: IList
       />
 
       <PremiumModal
+        api={api}
         isOpen={showPremiumModal}
         modCount={1}
         modId={mod.modId}
@@ -120,6 +120,7 @@ export const ListingRow = ({ api, entry, isHidden, onOpen, onToggleHide }: IList
           setShowPremiumModal(false);
           openModPage();
         }}
+        onPremiumUnlocked={() => void installInApp()}
       />
     </>
   );

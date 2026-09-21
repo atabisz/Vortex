@@ -55,6 +55,8 @@ class PluginPersistor implements types.IPersistor {
   private mFailed: boolean = false;
   private mOnError: (message: string, details: Error, options?: types.IErrorOptions) => void;
   private mControlOrder: () => boolean;
+  private mOnExternalChange: () => PromiseLike<"keep" | "revert">;
+  private mExternalChoicePending: boolean = false;
 
   constructor(
     onError: (message: string, details: Error, options?: types.IErrorOptions) => void,
@@ -75,6 +77,7 @@ class PluginPersistor implements types.IPersistor {
           this.mPluginFormat = undefined;
           this.mNativePlugins = undefined;
           this.mLoaded = false;
+          this.mExternalChoicePending = false;
           let prom = Promise.resolve();
           if (this.mResetCallback) {
             prom = this.reset();
@@ -112,6 +115,7 @@ class PluginPersistor implements types.IPersistor {
           // start watching for external changes
           .then(() => {
             this.startWatch();
+            this.serialize();
             return Promise.resolve();
           })
       );
@@ -138,6 +142,63 @@ class PluginPersistor implements types.IPersistor {
 
   public setResetCallback(cb: () => any) {
     this.mResetCallback = cb;
+  }
+
+  /**
+   * Called when a foreign tool/game rewrote the plugin files while Vortex already holds
+   * state for the game; resolves the user's decision to keep or revert those changes.
+   */
+  public setExternalChangeCallback(cb: () => PromiseLike<"keep" | "revert">) {
+    this.mOnExternalChange = cb;
+  }
+
+  /**
+   * Merge the redux loadOrder hive into the persisted plugin state and write it to
+   * disk, bypassing the debounced per-key diff pipeline. Merging keeps position memory
+   * for plugins the hive does not know (disabled mods); native plugins are never
+   * stored. loadOrder is stored relative to the installed native plugins, matching
+   * setItem. Errors are swallowed: a rejection would poison the serialize queue.
+   */
+  public syncFromState(
+    gameId: string,
+    // keyed by plugin id (toPluginId form)
+    loadOrder: Record<string, ILoadOrder>,
+  ): Promise<void> {
+    return this.enqueue(() => {
+      try {
+        if (!this.mLoaded || this.mPluginPath === undefined || gameId !== this.mGameId) {
+          return Promise.resolve();
+        }
+        const entries = Object.entries(loadOrder ?? {});
+        if (entries.length === 0) {
+          // an empty hive means a profile/game activation is mid-flight; syncing it
+          // would serialize every plugin as disabled
+          return Promise.resolve();
+        }
+        const nativeSet = new Set(this.mNativePlugins ?? []);
+        const next: IPluginMap = { ...this.mPlugins };
+        entries.forEach(([pluginId, value]) => {
+          if (value == null || nativeSet.has(pluginId)) {
+            return;
+          }
+          next[pluginId] = {
+            ...value,
+            loadOrder: (value.loadOrder ?? -1) - this.mInstalledNative.length,
+          };
+        });
+        this.mPlugins = next;
+        return Promise.resolve(this.doSerialize()).catch((err) => {
+          log("error", "failed to write plugin state after collection install", {
+            error: err.message,
+          });
+        });
+      } catch (err) {
+        log("error", "failed to sync plugin state after collection install", {
+          error: err.message,
+        });
+        return Promise.resolve();
+      }
+    });
   }
 
   public getItem(key: string[]): Promise<string> {
@@ -210,16 +271,18 @@ class PluginPersistor implements types.IPersistor {
   }
 
   private updateNative() {
+    const previous = this.mInstalledNative;
     if (this.mKnownPlugins === undefined) {
       this.mInstalledNative = [];
     }
     this.mInstalledNative = (this.mNativePlugins || []).filter(
       (iter) => this.mKnownPlugins[iter] !== undefined,
     );
-
-    if (this.mResetCallback) {
-      this.mResetCallback();
-      this.mRetryCounter = retryCount;
+    const changed =
+      previous.length !== this.mInstalledNative.length ||
+      this.mInstalledNative.some((iter, idx) => previous[idx] !== iter);
+    if (changed && this.mResetCallback) {
+      void this.reset();
     }
   }
 
@@ -256,6 +319,10 @@ class PluginPersistor implements types.IPersistor {
   private serialize(): Promise<void> {
     if (!this.mLoaded) {
       // this happens during initialization, when the persistor is initially created
+      return Promise.resolve();
+    }
+    if (this.mExternalChoicePending) {
+      // don't serialize while the user is deciding whether to keep or revert a foreign rewrite
       return Promise.resolve();
     }
     if (!this.mSerializeScheduled) {
@@ -373,25 +440,30 @@ class PluginPersistor implements types.IPersistor {
       });
   }
 
-  private filterFileData(input: string, plugins: boolean): { keys: string[]; foreignApp: boolean } {
+  private filterFileData(
+    input: string,
+    plugins: boolean,
+    foreign?: { detected: boolean },
+  ): string[] {
     const lines = input.split(/\r?\n/);
 
-    const foreignApp = lines.length === 0 || lines[0].indexOf("generated by Vortex") === -1;
-
-    if (foreignApp) {
+    if (lines.length === 0 || lines[0].indexOf("generated by Vortex") === -1) {
       const header =
         lines.length === 0 || !lines[0].startsWith("#") ? "<empty>" : lines[0].slice(1).trim();
+      if (foreign !== undefined) {
+        foreign.detected = true;
+      }
       log("info", "plugins file was changed by foreign application", {
         header,
         pluginstxt: plugins,
       });
     }
 
-    const keys = lines.filter((value: string) => {
+    const res = lines.filter((value: string) => {
       return !value.startsWith("#") && value.length > 0;
     });
 
-    return { keys, foreignApp };
+    return res;
   }
 
   private initFromKeyList(plugins: IPluginMap, keys: string[], enable: boolean, offset: number) {
@@ -428,15 +500,20 @@ class PluginPersistor implements types.IPersistor {
     return loadOrderPos;
   }
 
-  private deserialize(retry: boolean = false): Promise<void> {
+  private deserialize(retry: boolean = false, adoptForeign: boolean = false): Promise<void> {
     if (this.mPluginPath === undefined) {
       return Promise.resolve();
     }
 
+    if (this.mExternalChoicePending && !adoptForeign) {
+      return Promise.resolve();
+    }
+
+    const foreign = { detected: false };
+
     let offset = 0;
 
     const newPlugins: IPluginMap = {};
-    let skipUpdate = false;
     // set to true when plugins.txt was foreign-reset during initial load and
     // we need to write the recovered state back to disk after mLoaded=true
     let needsRestore = false;
@@ -449,7 +526,7 @@ class PluginPersistor implements types.IPersistor {
     if (this.mPluginFormat === "original") {
       const loadOrderFile = path.join(this.mPluginPath, "loadorder.txt");
       phaseOne = fs.readFileAsync(loadOrderFile).then((data: Buffer) => {
-        const { keys } = this.filterFileData(data.toString("utf-8"), false);
+        const keys: string[] = this.filterFileData(data.toString("utf-8"), false, foreign);
         offset = this.initFromKeyList(newPlugins, keys, false, offset);
         return fs.readFileAsync(path.join(this.mPluginPath, "plugins.txt"));
       });
@@ -458,110 +535,114 @@ class PluginPersistor implements types.IPersistor {
     }
     return phaseOne
       .then((data: Buffer) => {
-        if (data.length === 0 && !retry) {
-          // not even a header? I don't trust this
-          // TODO: This is just a workaround
-          return this.deserialize(true);
+        if (data.length === 0) {
+          // not even a header? I don't trust this. Read once more in case we caught a write
+          // mid-flight, then leave the current state alone: a truncated file is not a
+          if (retry) {
+            // The persistor must still count as loaded, or serialize() drops every write
+            this.mLoaded = true;
+            return Promise.resolve();
+          }
+          return this.deserialize(true, adoptForeign);
         }
-        const { keys, foreignApp } = this.filterFileData(data.toString("latin1"), true);
-        // If a foreign application (e.g. the game itself via Proton) has reset
-        // plugins.txt to just a header comment with no plugin entries, recover
-        // the correct state rather than propagating the empty list.
-        if (foreignApp && keys.length === 0) {
+        const keys: string[] = this.filterFileData(data.toString("latin1"), true, foreign);
+        // If a foreign application (e.g. the game itself via Proton) has reset plugins.txt
+        // to just a header comment with no plugin entries, recover the correct state rather
+        // than propagating the empty list — or handing an empty list to the interactive
+        // external-change prompt below, which would offer to "keep" a wipe.
+        if (foreign.detected && keys.length === 0) {
           if (this.mLoaded) {
             // We have a valid in-memory state: restore it to disk immediately.
             log("info", "plugins.txt reset by foreign application, restoring Vortex state");
-            skipUpdate = true;
             return this.doSerialize() ?? Promise.resolve();
-          } else {
-            // Initial load (e.g. after a profile switch): plugins.txt was reset
-            // externally but we have no in-memory plugin state to restore from.
-            // For "original" format games (Skyrim etc.) the load order is kept in
-            // loadorder.txt which we have already parsed into newPlugins with
-            // enabled=false.  For "fallout4" format games (Skyrim SE etc.)
-            // loadorder.txt is not read during deserialization, so newPlugins may
-            // be empty — fall back to enabling all known deployed plugins.
-            // Either way, re-enable all plugins so Vortex writes a valid
-            // plugins.txt and the game does not crash on launch.
-            log(
-              "info",
-              "plugins.txt reset by foreign application during initial load; enabling all plugins",
-            );
-            // Enable plugins already parsed from loadorder.txt (original format).
-            Object.keys(newPlugins).forEach((key) => {
-              newPlugins[key].enabled = true;
-            });
-            // For fallout4-format games, newPlugins may be empty because
-            // loadorder.txt is not read.  Enable all known deployed plugins.
-            const nativePluginSet = new Set<string>(this.mNativePlugins || []);
-            Object.keys(this.mKnownPlugins || {}).forEach((pluginId) => {
-              if (nativePluginSet.has(pluginId)) {
-                return; // native plugins are always enabled; skip
-              }
-              if (newPlugins[pluginId] === undefined) {
-                newPlugins[pluginId] = { enabled: false, loadOrder: -1 };
-              }
-              newPlugins[pluginId].enabled = true;
-            });
-            // Signal that once mLoaded is set, we need to write the recovered
-            // state back to disk so the game sees the correct plugins.txt.
-            needsRestore = true;
           }
+          // Initial load (e.g. after a profile switch): plugins.txt was reset
+          // externally but we have no in-memory plugin state to restore from.
+          // For "original" format games (Skyrim etc.) the load order is kept in
+          // loadorder.txt which we have already parsed into newPlugins with
+          // enabled=false.  For "fallout4" format games (Skyrim SE etc.)
+          // loadorder.txt is not read during deserialization, so newPlugins may
+          // be empty — fall back to enabling all known deployed plugins.
+          // Either way, re-enable all plugins so Vortex writes a valid
+          // plugins.txt and the game does not crash on launch.
+          log(
+            "info",
+            "plugins.txt reset by foreign application during initial load; enabling all plugins",
+          );
+          // Enable plugins already parsed from loadorder.txt (original format).
+          Object.keys(newPlugins).forEach((key) => {
+            newPlugins[key].enabled = true;
+          });
+          // For fallout4-format games, newPlugins may be empty because
+          // loadorder.txt is not read.  Enable all known deployed plugins.
+          const nativePluginSet = new Set<string>(this.mNativePlugins || []);
+          Object.keys(this.mKnownPlugins || {}).forEach((pluginId) => {
+            if (nativePluginSet.has(pluginId)) {
+              return; // native plugins are always enabled; skip
+            }
+            if (newPlugins[pluginId] === undefined) {
+              newPlugins[pluginId] = { enabled: false, loadOrder: -1 };
+            }
+            newPlugins[pluginId].enabled = true;
+          });
+          // Signal that once mLoaded is set, we need to write the recovered
+          // state back to disk so the game sees the correct plugins.txt.
+          needsRestore = true;
         } else {
           this.initFromKeyList(newPlugins, keys, true, offset);
         }
-      })
-      .then(() => {
-        if (skipUpdate) {
-          return Promise.resolve();
-        }
-        // if we control the load order or in the case of skyrim (all reasonably current versions)
-        // the load order is stored in loadorder.txt with plugins.txt overriding for
-        // enabled plugins. In that case we have the correct load order at this point.
-        // If we aren't controlling the load order for Oblivion, Fallout 3 and Fallout NV
-        // these files are likely outdated and we have to use the file time instead.
-        if (
-          this.mPluginFormat !== "original" ||
-          this.mControlOrder() ||
-          this.mGameId === "skyrim"
-        ) {
-          return Promise.resolve();
-        }
 
-        return fs
-          .readdirAsync(this.mDataPath)
-          .filter((fileName: string) => newPlugins[toPluginId(fileName)] !== undefined)
-          .then((fileNames: string[]) =>
-            Promise.map(fileNames, (fileName) =>
-              fs
-                .statAsync(path.join(this.mDataPath, fileName))
-                .then((stat) => ({ fileName, fileTime: stat.mtimeMs })),
-            ),
-          )
-          .then((fileEntries) => fileEntries.sort((lhs, rhs) => lhs.fileTime - rhs.fileTime))
-          .then((sortedEntries) => {
-            sortedEntries.forEach((entry, idx) => {
-              newPlugins[toPluginId(entry.fileName)].loadOrder = idx;
-            });
+        return Promise.resolve()
+          .then(() => {
+            // if we control the load order or in the case of skyrim (all reasonably current
+            // versions) the load order is stored in loadorder.txt with plugins.txt overriding
+            // for enabled plugins. In that case we have the correct load order at this point.
+            // If we aren't controlling the load order for Oblivion, Fallout 3 and Fallout NV
+            // these files are likely outdated and we have to use the file time instead.
+            if (
+              this.mPluginFormat !== "original" ||
+              this.mControlOrder() ||
+              this.mGameId === "skyrim"
+            ) {
+              return Promise.resolve();
+            }
+
+            return fs
+              .readdirAsync(this.mDataPath)
+              .filter((fileName: string) => newPlugins[toPluginId(fileName)] !== undefined)
+              .then((fileNames: string[]) =>
+                Promise.map(fileNames, (fileName) =>
+                  fs
+                    .statAsync(path.join(this.mDataPath, fileName))
+                    .then((stat) => ({ fileName, fileTime: stat.mtimeMs })),
+                ),
+              )
+              .then((fileEntries) => fileEntries.sort((lhs, rhs) => lhs.fileTime - rhs.fileTime))
+              .then((sortedEntries) => {
+                sortedEntries.forEach((entry, idx) => {
+                  newPlugins[toPluginId(entry.fileName)].loadOrder = idx;
+                });
+              });
+          })
+          .then(() => {
+            if (
+              foreign.detected &&
+              !adoptForeign &&
+              this.mLoaded &&
+              this.mOnExternalChange !== undefined
+            ) {
+              // a foreign rewrite while Vortex holds state for this game: the user decides
+              this.promptExternalChange();
+              return Promise.resolve();
+            }
+            this.adoptParsed(newPlugins);
+            if (needsRestore) {
+              // plugins.txt was reset by a foreign application before we loaded. Now that
+              // adoptParsed() has set mLoaded, write the recovered state back to disk.
+              return this.doSerialize() ?? Promise.resolve();
+            }
+            return Promise.resolve();
           });
-      })
-      .then(() => {
-        if (skipUpdate) {
-          return Promise.resolve();
-        }
-        this.mPlugins = newPlugins;
-        this.mLoaded = true;
-        if (this.mResetCallback) {
-          this.mResetCallback();
-          this.mRetryCounter = retryCount;
-        }
-        this.mFailed = false;
-        if (needsRestore) {
-          // plugins.txt was reset by a foreign application before we loaded.
-          // Now that mLoaded is true, write the recovered state back to disk.
-          return this.doSerialize() ?? Promise.resolve();
-        }
-        return Promise.resolve();
       })
       .catch(util.UserCanceled, (err) => {
         this.mLoaded = true;
@@ -660,6 +741,50 @@ class PluginPersistor implements types.IPersistor {
       })
       .catch((err) => {
         this.reportError("failed to reset load order info", err);
+      });
+  }
+
+  private adoptParsed(newPlugins: IPluginMap) {
+    this.mPlugins = newPlugins;
+    this.mLoaded = true;
+    if (this.mResetCallback) {
+      // reset() owns the retry counter and reports hydration failures
+      void this.reset();
+    }
+    this.mFailed = false;
+  }
+
+  /**
+   * Ask the user whether to keep or revert a foreign rewrite of the plugin files. Runs
+   * detached from the serialize queue (a pending dialog must not block writes); bursts
+   * of change events collapse into the one open prompt. Keep re-parses the file at
+   * decision time; until then Vortex's own state stays authoritative.
+   */
+  private promptExternalChange() {
+    if (this.mExternalChoicePending) {
+      return;
+    }
+    this.mExternalChoicePending = true;
+    Promise.resolve(this.mOnExternalChange())
+      .then((choice) => {
+        this.mExternalChoicePending = false;
+        if (choice === "keep") {
+          return this.deserialize(false, true);
+        }
+        // revert: rewrite the files from Vortex's own state
+        return this.enqueue(() =>
+          Promise.resolve(this.doSerialize()).catch((err) => {
+            log("error", "failed to revert external plugin file change", {
+              error: err.message,
+            });
+          }),
+        );
+      })
+      .catch((err) => {
+        this.mExternalChoicePending = false;
+        log("warn", "failed to resolve external plugin file change", {
+          error: err.message,
+        });
       });
   }
 }
