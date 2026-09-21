@@ -11,12 +11,13 @@ import {
 } from "@/extensions/health_check/utils/fileRequirements/fileRequirementActions";
 import {
   canQuickInstall,
-  downloadCandidates,
+  downloadTargets,
   requirementModName,
   switchTargets,
   uninstalledFiles,
 } from "@/extensions/health_check/utils/fileRequirements/fileRequirementReport";
 import type { IFileRequirementReport } from "@/extensions/health_check/utils/fileRequirements/fileRequirementReport";
+import { sharedRequirementState } from "@/extensions/health_check/utils/shared/tracking";
 import { decodeUID } from "@/extensions/nexus_integration/util/UIDs";
 import { Button } from "@/ui/components/button/Button";
 import { PremiumBadge } from "@/ui/components/premium_badge/PremiumBadge";
@@ -42,15 +43,16 @@ export const ListingRow = ({ api, entry, isHidden, onOpen, onToggleHide }: IList
   const {
     trackOneClickInstallClicked,
     trackInstallAllInGroupClicked,
-    trackPickModInstallClicked,
+    trackViewPickOptionsClicked,
     trackEnableThisVersionClicked,
-    trackInstallDownloadedClicked,
+    trackInstallAllDownloadedClicked,
     trackIssueHidden,
     trackIssueUnhidden,
   } = useIssueTracking();
 
   const { identity, issueType, resolutionType } = useIssue();
-  const candidates = downloadCandidates(report.requirements);
+  const targets = downloadTargets(report.requirements);
+  const candidates = targets.map((target) => target.candidate);
   const quickInstall = canQuickInstall(report.category) && !!candidates.length;
   const switches = switchTargets(report.requirements);
   const toInstall = uninstalledFiles(report.requirements);
@@ -78,6 +80,14 @@ export const ListingRow = ({ api, entry, isHidden, onOpen, onToggleHide }: IList
       ? `${names[0]} ${t("listing::item::more_count", { count: names.length - 1 })}`
       : names[0];
 
+  // A listing row is one category, so every requirement in it shares a state.
+  const requirementState = sharedRequirementState(report.requirements);
+
+  const runQuickInstall = () =>
+    targets.forEach(
+      (target) => void downloadFileRequirement(api, target.candidate, identity, target.enabledFile),
+    );
+
   const doQuickInstall = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (candidates.length === 1) {
@@ -88,10 +98,12 @@ export const ListingRow = ({ api, entry, isHidden, onOpen, onToggleHide }: IList
         mod_name: candidate.modName,
         mod_version: candidate.version,
         is_adult_content: candidate.adultContent,
+        requirement_state: requirementState,
       });
     } else {
       trackInstallAllInGroupClicked({
         mod_count: candidates.length,
+        requirement_state: requirementState,
       });
     }
 
@@ -100,7 +112,7 @@ export const ListingRow = ({ api, entry, isHidden, onOpen, onToggleHide }: IList
       return;
     }
 
-    candidates.forEach((candidate) => void downloadFileRequirement(api, candidate, identity));
+    runQuickInstall();
   };
 
   return (
@@ -125,12 +137,9 @@ export const ListingRow = ({ api, entry, isHidden, onOpen, onToggleHide }: IList
               appearance="moderate"
               brand="neutral"
               leftIconPath={mdiCallSplit}
-              size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                trackPickModInstallClicked({
-                  issue_type: issueType,
-                });
+                trackViewPickOptionsClicked({});
                 onOpen();
               }}
             >
@@ -141,13 +150,13 @@ export const ListingRow = ({ api, entry, isHidden, onOpen, onToggleHide }: IList
               appearance="moderate"
               brand="neutral"
               leftIconPath={mdiSwapHorizontal}
-              size="sm"
               onClick={(e) => {
                 e.stopPropagation();
                 trackEnableThisVersionClicked({
                   mod_id: decodeUID(switches[0].correct.modUID)?.id ?? 0,
                   required_version: switches[0].correct.version,
                   current_version: switches[0].wrong.version,
+                  requirement_state: "disabled_wrong_enabled",
                 });
                 switchActiveVersions(api, switches);
               }}
@@ -161,17 +170,19 @@ export const ListingRow = ({ api, entry, isHidden, onOpen, onToggleHide }: IList
                 appearance="moderate"
                 brand="neutral"
                 leftIconPath={mdiCheck}
-                size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
 
-                  trackInstallDownloadedClicked({
-                    mod_id: decodeUID(toInstall[0].uninstalledFile.modUID)?.id ?? 0,
-                    mod_count: toInstall.length,
-                  });
+                  trackInstallAllDownloadedClicked({ mod_count: toInstall.length });
 
                   toInstall.forEach(
-                    (req) => void installDownloadedFile(api, req.uninstalledFile, identity),
+                    (req) =>
+                      void installDownloadedFile(
+                        api,
+                        req.uninstalledFile,
+                        identity,
+                        req.enabledFile,
+                      ),
                   );
                 }}
               >
@@ -198,6 +209,7 @@ export const ListingRow = ({ api, entry, isHidden, onOpen, onToggleHide }: IList
       />
 
       <PremiumModal
+        api={api}
         downloadScope={candidates.length === 1 ? "single" : "all"}
         isOpen={showPremium}
         modCount={candidates.length}
@@ -215,6 +227,7 @@ export const ListingRow = ({ api, entry, isHidden, onOpen, onToggleHide }: IList
             onOpen();
           }
         }}
+        onPremiumUnlocked={runQuickInstall}
       />
     </>
   );

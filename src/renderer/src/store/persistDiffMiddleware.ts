@@ -53,9 +53,34 @@ export function getPersistedHives(): string[] {
  */
 const DEBOUNCE_MS = 100;
 
+/**
+ * Queued operations for one hive, keyed by serialized path. Persistence is last-write-wins per
+ * path, so only the newest operation for a path is kept: the queue costs the size of the state
+ * rather than the number of writes. An array diffs as a single leaf operation carrying the whole
+ * array, so a repeatedly-written one (a collection's `rules`) would dominate otherwise (GH#23904).
+ *
+ * Insertion order is preserved and a rewrite moves its key to the end, so operations apply in the
+ * order of their newest write.
+ */
+type PendingHiveDiffs = Map<string, DiffOperation>;
+
 type PendingDiffs = {
-  [H in PersistedHive]?: DiffOperation[];
+  [H in PersistedHive]?: PendingHiveDiffs;
 };
+
+/**
+ * Key a diff operation by its path. Each segment is length-prefixed so segment content cannot
+ * make two paths collide: key segments may contain dots (mod ids) or control characters (see
+ * isClobberedKeySegment), so no separator-joined key is collision-free, and a collision here
+ * silently drops an operation from the queue.
+ */
+function pathKey(path: string[]): string {
+  let key = "";
+  for (const segment of path) {
+    key += `${segment.length}:${segment}`;
+  }
+  return key;
+}
 
 /**
  * Serialize a diff operation's value for IPC transport.
@@ -139,9 +164,10 @@ export function createPersistDiffMiddleware(
   let flushTimeout: ReturnType<typeof setTimeout> | null = null;
 
   /**
-   * Flush all pending diffs to main process
+   * Flush all pending diffs to main process.
    */
   const flushDiffs = () => {
+    flushTimeout = null;
     const persistApi = getApi();
     if (persistApi == null) {
       return;
@@ -149,16 +175,22 @@ export function createPersistDiffMiddleware(
 
     for (const [hive, operations] of Object.entries(pendingDiffs) as [
       PersistedHive,
-      DiffOperation[],
+      PendingHiveDiffs,
     ][]) {
-      if (operations.length > 0) {
-        // Serialize operations to ensure IPC compatibility
-        const serializedOps = operations.map(serializeOperation);
+      // Serialize operations to ensure IPC compatibility
+      const serializedOps = Array.from(operations.values(), serializeOperation);
+      try {
         persistApi.sendDiff(hive, serializedOps);
+        // cleared only once the send succeeded, so a failure keeps the queue for the next flush
+        delete pendingDiffs[hive];
+      } catch (err) {
+        log("error", "failed to send state diff for persistence", {
+          hive,
+          operationCount: serializedOps.length,
+          error: getErrorMessageOrDefault(err),
+        });
       }
     }
-    pendingDiffs = {};
-    flushTimeout = null;
   };
 
   /**
@@ -179,10 +211,10 @@ export function createPersistDiffMiddleware(
     }
     for (const [hive, operations] of Object.entries(pendingDiffs) as [
       PersistedHive,
-      DiffOperation[],
+      PendingHiveDiffs,
     ][]) {
-      if (operations.length > 0) {
-        const serializedOps = operations.map(serializeOperation);
+      if (operations.size > 0) {
+        const serializedOps = Array.from(operations.values(), serializeOperation);
         if (persistApi.sendDiffSync != null) {
           persistApi.sendDiffSync(hive, serializedOps);
         } else {
@@ -209,10 +241,18 @@ export function createPersistDiffMiddleware(
    * Add diff operations to the pending queue
    */
   const queueDiffs = (hive: PersistedHive, operations: DiffOperation[]) => {
-    if (pendingDiffs[hive] === undefined) {
-      pendingDiffs[hive] = [];
+    let hiveDiffs = pendingDiffs[hive];
+    if (hiveDiffs === undefined) {
+      hiveDiffs = new Map();
+      pendingDiffs[hive] = hiveDiffs;
     }
-    pendingDiffs[hive].push(...operations);
+    for (const op of operations) {
+      const key = pathKey(op.path);
+      // Map.set keeps an existing key's position, so delete first: the newest write to a path
+      // must sort after anything queued since the previous one
+      hiveDiffs.delete(key);
+      hiveDiffs.set(key, op);
+    }
     scheduleFlush();
   };
 
@@ -250,24 +290,30 @@ export function createPersistDiffMiddleware(
       }
 
       // Compute and queue diffs for each persisted hive
-      for (const hive of persistedHives) {
-        const oldHive = previousState[hive as keyof IState];
-        const newHive = newState[hive as keyof IState];
+      try {
+        for (const hive of persistedHives) {
+          const oldHive = previousState[hive as keyof IState];
+          const newHive = newState[hive as keyof IState];
 
-        // Skip if hive hasn't changed (reference equality)
-        if (oldHive === newHive) {
-          continue;
+          // Skip if hive hasn't changed (reference equality)
+          if (oldHive === newHive) {
+            continue;
+          }
+
+          // Compute diff for this hive
+          const operations = computeStateDiff(oldHive, newHive);
+          if (operations.length > 0) {
+            queueDiffs(hive as PersistedHive, operations);
+          }
         }
 
-        // Compute diff for this hive
-        const operations = computeStateDiff(oldHive, newHive);
-        if (operations.length > 0) {
-          queueDiffs(hive as PersistedHive, operations);
-        }
+        // Update previous state for next comparison
+        previousState = newState;
+      } catch (err) {
+        log("error", "failed to compute state diff, changes held for the next attempt", {
+          error: getErrorMessageOrDefault(err),
+        });
       }
-
-      // Update previous state for next comparison
-      previousState = newState;
 
       return result;
     };

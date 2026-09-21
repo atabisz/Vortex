@@ -27,7 +27,7 @@ import { DisplayOptions } from "../components/DisplayOptions";
 import { GamesGrid } from "../components/GamesGrid";
 import { GamesList } from "../components/GamesList";
 import { NoGamesFound } from "../components/NoGamesFound";
-import { Search } from "../components/Search";
+import { Search } from "../components/search/Search";
 import type { IDiscoveryResult } from "../types/IDiscoveryResult";
 import type { IGameStored } from "../types/IGameStored";
 
@@ -320,7 +320,7 @@ const GamePicker = ({
         <CollapsibleSection
           actions={
             <Picker
-              button={{ appearance: "subdued", size: "xs" }}
+              button={{ appearance: "subdued", size: "sm" }}
               options={[
                 { label: t("Name A-Z"), value: "alphabetical" },
                 { label: t("Recently used"), value: "recentlyused" },
@@ -380,7 +380,7 @@ const GamePicker = ({
         <CollapsibleSection
           actions={
             <Picker
-              button={{ appearance: "subdued", size: "xs" }}
+              button={{ appearance: "subdued", size: "sm" }}
               options={[
                 { label: t("Most Popular"), value: "popular" },
                 { label: t("Name A-Z"), value: "alphabetical" },

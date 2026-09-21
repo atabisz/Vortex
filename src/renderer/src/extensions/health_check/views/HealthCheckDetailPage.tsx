@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 
 import type { IExtensionApi } from "@/types/IExtensionContext";
+import type { IState } from "@/types/IState";
 import { Button } from "@/ui/components/button/Button";
 import { Typography } from "@/ui/components/typography/Typography";
 import { Page } from "@/views/components/Page/Page";
@@ -21,7 +22,7 @@ import {
   fileRequirementsCheckResult,
   hiddenFileRequirements,
   hiddenModRequirements,
-  isAnyHealthCheckRunning,
+  isHealthCheckRunning,
   modRequirementsCheckResult,
 } from "../selectors";
 import { selectListedEntries } from "../utils/shared/listedEntries";
@@ -51,10 +52,9 @@ const BackButton = ({ onBack }: { onBack: () => void }) => {
 
   return (
     <Button
-      appearance="subdued"
+      appearance="weak"
       brand="neutral"
       leftIconPath={mdiArrowLeft}
-      size="sm"
       onClick={() => {
         trackBackClicked({ time_spent_on_detail_ms: Date.now() - openedAtRef.current });
         onBack();
@@ -87,7 +87,9 @@ function HealthCheckDetailPage({
   const modResult = useSelector(modRequirementsCheckResult);
   const hiddenFile = useSelector(hiddenFileRequirements);
   const hiddenMod = useSelector(hiddenModRequirements);
-  const isRunning = useSelector(isAnyHealthCheckRunning);
+  // Only the entry's own check can bring its requirements back, so waiting on the other one
+  // would hold a resolved page open for the rest of that run.
+  const isRunning = useSelector((state: IState) => isHealthCheckRunning(state, entry.checkId));
 
   const liveEntry = useMemo(
     () => content.selectEntries(api.getState()).find((candidate) => candidate.id === entry.id),
@@ -111,15 +113,20 @@ function HealthCheckDetailPage({
       <IssueProvider entry={shownEntry}>
         <Page active={active} id="health-check-detail-page" scrollable={false}>
           <PageHeader
-            customTitle={
+            customTitle={(scrolled) => (
               <div className="flex items-center gap-x-1.5">
-                <Typography appearance="moderate" as="h2" typographyType="heading-xs">
+                <Typography
+                  appearance={scrolled ? "subdued" : "moderate"}
+                  as="h2"
+                  className="transition-colors"
+                  typographyType="heading-xs"
+                >
                   {t(`detail::title::${shownEntry.severity}`)}
                 </Typography>
 
-                <BetaBadge />
+                <BetaBadge isSubdued={scrolled} />
               </div>
-            }
+            )}
             pictogramName="health-check"
             subtitle={t(`detail::subtitle::${shownEntry.severity}`)}
           >
@@ -130,6 +137,7 @@ function HealthCheckDetailPage({
             <DetailView api={api} entry={shownEntry} onBack={onBack} />
 
             <PremiumBanner
+              api={api}
               placement="detail"
               totalIssues={selectListedEntries(api.getState()).length}
             />

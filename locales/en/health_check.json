@@ -37,6 +37,11 @@
     "no_results_hidden": {
       "title": "No hidden items"
     },
+    "no_results_logged_out": {
+      "title": "Additional checks available",
+      "message": "Health Check found no issues in the checks it could run. Log in to also check for missing Nexus Mods requirements.",
+      "action": "Log in to complete Health Check"
+    },
     "external_mod_install": "External mod install",
     "install_one_click": "1-click install ({{count}})",
     "install_uninstalled": "Install (downloaded)",
@@ -84,7 +89,11 @@
       "enable_required": "Enable required version",
       "view_in_mods": "View in Mods",
       "enable_this_version": "Enable this version",
-      "install_uninstalled": "Install (downloaded)"
+      "install_uninstalled": "Install (downloaded)",
+      "adult": "Adult",
+      "installed": "Installed",
+      "enabled": "Enabled",
+      "disabled": "Disabled"
     },
     "feedback_modal": {
       "title": "Thanks for letting us know",

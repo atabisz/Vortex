@@ -4,11 +4,12 @@ import type { IMod } from "@/extensions/mod_management/types/IMod";
 import { nexusGamesProm } from "@/extensions/nexus_integration/util";
 import { makeFileUID, makeModUID } from "@/extensions/nexus_integration/util/UIDs";
 import { activeProfile } from "@/extensions/profile_management/selectors";
-import type { IProfile } from "@/extensions/profile_management/types/IProfile";
+import { log } from "@/logging";
 import type { IExtensionApi } from "@/types/IExtensionContext";
 import { getSafe } from "@/util/storeHelper";
 
 import renderModName from "../../../mod_management/util/modName";
+import { collectionManagedTags, isCollectionManaged } from "../shared/collectionManaged";
 
 /**
  * A file the user already has installed (a Vortex mod)
@@ -94,28 +95,6 @@ export interface IInstalledFileRef {
 }
 
 /**
- * Reference tags of mods pulled in by a collection installed on the active
- * profile; files carrying one satisfy requirements but don't emit their own.
- * Edit `countsForProfile` to change which collections count.
- */
-function collectionManagedTags(mods: { [modId: string]: IMod }, profile: IProfile): Set<string> {
-  const countsForProfile = (collection: IMod): boolean => profile.modState?.[collection.id] != null;
-
-  const tags = new Set<string>();
-  for (const mod of Object.values(mods)) {
-    if (mod.type !== "collection" || !countsForProfile(mod)) {
-      continue;
-    }
-    for (const rule of mod.rules ?? []) {
-      if (rule.type === "requires" && rule.reference?.tag != null) {
-        tags.add(rule.reference.tag);
-      }
-    }
-  }
-  return tags;
-}
-
-/**
  * Resolve a Nexus file UID for a mod, or return undefined if not possible.
  * Shared by both gather functions below.
  */
@@ -167,9 +146,7 @@ export async function gatherInstalledFiles(api: IExtensionApi): Promise<IInstall
       fileUID,
       modId: mod.id,
       enabled: getSafe(profile.modState, [mod.id, "enabled"], false),
-      emitRequirements: !(
-        attributes.referenceTag != null && collectionTags.has(attributes.referenceTag)
-      ),
+      emitRequirements: !isCollectionManaged(mod, collectionTags),
     });
   }
 
@@ -265,7 +242,9 @@ function toDownloadedFile(
       modName,
     version: download.modInfo?.meta?.fileVersion ?? "",
     thumbnailUrl: modInfo.picture_url ?? details?.thumbnailUrl ?? undefined,
-    adultContent: modInfo.contains_adult_content ?? details?.adultContent ?? false,
+    // The fetched flag wins: a download's stored modInfo can carry a defaulted
+    // `contains_adult_content: false`, and a mod can be flagged after it was downloaded.
+    adultContent: details?.adultContent ?? modInfo.contains_adult_content ?? false,
   };
 }
 
@@ -283,32 +262,44 @@ export function makeDownloadedFileHydrator(
   const refByUID = new Map(refs.map((ref): [string, IDownloadedFileRef] => [ref.fileUID, ref]));
 
   return (fileUID) => {
+    // A ref miss is a normal negative lookup; callers try installed before downloaded.
     const ref = refByUID.get(fileUID);
     if (!ref) return undefined;
     const download = downloads[ref.downloadId];
-    if (!download) return undefined;
+    if (!download) {
+      log("debug", "unable to hydrate downloaded file", { fileUID, downloadId: ref.downloadId });
+      return undefined;
+    }
     return toDownloadedFile(ref, download, modDetailsByUID.get(ref.modUID));
   };
 }
 
-/**
- * Build the display shape for one installed file from its Vortex mod.
- */
-function toInstalledFile(
-  mod: IMod,
-  fileUID: string,
-  enabled: boolean,
-  gameId: string,
-  adultContent: boolean,
-): IInstalledFile {
-  const attributes: IInstalledModAttributes = mod.attributes ?? {};
-  const modName = renderModName(mod);
-  const modUID =
+/** Resolve a Nexus mod UID for an installed mod, or "" if not possible. */
+function resolveModUID(attributes: IInstalledModAttributes, gameId: string): string {
+  return (
     makeModUID({
       gameId: attributes.downloadGame ?? gameId,
       modId: String(attributes.modId ?? ""),
       fileId: String(attributes.fileId ?? ""),
-    }) ?? "";
+    }) ?? ""
+  );
+}
+
+/**
+ * Build the display shape for one installed file from its Vortex mod. The mod's own
+ * attributes carry the display data, backfilled from the fetched details when they don't
+ * (`modInfo` is the originating download's block, whose archive may since have gone).
+ */
+function toInstalledFile(
+  mod: IMod,
+  fileUID: string,
+  modUID: string,
+  enabled: boolean,
+  modInfo: INexusModDisplayInfo,
+  details: IModDetails | undefined,
+): IInstalledFile {
+  const attributes: IInstalledModAttributes = mod.attributes ?? {};
+  const modName = renderModName(mod);
   return {
     modId: mod.id,
     fileUID,
@@ -318,20 +309,22 @@ function toInstalledFile(
     // used only as a fallback when no display name was stored.
     fileName: attributes.logicalFileName ?? attributes.fileName ?? modName,
     version: attributes.version ?? "",
-    thumbnailUrl: attributes.pictureUrl,
-    adultContent,
+    thumbnailUrl: attributes.pictureUrl ?? details?.thumbnailUrl,
+    // The fetched flag wins: a mod can be flagged adult after it was installed.
+    adultContent: details?.adultContent ?? modInfo.contains_adult_content ?? false,
     enabled,
   };
 }
 
 /**
  * A `fileUID -> IInstalledFile` hydrator over the gathered refs, reading the mod
- * store on demand so only surfaced files are hydrated. The adult-content flag is
- * read from the originating download (linked via `archiveId`), or defaults to false.
+ * store on demand so only surfaced files are hydrated. `modDetailsByUID` backfills the
+ * thumbnail and adult flag the mod's own attributes don't carry.
  */
 export function makeInstalledFileHydrator(
   api: IExtensionApi,
   refs: IInstalledFileRef[],
+  modDetailsByUID: Map<string, IModDetails>,
 ): (fileUID: string) => IInstalledFile | undefined {
   const state = api.getState();
   const gameId = activeProfile(state)?.gameId;
@@ -340,22 +333,19 @@ export function makeInstalledFileHydrator(
   const refByUID = new Map(refs.map((ref): [string, IInstalledFileRef] => [ref.fileUID, ref]));
 
   return (fileUID) => {
+    // A ref miss is a normal negative lookup; callers try installed before downloaded.
     const ref = refByUID.get(fileUID);
     if (!ref) {
       return undefined;
     }
     const mod = mods[ref.modId];
     if (!mod) {
+      log("debug", "unable to hydrate installed file", { fileUID, modId: ref.modId });
       return undefined;
     }
+    const modUID = resolveModUID(mod.attributes ?? {}, gameId);
     const download = mod.archiveId ? downloads[mod.archiveId] : undefined;
     const modInfo = (download?.modInfo?.nexus?.modInfo ?? {}) as INexusModDisplayInfo;
-    return toInstalledFile(
-      mod,
-      fileUID,
-      ref.enabled,
-      gameId,
-      modInfo.contains_adult_content ?? false,
-    );
+    return toInstalledFile(mod, fileUID, modUID, ref.enabled, modInfo, modDetailsByUID.get(modUID));
   };
 }

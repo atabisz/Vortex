@@ -43,7 +43,7 @@ jobs:
         uses: volta-cli/action@v5
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v6.0.9
         with:
           cache: true
 
@@ -99,7 +99,7 @@ jobs:
         uses: volta-cli/action@v5
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v6.0.9
         with:
           cache: true
 

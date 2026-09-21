@@ -9,7 +9,7 @@
     "typecheck": "pnpm exec tsc -p tsconfig.json",
     "lint": "pnpm exec eslint --quiet --concurrency auto .",
     "lint:verbose": "pnpm exec eslint --concurrency auto .",
-    "api": "pnpm exec rimraf ./lib && pnpm exec tsc -p tsconfig.api.json && pnpm exec api-extractor run --local",
+    "api:dts": "pnpm exec rimraf ./lib && pnpm exec tsc -p tsconfig.api.json && pnpm exec node ./api-build.mjs",
     "test": "pnpm exec vitest run"
   },
   "nx": {
@@ -37,7 +37,7 @@
           "command": "pnpm -F @vortex/renderer exec node ./dev.mjs"
         }
       },
-      "api": {
+      "api:dts": {
         "dependsOn": [
           "^build"
         ],
@@ -45,11 +45,10 @@
         "inputs": [
           "default",
           "typescript",
-          "{projectRoot}/api-extractor.json"
+          "{projectRoot}/api-build.mjs"
         ],
         "outputs": [
-          "{workspaceRoot}/packages/vortex-api/lib/api.d.ts",
-          "{workspaceRoot}/etc/vortex.api.md"
+          "{workspaceRoot}/packages/vortex-api/lib/api.d.ts"
         ]
       }
     }
@@ -62,6 +61,7 @@
     "@babel/preset-typescript": "catalog:",
     "@babel/register": "catalog:",
     "@electron/remote": "catalog:",
+    "@floating-ui/react": "catalog:",
     "@headlessui/react": "catalog:",
     "@hot-updater/bsdiff": "catalog:",
     "@mdi/js": "catalog:",
@@ -72,6 +72,7 @@
     "@nexusmods/fomod-installer-ipc": "catalog:",
     "@nexusmods/fomod-installer-native": "catalog:",
     "@nexusmods/nexus-api": "catalog:",
+    "@nosferatu500/react-sortable-tree": "catalog:",
     "@opentelemetry/api": "catalog:",
     "@opentelemetry/context-zone": "catalog:",
     "@opentelemetry/resources": "catalog:",
@@ -108,7 +109,6 @@
     "@types/react-dom": "catalog:",
     "@types/react-redux": "catalog:",
     "@types/react-select": "catalog:",
-    "@types/react-sortable-tree": "catalog:",
     "@types/react-transition-group": "catalog:",
     "@types/redux": "catalog:",
     "@types/redux-devtools-log-monitor": "catalog:",
@@ -158,9 +158,9 @@
     "glob": "catalog:",
     "graphlib": "catalog:",
     "happy-dom": "catalog:",
-    "icon-extract": "workspace:*",
     "i18next": "catalog:",
     "i18next-fs-backend": "catalog:",
+    "icon-extract": "workspace:*",
     "iconv-lite": "catalog:",
     "immutability-helper": "catalog:",
     "interweave": "catalog:",
@@ -195,9 +195,7 @@
     "react-overlays": "catalog:",
     "react-redux": "catalog:",
     "react-refresh": "catalog:",
-    "react-resize-detector": "catalog:",
     "react-select": "catalog:",
-    "react-sortable-tree": "catalog:",
     "recharts": "catalog:",
     "redux": "catalog:",
     "redux-act": "catalog:",
@@ -208,6 +206,7 @@
     "reselect": "catalog:",
     "resolve": "catalog:",
     "rimraf": "catalog:",
+    "rolldown-plugin-dts": "catalog:",
     "sass": "catalog:",
     "semver": "catalog:",
     "shortid": "catalog:",

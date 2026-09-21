@@ -2,7 +2,7 @@ import { type FileHandle as NodeFileHandle, access, mkdir, open } from "node:fs/
 import type { IncomingHttpHeaders } from "node:http";
 import { dirname } from "node:path";
 
-import { getErrorCode, unknownToError } from "@vortex/shared";
+import { getErrorCode } from "@vortex/shared";
 import type {
   ByteRange,
   Chunk,
@@ -13,17 +13,20 @@ import type {
   RetryStrategy,
 } from "@vortex/shared/download";
 import { DownloadError } from "@vortex/shared/errors";
-import type { Got, Headers, Delays as GotTimeoutOptions, ExtendOptions } from "got";
+import type { Got, Headers, ExtendOptions } from "got";
 import got from "got";
 import type { RateLimiter } from "limiter";
 import PQueue from "p-queue";
 import type { CookieJar } from "tough-cookie";
 
-import { isCancellation, toNetworkError } from "./errors";
+import { isCancellation } from "../transfer/cancellation";
+import { withRetry } from "../transfer/retry";
+import type { TimeoutOptions } from "../transfer/timeouts";
+import { createGotTimeoutOptions } from "../transfer/timeouts";
+import { toNetworkError } from "./errors";
 import type { ProgressReporter } from "./progress";
 import type { NormalizedResource } from "./resolver";
 import { normalize } from "./resolver";
-import { sleep } from "./retry";
 
 export const defaultChunkConcurrency = 4;
 
@@ -33,17 +36,7 @@ export type Checkpoint = {
   completedRanges: ByteRange[];
 };
 
-export type TimeoutOptions = {
-  // TODO: use Temporal API
-  /** Timeout for DNS lookup (ms). */
-  lookup: number;
-
-  /** Timeout for DNS lookup + TCP connect + TLS handshake (ms). */
-  connect: number;
-
-  /** Timeout between received data packets before treating the connection as stalled (ms). */
-  stall: number;
-};
+export type { TimeoutOptions };
 
 /** @internal */
 export async function download<T>(
@@ -360,18 +353,6 @@ function createGotStream(
   return stream;
 }
 
-function createGotTimeoutOptions(timeout?: TimeoutOptions): GotTimeoutOptions | undefined {
-  if (!timeout) return undefined;
-
-  return {
-    lookup: timeout.lookup,
-    connect: timeout.connect,
-    secureConnect: timeout.connect,
-    socket: timeout.stall,
-    response: timeout.stall,
-  };
-}
-
 async function consumeTokens(
   limiter: RateLimiter,
   bytes: number,
@@ -472,32 +453,6 @@ async function downloadChunk(
     rateLimiter: options.rateLimiter,
     abortSignal: options.abortSignal,
   });
-}
-
-/**
- * Retry helper that re-invokes `fn` according to the given strategy.
- * Cancellations are never retried. Uses abort-aware sleep so backoff
- * delays are interrupted when the signal fires.
- */
-async function withRetry<T>(
-  fn: () => Promise<T>,
-  strategy?: RetryStrategy,
-  abortSignal?: AbortSignal,
-): Promise<T> {
-  if (!strategy) return await fn();
-
-  let attempt = 0;
-  while (true) {
-    try {
-      return await fn();
-    } catch (err) {
-      if (isCancellation(err)) throw err;
-      attempt++;
-      const verdict = strategy({ attempt, error: unknownToError(err) });
-      if (!verdict.retry) throw err;
-      await sleep(verdict.delayMs, abortSignal);
-    }
-  }
 }
 
 function createHeaders(

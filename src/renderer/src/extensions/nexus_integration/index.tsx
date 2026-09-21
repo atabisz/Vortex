@@ -1080,7 +1080,7 @@ function extendAPI(api: IExtensionApi, nexus: NexusT): INexusAPIExtension {
     nexusGetTrendingMods: eh.onGetTrendingMods(api, nexus),
     nexusEndorseMod: eh.onEndorseMod(api, nexus),
     nexusSubmitFeedback: eh.onSubmitFeedback(nexus),
-    nexusSubmitCollection: eh.onSubmitCollection(nexus),
+    nexusSubmitCollection: eh.onSubmitCollection(api),
     nexusModUpdate: eh.onModUpdate(api, nexus),
     nexusOpenCollectionPage: eh.onOpenCollectionPage(api),
     nexusOpenModPage: eh.onOpenModPage(api),
@@ -1254,7 +1254,7 @@ function once(api: IExtensionApi, callbacks: Array<(nexus: NexusT) => void>) {
   api.events.on("refresh-user-info", eh.onRefreshUserInfo(nexus, api));
   api.events.on("endorse-mod", eh.onEndorseMod(api, nexus));
   api.events.on("submit-feedback", eh.onSubmitFeedback(nexus));
-  api.events.on("submit-collection", eh.onSubmitCollection(nexus));
+  api.events.on("submit-collection", eh.onSubmitCollection(api));
   api.events.on("mods-update", eh.onModsUpdate(api, nexus));
   api.events.on("mod-update", eh.onModUpdate(api, nexus));
   api.events.on("open-collection-page", eh.onOpenCollectionPage(api));
@@ -1309,7 +1309,7 @@ function once(api: IExtensionApi, callbacks: Array<(nexus: NexusT) => void>) {
   callbacks.forEach((cb) => cb(nexus));
 }
 
-function toolbarBanner(t: TFunction): React.FunctionComponent<any> {
+function toolbarBanner(t: TFunction): React.FunctionComponent<React.PropsWithChildren<any>> {
   return () => {
     const context = React.useContext<IComponentContext>(MainContext);
     const premiumPictogramPath = "assets/pictograms/premium-pictogram.svg";
@@ -1471,6 +1471,7 @@ const freeDLQueue: IDLQueueItem[] = [];
 
 const DL_QUERY: IRevisionQuery = {
   id: true,
+  revisionNumber: true,
   downloadLink: true,
   collection: {
     id: true,
@@ -1660,7 +1661,7 @@ function makeNXMProtocol(api: IExtensionApi, onAwaitLink: AwaitLinkCB) {
                         collectionId: revisionInfo.collection.id,
                         revisionId: revisionInfo.id,
                         collectionSlug: url.collectionSlug,
-                        revisionNumber: url.revisionNumber,
+                        revisionNumber: revisionInfo.revisionNumber ?? url.revisionNumber,
                       },
                     },
                   } as any,

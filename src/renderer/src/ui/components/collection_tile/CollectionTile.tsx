@@ -66,7 +66,7 @@ const Stat = ({ children, iconPath }: PropsWithChildren<{ iconPath: string }>) =
   </div>
 );
 
-export const CollectionTile: ComponentType<ICollectionTileProps> = ({
+export const CollectionTile: ComponentType<React.PropsWithChildren<ICollectionTileProps>> = ({
   api,
   collection,
   isLoggedIn = true,
@@ -101,12 +101,12 @@ export const CollectionTile: ComponentType<ICollectionTileProps> = ({
 
   // Refresh user info when user hovers on the tile, debounced to once per 5 seconds
   useEffect(() => {
-    if (isHovered && api?.events) {
+    if (isHovered && isLoggedIn && api?.events) {
       userInfoDebouncer.schedule(undefined, () => {
         api.events.emit("refresh-user-info");
       });
     }
-  }, [isHovered]);
+  }, [isHovered, isLoggedIn]);
 
   const addCollection = useCallback(() => {
     if (!pending && canBeAdded && isLoggedIn) {
@@ -123,6 +123,7 @@ export const CollectionTile: ComponentType<ICollectionTileProps> = ({
   return (
     <div
       className={joinClasses(["w-full rounded-md bg-surface-mid", className])}
+      data-testid="collection-tile"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -214,13 +215,13 @@ export const CollectionTile: ComponentType<ICollectionTileProps> = ({
             brand="neutral"
             disabled={true}
             leftIconPath={!isLoggedIn ? undefined : mdiCheck}
-            size="xs"
+            size="sm"
             title={!isLoggedIn ? "Log in to add collections" : undefined}
           >
             {!isLoggedIn ? "Log in to add" : "Added"}
           </Button>
         ) : (
-          <Button size="xs" onClick={addCollection}>
+          <Button size="sm" onClick={addCollection}>
             Add collection
           </Button>
         )}
@@ -229,7 +230,7 @@ export const CollectionTile: ComponentType<ICollectionTileProps> = ({
           appearance="weak"
           brand="neutral"
           leftIconPath={mdiOpenInNew}
-          size="xs"
+          size="sm"
           onClick={onViewPage}
         >
           View page

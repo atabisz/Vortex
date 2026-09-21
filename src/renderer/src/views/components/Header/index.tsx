@@ -2,9 +2,13 @@ import React, { type FC, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 
-import { useWindowContext } from "../../../contexts";
-import { Typography } from "../../../ui/components/typography/Typography";
-import { nxmPanelClose, nxmPanelOpen } from "../../../ui/icon-paths";
+import { useWindowContext } from "@/contexts";
+import { Button } from "@/ui/components/button/Button";
+import { Tooltip } from "@/ui/components/tooltip/Tooltip";
+import { TooltipDelayGroup } from "@/ui/components/tooltip/TooltipDelayGroup";
+import { Typography } from "@/ui/components/typography/Typography";
+import { nxmPanelClose, nxmPanelOpen } from "@/ui/icon-paths";
+
 import {
   activeProfile as activeProfileSelector,
   gameProfiles as gameProfilesSelector,
@@ -12,7 +16,6 @@ import {
 } from "../../../util/selectors";
 import { useSpineContext } from "../Spine/SpineContext";
 import { HelpSection } from "./HelpSection";
-import { IconButton } from "./IconButton";
 import { Notifications } from "./Notifications";
 import { PremiumIndicator } from "./PremiumIndicator";
 import { ProfileSection } from "./ProfileSection";
@@ -20,7 +23,7 @@ import { StagingIndicator } from "./StagingIndicator";
 import { VersionIndicator } from "./VersionIndicator";
 import { WindowControls } from "./WindowControls";
 
-export const Header: FC = () => {
+export const Header: FC<React.PropsWithChildren<unknown>> = () => {
   const { menuIsCollapsed, setMenuIsCollapsed } = useWindowContext();
   const { t } = useTranslation();
   const { selection } = useSpineContext();
@@ -55,14 +58,17 @@ export const Header: FC = () => {
       className="flex h-11 items-center justify-between pl-4.5"
       style={{ WebkitAppRegion: "drag" }}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-x-1 overflow-hidden">
-        <IconButton
-          appearance="secondary"
-          iconPath={menuIsCollapsed ? nxmPanelOpen : nxmPanelClose}
-          style={{ WebkitAppRegion: "no-drag" }}
-          title={menuIsCollapsed ? "Open menu" : "Collapse menu"}
-          onClick={handleToggleMenu}
-        />
+      <div className="flex min-w-0 flex-1 items-center gap-x-1">
+        <Tooltip content={menuIsCollapsed ? t("Open menu") : t("Collapse menu")} placement="right">
+          <Button
+            appearance="weak"
+            aria-label={menuIsCollapsed ? t("Open menu") : t("Collapse menu")}
+            brand="neutral"
+            leftIconPath={menuIsCollapsed ? nxmPanelOpen : nxmPanelClose}
+            style={{ WebkitAppRegion: "no-drag" }}
+            onClick={handleToggleMenu}
+          />
+        </Tooltip>
 
         <Typography
           brand="none"
@@ -70,28 +76,32 @@ export const Header: FC = () => {
         >
           <span className="shrink-0 text-neutral-strong">{title}</span>
 
-          {profileName && (
+          {!!profileName && (
             <span className="max-w-[33%] min-w-0 truncate text-neutral-subdued">{profileName}</span>
           )}
         </Typography>
       </div>
 
-      <div className="flex shrink-0 items-center gap-x-4" style={{ WebkitAppRegion: "no-drag" }}>
+      <div className="flex shrink-0 items-center gap-x-2" style={{ WebkitAppRegion: "no-drag" }}>
         <StagingIndicator />
+
         <VersionIndicator />
+
         <PremiumIndicator />
 
-        <div className="flex gap-x-2">
-          <Notifications />
+        <div className="flex items-center gap-x-5">
+          <TooltipDelayGroup as="div" className="flex gap-x-1.5">
+            <Notifications />
 
-          <HelpSection />
+            <HelpSection />
 
-          <ProfileSection />
+            <ProfileSection />
+          </TooltipDelayGroup>
+
+          <div className="h-6 w-0.5 rounded-md bg-stroke-weak" />
+
+          <WindowControls />
         </div>
-
-        <div className="h-6 w-px bg-stroke-weak" />
-
-        <WindowControls />
       </div>
     </div>
   );

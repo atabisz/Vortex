@@ -6,8 +6,10 @@ import {
   candidateToFileData,
   fileWebLinks,
   type IFileActionContext,
+  type IResolutionContext,
 } from "@/extensions/health_check/utils/fileRequirements/cardHelpers";
 import { openModPage } from "@/extensions/health_check/utils/fileRequirements/fileRequirementActions";
+import type { IInstalledFile } from "@/extensions/health_check/utils/fileRequirements/installedFiles";
 import type { IFileRequirementCandidate } from "@/extensions/health_check/utils/fileRequirements/mapRequirementsReport";
 import { Button } from "@/ui/components/button/Button";
 import { PremiumBadge } from "@/ui/components/premium_badge/PremiumBadge";
@@ -19,37 +21,33 @@ import { FileRequirement } from "../FileRequirement";
 export const CandidateCard = ({
   ctx,
   candidate,
+  enabledFile,
+  resolution,
   isOr,
-  optionPosition,
-  optionCount,
 }: {
   ctx: IFileActionContext;
   candidate: IFileRequirementCandidate;
+  /** The wrong version this download replaces, if any; disabled once the download installs. */
+  enabledFile?: IInstalledFile;
+  resolution: IResolutionContext;
   isOr?: boolean;
-  optionPosition?: number;
-  optionCount?: number;
 }) => {
   const { t } = useTranslation(["health_check", "common"]);
 
   const { isLoading, onClick } = useInstallButton(
-    () => ctx.requestDownload(candidate),
+    () => ctx.requestDownload(candidate, enabledFile),
     ctx.showPremiumAd,
   );
 
   const loading = isLoading || !!ctx.isDownloadingAll;
 
   const handleInstall = () => {
-    if (isOr) {
-      ctx.onPickOption(candidate, optionPosition ?? 0, optionCount ?? 0);
-    } else {
-      ctx.onInstall(candidate);
-    }
-
+    ctx.onInstall(candidate, resolution);
     onClick();
   };
 
   const handleModPage = () => {
-    ctx.onOpenModPage(candidate);
+    ctx.onOpenModPage(candidate, resolution);
     openModPage(ctx.api, candidate);
   };
 
@@ -61,7 +59,6 @@ export const CandidateCard = ({
             appearance="subdued"
             brand="neutral"
             leftIconPath={mdiOpenInNew}
-            size="sm"
             onClick={handleModPage}
           >
             {t("detail::item::install_via_mod_page")}

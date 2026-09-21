@@ -1,16 +1,22 @@
 import { mdiCheck, mdiDiamondStone, mdiOpenInNew } from "@mdi/js";
-import React, { type ReactNode, useEffect } from "react";
+import React, { type ReactNode, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
 
+import {
+  useOptionalIssue,
+  useTracker,
+} from "@/extensions/health_check/hooks/HealthCheckTracking.context";
+import { usePremiumStatusRefresh } from "@/extensions/health_check/hooks/usePremiumStatusRefresh";
+import { PREMIUM_PATH } from "@/extensions/nexus_integration/constants";
+import { isPremium } from "@/extensions/nexus_integration/selectors";
+import type { IExtensionApi } from "@/types/IExtensionContext";
 import { Button } from "@/ui/components/button/Button";
 import { Icon } from "@/ui/components/icon/Icon";
 import { Modal } from "@/ui/components/modal/Modal";
 import { Typography } from "@/ui/components/typography/Typography";
+import opn from "@/util/opn";
 import { Campaign, Content, Section, nexusModsURL } from "@/util/util";
-
-import { opn } from "../../../../util/api";
-import { PREMIUM_PATH } from "../../../nexus_integration/constants";
-import { useOptionalIssue, useTracker } from "../../hooks/HealthCheckTracking.context";
 
 /** Which 1-click flow surfaced the premium upsell modal. */
 export type PremiumTrigger = "single_install" | "batch_install" | "install_all";
@@ -24,6 +30,7 @@ const ListItem = ({ children }: { children: ReactNode }) => (
 );
 
 export const PremiumModal = ({
+  api,
   isOpen,
   downloadScope = "single",
   modCount,
@@ -31,7 +38,9 @@ export const PremiumModal = ({
   trigger,
   onClose,
   onDownload,
+  onPremiumUnlocked,
 }: {
+  api: IExtensionApi;
   isOpen: boolean;
   downloadScope?: "single" | "all";
   modCount?: number;
@@ -40,6 +49,11 @@ export const PremiumModal = ({
   trigger: PremiumTrigger;
   onClose: () => void;
   onDownload: () => void;
+  /**
+   * Run the gated action once the purchase lands, so the user gets what they came for
+   * instead of having to find the button again. The modal closes either way.
+   */
+  onPremiumUnlocked?: () => void;
 }) => {
   const { t } = useTranslation(["health_check"]);
 
@@ -57,6 +71,33 @@ export const PremiumModal = ({
       trackPremiumModalShown({ ...identity, trigger, mod_id: modId, mod_count: modCount });
     }
   }, [isOpen, trigger, identity, modId, modCount, trackPremiumModalShown]);
+
+  // The purchase happens on the website, so watch for it while the upsell is up. This is
+  // also why "Unlock premium" doesn't close the modal: staying open is what keeps the
+  // check armed until the new membership can be seen.
+  usePremiumStatusRefresh(api, isOpen);
+
+  // Premium specifically, not `!shouldShowPremiumAd`: supporters can't download through
+  // the client either, and an absent userInfo would read as a purchase that never happened.
+  const unlocked = useSelector(isPremium);
+  // Guards against re-running the action, not against re-rendering: onClose is the
+  // parent's setState, so isOpen is still true for the rest of this effect's runs.
+  const handledUnlockRef = useRef(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      handledUnlockRef.current = false;
+      return;
+    }
+
+    if (!unlocked || handledUnlockRef.current) {
+      return;
+    }
+
+    handledUnlockRef.current = true;
+    onClose();
+    onPremiumUnlocked?.();
+  }, [isOpen, unlocked, onClose, onPremiumUnlocked]);
 
   return (
     <Modal
@@ -89,7 +130,6 @@ export const PremiumModal = ({
           brand="neutral"
           className="w-full"
           leftIconPath={downloadScope === "single" && mdiOpenInNew}
-          size="sm"
           onClick={() => {
             trackPremiumModalFallbackClicked({
               ...identity,
@@ -108,7 +148,6 @@ export const PremiumModal = ({
           brand="premium"
           className="w-full"
           leftIconPath={mdiDiamondStone}
-          size="sm"
           onClick={() => {
             trackPremiumModalUnlockClicked({
               ...identity,

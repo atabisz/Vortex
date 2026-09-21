@@ -47,7 +47,7 @@ class SettingsVortex extends ComponentEx<IProps, IComponentState> {
             {t("You need to restart Vortex to activate this change")}
           </Typography>
 
-          <Button brand="neutral" size="sm" onClick={this.restart}>
+          <Button brand="neutral" onClick={this.restart}>
             {t("Restart now")}
           </Button>
         </div>
@@ -70,6 +70,7 @@ class SettingsVortex extends ComponentEx<IProps, IComponentState> {
                 { label: t("Shared"), value: "on" },
                 { label: t("Per-User"), value: "off" },
               ]}
+              placement="left"
               value={multiUser ? "on" : "off"}
               onChange={this.selectMode}
             />

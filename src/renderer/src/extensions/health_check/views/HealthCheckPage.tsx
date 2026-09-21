@@ -1,16 +1,17 @@
 import {
-  mdiCheckCircle,
-  mdiCog,
+  mdiCheckCircleOutline,
+  mdiCogOutline,
+  mdiInformationOutline,
   mdiMonitorArrowDownVariant,
-  mdiEye,
-  mdiEyeOff,
+  mdiEyeOutline,
+  mdiEyeOffOutline,
   mdiRefresh,
 } from "@mdi/js";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 
-import { setOpenMainPage, setSettingsPage } from "@/actions/session";
+import { setDialogVisible, setOpenMainPage, setSettingsPage } from "@/actions/session";
 import type { IExtensionApi } from "@/types/IExtensionContext";
 import type { IState } from "@/types/IState";
 import { Button } from "@/ui/components/button/Button";
@@ -20,13 +21,17 @@ import { TabBar } from "@/ui/components/tabs/TabBar";
 import { TabButton } from "@/ui/components/tabs/TabButton";
 import { TabPanel } from "@/ui/components/tabs/TabPanel";
 import { TabProvider } from "@/ui/components/tabs/Tabs.context";
+import { Toolbar } from "@/ui/components/toolbar/Toolbar";
+import type { IToolbarAction } from "@/ui/components/toolbar/ToolbarGroup";
+import { ToolbarGroup } from "@/ui/components/toolbar/ToolbarGroup";
 import { Typography } from "@/ui/components/typography/Typography";
+import { UserCanceled } from "@/util/CustomErrors";
 import { useRelativeTime } from "@/util/useRelativeTime";
 import { Page } from "@/views/components/Page/Page";
 import { PageHeader } from "@/views/components/Page/PageHeader";
 import { PageScroll } from "@/views/components/Page/PageScroll";
 
-import { shouldShowPremiumAd } from "../../nexus_integration/selectors";
+import { isLoggedIn, shouldShowPremiumAd } from "../../nexus_integration/selectors";
 import { BetaBadge } from "../components/beta_badge/BetaBadge";
 import { PremiumBanner } from "../components/premium_banner/PremiumBanner";
 import { PremiumModal } from "../components/premium_modal/PremiumModal";
@@ -129,6 +134,9 @@ const HealthCheckPage = ({ api, onRefresh, active, registerReset }: IHealthCheck
   const showPremiumAd = useSelector(shouldShowPremiumAd);
   const [showInstallAllPremium, setShowInstallAllPremium] = useState(false);
   const isRefreshing = useSelector(isAnyHealthCheckRunning);
+  // Every check that talks to Nexus Mods skips itself while logged out, so an empty
+  // list then means "we couldn't run the checks", not "your loadout is healthy".
+  const loggedIn = useSelector(isLoggedIn);
 
   // selectListedEntries / collectInstallAllItems read the slices above from the live
   // state; those slices fully determine their results. exhaustive-deps can't see the
@@ -147,6 +155,27 @@ const HealthCheckPage = ({ api, onRefresh, active, registerReset }: IHealthCheck
   const activeItems = useMemo(() => items.filter((item) => !item.hidden), [items]);
   const hiddenItems = useMemo(() => items.filter((item) => item.hidden), [items]);
   const supportsHide = useMemo(() => items.some((item) => item.content.supportsHide), [items]);
+
+  const toolbarActions = useMemo<IToolbarAction[]>(
+    () => [
+      {
+        label: t("common:::refresh"),
+        iconPath: mdiRefresh,
+        isLoading: isRefreshing,
+        onClick: () => onRefresh?.(),
+      },
+      {
+        label: t("common:::settings"),
+        iconPath: mdiCogOutline,
+        onClick: () => {
+          trackSettingsOpened();
+          dispatch(setOpenMainPage("application_settings", false));
+          dispatch(setSettingsPage("Vortex"));
+        },
+      },
+    ],
+    [dispatch, isRefreshing, onRefresh, t, trackSettingsOpened],
+  );
 
   // page_viewed fires each time the page becomes active (it stays mounted across
   // navigation, so key off the active-prop transition rather than mount). lastHealthCheckRun
@@ -169,19 +198,21 @@ const HealthCheckPage = ({ api, onRefresh, active, registerReset }: IHealthCheck
     wasActiveRef.current = !!active;
   }, [active, activeItems, hiddenItems, trackPageViewed, api]);
 
-  // passed_viewed fires when the success/empty state becomes visible — on navigating to
+  // passed_viewed fires when the success state becomes visible — on navigating to
   // an already-passed page, or when a scan clears the last active issue while viewing.
+  // Logged out we show the "additional checks available" state instead, which isn't a
+  // pass, so it must not count towards the pass rate.
   const passedShownRef = useRef(false);
 
   useEffect(() => {
-    const passed = !!active && !activeItems.length;
+    const passed = !!active && loggedIn && !activeItems.length;
 
     if (passed && !passedShownRef.current) {
       trackPassedViewed();
     }
 
     passedShownRef.current = passed;
-  }, [active, activeItems, trackPassedViewed]);
+  }, [active, activeItems, loggedIn, trackPassedViewed]);
 
   if (selected) {
     return (
@@ -197,6 +228,8 @@ const HealthCheckPage = ({ api, onRefresh, active, registerReset }: IHealthCheck
 
   const activeCount = activeItems.length;
   const hiddenCount = hiddenItems.length;
+  // Without tabs the active list is all there is, and selectedTab stays on it.
+  const listIsEmpty = selectedTab === "hidden" ? hiddenCount === 0 : activeCount === 0;
 
   const renderRow = (item: IListedEntry) => {
     const { content, entry } = item;
@@ -238,6 +271,17 @@ const HealthCheckPage = ({ api, onRefresh, active, registerReset }: IHealthCheck
   // 1-click install all: premium-gated for free users. Items are de-duplicated first by
   // collectInstallAllItems (by key) and again here at execution time via the seen set,
   // so a file shared across multiple source reports is only queued once.
+  const runInstallAll = () => {
+    const seen = new Set<string>();
+
+    for (const item of installAllItems) {
+      if (!seen.has(item.key)) {
+        seen.add(item.key);
+        item.install();
+      }
+    }
+  };
+
   const installAll = () => {
     trackOneClickInstallAllClicked({
       issue_count: activeCount,
@@ -249,27 +293,54 @@ const HealthCheckPage = ({ api, onRefresh, active, registerReset }: IHealthCheck
       return;
     }
 
-    const seen = new Set<string>();
-
-    for (const item of installAllItems) {
-      if (!seen.has(item.key)) {
-        seen.add(item.key);
-        item.install();
-      }
-    }
+    runInstallAll();
   };
+
+  // Logging in is a prerequisite for the Nexus-backed checks rather than a fix for an
+  // issue, so it goes through the same OAuth flow as the header's profile button.
+  const requestLogin = () => {
+    dispatch(setDialogVisible("login-dialog"));
+
+    api.events.emit("request-nexus-login", (err: Error) => {
+      if (err != null && !(err instanceof UserCanceled)) {
+        api.showErrorNotification?.("Login Failed", err, {
+          id: "failed-get-nexus-key",
+          allowReport: false,
+        });
+      }
+    });
+  };
+
+  const loggedOutState = (
+    <NoResults
+      className="py-24"
+      iconPath={mdiInformationOutline}
+      message={t("listing::no_results_logged_out::message")}
+      title={t("listing::no_results_logged_out::title")}
+    >
+      <Button data-testid="health-check-login" onClick={requestLogin}>
+        {t("listing::no_results_logged_out::action")}
+      </Button>
+    </NoResults>
+  );
+
+  const passedState = (
+    <NoResults
+      appearance="success"
+      className="py-24"
+      iconPath={mdiCheckCircleOutline}
+      message={t("listing::no_results_active::message")}
+      title={t("listing::no_results_active::title")}
+    />
+  );
 
   const activeList =
     activeCount > 0 ? (
       <div className="space-y-2">{activeItems.map(renderRow)}</div>
+    ) : loggedIn ? (
+      passedState
     ) : (
-      <NoResults
-        appearance="success"
-        className="py-24"
-        iconPath={mdiCheckCircle}
-        message={t("listing::no_results_active::message")}
-        title={t("listing::no_results_active::title")}
-      />
+      loggedOutState
     );
 
   // The page's own events are cross-check aggregates, so it keeps the unscoped tracker
@@ -280,43 +351,29 @@ const HealthCheckPage = ({ api, onRefresh, active, registerReset }: IHealthCheck
     <HealthCheckTrackingProvider api={api}>
       <Page active={active} id="health-check-page" scrollable={false}>
         <PageHeader
-          customTitle={
+          customTitle={(scrolled) => (
             <div className="flex items-center gap-x-1.5">
-              <Typography appearance="moderate" as="h2" typographyType="heading-xs">
+              <Typography
+                appearance={scrolled ? "subdued" : "moderate"}
+                as="h2"
+                className="transition-colors"
+                typographyType="heading-xs"
+              >
                 {t("listing::title")}
               </Typography>
 
-              <BetaBadge />
+              <BetaBadge isSubdued={scrolled} />
             </div>
-          }
+          )}
           pictogramName="health-check"
           subtitle={t("listing::subtitle")}
         >
           <div className="flex shrink-0 items-center gap-x-2">
             <LastUpdated />
 
-            <Button
-              appearance="subdued"
-              brand="neutral"
-              isLoading={isRefreshing}
-              leftIconPath={mdiRefresh}
-              size="sm"
-              title={t("common:::refresh")}
-              onClick={() => onRefresh?.()}
-            />
-
-            <Button
-              appearance="subdued"
-              brand="neutral"
-              leftIconPath={mdiCog}
-              size="sm"
-              title={t("common:::settings")}
-              onClick={() => {
-                trackSettingsOpened();
-                dispatch(setOpenMainPage("application_settings", false));
-                dispatch(setSettingsPage("Vortex"));
-              }}
-            />
+            <Toolbar>
+              <ToolbarGroup actions={toolbarActions} />
+            </Toolbar>
           </div>
         </PageHeader>
 
@@ -343,8 +400,7 @@ const HealthCheckPage = ({ api, onRefresh, active, registerReset }: IHealthCheck
                       (selectedTab === "active" && !activeCount) ||
                       (selectedTab === "hidden" && !hiddenCount)
                     }
-                    leftIconPath={selectedTab === "active" ? mdiEyeOff : mdiEye}
-                    size="sm"
+                    leftIconPath={selectedTab === "active" ? mdiEyeOffOutline : mdiEyeOutline}
                     onClick={selectedTab === "active" ? hideAllActive : unhideAll}
                   >
                     {selectedTab === "active"
@@ -378,7 +434,7 @@ const HealthCheckPage = ({ api, onRefresh, active, registerReset }: IHealthCheck
                 ) : (
                   <NoResults
                     className="py-24"
-                    iconPath={mdiEyeOff}
+                    iconPath={mdiEyeOffOutline}
                     title={t("listing::no_results_hidden::title")}
                   />
                 )}
@@ -388,15 +444,19 @@ const HealthCheckPage = ({ api, onRefresh, active, registerReset }: IHealthCheck
             activeList
           )}
 
-          <PremiumBanner placement="list" totalIssues={activeCount + hiddenCount} />
+          {!listIsEmpty && (
+            <PremiumBanner api={api} placement="list" totalIssues={activeCount + hiddenCount} />
+          )}
 
           <PremiumModal
+            api={api}
             downloadScope="all"
             isOpen={showInstallAllPremium}
             modCount={installAllItems.length}
             trigger="install_all"
             onClose={() => setShowInstallAllPremium(false)}
             onDownload={() => setShowInstallAllPremium(false)}
+            onPremiumUnlocked={runInstallAll}
           />
         </PageScroll>
       </Page>

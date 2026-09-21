@@ -6,16 +6,17 @@ import type { IFileActionContext } from "@/extensions/health_check/utils/fileReq
 import { downloadFileRequirement } from "@/extensions/health_check/utils/fileRequirements/fileRequirementActions";
 import {
   canQuickInstall,
-  downloadCandidates,
+  downloadTargets,
   type FileRequirementCategory,
   type IFileRequirementReport,
 } from "@/extensions/health_check/utils/fileRequirements/fileRequirementReport";
 import type { IFileRequirement } from "@/extensions/health_check/utils/fileRequirements/mapRequirementsReport";
+import { sharedRequirementState } from "@/extensions/health_check/utils/shared/tracking";
 import type { IExtensionApi } from "@/types/IExtensionContext";
 import { Button } from "@/ui/components/button/Button";
 import { PremiumBadge } from "@/ui/components/premium_badge/PremiumBadge";
-import { Typography } from "@/ui/components/typography/Typography";
 
+import { Divider } from "../divider/Divider";
 import { PremiumModal } from "../premium_modal/PremiumModal";
 import { RequirementGroup } from "./RequirementGroup";
 import { DownloadRows } from "./rows/DownloadRows";
@@ -56,18 +57,6 @@ const requirementRows = (requirement: IFileRequirement, ctx: IFileActionContext)
   }
 };
 
-const AndDivider = () => (
-  <div aria-hidden className="flex h-9.5 items-center gap-x-3">
-    <div className="h-px w-3 bg-surface-mid" />
-
-    <Typography as="div" className="font-semibold">
-      And
-    </Typography>
-
-    <div className="h-px grow bg-surface-mid" />
-  </div>
-);
-
 export const RequirementBody = ({
   report,
   ctx,
@@ -85,11 +74,9 @@ export const RequirementBody = ({
   const title = t(groupTitleKey(report.category));
   const { requirements } = report;
 
-  const installAllCandidates = canQuickInstall(report.category)
-    ? downloadCandidates(requirements)
-    : [];
+  const installAllTargets = canQuickInstall(report.category) ? downloadTargets(requirements) : [];
 
-  const hasInstallAll = installAllCandidates.length > 1;
+  const hasInstallAll = installAllTargets.length > 1;
 
   // While "install all" runs, every card's install button also shows loading.
   const rowCtx: IFileActionContext = {
@@ -98,15 +85,12 @@ export const RequirementBody = ({
     isDownloadingAll: downloadingAll,
   };
 
-  const installAll = () => {
-    ctx.onInstallAll(installAllCandidates);
-    if (ctx.showPremiumAd) {
-      setPremiumOpen(true);
-      return;
-    }
+  const runInstallAll = () => {
     setDownloadingAll(true);
     void Promise.all(
-      installAllCandidates.map((candidate) => downloadFileRequirement(api, candidate, identity)),
+      installAllTargets.map((target) =>
+        downloadFileRequirement(api, target.candidate, identity, target.enabledFile),
+      ),
     ).then((results) => {
       // On full success the requirements clear and this view unmounts; only reset
       // when something failed and the buttons are still around.
@@ -114,6 +98,18 @@ export const RequirementBody = ({
         setDownloadingAll(false);
       }
     });
+  };
+
+  const installAll = () => {
+    ctx.onInstallAll(
+      installAllTargets.map((target) => target.candidate),
+      sharedRequirementState(requirements),
+    );
+    if (ctx.showPremiumAd) {
+      setPremiumOpen(true);
+      return;
+    }
+    runInstallAll();
   };
 
   const installAllAction = hasInstallAll && (
@@ -128,7 +124,7 @@ export const RequirementBody = ({
     >
       {downloadingAll
         ? t("detail::item::downloading")
-        : t("actions::install_all", { count: installAllCandidates.length })}
+        : t("actions::install_all", { count: installAllTargets.length })}
     </Button>
   );
 
@@ -145,7 +141,7 @@ export const RequirementBody = ({
       ) : (
         requirements.map((requirement, index) => (
           <React.Fragment key={requirement.requirementDefId}>
-            {index > 0 && <AndDivider />}
+            {index > 0 && <Divider className="h-9.5" variant="and" />}
 
             <RequirementGroup actions={index === 0 ? installAllAction : undefined} title={title}>
               {requirementRows(requirement, rowCtx)}
@@ -155,12 +151,14 @@ export const RequirementBody = ({
       )}
 
       <PremiumModal
+        api={api}
         downloadScope="all"
         isOpen={premiumOpen}
-        modCount={installAllCandidates.length}
+        modCount={installAllTargets.length}
         trigger="batch_install"
         onClose={() => setPremiumOpen(false)}
         onDownload={() => setPremiumOpen(false)}
+        onPremiumUnlocked={runInstallAll}
       />
     </>
   );
