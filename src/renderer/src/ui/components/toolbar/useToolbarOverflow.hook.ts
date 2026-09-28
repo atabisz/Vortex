@@ -16,17 +16,32 @@ interface IToolbarMeasurement {
 }
 
 interface IFitParams {
+  actionCount: number;
+  alwaysReserveOverflow?: boolean;
   availableWidth: number | null;
   maxVisible?: number;
   metrics: IToolbarGroupMetrics | null;
-  pinned: readonly boolean[];
 }
 
 interface IOverflowParams {
+  actionCount: number;
+  alwaysReserveOverflow?: boolean;
   maxVisible?: number;
-  pinned: readonly boolean[];
   signature: string;
 }
+
+/**
+ * Marks the elements a group measures: one per action, and its overflow button.
+ *
+ * Measuring goes by these rather than by position among the group's children,
+ * because a control is not always the only node it renders — Headless UI's
+ * `Popover` puts a hidden sentinel span beside its element until it has resolved
+ * its root container, so an action that opens a panel briefly occupies two slots.
+ * Indexing past the actions to find the overflow button landed on that span, read
+ * its width as 0, and left the group one control too wide.
+ */
+export const TOOLBAR_CONTROL_ATTRIBUTE = "data-toolbar-control";
+export const TOOLBAR_OVERFLOW_ATTRIBUTE = "data-toolbar-overflow";
 
 const parsePx = (value: string): number => {
   const parsed = Number.parseFloat(value);
@@ -39,13 +54,16 @@ const parsePx = (value: string): number => {
  * `.nxm-toolbar-group > *` being `flex-shrink: 0` so the widths hold even in the
  * frame where the row is too narrow to hold them all.
  */
-const measureGroup = (group: HTMLElement, actionCount: number): IToolbarGroupMetrics => {
-  const widths = Array.from(group.children, (child) => (child as HTMLElement).offsetWidth);
+const measureGroup = (group: HTMLElement): IToolbarGroupMetrics => {
+  const children = Array.from(group.children) as HTMLElement[];
   const style = getComputedStyle(group);
 
   return {
-    itemWidths: widths.slice(0, actionCount),
-    kebabWidth: widths[actionCount] ?? 0,
+    itemWidths: children
+      .filter((child) => child.hasAttribute(TOOLBAR_CONTROL_ATTRIBUTE))
+      .map((child) => child.offsetWidth),
+    kebabWidth:
+      children.find((child) => child.hasAttribute(TOOLBAR_OVERFLOW_ATTRIBUTE))?.offsetWidth ?? 0,
     gap: parsePx(style.columnGap),
     padding: parsePx(style.paddingLeft) + parsePx(style.paddingRight),
   };
@@ -87,26 +105,21 @@ const measureAvailableWidth = (
 };
 
 /**
- * Which actions render as buttons, by index. Pinned actions always do, wherever
- * they sit in the list; the unpinned ones then fill whatever room is left, in
- * order, so the tail of the row collapses first.
+ * Which actions render as buttons, by index: as many from the front as fit, so the
+ * tail of the row collapses first.
  *
- * Returning a set rather than a count is what lets a pin sit anywhere: the
- * visible actions are no longer necessarily a leading run of the list.
- *
- * A row too narrow for the pinned actions alone keeps them regardless — that is
- * what pinning asks for, so the group overflows rather than dropping them.
+ * `alwaysReserveOverflow` is for a group whose menu is there whatever fits — a
+ * toolbar offering pinning keeps the full list behind it — so the kebab's width
+ * comes off the budget even when nothing has collapsed.
  */
 export const fitVisibleActions = ({
+  actionCount,
+  alwaysReserveOverflow = false,
   availableWidth,
   maxVisible,
   metrics,
-  pinned,
 }: IFitParams): Set<number> => {
   const slots = maxVisible ?? Number.POSITIVE_INFINITY;
-
-  const pinnedIndices = pinned.flatMap((isPinned, index) => (isPinned ? [index] : []));
-  const unpinnedIndices = pinned.flatMap((isPinned, index) => (isPinned ? [] : [index]));
 
   const fits = (indices: number[], withKebab: boolean): boolean => {
     // `availableWidth` is checked against null rather than falsiness: 0 is a real
@@ -133,10 +146,10 @@ export const fitVisibleActions = ({
     );
   };
 
-  // Give up unpinned actions from the end until what's left fits.
-  for (let taken = unpinnedIndices.length; taken >= 0; taken--) {
-    const visible = [...pinnedIndices, ...unpinnedIndices.slice(0, taken)];
-    const withKebab = taken < unpinnedIndices.length;
+  // Give up actions from the end until what's left fits.
+  for (let taken = actionCount; taken >= 0; taken--) {
+    const visible = Array.from({ length: taken }, (_, index) => index);
+    const withKebab = alwaysReserveOverflow || taken < actionCount;
 
     if (visible.length + (withKebab ? 1 : 0) > slots) {
       continue;
@@ -147,7 +160,7 @@ export const fitVisibleActions = ({
     }
   }
 
-  return new Set(pinnedIndices);
+  return new Set();
 };
 
 /**
@@ -159,12 +172,15 @@ export const fitVisibleActions = ({
  * arithmetic in {@link fitVisibleActions}. Both passes happen in layout effects,
  * so the un-collapsed row is never painted.
  *
- * `pinned` is deliberately absent from `signature`: pinning changes which controls
- * show, not how wide any of them is, so the cached measurements still hold.
+ * `signature` covers the controls the group renders, so unpinning one — which takes
+ * it off the bar — re-measures, where the widths of those left are unchanged.
  */
-export const useToolbarOverflow = ({ maxVisible, pinned, signature }: IOverflowParams) => {
-  const actionCount = pinned.length;
-
+export const useToolbarOverflow = ({
+  actionCount,
+  alwaysReserveOverflow,
+  maxVisible,
+  signature,
+}: IOverflowParams) => {
   const { element: row, signature: rowSignature, width: rowWidth } = useToolbarContext();
 
   const groupRef = useRef<HTMLDivElement>(null);
@@ -183,8 +199,8 @@ export const useToolbarOverflow = ({ maxVisible, pinned, signature }: IOverflowP
     // renders them all has to hand what it measured to the pass that collapses
     // them. Runs at most once per distinct action list, before paint.
     // eslint-disable-next-line @eslint-react/set-state-in-effect
-    setMeasurement({ metrics: measureGroup(groupRef.current, actionCount), signature });
-  }, [actionCount, isMeasuring, signature]);
+    setMeasurement({ metrics: measureGroup(groupRef.current), signature });
+  }, [isMeasuring, signature]);
 
   const minimumFootprint = measurement
     ? measurement.metrics.kebabWidth + measurement.metrics.padding
@@ -195,12 +211,13 @@ export const useToolbarOverflow = ({ maxVisible, pinned, signature }: IOverflowP
   }, [minimumFootprint, row, rowSignature, rowWidth]);
 
   const visible = isMeasuring
-    ? new Set(pinned.map((_, index) => index))
+    ? new Set(Array.from({ length: actionCount }, (_, index) => index))
     : fitVisibleActions({
+        actionCount,
+        alwaysReserveOverflow,
         availableWidth,
         maxVisible,
         metrics: measurement?.metrics ?? null,
-        pinned,
       });
 
   return { groupRef, isMeasuring, visible };

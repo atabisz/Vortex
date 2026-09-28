@@ -1,23 +1,74 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
+import { Provider } from "react-redux";
 import { afterEach, describe, it, expect, vi } from "vitest";
 
+import { toolbarReducer } from "@/reducers/toolbars";
+import type { IToolbarStates } from "@/types/IState";
+
 import { Toolbar } from "./Toolbar";
+import type { IToolbarAnalytics } from "./Toolbar.context";
 import { ToolbarGroup, type IToolbarAction } from "./ToolbarGroup";
 import { fitVisibleActions, type IToolbarGroupMetrics } from "./useToolbarOverflow.hook";
 
 // --- Helpers ---
 
+/**
+ * Where a pinning toolbar keeps what the user decided. Minimal rather than the app's
+ * own tree — react-redux asks for these three — but reducing through the real
+ * reducer, so a decision has to survive the round trip to reach the bar.
+ */
+const makeStore = (toolbars: IToolbarStates) => {
+  let state = { settings: { toolbars } };
+  const listeners = new Set<() => void>();
+
+  return {
+    getState: () => state,
+    subscribe: (listener: () => void) => {
+      listeners.add(listener);
+
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    dispatch: (action: { type: string; payload: never }) => {
+      const reduce = toolbarReducer.reducers[action.type];
+
+      if (reduce) {
+        state = { settings: { toolbars: reduce(state.settings.toolbars, action.payload) } };
+        listeners.forEach((listener) => listener());
+      }
+
+      return action;
+    },
+  };
+};
+
 const makeActions = (count: number): IToolbarAction[] =>
   Array.from({ length: count }, (_, i) => ({ label: `Action ${i + 1}`, iconPath: "mdi-test" }));
 
-const getKebab = () => screen.getByRole("button", { name: /more actions/i });
+/**
+ * The kebab is found by test id, not by its name: that name is translated, and
+ * nothing may key off a string that changes with the language.
+ */
+const KEBAB_TEST_ID = "toolbar-overflow";
 
-const countActionButtons = () =>
-  screen
-    .getAllByRole("button")
-    .filter((button) => !/more actions/i.test(button.getAttribute("aria-label") ?? "")).length;
+const getKebab = () => screen.getByTestId(KEBAB_TEST_ID);
+
+/** Tracking whose every callback is a spy, for a test that cares about only one. */
+const silentTracking = (): IToolbarAnalytics => ({
+  onActionClick: vi.fn(),
+  onPinChange: vi.fn(),
+  onPinsReset: vi.fn(),
+});
+
+const queryKebab = () => screen.queryByTestId(KEBAB_TEST_ID);
+
+const actionButtons = () =>
+  screen.getAllByRole("button").filter((button) => button.dataset.testid !== KEBAB_TEST_ID);
+
+const countActionButtons = () => actionButtons().length;
 
 /**
  * happy-dom lays nothing out, so every control reports a width of 0. These stubs
@@ -52,7 +103,9 @@ const stubLayout = (initialRowWidth: number) => {
   Object.defineProperty(HTMLElement.prototype, "offsetWidth", {
     configurable: true,
     get(this: HTMLElement) {
-      const isControl = this.tagName === "BUTTON" || this.classList.contains("nxm-dropdown");
+      // A popover wrapper is the group's child for both the kebab and any action
+      // that opens a panel; the button it holds is a level down.
+      const isControl = this.tagName === "BUTTON" || this.classList.contains("nxm-popover");
       return isControl ? CONTROL_WIDTH : 0;
     },
   });
@@ -178,7 +231,7 @@ describe("ToolbarGroup", () => {
     it("does not render a kebab when the action count is within maxVisible", () => {
       render(<ToolbarGroup actions={makeActions(7)} maxVisible={7} />);
       expect(screen.getAllByRole("button")).toHaveLength(7);
-      expect(screen.queryByRole("button", { name: /more actions/i })).not.toBeInTheDocument();
+      expect(queryKebab()).not.toBeInTheDocument();
     });
 
     it("collapses the tail into a kebab once maxVisible is exceeded", () => {
@@ -199,13 +252,28 @@ describe("ToolbarGroup", () => {
       expect(screen.getByText("Action 8")).toBeInTheDocument();
     });
 
-    it("calls an overflowed action's onClick from the dropdown", async () => {
+    it("calls an overflowed action's onClick from the menu, then dismisses it", async () => {
       const onClick = vi.fn();
       const actions = [...makeActions(7), { label: "Overflowed", iconPath: "mdi-test", onClick }];
       render(<ToolbarGroup actions={actions} maxVisible={7} />);
       await userEvent.click(getKebab());
       await userEvent.click(screen.getByText("Overflowed"));
       expect(onClick).toHaveBeenCalledOnce();
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    });
+
+    it("moves the roving focus with the arrow keys", async () => {
+      render(<ToolbarGroup actions={makeActions(9)} maxVisible={7} />);
+      await userEvent.click(getKebab());
+
+      // Opening the menu puts focus on its first row.
+      expect(screen.getByRole("menuitem", { name: "Action 7" })).toHaveFocus();
+
+      await userEvent.keyboard("{ArrowDown}");
+      expect(screen.getByRole("menuitem", { name: "Action 8" })).toHaveFocus();
+
+      await userEvent.keyboard("{ArrowUp}{ArrowUp}");
+      expect(screen.getByRole("menuitem", { name: "Action 9" })).toHaveFocus();
     });
 
     it("respects a custom maxVisible", () => {
@@ -220,7 +288,126 @@ describe("ToolbarGroup", () => {
     it("never collapses when maxVisible is omitted", () => {
       render(<ToolbarGroup actions={makeActions(10)} />);
       expect(screen.getAllByRole("button")).toHaveLength(10);
-      expect(screen.queryByRole("button", { name: /more actions/i })).not.toBeInTheDocument();
+      expect(queryKebab()).not.toBeInTheDocument();
+    });
+  });
+
+  describe("panel actions", () => {
+    const panelAction: IToolbarAction = {
+      label: "Display options",
+      iconPath: "mdi-test",
+      panel: ({ close }) => (
+        <>
+          <span>Panel content</span>
+
+          <button type="button">Toggle something</button>
+
+          <button type="button" onClick={close}>
+            Reset to default
+          </button>
+        </>
+      ),
+    };
+
+    /** The action collapsed into the overflow, with the menu already open. */
+    const openOverflow = async () => {
+      render(<ToolbarGroup actions={[...makeActions(7), panelAction]} maxVisible={7} />);
+      await userEvent.click(getKebab());
+
+      return screen.getByRole("menuitem", { name: "Display options" });
+    };
+
+    // Headless UI's Popover renders a hidden sentinel span beside its own element
+    // until it has resolved its root container, so a panel action briefly occupies
+    // two slots in the row. Measuring must not be thrown off by that.
+    it("measures a group holding a panel action against the same budget", () => {
+      stubLayout(100);
+      render(
+        <Toolbar>
+          <ToolbarGroup actions={[...makeActions(4), panelAction]} />
+        </Toolbar>,
+      );
+
+      // 100px holds three 28px controls: two actions plus the kebab.
+      expect(countActionButtons()).toBe(2);
+      expect(getKebab()).toBeInTheDocument();
+    });
+
+    it("renders a panel action as an ordinary toolbar button", () => {
+      render(<ToolbarGroup actions={[panelAction]} />);
+      expect(screen.getByRole("button", { name: "Display options" })).toBeInTheDocument();
+      expect(screen.queryByText("Panel content")).not.toBeInTheDocument();
+    });
+
+    it("opens the panel from the toolbar button", async () => {
+      render(<ToolbarGroup actions={[panelAction]} />);
+      await userEvent.click(screen.getByRole("button", { name: "Display options" }));
+      expect(screen.getByText("Panel content")).toBeInTheDocument();
+    });
+
+    // Headless UI returns focus to the trigger after the click that opened the
+    // panel, which the tooltip would otherwise read as a cue to reappear — over
+    // the panel.
+    it("holds the trigger's tooltip back while the panel is open", async () => {
+      render(<ToolbarGroup actions={[panelAction]} />);
+      const trigger = screen.getByRole("button", { name: "Display options" });
+
+      await userEvent.click(trigger);
+      await userEvent.hover(trigger);
+
+      await expect(screen.findByRole("tooltip", {}, { timeout: 400 })).rejects.toThrow();
+    });
+
+    it("lets the panel's own content close it", async () => {
+      render(<ToolbarGroup actions={[panelAction]} />);
+      await userEvent.click(screen.getByRole("button", { name: "Display options" }));
+      await userEvent.click(screen.getByRole("button", { name: "Reset to default" }));
+      await waitFor(() => expect(screen.queryByText("Panel content")).not.toBeInTheDocument());
+    });
+
+    it("opens the panel from the overflow menu, alongside the row", async () => {
+      const row = await openOverflow();
+
+      expect(row).toHaveAttribute("aria-haspopup", "dialog");
+
+      await userEvent.click(row);
+      expect(screen.getByText("Panel content")).toBeInTheDocument();
+    });
+
+    // The regression this whole arrangement exists for: a Menu closes as soon as
+    // focus reaches a surface nested inside it, taking the panel with it.
+    it("keeps the overflow menu open behind the panel", async () => {
+      await userEvent.click(await openOverflow());
+
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+      expect(screen.getByRole("menuitem", { name: "Action 7" })).toBeInTheDocument();
+    });
+
+    it("holds the row in the hover state while its panel is open", async () => {
+      const row = await openOverflow();
+
+      expect(row).not.toHaveClass("nxm-dropdown-item-focus");
+
+      await userEvent.click(row);
+      expect(row).toHaveClass("nxm-dropdown-item-focus");
+    });
+
+    it("keeps both open while the panel's controls are used", async () => {
+      await userEvent.click(await openOverflow());
+      await userEvent.click(screen.getByRole("button", { name: "Toggle something" }));
+
+      expect(screen.getByText("Panel content")).toBeInTheDocument();
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+    });
+
+    it("opens the panel from the overflow row with ArrowRight", async () => {
+      const row = await openOverflow();
+
+      await userEvent.keyboard("{ArrowDown}");
+      expect(row).toHaveFocus();
+
+      await userEvent.keyboard("{ArrowRight}");
+      expect(screen.getByText("Panel content")).toBeInTheDocument();
     });
   });
 
@@ -312,7 +499,7 @@ describe("ToolbarGroup", () => {
     it("keeps every action when the row has room for them all", () => {
       renderRow(200);
       expect(countActionButtons()).toBe(5);
-      expect(screen.queryByRole("button", { name: /more actions/i })).not.toBeInTheDocument();
+      expect(queryKebab()).not.toBeInTheDocument();
     });
 
     it("collapses the actions that don't fit, leaving room for the kebab", () => {
@@ -343,7 +530,7 @@ describe("ToolbarGroup", () => {
 
       resizeRowTo(200);
       expect(countActionButtons()).toBe(5);
-      expect(screen.queryByRole("button", { name: /more actions/i })).not.toBeInTheDocument();
+      expect(queryKebab()).not.toBeInTheDocument();
     });
 
     it("shows only the kebab when not even one action fits", () => {
@@ -364,86 +551,276 @@ describe("ToolbarGroup", () => {
     });
   });
 
-  describe("pinned actions", () => {
-    /** Pins the named actions within an otherwise ordinary five-action row. */
-    const renderPinned = (rowPixels: number, pinnedLabels: string[]) => {
-      stubLayout(rowPixels);
-      render(
-        <Toolbar>
-          <ToolbarGroup
-            actions={makeActions(5).map((action) => ({
-              ...action,
-              pinned: pinnedLabels.includes(action.label),
-            }))}
-          />
-        </Toolbar>,
-      );
-    };
-
-    it("keeps a pinned action visible while the rest collapse", () => {
-      // 100px holds three controls. Unpinned, "Action 5" would be first to go.
-      renderPinned(100, ["Action 5"]);
-
-      expect(screen.getByRole("button", { name: "Action 5" })).toBeInTheDocument();
-      expect(getKebab()).toBeInTheDocument();
-    });
-
-    it("collapses an unpinned action to make room for a pinned one", async () => {
-      renderPinned(100, ["Action 5"]);
-
-      expect(screen.queryByRole("button", { name: "Action 3" })).not.toBeInTheDocument();
-
-      await userEvent.click(getKebab());
-      expect(screen.getByText("Action 3")).toBeInTheDocument();
-    });
-
-    it("pins an action wherever it sits, not just at the front", () => {
-      renderPinned(100, ["Action 4"]);
-
-      expect(screen.getByRole("button", { name: "Action 4" })).toBeInTheDocument();
-    });
-
-    it("keeps the row in the caller's order, so a pin doesn't reshuffle it", () => {
-      // 120px holds four controls: the two pins, one unpinned action, and the
-      // kebab. Rendering the pins first would give "Action 4, Action 5, Action 1".
-      renderPinned(120, ["Action 4", "Action 5"]);
-
-      const names = screen
-        .getAllByRole("button")
-        .map((button) => button.getAttribute("aria-label"))
-        .filter((name) => name !== "More actions");
-
-      expect(names).toEqual(["Action 1", "Action 4", "Action 5"]);
-    });
-
-    it("keeps pinned actions even when the row has room for nothing", () => {
-      renderPinned(10, ["Action 2"]);
-
-      expect(screen.getByRole("button", { name: "Action 2" })).toBeInTheDocument();
-      expect(countActionButtons()).toBe(1);
-    });
-
-    it("keeps a pinned action past the maxVisible ceiling", () => {
+  describe("a toolbar that doesn't offer pinning", () => {
+    it("shows every action it was given, `pinned` or not", () => {
+      // `pinned` is a default for a toolbar that lets the user decide; without
+      // `pinningId` there is nobody to decide, so it means nothing here.
       stubLayout(1000);
       render(
         <Toolbar>
           <ToolbarGroup
-            actions={makeActions(6).map((action, index) => ({ ...action, pinned: index >= 4 }))}
-            maxVisible={2}
+            actions={makeActions(5).map((action, index) => ({
+              ...action,
+              id: `action-${index}`,
+              pinned: index === 0,
+            }))}
           />
         </Toolbar>,
       );
 
-      // Both pins show even though they plus the kebab exceed the two-slot cap.
-      expect(screen.getByRole("button", { name: "Action 5" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Action 6" })).toBeInTheDocument();
-      expect(countActionButtons()).toBe(2);
+      expect(countActionButtons()).toBe(5);
+      expect(queryKebab()).not.toBeInTheDocument();
+    });
+  });
+
+  describe("a toolbar that offers pinning", () => {
+    const pinnable = (specs: Array<[label: string, pinned: boolean]>): IToolbarAction[] =>
+      specs.map(([label, pinned]) => ({
+        id: label.toLowerCase().replace(/ /g, "-"),
+        iconPath: "mdi-test",
+        label,
+        pinned,
+      }));
+
+    const renderToolbar = ({
+      actions,
+      decisions = {},
+      width = 1000,
+      tracking,
+    }: {
+      actions: IToolbarAction[];
+      decisions?: { [actionId: string]: boolean };
+      width?: number;
+      tracking?: Partial<IToolbarAnalytics>;
+    }) => {
+      stubLayout(width);
+      const store = makeStore({ mods: { pinned: decisions } });
+
+      render(
+        <Provider store={store as never}>
+          <Toolbar pinningId="mods" tracking={tracking && { ...silentTracking(), ...tracking }}>
+            <ToolbarGroup actions={actions} />
+          </Toolbar>
+        </Provider>,
+      );
+
+      return store;
+    };
+
+    /**
+     * The controls on the bar, by name. Scoped to the row because the menu's panel is
+     * portalled out of it, so its rows and their pins can't be mistaken for controls.
+     */
+    const barLabels = () =>
+      within(screen.getByRole("toolbar"))
+        .getAllByRole("button")
+        .filter((button) => button.dataset.testid !== KEBAB_TEST_ID)
+        .map((button) => button.getAttribute("aria-label"));
+
+    const openMenu = () => userEvent.click(getKebab());
+
+    const menuLabels = () => screen.getAllByRole("menuitem").map((row) => row.textContent?.trim());
+
+    const rowFor = (label: string) => {
+      const row = screen
+        .getAllByRole("menuitem")
+        .find((item) => item.textContent?.trim() === label);
+
+      if (row === undefined) {
+        throw new Error(`the menu has no row for "${label}"`);
+      }
+
+      return row;
+    };
+
+    /**
+     * The pin toggle on a row, reached through the row rather than by its own name:
+     * `t` returns the key uninterpolated here, so every pin reads alike — the same
+     * reason the kebab is found by test id.
+     */
+    const pinOf = (label: string) => within(rowFor(label)).getByRole("button");
+
+    /**
+     * The reset link, which sits below the menu rather than in it — the same shape the
+     * display options panel ends in.
+     */
+    const queryResetLink = () => screen.queryByRole("button", { name: "Reset pins to default" });
+
+    const resetLink = () => screen.getByRole("button", { name: "Reset pins to default" });
+
+    it("puts the pinned actions on the bar, and every action in the menu", async () => {
+      renderToolbar({
+        actions: pinnable([
+          ["Deploy", true],
+          ["Purge", false],
+          ["History", true],
+        ]),
+      });
+
+      expect(barLabels()).toEqual(["Deploy", "History"]);
+
+      await openMenu();
+      expect(menuLabels()).toEqual(["Deploy", "Purge", "History"]);
     });
 
-    it("still collapses normally when nothing is pinned", () => {
-      renderPinned(100, []);
-      expect(countActionButtons()).toBe(2);
+    it("keeps the menu there even when the bar has room to spare", () => {
+      // Everything the bar holds fits, but the menu is the only way to reach an
+      // unpinned action, so it can't come and go with the width.
+      renderToolbar({ actions: pinnable([["Deploy", true]]) });
+
+      expect(barLabels()).toEqual(["Deploy"]);
       expect(getKebab()).toBeInTheDocument();
+    });
+
+    it("follows what the user decided over what the action asks for", () => {
+      renderToolbar({
+        actions: pinnable([
+          ["Deploy", false],
+          ["Purge", true],
+        ]),
+        decisions: { deploy: true, purge: false },
+      });
+
+      expect(barLabels()).toEqual(["Deploy"]);
+    });
+
+    it("gives every row a toggle saying whether that action is pinned", async () => {
+      renderToolbar({
+        actions: pinnable([
+          ["Deploy", true],
+          ["Purge", false],
+        ]),
+      });
+
+      await openMenu();
+
+      expect(pinOf("Deploy")).toHaveAttribute("aria-pressed", "true");
+      expect(pinOf("Purge")).toHaveAttribute("aria-pressed", "false");
+    });
+
+    it("puts a pinned action on the bar at its own position, not at the end", async () => {
+      renderToolbar({
+        actions: pinnable([
+          ["Deploy", true],
+          ["Purge", false],
+          ["History", true],
+        ]),
+      });
+
+      await openMenu();
+      await userEvent.click(pinOf("Purge"));
+
+      await waitFor(() => expect(barLabels()).toEqual(["Deploy", "Purge", "History"]));
+    });
+
+    it("takes an unpinned action off the bar, leaving it in the menu", async () => {
+      renderToolbar({
+        actions: pinnable([
+          ["Deploy", true],
+          ["History", true],
+        ]),
+      });
+
+      await openMenu();
+      await userEvent.click(pinOf("Deploy"));
+
+      await waitFor(() => expect(barLabels()).toEqual(["History"]));
+      expect(menuLabels()).toEqual(["Deploy", "History"]);
+    });
+
+    it("stores a decision under the action's id, so a translated label can't key it", async () => {
+      const store = renderToolbar({ actions: pinnable([["Deploy Mods", true]]) });
+
+      await openMenu();
+      await userEvent.click(pinOf("Deploy Mods"));
+
+      expect(store.getState().settings.toolbars).toEqual({
+        mods: { pinned: { "deploy-mods": false } },
+      });
+    });
+
+    it("offers no toggle for an action it could not store a decision about", async () => {
+      // Without an id there is nothing to key a decision on, so the action stays on
+      // the bar rather than being offered a toggle that would do nothing.
+      renderToolbar({
+        actions: [{ iconPath: "mdi-test", label: "Nameless" }, ...pinnable([["Deploy", true]])],
+      });
+
+      expect(barLabels()).toEqual(["Nameless", "Deploy"]);
+
+      await openMenu();
+      expect(within(rowFor("Nameless")).queryByRole("button")).not.toBeInTheDocument();
+      expect(pinOf("Deploy")).toBeInTheDocument();
+    });
+
+    describe("resetting to defaults", () => {
+      it("offers no reset until the user has decided something", async () => {
+        renderToolbar({ actions: pinnable([["Deploy", true]]) });
+
+        await openMenu();
+        expect(queryResetLink()).not.toBeInTheDocument();
+      });
+
+      it("offers one once a decision has been made", async () => {
+        renderToolbar({ actions: pinnable([["Deploy", true]]), decisions: { deploy: false } });
+
+        await openMenu();
+        expect(resetLink()).toBeInTheDocument();
+      });
+
+      // The pins above move back, which is the confirmation — and with nothing left to
+      // undo the link takes itself away.
+      it("puts the bar back, leaves the menu open, and removes itself", async () => {
+        renderToolbar({ actions: pinnable([["Deploy", true]]), decisions: { deploy: false } });
+
+        await openMenu();
+        expect(barLabels()).toEqual([]);
+
+        await userEvent.click(resetLink());
+
+        expect(barLabels()).toEqual(["Deploy"]);
+        expect(screen.getByRole("menu")).toBeInTheDocument();
+        expect(queryResetLink()).not.toBeInTheDocument();
+      });
+    });
+
+    describe("tracking", () => {
+      it("reports a pin, and the unpin that undoes it", async () => {
+        const onPinChange = vi.fn();
+        renderToolbar({ actions: pinnable([["Deploy", false]]), tracking: { onPinChange } });
+
+        await openMenu();
+        await userEvent.click(pinOf("Deploy"));
+
+        expect(onPinChange).toHaveBeenLastCalledWith({ id: "deploy", extension: undefined }, true);
+
+        await userEvent.click(pinOf("Deploy"));
+
+        expect(onPinChange).toHaveBeenLastCalledWith({ id: "deploy", extension: undefined }, false);
+      });
+
+      it("reports a reset to defaults", async () => {
+        const onPinsReset = vi.fn();
+        renderToolbar({
+          actions: pinnable([["Deploy", false]]),
+          decisions: { deploy: true },
+          tracking: { onPinsReset },
+        });
+
+        await openMenu();
+        await userEvent.click(resetLink());
+
+        expect(onPinsReset).toHaveBeenCalledOnce();
+      });
+
+      it("says nothing on a toolbar that isn't tracked", async () => {
+        renderToolbar({ actions: pinnable([["Deploy", false]]) });
+
+        await openMenu();
+        await userEvent.click(pinOf("Deploy"));
+
+        expect(screen.getByRole("toolbar")).toBeInTheDocument();
+      });
     });
   });
 });
@@ -457,16 +834,14 @@ describe("fitVisibleActions", () => {
     padding: 8,
   };
 
-  const noPins = metrics.itemWidths.map(() => false);
-
   /** Visible indices, ascending, so the expectations read as positions. */
-  const fit = (availableWidth: number | null, maxVisible?: number, pinnedIndices: number[] = []) =>
+  const fit = (availableWidth: number | null, maxVisible?: number) =>
     [
       ...fitVisibleActions({
+        actionCount: metrics.itemWidths.length,
         availableWidth,
         maxVisible,
         metrics,
-        pinned: metrics.itemWidths.map((_, index) => pinnedIndices.includes(index)),
       }),
     ].sort((a, b) => a - b);
 
@@ -499,39 +874,172 @@ describe("fitVisibleActions", () => {
   });
 
   it("treats missing metrics as unconstrained", () => {
-    expect([...fitVisibleActions({ availableWidth: 10, metrics: null, pinned: noPins })]).toEqual([
-      0, 1, 2, 3, 4,
-    ]);
+    expect([
+      ...fitVisibleActions({
+        actionCount: metrics.itemWidths.length,
+        availableWidth: 10,
+        metrics: null,
+      }),
+    ]).toEqual([0, 1, 2, 3, 4]);
   });
 
-  describe("pinning", () => {
-    it("keeps a pinned action at the end while the earlier ones collapse", () => {
-      // Unpinned, 100px leaves just index 0; pinning 4 spends that budget on it.
-      expect(fit(100, undefined, [4])).toEqual([4]);
+  describe("a menu that is always there", () => {
+    /** As a toolbar offering pinning is: its menu holds the full list regardless. */
+    const fitBesideMenu = (availableWidth: number | null, maxVisible?: number) =>
+      [
+        ...fitVisibleActions({
+          actionCount: metrics.itemWidths.length,
+          alwaysReserveOverflow: true,
+          availableWidth,
+          maxVisible,
+          metrics,
+        }),
+      ].sort((a, b) => a - b);
+
+    it("spends part of the budget on the kebab even when everything would fit", () => {
+      // Without a kebab, all five come to 204 + 32 gaps + 8 padding = 244px. With one
+      // they need 280, so at 244 the last action goes: four plus the kebab is exactly
+      // 176 + 28 + 32 + 8 = 244, and a pixel less drops the 92px one too.
+      expect(fit(244)).toEqual([0, 1, 2, 3, 4]);
+      expect(fitBesideMenu(280)).toEqual([0, 1, 2, 3, 4]);
+      expect(fitBesideMenu(244)).toEqual([0, 1, 2, 3]);
+      expect(fitBesideMenu(243)).toEqual([0, 1, 2]);
     });
 
-    it("spends the remaining width on the unpinned actions, in order", () => {
-      // 28 (pinned 4) + 28 (0) + 28 kebab + 16 gaps + 8 padding = 108px.
-      expect(fit(108, undefined, [4])).toEqual([0, 4]);
+    it("counts the kebab against the maxVisible ceiling", () => {
+      expect(fitBesideMenu(null, 3)).toEqual([0, 1]);
     });
 
-    it("keeps every pin even when there is no room at all", () => {
-      expect(fit(0, undefined, [1, 3])).toEqual([1, 3]);
-      expect(fit(10, undefined, [4])).toEqual([4]);
+    it("gives up every action when the budget only covers the kebab", () => {
+      expect(fitBesideMenu(40)).toEqual([]);
+    });
+  });
+});
+
+describe("click tracking", () => {
+  const trackedToolbar = (actions: IToolbarAction[], onActionClick: () => void, max?: number) =>
+    render(
+      <Toolbar tracking={{ ...silentTracking(), onActionClick }}>
+        <ToolbarGroup actions={actions} maxVisible={max} />
+      </Toolbar>,
+    );
+
+  it("reports a visible action's click, and still runs it exactly once", async () => {
+    const onActionClick = vi.fn();
+    const onClick = vi.fn();
+    trackedToolbar([{ label: "Deploy", id: "deploy", onClick }], onActionClick);
+
+    await userEvent.click(screen.getByRole("button", { name: "Deploy" }));
+
+    expect(onActionClick).toHaveBeenCalledWith({ id: "deploy", extension: undefined }, "bar");
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it("reports an overflowed action against the overflow, not the bar", async () => {
+    const onActionClick = vi.fn();
+    const onClick = vi.fn();
+    const actions = [...makeActions(7), { label: "Overflowed", id: "overflowed", onClick }];
+    trackedToolbar(actions, onActionClick, 7);
+
+    await userEvent.click(getKebab());
+    await userEvent.click(screen.getByText("Overflowed"));
+
+    expect(onActionClick).toHaveBeenCalledWith(
+      { id: "overflowed", extension: undefined },
+      "overflow",
+    );
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it("names the extension an action came from", async () => {
+    const onActionClick = vi.fn();
+    trackedToolbar(
+      [
+        {
+          label: "Manage Rules",
+          id: "Manage Rules",
+          extension: "mod-dependency-manager",
+          onClick: vi.fn(),
+        },
+      ],
+      onActionClick,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Manage Rules" }));
+
+    expect(onActionClick).toHaveBeenCalledWith(
+      { id: "Manage Rules", extension: "mod-dependency-manager" },
+      "bar",
+    );
+  });
+
+  // The label is the only other thing to hand, and it is translated. Reporting an action
+  // under a name that changes with the language would split one button across as many
+  // ids as there are locales, which is worse than not reporting it at all. An action
+  // without an id cannot be pinned either — see `useToolbarPinning`.
+  it("says nothing about an action that has no id, but still runs it", async () => {
+    const onActionClick = vi.fn();
+    const onClick = vi.fn();
+    trackedToolbar([{ label: "Nameless", onClick }], onActionClick);
+
+    await userEvent.click(screen.getByRole("button", { name: "Nameless" }));
+
+    expect(onActionClick).not.toHaveBeenCalled();
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  // An empty id is no identity at all — reporting it would put `action: ""` in the
+  // dashboard, which reads as a real button nobody can name.
+  it("treats an empty id as no identity", async () => {
+    const onActionClick = vi.fn();
+    const onClick = vi.fn();
+    trackedToolbar([{ label: "Blank", id: "", onClick }], onActionClick);
+
+    await userEvent.click(screen.getByRole("button", { name: "Blank" }));
+
+    expect(onActionClick).not.toHaveBeenCalled();
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it("leaves an untracked toolbar's actions alone", async () => {
+    const onClick = vi.fn();
+    render(
+      <Toolbar>
+        <ToolbarGroup actions={[{ label: "Deploy", id: "deploy", onClick }]} />
+      </Toolbar>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Deploy" }));
+
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  describe("panel actions", () => {
+    const panelAction: IToolbarAction = {
+      label: "Open",
+      id: "open",
+      panel: () => <span>Panel content</span>,
+    };
+
+    it("counts opening the panel as a click on the control", async () => {
+      const onActionClick = vi.fn();
+      trackedToolbar([panelAction], onActionClick);
+
+      await userEvent.click(screen.getByRole("button", { name: "Open" }));
+
+      expect(screen.getByText("Panel content")).toBeInTheDocument();
+      expect(onActionClick).toHaveBeenCalledWith({ id: "open", extension: undefined }, "bar");
     });
 
-    it("keeps pins past the maxVisible ceiling", () => {
-      // Two pins plus a kebab is three slots, over the cap, and they still show.
-      expect(fit(null, 2, [0, 4])).toEqual([0, 4]);
-    });
+    it("does not count closing it again as a second click", async () => {
+      const onActionClick = vi.fn();
+      trackedToolbar([panelAction], onActionClick);
 
-    it("drops the kebab when every action is pinned", () => {
-      const allPinned = [0, 1, 2, 3, 4];
-      expect(fit(0, undefined, allPinned)).toEqual(allPinned);
-    });
+      const trigger = screen.getByRole("button", { name: "Open" });
+      await userEvent.click(trigger);
+      await userEvent.click(trigger);
 
-    it("behaves exactly as before when nothing is pinned", () => {
-      expect(fit(143, undefined, [])).toEqual([0, 1]);
+      expect(onActionClick).toHaveBeenCalledOnce();
     });
   });
 });

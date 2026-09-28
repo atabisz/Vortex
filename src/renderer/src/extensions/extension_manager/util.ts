@@ -1,115 +1,27 @@
 import * as path from "node:path";
 
-import PromiseBB from "bluebird";
-import * as _ from "lodash";
+import type { IGameListEntry } from "@nexusmods/nexus-api";
+import { getErrorMessageOrDefault } from "@vortex/shared";
 
 import { log } from "@/logging";
 
 import type {
-  ExtensionType,
   IAvailableExtension,
-  IExtension,
   IExtensionDownloadInfo,
-  IExtensionManifest,
   ISelector,
 } from "../../types/extensions";
 import type { IExtensionApi } from "../../types/IExtensionContext";
-import { DataInvalid, ProcessCanceled, UserCanceled } from "../../util/CustomErrors";
-import * as fs from "../../util/fs";
-import { writeFileAtomic } from "../../util/fsAtomic";
-import getVortexPath from "../../util/getVortexPath";
-import { jsonRequest } from "../../util/network";
+import { ProcessCanceled, UserCanceled } from "../../util/CustomErrors";
 import { INVALID_FILENAME_RE } from "../../util/util";
 import { setDownloadModInfo } from "../download_management/actions/state";
 import { downloadPathForGame } from "../download_management/selectors";
 import { SITE_ID } from "../gamemode_management/constants";
+import { nexusGamesProm } from "../nexus_integration/util";
+import { dedupeGameExtensions, fetchExtensionList } from "./availableExtensions";
 import installExtension from "./installExtension";
+import { findInCatalog } from "./queries";
 
-const caches: {
-  __availableExtensions?: PromiseBB<{
-    time: Date;
-    extensions: IAvailableExtension[];
-  }>;
-  __installedExtensions?: PromiseBB<{ [extId: string]: IExtension }>;
-} = {};
-
-// don't fetch more than once per hour
-const UPDATE_FREQUENCY = 60 * 60 * 1000;
-
-function githubRawUrl(repo: string, branch: string, repoPath: string) {
-  return `https://raw.githubusercontent.com/${repo}/${branch}/${repoPath}`;
-}
-
-//const EXTENSION_FORMAT = '1_8';
-const EXTENSION_FILENAME = `extensions-manifest.json`;
-const EXTENSION_PATH = "out/";
-const EXTENSION_URL = githubRawUrl(
-  "Nexus-Mods/Vortex-Backend",
-  "main",
-  EXTENSION_PATH + EXTENSION_FILENAME,
-);
-
-function getAllDirectories(searchPath: string): PromiseBB<string[]> {
-  return fs
-    .readdirAsync(searchPath)
-    .filter((fileName: string) => {
-      if (path.extname(fileName) === ".installing") {
-        // ignore directories during installation
-        return PromiseBB.resolve(false);
-      }
-      return fs
-        .statAsync(path.join(searchPath, fileName))
-        .then((stat) => stat.isDirectory())
-        .catch((err) => {
-          if (err.code !== "ENOENT") {
-            log("error", "failed to stat file/directory", {
-              searchPath,
-              fileName,
-              error: err.message,
-            });
-          }
-          // the stat may fail if the directory has been removed/renamed between reading the dir
-          // and the stat. Specifically this can happen while installing an extension for the
-          // temporary ".installing" directory
-          return PromiseBB.resolve(false);
-        });
-    })
-    .catch({ code: "ENOENT" }, () => []);
-}
-
-function applyExtensionInfo(
-  id: string,
-  bundled: boolean,
-  archiveInfo: Partial<IExtension>,
-  manifestInfo: Partial<IExtension>,
-): IExtension {
-  const res = {
-    name: manifestInfo.name || archiveInfo.name || id,
-    author: manifestInfo.author || archiveInfo.author || "Unknown",
-    version: manifestInfo.version || archiveInfo.version || "0.0.0",
-    description: manifestInfo.description || archiveInfo.description || "Missing",
-  } satisfies IExtension;
-
-  // add optional settings if we have them
-  const add = <T>(key: string, primary: T, secondary: T) => {
-    if (primary !== undefined) {
-      res[key] = primary;
-    } else if (secondary !== undefined) {
-      res[key] = secondary;
-    }
-  };
-
-  add("id", archiveInfo.id, manifestInfo.id);
-  add("type", manifestInfo.type, archiveInfo.type);
-  add("path", archiveInfo.path, undefined);
-  add("bundled", bundled, undefined);
-  // modId/fileId are identity data assigned by the Nexus Mods manifest, not
-  // something an extension author controls via their own info.json.
-  add("modId", manifestInfo.modId, archiveInfo.modId);
-  add("fileId", manifestInfo.fileId, archiveInfo.fileId);
-
-  return res;
-}
+let availableExtensionsCache: Promise<IAvailableExtension[]> | undefined;
 
 export function selectorMatch(ext: IAvailableExtension, selector: ISelector): boolean {
   if (selector === undefined) {
@@ -122,148 +34,44 @@ export function sanitize(input: string): string {
   return input.replace(INVALID_FILENAME_RE, "_");
 }
 
-export function readExtensionInfo(
-  extensionPath: string,
-  bundled: boolean,
-  manifestInfo: Partial<IExtension> = {},
-): PromiseBB<{ id: string; info: IExtension }> {
-  const finalPath = extensionPath.replace(/\.installing$/, "");
-
-  return fs
-    .readFileAsync(path.join(extensionPath, "info.json"), { encoding: "utf-8" })
-    .then((info: string) => {
-      const data = JSON.parse(info) as unknown as Partial<IExtension>;
-      data.path = finalPath;
-      const id = data.id || path.basename(finalPath);
-      return {
-        id,
-        info: applyExtensionInfo(id, bundled, data, manifestInfo),
-      };
-    })
-    .catch(() => {
-      const id = path.basename(finalPath);
-      return {
-        id,
-        info: applyExtensionInfo(id, bundled, {}, manifestInfo),
-      };
-    });
-}
-
-function readExtensionDir(
-  pluginPath: string,
-  bundled: boolean,
-): PromiseBB<Array<{ id: string; info: IExtension }>> {
-  return getAllDirectories(pluginPath)
-    .map((extPath: string) => path.join(pluginPath, extPath))
-    .map((fullPath: string) => readExtensionInfo(fullPath, bundled));
-}
-
-export function readExtensions(force: boolean): PromiseBB<{ [extId: string]: IExtension }> {
-  if (caches.__installedExtensions === undefined || force) {
-    caches.__installedExtensions = doReadExtensions();
-  }
-  return caches.__installedExtensions;
-}
-
-function doReadExtensions(): PromiseBB<{ [extId: string]: IExtension }> {
-  const bundledPath = getVortexPath("bundledPlugins");
-  const extensionsPath = path.join(getVortexPath("userData"), "plugins");
-
-  return PromiseBB.all([
-    readExtensionDir(bundledPath, true),
-    readExtensionDir(extensionsPath, false),
-  ])
-    .then((extLists) => [].concat(...extLists))
-    .reduce((prev, value: { id: string; info: IExtension }) => {
-      prev[value.id] = value.info;
-      return prev;
-    }, {});
-}
-
-export function fetchAvailableExtensions(
-  forceCache: boolean,
-  forceDownload: boolean = false,
-): PromiseBB<{ time: Date; extensions: IAvailableExtension[] }> {
-  if (caches.__availableExtensions === undefined || forceCache || forceDownload) {
-    caches.__availableExtensions = doFetchAvailableExtensions(forceDownload);
-  }
-  return caches.__availableExtensions;
-}
-
-function downloadExtensionList(cachePath: string): PromiseBB<IAvailableExtension[]> {
-  log("info", "downloading extension list", { url: EXTENSION_URL });
-  return PromiseBB.resolve(jsonRequest<IExtensionManifest>(EXTENSION_URL))
-    .then((manifest) => {
-      log("debug", "extension list received");
-      return manifest.extensions.filter((ext) => ext.name !== undefined);
-    })
-    .tap((extensions) => writeFileAtomic(cachePath, JSON.stringify({ extensions }, undefined, 2)))
-    .tapCatch((err) => log("error", "failed to download extension list", err));
-}
-
-function doFetchAvailableExtensions(
-  forceDownload: boolean,
-): PromiseBB<{ time: Date; extensions: IAvailableExtension[] }> {
-  const cachePath = path.join(getVortexPath("temp"), EXTENSION_FILENAME);
-  let time = new Date();
-
-  const checkCache = forceDownload
-    ? PromiseBB.resolve(true)
-    : fs.statAsync(cachePath).then((stat) => {
-        if (Date.now() - stat.mtimeMs > UPDATE_FREQUENCY) {
-          return true;
-        } else {
-          time = stat.mtime;
-          return false;
-        }
-      });
-
-  return checkCache
-    .then((needsDownload) => {
-      if (needsDownload) {
-        log("info", "extension list outdated, will update");
-      } else {
-        log("info", "extension list up-to-date");
-      }
-      return needsDownload
-        ? downloadExtensionList(cachePath)
-        : fs.readFileAsync(cachePath, { encoding: "utf8" }).then((data) => {
-            try {
-              return JSON.parse(data).extensions;
-            } catch (err) {
-              return PromiseBB.reject(
-                new DataInvalid("Extension cache invalid, please try again later"),
-              );
-            }
-          });
-    })
-    .catch({ code: "ENOENT" }, () => {
-      log("info", "extension list missing, will update");
-      return downloadExtensionList(cachePath);
-    })
-    .catch((err) => {
-      log("error", "failed to fetch list of extensions", err);
-      return PromiseBB.resolve([]);
-    })
-    .filter((ext: IAvailableExtension) => ext.description !== undefined)
-    .then((extensions: IAvailableExtension[]) => filterInstallableExtensions(extensions))
-    .then((extensions) => ({ time, extensions }));
-}
-
 /**
- * Only extensions with both a modId and a fileId can be installed/updated: identity is
- * keyed on modId, with fileId identifying the specific version. Entries missing either
- * (e.g. legacy GitHub-hosted extensions) are dropped from the manifest client-side.
+ * Fetch the extension list, memoized so concurrent callers share one request.
+ * `force` refetches; a failed fetch clears the memo so the next call retries.
  */
-export function filterInstallableExtensions(
-  extensions: IAvailableExtension[],
-): IAvailableExtension[] {
-  const filtered = extensions.filter((ext) => ext.modId !== undefined && ext.fileId !== undefined);
-  const dropped = extensions.length - filtered.length;
-  if (dropped > 0) {
-    log("debug", "dropped extensions without modId/fileId", { dropped });
+export function fetchAvailableExtensions(
+  api: IExtensionApi,
+  force: boolean = false,
+): Promise<IAvailableExtension[]> {
+  if (availableExtensionsCache === undefined || force) {
+    const fetching = doFetchAvailableExtensions(api);
+    fetching.catch(() => {
+      if (availableExtensionsCache === fetching) {
+        availableExtensionsCache = undefined;
+      }
+    });
+    availableExtensionsCache = fetching;
   }
-  return filtered;
+  return availableExtensionsCache;
+}
+
+/** Fill in gameDomain/gameName from the local Nexus games list. */
+function resolveGameInfo(
+  extensions: IAvailableExtension[],
+  games: IGameListEntry[],
+): IAvailableExtension[] {
+  // keyed by numeric Nexus Mods game ID
+  const gameById = new Map<number, IGameListEntry>(games.map((game) => [game.id, game]));
+
+  return extensions.map((ext) => {
+    const game = ext.gameId !== undefined ? gameById.get(ext.gameId) : undefined;
+    return game === undefined ? ext : { ...ext, gameDomain: game.domain_name, gameName: game.name };
+  });
+}
+
+async function doFetchAvailableExtensions(api: IExtensionApi): Promise<IAvailableExtension[]> {
+  const [fetched, games] = await Promise.all([fetchExtensionList(api), nexusGamesProm()]);
+  const extensions = resolveGameInfo(fetched, games);
+  return dedupeGameExtensions(extensions);
 }
 
 export async function downloadAndInstallExtension(
@@ -275,7 +83,22 @@ export async function downloadAndInstallExtension(
       return false;
     }
 
-    const downloadIds = await downloadFromNexus(api, ext);
+    // the catalog only provides metadata here; install the download without it
+    let availableExtensions: IAvailableExtension[] = [];
+    try {
+      availableExtensions = await fetchAvailableExtensions(api);
+    } catch (err) {
+      log("warn", "failed to fetch extension list", { error: getErrorMessageOrDefault(err) });
+    }
+
+    const catalogEntry = findInCatalog(availableExtensions, { modId: ext.modId });
+
+    const fileId = ext.fileId ?? catalogEntry?.fileId;
+    if (fileId === undefined) {
+      throw new ProcessCanceled(`Extension with mod id ${ext.modId} is not in the catalog`);
+    }
+
+    const downloadIds = await downloadFromNexus(api, ext, fileId);
     if (downloadIds.length === 0) {
       throw new ProcessCanceled("No download found");
     }
@@ -284,31 +107,17 @@ export async function downloadAndInstallExtension(
     const download = api.getState().persistent.downloads.files[downloadId];
 
     api.store.dispatch(setDownloadModInfo(downloadId, "internal", true));
-    // TODO: native Promise
-    const { extensions: availableExtensions } = await Promise.resolve(
-      fetchAvailableExtensions(false),
-    );
-
-    const extDetail = availableExtensions.find((iter) => iter.modId === ext.modId);
-
-    const info: IExtension | undefined =
-      extDetail !== undefined
-        ? {
-            ..._.pick(extDetail, ["id", "name", "author", "version", "type"]),
-            bundled: false,
-            description: extDetail.description.short,
-            modId: ext.modId,
-            fileId: extDetail.fileId,
-          }
-        : undefined;
 
     const state = api.getState();
     const downloadPath = downloadPathForGame(state, SITE_ID);
 
-    await installExtension(api, path.join(downloadPath, download.localPath), info, {
-      source: "nexusmods",
-      gameDomain: extDetail?.gameId,
-      gameName: extDetail?.gameName,
+    await installExtension(api, path.join(downloadPath, download.localPath), {
+      catalogEntry,
+      analytics: {
+        source: "nexusmods",
+        gameDomain: catalogEntry?.gameDomain,
+        gameName: catalogEntry?.gameName,
+      },
     });
 
     return true;
@@ -350,52 +159,15 @@ function archiveFileName(ext: IExtensionDownloadInfo): string {
 async function downloadFromNexus(
   api: IExtensionApi,
   ext: IExtensionDownloadInfo,
+  fileId: number,
 ): Promise<string[]> {
-  if (ext.fileId === undefined && ext.modId !== undefined) {
-    const state = api.getState();
-    const availableExt = state.session.extensions.available.find(
-      (iter) => iter.modId === ext.modId,
-    );
-    if (availableExt !== undefined) {
-      ext.fileId = availableExt.fileId;
-    } else {
-      throw new Error("unavailable nexus extension");
-    }
-  }
-
   log("debug", "download from nexus", archiveFileName(ext));
   return await api.emitAndAwait<"nexus-download">(
     "nexus-download",
     SITE_ID,
     ext.modId,
-    ext.fileId,
+    fileId,
     archiveFileName(ext),
     false,
   );
-}
-
-export function readExtensibleDir(extType: ExtensionType, bundledPath: string, customPath: string) {
-  const readBaseDir = (baseName: string): PromiseBB<string[]> => {
-    return fs
-      .readdirAsync(baseName)
-      .filter((name: string) =>
-        fs.statAsync(path.join(baseName, name)).then((stats) => stats.isDirectory()),
-      )
-      .map((name: string) => path.join(baseName, name))
-      .catch({ code: "ENOENT" }, () => []);
-  };
-
-  return readExtensions(false)
-    .then((extensions) => {
-      const extDirs = Object.keys(extensions)
-        .filter((extId) => extensions[extId].type === extType)
-        .map((extId) => extensions[extId].path);
-
-      return PromiseBB.join(
-        readBaseDir(bundledPath),
-        ...extDirs.map((extPath) => readBaseDir(extPath)),
-        readBaseDir(customPath),
-      );
-    })
-    .then((lists) => [].concat(...lists));
 }

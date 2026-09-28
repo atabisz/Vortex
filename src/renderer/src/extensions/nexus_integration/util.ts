@@ -26,9 +26,11 @@ import {
   getErrorCode,
   getErrorMessage,
   getErrorMessageOrDefault,
+  getErrorStatusCode,
   unknownToError,
 } from "@vortex/shared";
-import { AlreadyDownloaded, DownloadIsHTML } from "@vortex/shared/errors";
+import { VortexError } from "@vortex/shared";
+import { AlreadyDownloaded } from "@vortex/shared/errors";
 import BluebirdPromise from "bluebird";
 import type { TFunction } from "i18next";
 import jwt from "jsonwebtoken";
@@ -68,6 +70,7 @@ import type { RedownloadMode } from "../download_management/types/IDownload";
 import { SITE_ID } from "../gamemode_management/constants";
 import { gameById, knownGames } from "../gamemode_management/selectors";
 import modName from "../mod_management/util/modName";
+import { clearOAuthCredentials } from "./actions/account";
 import { setUserInfo } from "./actions/persistent";
 import { setLoginId, setOauthPending } from "./actions/session";
 import { OAUTH_CLIENT_ID, OAUTH_REDIRECT_URL, OAUTH_URL, getOAuthRedirectUrl } from "./constants";
@@ -76,7 +79,12 @@ import { isLoggedIn, userInfo as userInfoSelector } from "./selectors";
 import { accessTokenSchema } from "./types/IJWTAccessToken";
 import type { IMembership, IValidateKeyDataV2 } from "./types/IValidateKeyData";
 import { checkModVersion, fetchRecentUpdates, ONE_DAY, ONE_MINUTE } from "./util/checkModsVersion";
-import { convertGameIdReverse, convertNXMIdReverse, nexusGameId } from "./util/convertGameId";
+import {
+  convertGameIdReverse,
+  convertNXMIdReverse,
+  nexusGameId,
+  nxmPageId,
+} from "./util/convertGameId";
 import { endorseCollection, endorseMod } from "./util/endorseMod";
 import { FULL_REVISION_INFO, MOD_FILE_INFO } from "./util/graphQueries";
 import type { ITokenReply } from "./util/oauth";
@@ -377,7 +385,12 @@ export function startDownload(
 
   if (["vortex", "site"].includes(url.gameId) && url.view) {
     api.events.emit("show-extension-page", url.modId);
-    return BluebirdPromise.reject(new DownloadIsHTML(nxmurl));
+    return BluebirdPromise.reject(
+      new VortexError("Server returned an HTML page instead of a file", {
+        kind: "download:is-html",
+        url: nxmurl,
+      }),
+    );
   }
 
   if (!["mod", "collection"].includes(url.type)) {
@@ -408,9 +421,8 @@ function startDownloadCollection(
   referenceTag?: string,
 ): BluebirdPromise<string> {
   const state: IState = api.getState();
-  const games = knownGames(state);
-  const gameId = convertNXMIdReverse(games, url.gameId);
-  const pageId = nexusGameId(gameById(state, gameId), url.gameId);
+  const gameId = convertNXMIdReverse(knownGames(state), url.gameId);
+  const pageId = nxmPageId(state, url.gameId);
   let revisionInfo: Partial<IRevision>;
 
   const revNumber = url.revisionNumber >= 0 ? url.revisionNumber : undefined;
@@ -753,9 +765,8 @@ function startDownloadMod(
 ): BluebirdPromise<string> {
   log("info", "start download mod", { urlStr, allowInstall });
   let state = api.getState();
-  const games = knownGames(state);
-  const gameId = convertNXMIdReverse(games, url.gameId);
-  const pageId = nexusGameId(gameById(state, gameId), url.gameId);
+  const gameId = convertNXMIdReverse(knownGames(state), url.gameId);
+  const pageId = nxmPageId(state, url.gameId);
 
   let nexusFileInfo: IFileInfo;
   return getInfoGraphQL(nexus, pageId, url.modId, url.fileId)
@@ -1776,7 +1787,7 @@ function errorFromNexusError(err: NexusError): string {
 
 // Membership is encoded in the user payload / JWT as a set of role strings.
 // Keep those literals in one place so the checks below can't drift.
-const MEMBERSHIP_ROLE = {
+export const MEMBERSHIP_ROLE = {
   premium: "premium",
   supporter: "supporter",
   lifetime: "lifetimepremium",
@@ -1867,7 +1878,8 @@ export function getOAuthTokenFromState(api: IExtensionApi) {
   return oauthCred !== undefined ? oauthCred.token : undefined;
 }
 
-function getUserInfo(
+/** Re-read the account from the api into state. Resolves to whether it was updated. */
+export function getUserInfo(
   api: IExtensionApi,
   nexus: Nexus,
   /*userInfo: IValidateKeyResponse*/
@@ -1945,6 +1957,44 @@ function onJWTTokenRefresh(api: IExtensionApi, credentials: IOAuthCredentials, n
   //Promise.resolve(getUserInfo(api, nexus));
 }
 
+// nexus-api retries a 401 through a token refresh of its own and rethrows it only once that
+// hasn't helped, so one reaching us is final; 403 is an account we may no longer act for at all.
+const REFUSED_STATUS_CODES = [401, 403];
+
+// A dead refresh token is turned down by the OAuth token endpoint with 400 invalid_grant
+// (RFC 6749 §5.2), and that is the error nexus-api surfaces for the request that needed the
+// refresh - not the site's 401 for the expired access token.
+const REFUSED_OAUTH_CODES = ["invalid_grant"];
+
+/**
+ * Whether the site turned the credentials down, which is the only answer that means the session
+ * is over — every other way a request can fail says nothing about the credentials.
+ */
+const isLoginRefused = (err: unknown): boolean =>
+  REFUSED_STATUS_CODES.includes(getErrorStatusCode(err) ?? 0) ||
+  REFUSED_OAUTH_CODES.includes(getErrorCode(err) ?? "");
+
+/**
+ * The account the access token describes on its own. All of this is signed into the token, so
+ * reading it needs no request, which makes it the fallback for a session we hold credentials
+ * for but can't reach the site to flesh out. The avatar and email only exist server-side and
+ * come out empty; the header falls back to the generic account icon for an empty avatar.
+ */
+export function userInfoFromToken(token: string): IValidateKeyDataV2 | undefined {
+  const parsed = accessTokenSchema.safeParse(jwt.decode(token));
+  if (!parsed.success) {
+    return undefined;
+  }
+
+  return {
+    email: "",
+    name: parsed.data.user.username,
+    profileUrl: "",
+    userId: parsed.data.user.id,
+    ...deriveMembership(parsed.data.user),
+  };
+}
+
 export function updateToken(
   api: IExtensionApi,
   nexus: Nexus,
@@ -1970,11 +2020,33 @@ export function updateToken(
   )
     .then(() => getUserInfo(api, nexus)) // update userinfo as we've set some new nexus credentials, either by launch, login or token refresh
     .then(() => true)
-    .catch((err) => {
-      api.showErrorNotification("Authentication failed, please log in again", err, {
-        allowReport: false,
+    .catch((err: unknown) => {
+      if (isLoginRefused(err)) {
+        api.showErrorNotification("Authentication failed, please log in again", err, {
+          allowReport: false,
+        });
+        api.store.dispatch(clearOAuthCredentials(null));
+        api.store.dispatch(setUserInfo(undefined));
+        api.events.emit("did-login", err);
+        return false;
+      }
+
+      // Anything else - offline, a timeout, a 500 - leaves the session untouched, and
+      // setOAuthCredentials has already kept the credentials by the time the avatar request
+      // that failed here was made, so the last known account is still the best answer we have.
+      // Clearing it left the header with no account *and* no login button, because the
+      // credentials that stay in state still count as logged in.
+      log("info", "couldn't validate the login, keeping the known account", {
+        message: getErrorMessage(err),
       });
-      api.store.dispatch(setUserInfo(undefined));
+      if (userInfoSelector(api.getState()) === undefined) {
+        // nothing persisted to keep - a first run offline, or a session an older build
+        // already wiped - so fall back to what the token itself says
+        const fromToken = userInfoFromToken(credentials.token);
+        if (fromToken !== undefined) {
+          api.store.dispatch(setUserInfo(fromToken));
+        }
+      }
       api.events.emit("did-login", err);
       return false;
     });

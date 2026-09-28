@@ -274,11 +274,16 @@ export function buildProtonEnvironment(
   appId?: string,
   existingEnv?: Record<string, string>,
 ): Record<string, string> {
+  const preloads = [
+    path.join(steamPath, "ubuntu12_32", "gameoverlayrenderer.so"),
+    path.join(steamPath, "ubuntu12_64", "gameoverlayrenderer.so"),
+  ];
   const env: Record<string, string> = {
     ...existingEnv,
     STEAM_COMPAT_DATA_PATH: compatDataPath,
     STEAM_COMPAT_CLIENT_INSTALL_PATH: steamPath,
     WINEPREFIX: getWinePrefixPath(compatDataPath),
+    LD_PRELOAD: preloads.join(":"),
   };
   if (appId) {
     env.SteamAppId = appId;

@@ -23,6 +23,10 @@ on:
         description: "Release version (required when status is released and remove is false)"
         required: false
         default: ""
+      dry-run:
+        description: "Log the rows without writing them to ClickHouse."
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -31,9 +35,9 @@ jobs:
   sync:
     # Needs upstream's self-hosted runner + ClickHouse secrets; no-op in forks.
     if: github.repository == 'Nexus-Mods/Vortex'
-    runs-on: [self-hosted]
+    runs-on: platform-cluster-public
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/fingerprints
         with:
           mode: resolve
@@ -41,6 +45,7 @@ jobs:
           remove: ${{ inputs.remove }}
           status: ${{ inputs.status }}
           release-version: ${{ inputs.release_version }}
+          dry-run: ${{ inputs.dry-run }}
           clickhouse-url: ${{ secrets.CLICKHOUSE_URL }}
           clickhouse-user: ${{ secrets.CLICKHOUSE_USER }}
           clickhouse-password: ${{ secrets.CLICKHOUSE_PASSWORD }}

@@ -39,7 +39,7 @@ catalog:
   "@msgpack/msgpack": 2.8.0
   "@nexusmods/fomod-installer-ipc": 0.13.3
   "@nexusmods/fomod-installer-native": 0.13.3
-  "@nexusmods/nexus-api": github:Nexus-Mods/node-nexus-api#ac96897d5ea4eb1288dae4ed43a01ce9cdc075c0
+  "@nexusmods/nexus-api": github:Nexus-Mods/node-nexus-api#0fd74492a11102da7064c01256050ade16c28690
   "@nosferatu500/react-sortable-tree": 4.4.0
   "@nosferatu500/theme-file-explorer": 3.0.21
   "@opentelemetry/api": 1.9.1
@@ -151,7 +151,7 @@ catalog:
   electron-context-menu: 3.6.1
   electron-extension-installer: 2.0.1
   electron-redux: github:TanninOne/electron-redux#66bbd9d389579806e8c4ebd87bd513a668cc64a8
-  electron-updater: 4.6.5
+  electron-updater: 6.8.9
   encoding-down: 6.3.0
   enquirer: 2.4.1
   eslint: 10.6.0
@@ -185,7 +185,7 @@ catalog:
   limiter: 3.0.0
   lint-staged: 17.0.8
   lodash: 4.17.23
-  loot: github:Nexus-Mods/node-loot#7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d
+  loot: github:Nexus-Mods/node-loot#cc1515667f494be188e3b1172a3bc8db3dc52eb5
   lru-cache: 11.2.7
   markdown-ast: 0.2.1
   memoize-one: 5.2.1
@@ -193,7 +193,7 @@ catalog:
   minimist: 1.2.8
   mixpanel-browser: 2.79.0
   modmeta-db: github:Nexus-Mods/modmeta-db#daa8935b6e38e255ec192c908adfce35d47c0336
-  nexus-api: github:Nexus-Mods/node-nexus-api#ac96897d5ea4eb1288dae4ed43a01ce9cdc075c0
+  nexus-api: github:Nexus-Mods/node-nexus-api#0fd74492a11102da7064c01256050ade16c28690
   node: runtime:24.17.0
   node-7z: github:Nexus-Mods/node-7z#b75def8d0d7d81a03f4526c52b8ada9a34a06479
   normalize-url: 6.1.0
@@ -243,7 +243,6 @@ catalog:
   sass: 1.101.0
   semver: 7.7.4
   shortid: 2.2.17
-  simple-git: 3.33.0
   simple-vdf: github:Nexus-Mods/vdf-parser#df279ff89cb480597544d3029e12f90cb8c79464
   source-map-loader: 5.0.0
   source-map-support: 0.5.21
@@ -339,8 +338,8 @@ allowBuilds:
   font-scanner: true
   gamebryo-savegame: true
   leveldown: true
-  loot@https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d: true
-  loot@https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/7b6028fb2caeb3a2af6a0c3d68630c033cc01e8d(patch_hash=3d4c1edc7a442f9db9c091845b9f808f1d84517b03a9612fef4e41bd141f47bc): true
+  loot@https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/cc1515667f494be188e3b1172a3bc8db3dc52eb5: true
+  loot@https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/cc1515667f494be188e3b1172a3bc8db3dc52eb5(patch_hash=3d4c1edc7a442f9db9c091845b9f808f1d84517b03a9612fef4e41bd141f47bc): true
   node@runtime:24.17.0: true
   nx: false
   protobufjs: true
@@ -349,4 +348,4 @@ allowBuilds:
   xxhash-addon: true
 
 patchedDependencies:
-  loot@6.2.2: patches/loot@6.2.2.patch
+  loot@6.2.3: patches/loot@6.2.3.patch

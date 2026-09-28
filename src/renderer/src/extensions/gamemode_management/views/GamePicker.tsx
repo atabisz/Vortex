@@ -11,6 +11,9 @@ import type { IState } from "@/types/IState";
 import { Listing } from "@/ui/components/listing/Listing";
 import { Pagination } from "@/ui/components/pagination/Pagination";
 import { Picker } from "@/ui/components/picker/Picker";
+import { Toolbar } from "@/ui/components/toolbar/Toolbar";
+import type { IToolbarAction } from "@/ui/components/toolbar/ToolbarGroup";
+import { ToolbarGroup } from "@/ui/components/toolbar/ToolbarGroup";
 import { isContributed } from "@/util/isContributed";
 import { getSafe } from "@/util/storeHelper";
 import { Page } from "@/views/components/Page/Page";
@@ -21,13 +24,17 @@ import { connect, translate } from "../../../controls/ComponentEx";
 import { activeGameId } from "../../../util/selectors";
 import { nexusGameId } from "../../nexus_integration/util/convertGameId";
 import type { IProfile } from "../../profile_management/types/IProfile";
+import { setShowHiddenGames } from "../actions/session";
 import { setPickerLayout, setSortManaged, setSortUnmanaged } from "../actions/settings";
 import { CollapsibleSection } from "../components/CollapsibleSection";
-import { DisplayOptions } from "../components/DisplayOptions";
 import { GamesGrid } from "../components/GamesGrid";
 import { GamesList } from "../components/GamesList";
 import { NoGamesFound } from "../components/NoGamesFound";
 import { Search } from "../components/search/Search";
+import {
+  DEFAULT_PICKER_LAYOUT,
+  useDisplayOptionsAction,
+} from "../hooks/useDisplayOptionsAction.hook";
 import type { IDiscoveryResult } from "../types/IDiscoveryResult";
 import type { IGameStored } from "../types/IGameStored";
 
@@ -63,12 +70,14 @@ interface IConnectedProps {
   extensionsInstalled: { [extId: string]: IExtensionState };
   sortManaged: string;
   sortUnmanaged: string;
+  showHidden: boolean;
 }
 
 interface IActionProps {
   onSetPickerLayout: (layout: "list" | "small" | "large") => void;
   onSetSortManaged: (sorting: string) => void;
   onSetSortUnmanaged: (sorting: string) => void;
+  onSetShowHidden: (show: boolean) => void;
 }
 
 type IProps = IBaseProps & IConnectedProps & IActionProps & WithTranslation;
@@ -94,6 +103,7 @@ const GamePicker = ({
   profiles,
   sortManaged,
   sortUnmanaged,
+  showHidden,
   gameMode,
   nexusGames,
   onRefreshGameInfo,
@@ -101,12 +111,11 @@ const GamePicker = ({
   onSetPickerLayout,
   onSetSortManaged,
   onSetSortUnmanaged,
+  onSetShowHidden,
 }: IProps) => {
-  const [showHidden, setShowHidden] = useState(false);
   const [currentFilterValue, setCurrentFilterValue] = useState("");
   const [unmanagedPage, setUnmanagedPage] = useState(1);
 
-  const [rootEl, setRootEl] = useState<HTMLElement | null>(null);
   const nameLookupRef = useRef<{ [name: string]: string }>({});
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const unmanagedSectionRef = useRef<HTMLDivElement>(null);
@@ -132,8 +141,6 @@ const GamePicker = ({
       ),
     [],
   );
-
-  const getBounds = useCallback(() => rootEl.getBoundingClientRect(), [rootEl]);
 
   const getTabGameNumber = (unfiltered: IGameStored[], filtered: IGameStored[]): string =>
     currentFilterValue ? `${filtered.length}/${unfiltered.length}` : `${unfiltered.length}`;
@@ -241,7 +248,7 @@ const GamePicker = ({
   supportedGameList.push(
     ...extensionsUninstalled
       .map((ext) => ({
-        id: ext.gameId || ext.name,
+        id: ext.gameDomain || ext.name,
         name: ext.gameName || ext.name,
         extensionPath: undefined,
         imageURL: ext.image,
@@ -279,8 +286,28 @@ const GamePicker = ({
     currentUnmanagedPage * UNMANAGED_PAGE_SIZE,
   );
 
+  const displayOptions = useDisplayOptionsAction({
+    pickerLayout,
+    showHidden,
+    t,
+    onReset: () => {
+      onSetPickerLayout(DEFAULT_PICKER_LAYOUT);
+      onSetSortManaged("alphabetical");
+      onSetSortUnmanaged("popular");
+      onSetShowHidden(false);
+      setUnmanagedPage(1);
+    },
+    onSetPickerLayout,
+    onToggleHidden: () => {
+      onSetShowHidden(!showHidden);
+      setUnmanagedPage(1);
+    },
+  });
+
+  const toolbarActions: IToolbarAction[] = [displayOptions];
+
   return (
-    <Page active={active} domRef={(el) => setRootEl(el)} pageId={pageId} scrollable={false}>
+    <Page active={active} pageId={pageId} scrollable={false}>
       <PageHeader
         pictogramName="game"
         subtitle={t("Manage games to get started.")}
@@ -296,23 +323,9 @@ const GamePicker = ({
             }}
           />
 
-          <DisplayOptions
-            pickerLayout={pickerLayout}
-            showHidden={showHidden}
-            t={t}
-            onReset={() => {
-              onSetPickerLayout("small");
-              onSetSortManaged("alphabetical");
-              onSetSortUnmanaged("popular");
-              setShowHidden(false);
-              setUnmanagedPage(1);
-            }}
-            onSetPickerLayout={onSetPickerLayout}
-            onToggleHidden={() => {
-              setShowHidden((prev) => !prev);
-              setUnmanagedPage(1);
-            }}
-          />
+          <Toolbar>
+            <ToolbarGroup actions={toolbarActions} />
+          </Toolbar>
         </div>
       </PageHeader>
 
@@ -352,11 +365,9 @@ const GamePicker = ({
           >
             {pickerLayout === "list" ? (
               <GamesList
-                container={rootEl}
                 discoveredGames={discoveredGames}
                 gameMode={gameMode}
                 games={filteredManaged}
-                getBounds={getBounds}
                 t={t}
                 type="managed"
                 onBrowseGameLocation={onBrowseGameLocation}
@@ -364,11 +375,9 @@ const GamePicker = ({
               />
             ) : (
               <GamesGrid
-                container={rootEl}
                 discoveredGames={discoveredGames}
                 gameMode={gameMode}
                 games={filteredManaged}
-                getBounds={getBounds}
                 t={t}
                 type="managed"
                 onRefreshGameInfo={onRefreshGameInfo}
@@ -411,11 +420,9 @@ const GamePicker = ({
             >
               {pickerLayout === "list" ? (
                 <GamesList
-                  container={rootEl}
                   discoveredGames={discoveredGames}
                   gameMode={gameMode}
                   games={pagedUnmanaged}
-                  getBounds={getBounds}
                   t={t}
                   type="unmanaged"
                   onBrowseGameLocation={onBrowseGameLocation}
@@ -423,11 +430,9 @@ const GamePicker = ({
                 />
               ) : (
                 <GamesGrid
-                  container={rootEl}
                   discoveredGames={discoveredGames}
                   gameMode={gameMode}
                   games={pagedUnmanaged}
-                  getBounds={getBounds}
                   t={t}
                   type="unmanaged"
                   onRefreshGameInfo={onRefreshGameInfo}
@@ -472,6 +477,7 @@ function mapStateToProps(state: IState): IConnectedProps {
     extensionsInstalled: state.app.extensions ?? {},
     sortManaged: state.settings.gameMode.sortManaged ?? "alphabetical",
     sortUnmanaged: state.settings.gameMode.sortUnmanaged ?? "alphabetical",
+    showHidden: state.session.gameMode.showHidden ?? false,
   };
 }
 
@@ -480,6 +486,7 @@ function mapDispatchToProps(dispatch): IActionProps {
     onSetPickerLayout: (layout) => dispatch(setPickerLayout(layout)),
     onSetSortManaged: (sorting: string) => dispatch(setSortManaged(sorting)),
     onSetSortUnmanaged: (sorting: string) => dispatch(setSortUnmanaged(sorting)),
+    onSetShowHidden: (show: boolean) => dispatch(setShowHiddenGames(show)),
   };
 }
 

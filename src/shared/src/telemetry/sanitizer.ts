@@ -61,6 +61,7 @@ export const SPAN_ATTRIBUTE_ALLOWLIST: ReadonlySet<string> = new Set([
   "componentStack",
   "crash.type",
   "crash.sourceProcess",
+  "crash.exitCode",
   // Native crash facts extracted from minidumps — codes, module names and
   // offsets only, never memory contents
   "crash.native.dumpCount",
@@ -69,7 +70,9 @@ export const SPAN_ATTRIBUTE_ALLOWLIST: ReadonlySet<string> = new Set([
   "crash.native.module",
   "crash.native.moduleVersion",
   "crash.native.moduleOffset",
+  "crash.native.moduleId",
   "crash.native.processType",
+  "crash.native.fatalMessage",
   // Ambient context (setErrorContext) — active game, extension + deployment context
   "context.gamemode",
   "context.extension_type",
