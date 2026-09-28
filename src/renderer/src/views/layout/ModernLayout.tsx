@@ -2,9 +2,9 @@ import React, { type FC } from "react";
 
 import { useSwitchingProfile } from "../../hooks";
 import { ModernContentPane } from "../components/ContentPane";
-import { Header } from "../components/Header";
-import { Menu } from "../components/Menu";
-import { Spine } from "../components/Spine";
+import { Header } from "../components/Header/Header";
+import { Menu } from "../components/Menu/Menu";
+import { Spine } from "../components/Spine/Spine";
 import { SpineProvider } from "../components/Spine/SpineContext";
 import { DialogLayer } from "./DialogLayer";
 import { LayoutContainer } from "./LayoutContainer";

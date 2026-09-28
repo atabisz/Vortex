@@ -191,6 +191,15 @@ for sym in isPathPrefix shouldRunWithProton runToolWithProton; do
     probe "$sym in StarterInfo.ts" FAIL "not found"
   fi
 done
+# buildProtonEnvironment must carry both the fork's SteamAppId/SteamGameId
+# (Steamworks init) and upstream's Steam overlay LD_PRELOAD — v2.7.1 conflicted here.
+for sym in SteamAppId SteamGameId LD_PRELOAD; do
+  if grep -q "$sym" src/renderer/src/util/linux/proton.ts 2>/dev/null; then
+    probe "$sym in proton.ts buildProtonEnvironment" PASS
+  else
+    probe "$sym in proton.ts buildProtonEnvironment" FAIL "not found"
+  fi
+done
 
 # §9 — Steam library path resolution reads ALL roots
 section 9 "Steam multi-root resolution"

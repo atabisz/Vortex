@@ -5,16 +5,15 @@ import type {
   ResolverPorts,
 } from "@nexusmods/file-dependency-resolver";
 import type { components } from "@vortex/nexus-api-v3";
+import { getErrorMessage, unknownToError } from "@vortex/shared";
 
-import {
-  chunked,
-  createKeyedCache,
-  resolveCached,
-  type KeyedCache,
-} from "@/extensions/health_check/utils/shared/batchCache";
+import type { IModDetails } from "@/extensions/health_check/types";
+import { chunked, resolveCached } from "@/extensions/health_check/utils/shared/batchCache";
 import { getModDetails } from "@/extensions/health_check/utils/shared/modDetails";
 import { createVortexNexusV3Client } from "@/extensions/nexus_integration/nexusV3Client";
+import { log } from "@/logging";
 import type { IExtensionApi } from "@/types/IExtensionContext";
+import { createKeyedCache, type KeyedCache } from "@/util/keyedCache";
 
 type V3Client = ReturnType<typeof createVortexNexusV3Client>;
 type V3Candidate = components["schemas"]["ModFileVersionDependencyCandidate"];
@@ -145,7 +144,17 @@ export function createResolverPorts(api: IExtensionApi, signal?: AbortSignal): R
     },
 
     async fetchModDetails(modUids) {
-      const details = await getModDetails(api, modUids, signal);
+      // Display data only, so a failed lookup degrades the result instead of failing the check.
+      const details = await getModDetails(api, modUids, signal).catch(
+        (err: unknown): IModDetails[] => {
+          signal?.throwIfAborted();
+          log("warn", "failed to fetch mod details for dependency candidates", {
+            count: modUids.length,
+            error: getErrorMessage(unknownToError(err)),
+          });
+          return [];
+        },
+      );
       return details.map(
         (detail): ModDetail => ({
           modUid: detail.modUID,

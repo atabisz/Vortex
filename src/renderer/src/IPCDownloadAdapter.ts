@@ -2,8 +2,13 @@ import { randomUUID } from "node:crypto";
 import { access, copyFile, mkdir, rename, rm, stat } from "node:fs/promises";
 import * as path from "node:path";
 
-import { unknownToError, wireToDownloadError } from "@vortex/shared";
-import { AlreadyDownloaded, UserCanceled } from "@vortex/shared/errors";
+import { unknownToError } from "@vortex/shared";
+import {
+  AlreadyDownloaded,
+  deserializeVortexError,
+  type SerializedVortexError,
+  UserCanceled,
+} from "@vortex/shared/errors";
 import type {
   WireDownloadCheckpoint,
   WireDownloadState,
@@ -24,12 +29,14 @@ import {
 } from "./extensions/analytics/mixpanel/MixpanelEvents";
 import { makeModAnalyticsIdentity } from "./extensions/analytics/mixpanel/modAnalyticsIdentity";
 import {
+  addLocalDownload,
   downloadProgress,
   finishDownload,
   initDownload,
   pauseDownload,
   removeDownload,
   removeDownloadSilent,
+  setCompatibleGames,
   setDownloadFilePath,
   setDownloadHash,
   setDownloadInterrupted,
@@ -58,7 +65,7 @@ import { batchDispatch, flatten } from "./util/util";
 function rehydrateDownloadError(state: WireDownloadState): Error | null {
   if (state.status === "canceled") return new UserCanceled();
   if (state.status !== "failed" || state.error === null) return null;
-  return wireToDownloadError(state.error);
+  return deserializeVortexError(state.error as unknown as SerializedVortexError);
 }
 
 type ProtocolHandler = (
@@ -186,6 +193,9 @@ export class IPCDownloadAdapter {
       this.#handleStartDownload(urls, modInfo, fileName, callback, redownload, options).catch(
         (err) => {
           log("error", "failed to start download", err);
+          // callers await the callback (collection installs block on it per dependency), so
+          // failures settle it too
+          callback?.(unknownToError(err));
         },
       );
     });
@@ -533,6 +543,7 @@ export class IPCDownloadAdapter {
         () => false,
       );
       if (fileExists && redownload !== "replace") {
+        let useExisting = true;
         if (redownload === "ask") {
           const result = await this.#api.showDialog?.(
             "question",
@@ -540,24 +551,34 @@ export class IPCDownloadAdapter {
             { text: `"${fileName}" is already on disk. Download again?` },
             [{ label: "Use existing" }, { label: "Re-download" }],
           );
-
-          if (result?.action !== "Re-download") {
-            const downloads = state.persistent.downloads.files;
-            const [existingId, _] = Object.entries(downloads).find(
-              ([_, download]) => download.localPath === fileName,
+          useExisting = result?.action !== "Re-download";
+        }
+        if (useExisting) {
+          const downloads = state.persistent.downloads.files;
+          let existingId = Object.keys(downloads).find(
+            (id) => downloads[id].localPath === fileName,
+          );
+          const gameId = gameIds[0];
+          if (existingId === undefined && gameId !== undefined) {
+            // A file no record tracks (dropped in manually, or its record was lost) is adopted
+            // the same way the download-folder scan adopts unknown archives, so the caller
+            // receives a usable download id. Adoption needs a game id: ADD_LOCAL_DOWNLOAD's
+            // sanity check blocks a record without one.
+            const { size } = await stat(namedDest);
+            existingId = randomUUID();
+            this.#api.store.dispatch(addLocalDownload(existingId, gameId, fileName, size));
+            this.#api.store.dispatch(
+              setCompatibleGames(
+                existingId,
+                gameIds.filter((game): game is string => game !== undefined),
+              ),
             );
-
+          }
+          if (existingId !== undefined) {
             callback?.(new AlreadyDownloaded(fileName, existingId));
             return;
           }
-        } else {
-          const downloads = state.persistent.downloads.files;
-          const [existingId, _] = Object.entries(downloads).find(
-            ([_, download]) => download.localPath === fileName,
-          );
-
-          callback?.(new AlreadyDownloaded(fileName, existingId));
-          return;
+          // untracked file with no game to record it under: fall through to a fresh download
         }
       }
     }

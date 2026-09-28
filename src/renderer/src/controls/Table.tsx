@@ -17,6 +17,8 @@ import {
   setCollapsedGroups,
   setGroupingAttribute,
 } from "../actions/tables";
+import { numericNexusGameId } from "../extensions/analytics/mixpanel/numericGameId";
+import { activeGameId } from "../extensions/profile_management/selectors";
 import smoothScroll from "../smoothScroll";
 import type { IActionDefinition } from "../types/IActionDefinition";
 import type { IAttributeState } from "../types/IAttributeState";
@@ -31,13 +33,21 @@ import { getSafe, setSafe } from "../util/storeHelper";
 import { makeUnique, sanitizeCSSId, truthy } from "../util/util";
 import { ComponentEx, connect, extend, translate } from "./ComponentEx";
 import IconBar from "./IconBar";
+import {
+  columnsOf,
+  emitTableColumnsViewed,
+  emitTableColumnToggled,
+  gameIdPending,
+  isColumn,
+} from "./table/columnAnalytics";
 import GroupingRow, { EMPTY_ID } from "./table/GroupingRow";
 import HeaderCell from "./table/HeaderCell";
 import { Table, TBody, TD, TH, THead, TR } from "./table/MyTable";
+import { scrollContainerOf } from "./table/scrollContainer";
 import TableDetail from "./table/TableDetail";
 import TableRow from "./table/TableRow";
 import ToolbarIcon from "./ToolbarIcon";
-import Usage from "./Usage";
+import { UsageAlert } from "./UsageAlert";
 
 export type ChangeDataHandler = (rowId: string, attributeId: string, newValue: any) => void;
 
@@ -50,6 +60,8 @@ export interface ITableRowAction extends IActionDefinition {
 
 export interface IBaseProps {
   tableId: string;
+  /** This table's id in the analytics. Defaults to `tableId`; set where two tables share one. */
+  analyticsId?: string;
   data: { [rowId: string]: any };
   // cheap-ass way to force the table to refresh its data cache. This will only affect
   // 'volatile' fields as normal data fields would prompt a table refresh anyway
@@ -71,6 +83,11 @@ export interface IBaseProps {
   // drops its horizontal padding around the table in exchange.
   edgeToEdge?: boolean;
   hasActions?: boolean;
+  // Where to put the footer — the multi-selection bar, or the hint standing in for it
+  // — instead of over the bottom of the table. For a page that gives it a place of its
+  // own, so it stops overlaying the rows and can sit beside whatever else the page
+  // keeps down there.
+  footerContainer?: HTMLElement | null;
   onChangeSelection?: (ids: string[]) => void;
   children?: React.ReactNode;
 }
@@ -135,12 +152,26 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
   // this improves scroll smoothness at the expense of memory
   private static SCROLL_DEBOUNCE = 5000;
 
+  // How long the set of columns has to hold still before it's reported. Attributes come
+  // from extensions and can be gated on state, so what a table shows in its first frame
+  // isn't yet what the user is looking at.
+  private static COLUMN_REPORT_DEBOUNCE = 2000;
+
+  // How many of those to wait through for the games list before reporting with no game
+  // rather than the wrong one. A cold start has been seen to take 21.6s.
+  private static COLUMN_REPORT_MAX_WAITS = 12;
+
   private mVisibleAttributes: ITableAttribute[];
   private mVisibleDetails: ITableAttribute[];
   private mVisibleInlines: ITableAttribute[];
 
   private mPinnedRef: HTMLElement;
   private mScrollRef: HTMLElement;
+  // What the rows scroll in: the main pane, unless the header sticks to the page and the
+  // page scrolls the table (null when only the window does). Row visibility is measured
+  // against it, and cell dropdowns open up or down to stay inside it. It is found once,
+  // when the pane mounts, which is before any row renders.
+  private mScrollContainer: HTMLElement | null;
   private mHeaderRef: HTMLElement;
   private mRowRefs: { [id: string]: HTMLElement } = {};
   private mLastSelectOnly: number = 0;
@@ -157,6 +188,8 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
   private mVisibleHeaderRef: HTMLElement;
   private mHeaderUpdateDebouncer: Debouncer;
   private mUpdateCalculatedDebouncer: Debouncer;
+  private mColumnReportDebouncer: Debouncer;
+  private mColumnReportWaits: number = 0;
   private mLastScroll: number;
   private mWillSetVisibility: boolean = false;
   private mMounted: boolean = false;
@@ -212,6 +245,15 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
       200,
       true,
     );
+
+    this.mColumnReportDebouncer = new Debouncer(
+      () => {
+        this.reportColumns();
+        return PromiseBB.resolve();
+      },
+      SuperTable.COLUMN_REPORT_DEBOUNCE,
+      true,
+    );
   }
 
   public componentDidMount() {
@@ -228,12 +270,15 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
     });
     this.mMounted = true;
     window.addEventListener("resize", this.onResize);
+    this.mColumnReportDebouncer.schedule();
   }
 
   public componentWillUnmount() {
     this.context.api.events.removeAllListeners(this.props.tableId + "-scroll-to");
     window.removeEventListener("resize", this.onResize);
+    this.detachScrollListeners();
     this.mMounted = false;
+    this.mColumnReportDebouncer.clear();
   }
 
   public UNSAFE_componentWillReceiveProps(newProps: IProps) {
@@ -247,6 +292,10 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
       this.mVisibleAttributes = table;
       this.mVisibleDetails = detail;
       this.mVisibleInlines = inline;
+
+      // The columns just changed, so give them longer to hold still before reporting
+      // them. Once reported, this is a no-op for the rest of the session.
+      this.mColumnReportDebouncer.schedule();
 
       if (
         Object.keys(newProps.attributeState).find(
@@ -337,12 +386,18 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
 
     const openClass = detailsOpen ? "open" : "closed";
 
+    const detailsPane =
+      showDetails === false ? null : (
+        <div className={`table-details-pane ${openClass}`}>{this.renderDetails()}</div>
+      );
+
     const containerClasses = ["table-container"];
     if (showDetails) {
       containerClasses.push("has-details");
     }
     if (stickyHeader) {
-      containerClasses.push("sticky-header");
+      // grow past the last row, so the details pane doesn't open one row tall
+      containerClasses.push("sticky-header", "flex-auto");
     }
     if (edgeToEdge) {
       containerClasses.push("edge-to-edge");
@@ -375,8 +430,13 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
           </div>
         )}
 
-        {showDetails === false ? null : (
-          <div className={`table-details-pane ${openClass}`}>{this.renderDetails()}</div>
+        {stickyHeader ? (
+          // A table that scrolls with the page is as tall as its rows and as wide as
+          // its columns, so a pane positioned against it would be too. The layer is
+          // what sticks to the visible part of the scroll instead.
+          <div className="table-details-layer">{detailsPane}</div>
+        ) : (
+          detailsPane
         )}
       </div>
     );
@@ -416,6 +476,45 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
   }
 
   private renderFooter(): JSX.Element {
+    const { footerContainer } = this.props;
+    const footer = this.renderFooterContent();
+
+    if (footer === null) {
+      return null;
+    }
+
+    // Given a place of its own the footer lays out in the page's flow there, so it needs
+    // neither the absolute positioning that fills the table nor the placeholder that
+    // keeps the rows clear of it. Without one it fills the bottom of the table as it
+    // always has, which every other table still does.
+    if (footerContainer) {
+      return ReactDOM.createPortal(
+        <div className="table-footer-detached">{footer}</div>,
+        footerContainer,
+      );
+    }
+
+    // Only the multi-row bar is absolutely positioned, filling a surrounding panel, so
+    // only it needs a placeholder to hold the rows clear of it. The usage hint shown
+    // below two selections lays out in the flow and takes its own height — giving that
+    // the placeholder's fixed height boxes it at 48px on every table that has no
+    // `footerContainer`, which is not something it ever had.
+    return this.isMultiRowFooter() ? (
+      <div className="table-footer-placeholder">{footer}</div>
+    ) : (
+      footer
+    );
+  }
+
+  /** Whether the footer is the multi-row action bar rather than the usage hint. */
+  private isMultiRowFooter(): boolean {
+    const { rowState } = this.state;
+    const selected = Object.keys(rowState).filter((key) => rowState[key].selected);
+
+    return this.useMultiSelect() && selected.length >= 2;
+  }
+
+  private renderFooterContent(): JSX.Element {
     const { t, tableId } = this.props;
     const { multiRowActions, rowState } = this.state;
 
@@ -427,40 +526,35 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
 
     if (selected.length < 2) {
       return (
-        <Usage infoId="table-multiselect">
+        <UsageAlert infoId="table-multiselect">
           {t(
             "Did you know? You can select multiple items using ctrl+click or shift+click or " +
               "select everything using ctrl+a and then do things with all selected items at once.",
           )}
-        </Usage>
+        </UsageAlert>
       );
     }
 
-    // the footer itself (.table-footer) is absolutely positioned so it fills out a surrounding
-    // panel. To ensure the table body isn't overlapped by the footer, insert a placeholder
-    // that needs to be the same size as the footer itself (see css)
     return (
-      <div className="table-footer-placeholder">
-        <div className="table-footer">
-          <IconBar
-            className="menubar"
-            group={`${tableId}-multirow-actions`}
-            groupByIcon={false}
-            instanceId={selected}
-            staticElements={multiRowActions}
-            t={t}
+      <div className="table-footer">
+        <IconBar
+          className="menubar"
+          group={`${tableId}-multirow-actions`}
+          groupByIcon={false}
+          instanceId={selected}
+          staticElements={multiRowActions}
+          t={t}
+        />
+
+        <div className="menubar">
+          <p>{t("{{ count }} item selected", { count: selected.length })}</p>
+
+          <ToolbarIcon
+            icon="deselect"
+            key="btn-deselect"
+            text={t("Deselect All")}
+            onClick={this.deselectAll}
           />
-
-          <div className="menubar">
-            <p>{t("{{ count }} item selected", { count: selected.length })}</p>
-
-            <ToolbarIcon
-              icon="deselect"
-              key="btn-deselect"
-              text={t("Deselect All")}
-              onClick={this.deselectAll}
-            />
-          </div>
         </div>
       </div>
     );
@@ -689,7 +783,7 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
           prev[attr.placement === "inline" ? "inlines" : visible ? "columns" : "disabled"].push({
             icon: attributeState.enabled ? "checkbox-checked" : "checkbox-unchecked",
             title: attr.name,
-            action: (arg) => this.setAttributeVisible(attr.id, !attributeState.enabled),
+            action: (arg) => this.setAttributeVisible(attr, !attributeState.enabled),
           });
         }
         return prev;
@@ -785,7 +879,7 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
       <TableRow
         actions={singleRowActions}
         attributes={attributes}
-        container={this.mScrollRef}
+        container={this.mScrollContainer}
         data={calculatedValues[rowId]}
         domRef={this.setRowRef}
         group={groupId}
@@ -1198,7 +1292,10 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
     }
   };
 
-  private onScroll = (event) => {
+  // Runs whenever the rows scroll, whatever scrolls them. While they do, rows that leave
+  // the view stay rendered until scrolling settles, and noShrink columns keep the widest
+  // width they have reached, so they don't narrow as the rows that set it unmount.
+  private onRowsScroll = () => {
     this.mLastScroll = Date.now();
     if (this.mDelayedVisibilityTimer === undefined) {
       this.mDelayedVisibilityTimer = setTimeout(
@@ -1206,6 +1303,13 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
         SuperTable.SCROLL_DEBOUNCE + 100,
       );
     }
+    Object.keys(this.mNoShrinkColumns).forEach((colId) => {
+      this.mNoShrinkColumns[colId].updateWidth();
+    });
+  };
+
+  private onScroll = (event) => {
+    this.onRowsScroll();
     const ele: Element = event.target;
 
     const atTop = ele.scrollTop === 0;
@@ -1225,9 +1329,6 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
         }
       });
     }
-    Object.keys(this.mNoShrinkColumns).forEach((colId) => {
-      this.mNoShrinkColumns[colId].updateWidth();
-    });
   };
 
   private onResize = () => {
@@ -1239,13 +1340,25 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
       return;
     }
 
-    // not sure if this is necessary, I guess not
-    ref.removeEventListener("scroll", this.onScroll);
+    this.detachScrollListeners();
 
     // translate the header so that it remains in view during scrolling
     ref.addEventListener("scroll", this.onScroll);
     this.mScrollRef = ref;
+
+    // A sticky-header pane has visible overflow and doesn't clip, so rows observed
+    // against it all count as visible and every one of them renders in full.
+    this.mScrollContainer = this.props.stickyHeader ? scrollContainerOf(ref) : ref;
+    if (this.mScrollContainer !== ref) {
+      this.mScrollContainer?.addEventListener("scroll", this.onRowsScroll);
+    }
   };
+
+  private detachScrollListeners() {
+    this.mScrollRef?.removeEventListener("scroll", this.onScroll);
+    // the page scroll outlives the table, so its listener has to come off explicitly
+    this.mScrollContainer?.removeEventListener("scroll", this.onRowsScroll);
+  }
 
   private mainHeaderRef = (ref) => {
     this.mHeaderRef = ref;
@@ -1570,9 +1683,55 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
     }, []);
   }
 
-  private setAttributeVisible = (attributeId: string, visible: boolean) => {
-    const { onSetAttributeVisible, tableId } = this.props;
-    onSetAttributeVisible(tableId, attributeId, visible);
+  /**
+   * Says which of this table's columns the user has in front of them, so the case for
+   * dropping one can be made from how many installs still show it. See
+   * {@link emitTableColumnsViewed} for why this happens once a game a session.
+   *
+   * The game is read here rather than taken from props so it is the one in effect when
+   * the debounce fires, which is what the columns being reported were built from.
+   */
+  private reportColumns() {
+    const { analyticsId, columnBlacklist, objects, tableId } = this.props;
+
+    const activeGame = activeGameId(this.context.api.getState());
+    const game = activeGame === undefined ? null : numericNexusGameId(activeGame);
+
+    // Giving up reports under no game rather than staying silent: a row with no game can
+    // be filtered out, silence can't be seen. That also leaves the real game's slot
+    // unspent, so the table reports properly if its columns change once the list lands.
+    if (
+      gameIdPending(activeGame, game) &&
+      this.mColumnReportWaits < SuperTable.COLUMN_REPORT_MAX_WAITS
+    ) {
+      this.mColumnReportWaits += 1;
+      this.mColumnReportDebouncer.schedule();
+      return;
+    }
+
+    emitTableColumnsViewed(
+      this.context.api,
+      analyticsId ?? tableId,
+      game,
+      columnsOf({
+        attributes: objects,
+        visible: this.mVisibleAttributes ?? [],
+        blacklist: columnBlacklist,
+      }),
+    );
+  }
+
+  private setAttributeVisible = (attribute: ITableAttribute, visible: boolean) => {
+    const { analyticsId, onSetAttributeVisible, tableId } = this.props;
+
+    // The same menu toggles attributes that are never columns, and hiding one of those
+    // says nothing about the columns this is counting.
+    if (isColumn(attribute)) {
+      emitTableColumnToggled(this.context.api, analyticsId ?? tableId, attribute.id, visible);
+    }
+
+    // The layout is stored against `tableId`, so that stays whatever the numbers call it.
+    onSetAttributeVisible(tableId, attribute.id, visible);
   };
 
   private getClasses(element: HTMLElement): string {

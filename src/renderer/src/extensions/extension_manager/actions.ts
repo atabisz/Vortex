@@ -15,5 +15,10 @@ export const setExtensionsUpdate = createAction(
 
 export const setOptionalExtensions = createAction(
   "SET_OPTIONAL_EXTENSIONS",
-  (optional: { [extId: string]: IExtensionOptional[] }) => optional,
+  (optional: { [extensionName: string]: IExtensionOptional[] }) => optional,
+);
+
+export const setShowBundledExtensions = createAction(
+  "SET_SHOW_BUNDLED_EXTENSIONS",
+  (show: boolean) => show,
 );

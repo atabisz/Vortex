@@ -56,6 +56,7 @@ import { batchDispatch, isChildPath, truthy, wrapExtCBAsync } from "../../util/u
 import { waitForCondition } from "../../util/waitForCondition";
 import { emitModsDeployed } from "../analytics/mixpanel/deployAnalytics";
 import { emitModStateChanged } from "../analytics/mixpanel/modChangeAnalytics";
+import { emitModListSnapshot } from "../analytics/utils/modListSnapshot";
 import { setDownloadModInfo } from "../download_management/actions/state";
 import { getGame } from "../gamemode_management/util/getGame";
 import { getModType } from "../gamemode_management/util/modTypeExtensions";
@@ -886,6 +887,7 @@ function genUpdateModDeployment(installManager: InstallManager) {
               manual,
               isCollectionPostprocess: deployOptions?.isCollectionPostprocessCall ?? false,
             });
+            void emitModListSnapshot(api, gameId);
           } catch (unknownErr) {
             const err = unknownToError(unknownErr);
             if (err instanceof UserCanceled) {
@@ -2089,6 +2091,10 @@ function init(context: IExtensionContext): boolean {
       priority: 1,
       hotkey: "M",
       group: "per-game",
+      // The redesigned page, except under the classic UI, which still has the page it
+      // always had — see ModList. A callback rather than a value so the answer follows
+      // the setting instead of being fixed when the page registered.
+      newLayout: () => context.api.getState().settings.window.useModernLayout ?? true,
       visible: () => activeGameId(context.api.store.getState()) !== undefined,
       activity: modsActivity,
       props: () => ({
@@ -2099,12 +2105,16 @@ function init(context: IExtensionContext): boolean {
     },
   );
 
-  context.registerAction("mod-icons", 105, ActivationButton, {}, () => ({
+  // Deploy and Purge for the classic toolbar, which renders whatever component a
+  // registration gives it. The new toolbar builds its own pair instead — it renders
+  // actions rather than arbitrary components, see useModToolbarActions — so these are
+  // marked classic-only and it skips them rather than showing each twice.
+  context.registerAction("mod-icons", 105, ActivationButton, { isClassicOnly: true }, () => ({
     key: "activate-button",
     getActivators: getAllActivators,
   }));
 
-  context.registerAction("mod-icons", 110, DeactivationButton, {}, () => ({
+  context.registerAction("mod-icons", 110, DeactivationButton, { isClassicOnly: true }, () => ({
     key: "deactivate-button",
     getActivators: getAllActivators,
   }));
@@ -2289,7 +2299,7 @@ function init(context: IExtensionContext): boolean {
   const history = new ModHistory(context.api);
 
   context.registerHistoryStack("mods", history);
-  context.registerAction("mod-icons", 200, "history", {}, "History", () => {
+  context.registerAction("mod-icons", 40, "history", { pinned: true }, "History", () => {
     context.api.ext.showHistory?.("mods");
   });
 

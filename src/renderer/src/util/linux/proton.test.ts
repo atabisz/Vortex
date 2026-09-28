@@ -91,13 +91,21 @@ describe("isWindowsExecutable", () => {
 });
 
 describe("buildProtonEnvironment", () => {
-  it("returns object with all 3 required keys set", () => {
+  it("returns object with the required keys and Steam overlay preload", () => {
     const result = buildProtonEnvironment("/compat/data", "/steam");
     expect(result).toEqual({
       STEAM_COMPAT_DATA_PATH: "/compat/data",
       STEAM_COMPAT_CLIENT_INSTALL_PATH: "/steam",
       WINEPREFIX: "/compat/data/pfx",
+      LD_PRELOAD:
+        "/steam/ubuntu12_32/gameoverlayrenderer.so:/steam/ubuntu12_64/gameoverlayrenderer.so",
     });
+  });
+
+  it("sets SteamAppId and SteamGameId when appId is given", () => {
+    const result = buildProtonEnvironment("/compat/data", "/steam", "489830");
+    expect(result.SteamAppId).toBe("489830");
+    expect(result.SteamGameId).toBe("489830");
   });
 
   it("merges existingEnv and overrides with Proton keys", () => {

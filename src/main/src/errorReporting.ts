@@ -1,16 +1,26 @@
 import { type Dirent } from "node:fs";
 import { readdir, readFile, rename, stat, unlink, utimes } from "node:fs/promises";
 import * as path from "node:path";
+import { inspect } from "node:util";
 
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { BasicTracerProvider, SimpleSpanProcessor } from "@opentelemetry/sdk-trace-base";
-import { getErrorCode, getErrorMessageOrDefault, sanitizeFramePath } from "@vortex/shared";
-import type { ReportableError } from "@vortex/shared/errors";
+import {
+  computeIdentityFingerprint,
+  getErrorCode,
+  getErrorMessageOrDefault,
+  sanitizeFramePath,
+} from "@vortex/shared";
+import type { CrashType, ReportableError } from "@vortex/shared/errors";
 import { recordErrorOnSpan, SanitizingSpanExporter } from "@vortex/shared/telemetry";
 import { app } from "electron";
 
 import { log } from "./logging";
-import { type IMinidumpSummary, summarizeMinidumpFile } from "./minidump";
+import {
+  DUMP_WITHOUT_CRASHING_CODE,
+  type IMinidumpSummary,
+  summarizeMinidumpFile,
+} from "./minidump";
 import { createVortexResource } from "./telemetry/resources";
 import { COLLECTOR_URL, OTLP_HEADERS } from "./telemetry/setup";
 import { isTelemetryEnabled } from "./telemetry/state";
@@ -25,19 +35,33 @@ export function isErrorReportingDisabled(): boolean {
   return errorReportingDisabled;
 }
 
+// Object props (e.g. VortexError.data) render as JSON; template
+// interpolation would flatten them to "[object Object]". Circular
+// values fall back to util.inspect, which renders them legibly.
+function formatDetailValue(value: unknown): string {
+  if (typeof value !== "object" || value === null) {
+    return String(value);
+  }
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return inspect(value);
+  }
+}
+
 export function errorToReportableError(error: Error): ReportableError {
   return {
     message: error.message,
     stack: error.stack,
     allowReport: "allowReport" in error && !!error.allowReport,
     details: Object.entries(error)
-      .map(([key, value]) => `${key}: ${value}`)
+      .map(([key, value]) => `${key}: ${formatDetailValue(value)}`)
       .join("\n"),
   };
 }
 
 interface ICrashInfo {
-  type: string;
+  type: CrashType;
   error: ReportableError;
   context?: Record<string, string>;
   reportProcess?: string;
@@ -134,8 +158,10 @@ export async function sendPendingCrashReport(): Promise<void> {
  * crashinfo.json. Renderer/gpu dumps were already reported live by the
  * *-process-gone handlers, so they are deleted unreported; main-process
  * ("browser") dumps — and dumps too corrupt to attribute — get one
- * crash.report span for the newest one. Dumps are only deleted once the
- * report is sent, so a failed send retries on the next startup.
+ * crash.report span for the newest one. The dump folder outlives installs,
+ * so dumps written by another Vortex version are discarded rather than
+ * reported as this version's crashes. Dumps are only deleted once the report
+ * is sent, so a failed send retries on the next startup.
  *
  * Each dump is claimed by an atomic rename first (same protocol as
  * sendPendingCrashReport), so concurrent instances never sweep the same
@@ -143,8 +169,10 @@ export async function sendPendingCrashReport(): Promise<void> {
  */
 export async function sendPendingNativeCrashReport(): Promise<void> {
   const dumps = await claimCrashDumps();
+  const installedAt = await modifiedTime(process.execPath);
 
   const unreported: Array<{ path: string; summary: IMinidumpSummary | undefined }> = [];
+  let stale = 0;
   for (const dump of dumps) {
     // anything beyond the newest few is stale backlog, not worth a report
     if (unreported.length >= MAX_PROCESSED_DUMPS) {
@@ -152,18 +180,28 @@ export async function sendPendingNativeCrashReport(): Promise<void> {
       continue;
     }
     const summary = await summarizeMinidumpFile(dump.path);
-    if (summary?.processType !== undefined && summary.processType !== "browser") {
+    if (!isFromCurrentBuild(summary?.appVersion, app.getVersion(), dump.mtimeMs, installedAt)) {
+      stale += 1;
+      await removeQuietly(dump.path);
+    } else if (
+      summary?.exceptionCode === DUMP_WITHOUT_CRASHING_CODE ||
+      (summary?.processType !== undefined && summary.processType !== "browser")
+    ) {
       await removeQuietly(dump.path);
     } else {
       unreported.push({ path: dump.path, summary });
     }
+  }
+  if (stale > 0) {
+    log("info", "discarded crash dumps left by other Vortex versions", { count: stale });
   }
 
   if (unreported.length === 0) {
     return;
   }
 
-  const primary = unreported[0]?.summary;
+  // the newest dump we can actually read; unreadable ones only add to the count
+  const primary = unreported.find((dump) => dump.summary !== undefined)?.summary;
 
   const attributes: Record<string, string | number> = {
     "crash.native.dumpCount": unreported.length,
@@ -180,12 +218,22 @@ export async function sendPendingNativeCrashReport(): Promise<void> {
     if (primary.moduleOffset !== undefined) {
       attributes["crash.native.moduleOffset"] = primary.moduleOffset;
     }
+    if (primary.moduleId !== undefined) {
+      attributes["crash.native.moduleId"] = primary.moduleId;
+    }
     if (primary.processType !== undefined) {
       attributes["crash.native.processType"] = primary.processType;
+    }
+    if (primary.fatalMessage !== undefined) {
+      attributes["crash.native.fatalMessage"] = sanitizeFramePath(primary.fatalMessage);
     }
   }
 
   const error: ReportableError = {
+    title:
+      primary?.module !== undefined
+        ? `Native crash in ${primary.module}`
+        : "Native crash (unreadable dump)",
     message: describeNativeCrash(primary, unreported.length),
     code: primary?.exceptionCode ?? "native-crash",
   };
@@ -218,6 +266,31 @@ export async function sendPendingNativeCrashReport(): Promise<void> {
 }
 
 const MAX_PROCESSED_DUMPS = 5;
+
+/**
+ * Whether a dump was written by the running build. Readable dumps carry the
+ * writer's version; an unreadable dump older than the executable predates
+ * this install.
+ */
+export function isFromCurrentBuild(
+  dumpVersion: string | undefined,
+  appVersion: string,
+  dumpMtimeMs: number,
+  installedAtMs: number | undefined,
+): boolean {
+  if (dumpVersion !== undefined) {
+    return dumpVersion === appVersion;
+  }
+  return installedAtMs === undefined || dumpMtimeMs >= installedAtMs;
+}
+
+async function modifiedTime(filePath: string): Promise<number | undefined> {
+  try {
+    return (await stat(filePath)).mtimeMs;
+  } catch {
+    return undefined;
+  }
+}
 
 /**
  * Claim every crash dump via atomic rename to *.sending — of concurrent
@@ -260,7 +333,8 @@ const describeNativeCrash = (summary: IMinidumpSummary | undefined, dumpCount: n
       ? `${summary.exceptionName} (${summary.exceptionCode})`
       : summary.exceptionCode;
   const where = summary.module !== undefined ? ` in ${summary.module}+${summary.moduleOffset}` : "";
-  return `Previous session crashed: ${what}${where}`;
+  const why = summary.fatalMessage !== undefined ? `: ${summary.fatalMessage}` : "";
+  return `Previous session crashed: ${what}${where}${why}`;
 };
 
 interface IDumpFile {
@@ -297,12 +371,39 @@ async function collectCrashDumps(): Promise<IDumpFile[]> {
   return found;
 }
 
+/** What identifies a crash site when there is no JavaScript stack to hash. */
+const CRASH_IDENTITY_ATTRIBUTES = [
+  "crash.sourceProcess",
+  "crash.exitCode",
+  "crash.native.exceptionCode",
+  "crash.native.module",
+  "crash.native.moduleOffset",
+];
+
+/**
+ * Fingerprint for crashes without a JavaScript stack (native dumps, processes
+ * gone), so the backend dedupes and resolves them like error reports.
+ */
+export function crashFingerprint(
+  appVersion: string,
+  type: CrashType,
+  error: ReportableError,
+  attributes: Record<string, string | number | boolean>,
+): string {
+  return computeIdentityFingerprint(
+    appVersion,
+    type,
+    error.code ?? "",
+    ...CRASH_IDENTITY_ATTRIBUTES.map((key) => String(attributes[key] ?? "")),
+  );
+}
+
 /**
  * Create a short-lived OTel provider, record a crash error span,
  * flush the export, and shut down.
  */
 export async function reportCrash(
-  type: string,
+  type: CrashType,
   error: ReportableError,
   context?: Record<string, string>,
   sourceProcess?: string,
@@ -330,20 +431,21 @@ export async function reportCrash(
 
   try {
     const tracer = provider.getTracer("vortex.crash");
-    const span = tracer.startSpan("crash.report", {
-      attributes: {
-        "crash.type": type,
-        "crash.sourceProcess": sourceProcess ?? "unknown",
-        "error.message": sanitizeFramePath(error.message),
-        "error.code": error.code ?? "",
-      },
-    });
+    const spanAttributes: Record<string, string | number | boolean> = {
+      "crash.type": type,
+      "crash.sourceProcess": sourceProcess ?? "unknown",
+      "error.message": sanitizeFramePath(error.message),
+      "error.code": error.code ?? "",
+      ...attributes,
+    };
+    const span = tracer.startSpan("crash.report", { attributes: spanAttributes });
 
     const errorObj = new Error(error.message);
     errorObj.stack = error.stack;
     recordErrorOnSpan(span, errorObj, app.getVersion(), context, {
-      "error.title": error.title ?? "",
-      ...attributes,
+      "error.title": error.title ?? `Native crash: ${type}`,
+      // overridden by the stack fingerprint when the error has a stack
+      "error.fingerprint": crashFingerprint(app.getVersion(), type, error, spanAttributes),
     });
     span.end();
   } finally {

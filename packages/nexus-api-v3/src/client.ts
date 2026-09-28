@@ -2,6 +2,10 @@ import createClient, { type Middleware } from "openapi-fetch";
 
 import { V3ApiError } from "./errors";
 import type { components, paths } from "./generated/nexus-api-v3";
+import type {
+  components as internalComponents,
+  paths as internalPaths,
+} from "./generated/nexus-api-v3-internal";
 
 export interface NexusV3ClientOptions {
   baseUrl: string;
@@ -20,7 +24,8 @@ export interface NexusV3ClientOptions {
 
 export type NexusV3Client = ReturnType<typeof createNexusV3Client>;
 
-export function createNexusV3Client(options: NexusV3ClientOptions) {
+/** User-Agent plus bearer-else-apikey auth, shared by the public and internal clients. */
+function authHeaders(options: NexusV3ClientOptions): Record<string, string> {
   const headers: Record<string, string> = {};
 
   if (options.userAgent) {
@@ -33,9 +38,13 @@ export function createNexusV3Client(options: NexusV3ClientOptions) {
     headers["apikey"] = options.apiKey;
   }
 
+  return headers;
+}
+
+export function createNexusV3Client(options: NexusV3ClientOptions) {
   const client = createClient<paths>({
     baseUrl: options.baseUrl,
-    headers,
+    headers: authHeaders(options),
     signal: options.signal,
   });
 
@@ -160,6 +169,21 @@ export function createNexusV3Client(options: NexusV3ClientOptions) {
       return Array.from(data.data.versions);
     },
 
+    /** Fetch Vortex extensions, themes, and translations, split into three lists. */
+    async getVortexExtensions(): Promise<{
+      extensions: components["schemas"]["VortexExtension"][];
+      themes: components["schemas"]["VortexAsset"][];
+      translations: components["schemas"]["VortexTranslation"][];
+    }> {
+      const { data, error, response } = await client.GET("/vortex/extensions");
+      if (error) throw toV3Error(error, response);
+      return {
+        extensions: Array.from(data.data.extensions),
+        themes: Array.from(data.data.themes),
+        translations: Array.from(data.data.translations),
+      };
+    },
+
     /**
      * Resolve mod-level display details (name, summary, status, thumbnail, adult
      * flag) for a set of composite mod UIDs. Up to 2000 `modIds` per call;
@@ -171,6 +195,38 @@ export function createNexusV3Client(options: NexusV3ClientOptions) {
       });
       if (error) throw toV3Error(error, response);
       return Array.from(data.data.mods);
+    },
+  };
+}
+
+export type NexusV3InternalClient = ReturnType<typeof createNexusV3InternalClient>;
+
+/**
+ * Client for Internal (`x-badges: Internal`) v3 endpoints, typed against the vendored telemetry
+ * fragment. Same auth and transport as the public client; kept as a separate client so the
+ * internal paths stay off the public surface.
+ */
+export function createNexusV3InternalClient(options: NexusV3ClientOptions) {
+  const client = createClient<internalPaths>({
+    baseUrl: options.baseUrl,
+    headers: authHeaders(options),
+    signal: options.signal,
+  });
+
+  for (const mw of options.middleware ?? []) {
+    client.use(mw);
+  }
+
+  return {
+    ...client,
+
+    /** Submit a Vortex mod-list snapshot. Returns the accepted-count ack; throws on a non-2xx. */
+    async submitModLists(snapshot: internalComponents["schemas"]["ModListSnapshot"]) {
+      const { data, error, response } = await client.POST("/telemetry/mod-lists", {
+        body: snapshot,
+      });
+      if (error) throw toV3Error(error, response);
+      return data.data;
     },
   };
 }

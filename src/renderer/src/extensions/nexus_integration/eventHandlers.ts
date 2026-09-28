@@ -25,8 +25,8 @@ import type {
 } from "@nexusmods/nexus-api";
 import type Nexus from "@nexusmods/nexus-api";
 import { NexusError, RateLimitError, TimeoutError } from "@nexusmods/nexus-api";
-import { getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
-import { AlreadyDownloaded, DownloadIsHTML } from "@vortex/shared/errors";
+import { getErrorMessageOrDefault, parseError, unknownToError } from "@vortex/shared";
+import { AlreadyDownloaded } from "@vortex/shared/errors";
 import Bluebird from "bluebird";
 import * as semver from "semver";
 
@@ -55,8 +55,9 @@ import { setUpdatingMods } from "../mod_management/actions/session";
 import type { IModListItem } from "../news_dashlet/types";
 import { setUserInfo } from "./actions/persistent";
 import { NEXUS_BASE_URL, NEXUS_GAMES_URL } from "./constants";
+import { ensureFreshMembership, refreshMembership } from "./membership";
 import { nxmModUrl } from "./NXMUrl";
-import { isLoggedIn } from "./selectors";
+import { isLoggedIn, isPremium } from "./selectors";
 import type { IValidateKeyDataV2 } from "./types/IValidateKeyData";
 import {
   checkModVersionsImpl,
@@ -69,7 +70,6 @@ import {
   resolveGraphError,
   startDownload,
   updateUserInfoFromRefreshedToken,
-  transformUserInfoFromApi,
   updateKey,
   updateToken,
 } from "./util";
@@ -366,14 +366,17 @@ function downloadFile(
 ): Bluebird<string> {
   const state: IState = api.getState();
   const gameId = game?.id ?? SITE_ID;
-  if (
-    game != null &&
-    gameId !== SITE_ID &&
-    !getSafe(state, ["persistent", "nexus", "userInfo", "isPremium"], false)
-  ) {
-    // nexusmods can't let users download files directly from client, without
-    // showing ads
-    return Bluebird.reject(new ProcessCanceled("Only available to premium users"));
+  if (game != null && gameId !== SITE_ID && !isPremium(state)) {
+    // The cached membership is the only thing saying no, and a plan bought on the website pushes
+    // nothing to Vortex - so confirm it before refusing a download the user can now make.
+    return Bluebird.resolve(ensureFreshMembership(api, nexus)).then(() => {
+      if (isPremium(api.getState())) {
+        return downloadFile(api, nexus, game, modId, fileId, fileName, allowInstall);
+      }
+      // nexusmods can't let users download files directly from client, without
+      // showing ads
+      return Bluebird.reject(new ProcessCanceled("Only available to premium users"));
+    });
   }
   // TODO: Need some way to identify if this request is actually for a nexus mod
   const url = nxmModUrl(game, gameId, modId, fileId);
@@ -518,7 +521,13 @@ export function onModUpdate(api: IExtensionApi, nexus: Nexus) {
           api.events.emit("start-install-download", downloadId);
         }
       })
-      .catch(DownloadIsHTML, (err) => undefined)
+      .catch((err: unknown) => {
+        // "DownloadIsHTML": the server answered the file request with a web page
+        // (consent flow, redirect, dead link). Swallow it; the caller has already
+        // emitted the appropriate state change for "no download started".
+        if (parseError(err).data.kind === "download:is-html") return undefined;
+        throw err;
+      })
       .catch(DataInvalid, () => {
         const url = nxmModUrl(game, gameId, modId, fileId);
         api.showErrorNotification("Invalid URL", url, { allowReport: false });
@@ -948,6 +957,32 @@ export function onGetModRequirements(
   };
 }
 
+/**
+ * Fetches endorsement counts for the given mod UIDs in one batched query.
+ * The result is keyed by UID; mods the query cannot resolve are omitted.
+ */
+export function onGetModEndorsementCounts(
+  nexus: Nexus,
+): (uids: string[]) => Bluebird<Record<string, number>> {
+  return (uids: string[]) => {
+    if (uids.length === 0) {
+      return Bluebird.resolve({});
+    }
+
+    return Bluebird.resolve(nexus.modsByUid({ uid: true, endorsements: true }, uids)).then(
+      (mods) => {
+        const result: Record<string, number> = {};
+        for (const mod of mods) {
+          if (mod.uid !== undefined && mod.endorsements !== undefined) {
+            result[mod.uid] = mod.endorsements;
+          }
+        }
+        return result;
+      },
+    );
+  };
+}
+
 export function onGetUserKeyData(
   api: IExtensionApi,
 ): (...args: any[]) => Promise<IValidateKeyDataV2> {
@@ -1205,6 +1240,13 @@ export function onGetLatestMods(api: IExtensionApi, nexus: Nexus) {
   };
 }
 
+/**
+ * Handles the `refresh-user-info` event. It goes through refreshMembership so a scheduled re-read
+ * shares the in-flight request and the freshness stamp with the callers that await one.
+ *
+ * The logged-out check belongs here rather than in refreshMembership: several places raise this
+ * event and not all of them check first, and a read without credentials raises an error toast.
+ */
 export function onRefreshUserInfo(nexus: Nexus, api: IExtensionApi) {
   return (): Bluebird<void> => {
     if (!isLoggedIn(api.getState())) {
@@ -1212,20 +1254,7 @@ export function onRefreshUserInfo(nexus: Nexus, api: IExtensionApi) {
       return Bluebird.resolve();
     }
 
-    log("info", "onRefreshUserInfo() started");
-
-    return Bluebird.resolve(nexus.getUserInfo())
-      .then((apiUserInfo) => {
-        api.store.dispatch(setUserInfo(transformUserInfoFromApi(apiUserInfo)));
-        // don't log the response payload: it contains PII (email, age verification, preferences)
-        log("info", "onRefreshUserInfo() user info updated");
-      })
-      .catch((err) => {
-        log("error", `onRefreshUserInfo() nexus.getUserInfo response ${err.message}`, err);
-        showError(api.store.dispatch, "An error occurred refreshing user info", err, {
-          allowReport: false,
-        });
-      });
+    return Bluebird.resolve(refreshMembership(api, nexus)).then(() => undefined);
   };
 }
 
