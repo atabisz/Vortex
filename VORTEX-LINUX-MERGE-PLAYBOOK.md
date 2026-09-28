@@ -329,6 +329,18 @@ The upstream-wins resolution at `488f84097` swapped to `mode === "production" ? 
 
 ---
 
+## §16 Linux packaging target builds AppImage + deb
+
+```bash
+grep -n -A 1 "linux: {" src/main/electron-builder.config.cjs
+```
+
+The `linux.target` in `src/main/electron-builder.config.cjs` MUST include `"AppImage"` and `"deb"`. `release-linux.yml` smoke-launches `./dist/vortex-setup*.AppImage`, renames it to the stable `vortex-setup.AppImage` the README and PKGBUILD link to, and uploads it next to `vortex_amd64.deb`. If the target regresses, `pnpm package:nosign` still exits 0, but there's nothing to launch, rename or upload.
+
+This already happened once. On 2026-06-24 the v2.1.1 sync brought back upstream's `"target": ["zip"]`, and the release run failed at the AppImage step. It read as a scripting bug in the rename step, which got rewritten three times (`02cc828e6`, `fa94178b3`, `18e159705`) and then dropped (`cc04f9143`), before `536a63a62` restored the target. Losing the rename meant `latest-linux` kept serving the 2026-05-29 AppImage until `2be888bdb` put it back. The probe checks the target in the source tree, so a sync that resets it fails in the smoke test instead of in the release run.
+
+---
+
 ## What we've learned the hard way
 
 These are the non-obvious things that cost real time during the 2026-05-08 merge, written down so they don't cost the same time twice.
@@ -638,6 +650,8 @@ Durable references to the fork-local Linux fixes this file depends on. If any of
 | Phase 39–43 (v8.2) — fix-up: `.oxfmtrc.json` ignore `fingerprints/dist/**` (see §13)                            | `fe07ccee6`                              | _master-only_    |
 | **v8.2 milestone closure** — merge `c4bd2afb7` of `sync/upstream-v2.0.2` + tag `v2.0.2-linux-rebased`           | `c4bd2afb7` (tag `ec12890c3`)            | _deferred_       |
 | v2.6.3 sync — hand-merge on `sync/upstream-v2.6.3` (base was `v2.5.0`; automation blocked, see dist/CI gotchas) | `02affcf52`                              | _master-only_    |
+| Linux electron-builder target restored to AppImage + deb after upstream `zip` regression (see §16)              | `536a63a62`                              | _master-only_    |
+| Stable-name `vortex-setup.AppImage` rename restored in `release-linux.yml` (see §16)                            | `2be888bdb`                              | _master-only_    |
 | v2.7.1 sync — hand-merge of `release/v2.7` @ `48c20dcab` (tag was on master, see release-tag gotchas)           | `944f5f9da`                              | _master-only_    |
 
 Phase 36 cherry-pick filter range: `merge-base(linux-port, master) = 538aef374..c4d1b4555` with `--no-merges` + patch-id dedup → 407 candidates → 52 clean + 12 auto-resolved + 324 skipped + 2 fix-ups = 66 commits added to linux-port.

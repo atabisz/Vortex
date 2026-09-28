@@ -227,6 +227,15 @@ else
   probe "webpack writes renderer.js to src/main/build/" FAIL "webpack output path != src/main/build — renderer.js missing from app.asar, splash → blank window"
 fi
 
+# §16 — Linux packaging target builds AppImage + deb
+section 16 "Linux target is AppImage + deb"
+linux_target=$(awk '/^    linux: \{/{f=1} f && /target:/{print; exit}' src/main/electron-builder.config.cjs 2>/dev/null)
+if [[ "$linux_target" == *'"AppImage"'* && "$linux_target" == *'"deb"'* ]]; then
+  probe "electron-builder linux.target includes AppImage and deb" PASS
+else
+  probe "electron-builder linux.target includes AppImage and deb" FAIL "linux target is '${linux_target:-not found}' in src/main/electron-builder.config.cjs — release-linux.yml publishes no AppImage"
+fi
+
 # §11 — Deliberate test-runner divergences (NEGATIVE gates)
 section 11 "Vitest-only renderer (no Jest scaffolding)"
 [[ ! -f src/renderer/jest.config.mjs ]] \
