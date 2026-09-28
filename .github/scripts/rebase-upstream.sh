@@ -81,6 +81,10 @@ fi
 # GITHUB_TOKEN cannot push workflow file changes — and we don't want upstream's
 # CI config overwriting ours anyway. Restoring from master keeps our workflows
 # intact and keeps the push within the token's permissions.
+# Remove first: checkout alone restores master's files but leaves any workflow
+# upstream newly added (e.g. publish-vortex-api.yml in v2.7.1), and the push is
+# then rejected for lacking the `workflows` permission.
+git rm -r -q --ignore-unmatch .github/workflows/
 git checkout master -- .github/workflows/ 2>/dev/null || true
 if ! git diff --cached --quiet; then
   git commit --no-edit -m "restore fork workflows after upstream merge" || true
