@@ -3,11 +3,14 @@
 # Fork (Linux port): https://github.com/atabisz/Vortex
 #
 # This package wraps the pre-built AppImage from the Linux fork's GitHub Releases.
-# To update: bump pkgver to the new release tag (without the leading 'v'), then
-# regenerate .SRCINFO with: makepkg --printsrcinfo > .SRCINFO
+# To update: set pkgver to the new release tag without the leading 'v' or the
+# '-linux' suffix (v2.7.1-linux -> 2.7.1), and _appimage to that release's
+# AppImage asset name — CI stamps it with the build time, so read it from the
+# release page. Then regenerate .SRCINFO with: makepkg --printsrcinfo > .SRCINFO
 
 pkgname=vortex-linux-bin
-pkgver=4.0.0
+pkgver=2.7.1
+_appimage="vortex-setup-1.0.202609280813.AppImage"
 pkgrel=1
 pkgdesc="Nexus Mods mod manager — unofficial Linux AppImage port"
 arch=("x86_64")
@@ -18,7 +21,7 @@ provides=("vortex")
 conflicts=("vortex")
 options=("!strip")
 source=(
-    "vortex-setup.AppImage::https://github.com/atabisz/Vortex/releases/download/v${pkgver}/vortex-setup.AppImage"
+    "vortex-setup.AppImage::https://github.com/atabisz/Vortex/releases/download/v${pkgver}-linux/${_appimage}"
     "vortex-linux.desktop"
     "vortex-linux.png::https://raw.githubusercontent.com/atabisz/Vortex/master/assets/images/vortex.png"
 )
