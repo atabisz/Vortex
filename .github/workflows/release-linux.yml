@@ -112,6 +112,22 @@ jobs:
       - name: Verify asar-unpacked paths
         run: node scripts/verify-asar-unpacked.cjs
 
+      # electron-builder stamps the AppImage with the build version. Publish it
+      # under a fixed name so the README and PKGBUILD can link to it directly.
+      # (A June attempt at this failed only because the Linux target had
+      # regressed to zip and no AppImage was built; the smoke step above now
+      # guarantees one exists.)
+      - name: Rename AppImage to stable filename
+        run: |
+          appimage="$(find ./dist -maxdepth 1 -name 'vortex-setup*.AppImage' -print -quit)"
+          if [ -z "$appimage" ]; then
+            ls -la ./dist
+            exit 1
+          fi
+          if [ "$appimage" != "./dist/vortex-setup.AppImage" ]; then
+            mv "$appimage" ./dist/vortex-setup.AppImage
+          fi
+
       # On master branch pushes, force-move the rolling latest-linux tag to this commit
       # so the GitHub release always points to the most recent build.
       - name: Update latest-linux tag
@@ -125,7 +141,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./dist/vortex-setup*.AppImage
+            ./dist/vortex-setup.AppImage
             ./dist/vortex_amd64.deb
             ./dist/latest-linux.yml
           prerelease: false
@@ -147,7 +163,7 @@ jobs:
         with:
           tag_name: latest-linux
           files: |
-            ./dist/vortex-setup*.AppImage
+            ./dist/vortex-setup.AppImage
             ./dist/vortex_amd64.deb
             ./dist/latest-linux.yml
           prerelease: true

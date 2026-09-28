@@ -4,9 +4,9 @@
 #
 # This package wraps the pre-built AppImage from the Linux fork's GitHub Releases.
 # To update: set pkgver to the new release tag without the leading 'v' or the
-# '-linux' suffix (v2.7.1-linux -> 2.7.1), and _appimage to that release's
-# AppImage asset name — CI stamps it with the build time, so read it from the
-# release page. Then regenerate .SRCINFO with: makepkg --printsrcinfo > .SRCINFO
+# '-linux' suffix (v2.7.1-linux -> 2.7.1). _appimage is that release's AppImage
+# asset name: releases up to v2.7.1-linux carry a build-stamped name, later ones
+# publish plain "vortex-setup.AppImage". Then regenerate .SRCINFO with: makepkg --printsrcinfo > .SRCINFO
 
 pkgname=vortex-linux-bin
 pkgver=2.7.1
