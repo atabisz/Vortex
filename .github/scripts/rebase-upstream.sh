@@ -28,9 +28,41 @@ fi
 
 echo "Target upstream tag: ${UPSTREAM_TAG}"
 
+# Step 2b: Resolve the commit to merge. Upstream has tagged a release on master
+# instead of its release branch (v2.7.1 = a master merge carrying 2.8 beta code,
+# with v2.7.0 not even an ancestor). When the tag isn't on release/vX.Y, the
+# branch head is what shipped — but only trust it if its CHANGELOG tops out at
+# the tagged version; otherwise the branch has moved on and we can't tell which
+# commit is the release, so stop and let a human pick (UPSTREAM_REF).
+MERGE_REF="${UPSTREAM_TAG}"
+MERGE_NOTE=""
+if [[ -z "${UPSTREAM_REF:-}" && "${UPSTREAM_TAG}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+  RELEASE_BRANCH="release/v${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+  TAG_VERSION="${UPSTREAM_TAG#v}"
+  if git fetch upstream "+refs/heads/${RELEASE_BRANCH}:refs/remotes/upstream/${RELEASE_BRANCH}" \
+    --no-recurse-submodules 2>/dev/null; then
+    if ! git merge-base --is-ancestor "${UPSTREAM_TAG}" "upstream/${RELEASE_BRANCH}"; then
+      TOP_VERSION=$(git show "upstream/${RELEASE_BRANCH}:CHANGELOG.md" 2>/dev/null \
+        | grep -m1 -oE '^## \[[^]]+\]' | sed -E 's/^## \[(.*)\]$/\1/' || true)
+      if [[ "${TOP_VERSION}" != "${TAG_VERSION}" ]]; then
+        echo "::error::${UPSTREAM_TAG} is not on ${RELEASE_BRANCH}, and that branch's CHANGELOG tops out at '${TOP_VERSION}', not ${TAG_VERSION}. Re-run with upstream_ref set to the released commit (see VORTEX-LINUX-MERGE-PLAYBOOK.md, upstream release tags)."
+        exit 1
+      fi
+      MERGE_REF="upstream/${RELEASE_BRANCH}"
+      MERGE_SHA=$(git rev-parse --short "${MERGE_REF}")
+      echo "::warning::${UPSTREAM_TAG} is not on ${RELEASE_BRANCH}; merging ${RELEASE_BRANCH} @ ${MERGE_SHA} instead."
+      MERGE_NOTE="${RELEASE_BRANCH} @ ${MERGE_SHA}"
+    fi
+  else
+    echo "No upstream ${RELEASE_BRANCH} branch; merging the tag as-is."
+  fi
+fi
+
+echo "Merge ref: ${MERGE_REF}"
+
 # Step 3: Check if already up to date
-if git merge-base --is-ancestor "${UPSTREAM_TAG}" master; then
-  echo "Fork master already includes ${UPSTREAM_TAG}, nothing to do."
+if git merge-base --is-ancestor "${MERGE_REF}" master; then
+  echo "Fork master already includes ${MERGE_REF}, nothing to do."
   exit 0
 fi
 
@@ -47,7 +79,11 @@ git config merge.ours.driver true
 # Step 5: Attempt merge of upstream tag into the branch — capture conflicts without failing job
 HAS_CONFLICTS=false
 CONFLICT_FILES=""
-if ! git merge "${UPSTREAM_TAG}" --no-edit -m "merge upstream ${UPSTREAM_TAG} into master"; then
+MERGE_MSG="merge upstream ${UPSTREAM_TAG} into master"
+if [[ -n "${MERGE_NOTE}" ]]; then
+  MERGE_MSG="merge upstream ${UPSTREAM_TAG} (${MERGE_NOTE}) into master"
+fi
+if ! git merge "${MERGE_REF}" --no-edit -m "${MERGE_MSG}"; then
   echo "Merge conflicts detected."
   HAS_CONFLICTS=true
   # Capture conflicted files before staging (excluding submodule paths)
@@ -94,15 +130,22 @@ fi
 git push --force origin "HEAD:refs/heads/${BRANCH}"
 
 # Step 7: Build PR body
-FORK_BASE=$(git merge-base master "upstream/${UPSTREAM_TAG}" 2>/dev/null || echo "unknown")
-COMMIT_COUNT=$(git rev-list --count "${FORK_BASE}..upstream/${UPSTREAM_TAG}" 2>/dev/null || echo "?")
-COMMIT_LOG=$(git log --oneline "${FORK_BASE}..upstream/${UPSTREAM_TAG}" 2>/dev/null | head -20 || echo "(unavailable)")
+FORK_BASE=$(git merge-base master "${MERGE_REF}" 2>/dev/null || echo "unknown")
+COMMIT_COUNT=$(git rev-list --count "${FORK_BASE}..${MERGE_REF}" 2>/dev/null || echo "?")
+COMMIT_LOG=$(git log --oneline "${FORK_BASE}..${MERGE_REF}" 2>/dev/null | head -20 || echo "(unavailable)")
+MERGE_REF_LINE=""
+if [[ -n "${MERGE_NOTE}" ]]; then
+  MERGE_REF_LINE="
+> [!NOTE]
+> \`${UPSTREAM_TAG}\` is not on its release branch, so this merges \`${MERGE_NOTE}\` instead.
+"
+fi
 
 if [[ "${HAS_CONFLICTS}" == "true" ]]; then
   PR_BODY="## Sync upstream ${UPSTREAM_TAG} into master
 
 **Upstream tag:** \`${UPSTREAM_TAG}\`
-**Upstream release:** https://github.com/Nexus-Mods/Vortex/releases/tag/${UPSTREAM_TAG}
+**Upstream release:** https://github.com/Nexus-Mods/Vortex/releases/tag/${UPSTREAM_TAG}${MERGE_REF_LINE}
 
 > [!WARNING]
 > Conflicts detected — manual resolution required before merging.
@@ -121,7 +164,7 @@ else
   PR_BODY="## Sync upstream ${UPSTREAM_TAG} into master
 
 **Upstream tag:** \`${UPSTREAM_TAG}\`
-**Upstream release:** https://github.com/Nexus-Mods/Vortex/releases/tag/${UPSTREAM_TAG}
+**Upstream release:** https://github.com/Nexus-Mods/Vortex/releases/tag/${UPSTREAM_TAG}${MERGE_REF_LINE}
 **Conflict status:** Clean merge
 **Linux smoke gate:** ${SMOKE_STATUS}
 \`${SMOKE_DETAIL}\`
