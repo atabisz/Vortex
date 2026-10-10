@@ -13,8 +13,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
+<<<<<<< HEAD
           - os: windows-latest
           - os: ubuntu-latest
+=======
+          - os-name: vortex-e2e
+          - os-name: platform-cluster-public
+
+    runs-on: ${{ matrix.os-name }}
+>>>>>>> v2.8.0
 
     runs-on: ${{ matrix.os }}
     # E2E aren't stable yet. Windows takes too long to execute, Linux is experimental
@@ -42,13 +49,8 @@ jobs:
         with:
           dotnet-version: "9.0.x"
 
-      - name: Install volta, Node.js and Yarn
-        uses: volta-cli/action@v5
-
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.9
-        with:
-          cache: true
+        uses: ./.github/actions/setup-pnpm
 
       - name: Configure node-gyp for VS 2022
         if: runner.os == 'Windows'

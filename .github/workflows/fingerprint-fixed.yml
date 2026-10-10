@@ -27,10 +27,16 @@ jobs:
     # (head branches always start with `cherry-pick/`); the original PR is
     # what fixes the fingerprint, the cherry-pick is just propagation.
     if: >-
+<<<<<<< HEAD
       github.repository == 'Nexus-Mods/Vortex' &&
       (github.event_name == 'workflow_dispatch' ||
       (github.event.pull_request.merged == true &&
       !startsWith(github.event.pull_request.head.ref, 'cherry-pick/')))
+=======
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+      !startsWith(github.event.pull_request.head.ref, 'cherry-pick/'))
+>>>>>>> v2.8.0
     runs-on: platform-cluster-public
     steps:
       - uses: actions/checkout@v7

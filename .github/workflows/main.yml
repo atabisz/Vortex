@@ -2,6 +2,7 @@ name: Main
 
 on:
   push:
+<<<<<<< HEAD
     branches: [master, rebase/*]
     paths-ignore:
       - ".planning/**"
@@ -9,6 +10,11 @@ on:
       - "*.md"
   pull_request:
     branches: [master]
+=======
+    branches: [master, release/*]
+  pull_request:
+    branches: [master, release/*]
+>>>>>>> v2.8.0
   workflow_dispatch:
 
 concurrency:
@@ -67,10 +73,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install volta, Node.js and Yarn
-        uses: volta-cli/action@v5
-
       - name: Install pnpm
+<<<<<<< HEAD
         uses: pnpm/action-setup@v6.0.9
         with:
           cache: true
@@ -81,6 +85,9 @@ jobs:
         run: |
           echo "npm_config_msvs_version=2022" >> $env:GITHUB_ENV
           echo "GYP_MSVS_VERSION=2022" >> $env:GITHUB_ENV
+=======
+        uses: ./.github/actions/setup-pnpm
+>>>>>>> v2.8.0
 
       # NOTE(erri120): fontconfig required by font-scanner required by theme-switcher
       # cmake and liblz4-dev required for native addon compilation on Linux

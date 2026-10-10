@@ -1,5 +1,9 @@
 import { createWriteStream, existsSync } from "node:fs";
+<<<<<<< HEAD
 import { chmod, copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+=======
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+>>>>>>> v2.8.0
 import { dirname, resolve } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
@@ -8,10 +12,13 @@ const MAIN_DIR = resolve(import.meta.dirname);
 const MAIN_PACKAGE_PATH = resolve(MAIN_DIR, "package.json");
 const DIST_DIR = resolve(MAIN_DIR, "build");
 const DIST_PACKAGE_PATH = resolve(DIST_DIR, "package.json");
+<<<<<<< HEAD
 const WINAPI_STUB_DIR = [
   resolve(MAIN_DIR, "../../../build/linux/winapi-bindings-stub"),
   resolve(MAIN_DIR, "../../build/linux/winapi-bindings-stub"),
 ].find((dir) => existsSync(dir));
+=======
+>>>>>>> v2.8.0
 // Runtimes bundled into the installer; also declared as winget dependencies by winget-release.yml.
 const RUNTIME_DEPS_FILE = "runtime-dependencies.json";
 
@@ -58,6 +65,7 @@ async function prepareWin() {
   for (const { file, url } of runtimeDeps) {
     await downloadFile(url, resolve(tempDir, file));
   }
+<<<<<<< HEAD
 }
 
 async function replaceWithWinapiStub(dir) {
@@ -118,6 +126,8 @@ async function prepareLinux() {
   if (existsSync(fomodIpcBinary)) {
     await chmod(fomodIpcBinary, 0o755);
   }
+=======
+>>>>>>> v2.8.0
 }
 
 async function main() {
