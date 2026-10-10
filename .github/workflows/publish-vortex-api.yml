@@ -36,11 +36,8 @@ permissions:
 
 jobs:
   publish:
-<<<<<<< HEAD
     # Fork releases must never publish the official @nexusmods/vortex-api package.
     if: github.repository == 'Nexus-Mods/Vortex'
-=======
->>>>>>> v2.8.0
     runs-on: ubuntu-latest
     env:
       TAG: ${{ github.event.release.tag_name || inputs.tag }}

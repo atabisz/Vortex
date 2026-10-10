@@ -23,11 +23,8 @@ concurrency:
 
 jobs:
   sync:
-<<<<<<< HEAD
     # Needs upstream's self-hosted runner + ClickHouse secrets; no-op in forks.
     if: github.repository == 'Nexus-Mods/Vortex'
-=======
->>>>>>> v2.8.0
     runs-on: platform-cluster-public
     steps:
       - uses: actions/checkout@v7

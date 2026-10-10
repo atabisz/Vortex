@@ -40,12 +40,8 @@ jobs:
     name: Submit to winget-pkgs
     # `released` never fires for pre-releases, but a beta could still be
     # published as a full release by mistake; winget has no channels.
-<<<<<<< HEAD
     # Fork releases must never submit to the official NexusMods.Vortex winget package.
     if: ${{ github.repository == 'Nexus-Mods/Vortex' && !contains(inputs.tag || github.event.release.tag_name, '-') }}
-=======
-    if: ${{ !contains(inputs.tag || github.event.release.tag_name, '-') }}
->>>>>>> v2.8.0
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.WINGET_GITHUB_PAT }}
