@@ -116,6 +116,7 @@ import allTypesSupported from "./util/allTypesSupported";
 import * as basicInstaller from "./util/basicInstaller";
 import BlacklistSet from "./util/BlacklistSet";
 import { genSubDirFunc, purgeMods, purgeModsInPath } from "./util/deploy";
+import { reportRecordedFailures, resetDeploymentFailures } from "./util/deploymentFailures";
 import {
   getAllActivators,
   getCurrentActivator,
@@ -727,6 +728,7 @@ function genUpdateModDeployment(installManager: InstallManager) {
     // will contain all mods fully overwritten (this also includes mods that didn't
     // files to begin with)
     let sortedModList: IMod[];
+    let deployStartedAt: number;
 
     const userGate = () => {
       if (!appContext.isProfileChanging && game.deploymentGate !== undefined) {
@@ -782,6 +784,7 @@ function genUpdateModDeployment(installManager: InstallManager) {
               notification.message = t("Deploying mods");
               api.sendNotification(notification);
               api.store.dispatch(startActivity("mods", "deployment"));
+              deployStartedAt = Date.now();
               progress(t("Loading deployment manifest"), 0);
 
               // sequential: load activation order matters per mod type
@@ -840,6 +843,7 @@ function genUpdateModDeployment(installManager: InstallManager) {
               );
 
               progress(t("Starting deployment"), 35);
+              resetDeploymentFailures(api, game.id);
               const deployProgress = (name, percent) =>
                 progress(t("Deploying: ") + name, 50 + percent / 2);
 
@@ -877,7 +881,8 @@ function genUpdateModDeployment(installManager: InstallManager) {
 
             await bakeSettings(api, profile, sortedModList);
 
-            api.store.dispatch(setDeploymentNecessary(game.id, false));
+            const failures = reportRecordedFailures(api, game.id);
+            api.store.dispatch(setDeploymentNecessary(game.id, failures.length > 0));
 
             emitModsDeployed(api, {
               gameId,
@@ -886,6 +891,7 @@ function genUpdateModDeployment(installManager: InstallManager) {
               enabledModCount,
               manual,
               isCollectionPostprocess: deployOptions?.isCollectionPostprocessCall ?? false,
+              durationMs: Date.now() - deployStartedAt,
             });
             void emitModListSnapshot(api, gameId);
           } catch (unknownErr) {
@@ -1264,6 +1270,7 @@ function onDeploySingleMod(api: IExtensionApi) {
           stagingPath,
           activator,
         );
+        resetDeploymentFailures(api, gameId);
         await activator.prepare(dataPath, false, lastActivation, normalize);
         if (mod !== undefined) {
           if (enable !== false) {
@@ -1287,6 +1294,7 @@ function onDeploySingleMod(api: IExtensionApi) {
           newActivation,
           activator.id,
         );
+        reportRecordedFailures(api, gameId);
       } catch (unknownErr) {
         if (activator.cancel !== undefined) {
           activator.cancel(gameId, dataPath, stagingPath);
@@ -1516,6 +1524,10 @@ function once(api: IExtensionApi) {
     (profileId: string, gameId: string, modIds: string[], silent?: boolean) => {
       const state: IState = api.store.getState();
       const profile: IProfile = getSafe(state, ["persistent", "profiles", profileId], undefined);
+      if (profile === undefined) {
+        log("warn", "skipping dependency install, profile no longer exists", { profileId, modIds });
+        return;
+      }
 
       Promise.all(
         modIds.map((modId) =>
@@ -1542,6 +1554,7 @@ function once(api: IExtensionApi) {
         const profile: IProfile = getSafe(state, ["persistent", "profiles", profileId], undefined);
         if (profile === undefined) {
           api.showErrorNotification("Failed to install recommendations", "Invalid profile");
+          return;
         }
 
         Promise.all(

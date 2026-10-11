@@ -43,12 +43,21 @@ const credentials = (roles: string[] = []) => ({
   token: makeToken(roles),
 });
 
+<<<<<<< HEAD
 /** A nexus connection whose credential handover fails the way `err` says. */
 const makeNexus = (err: Error) => {
   const setOAuthCredentials = vi.fn().mockRejectedValue(err);
   const getUserInfo = vi.fn();
 
   return { nexus: { setOAuthCredentials, getUserInfo } as never, setOAuthCredentials, getUserInfo };
+=======
+/** A nexus connection whose account lookup fails the way `err` says. */
+const makeNexus = (err: Error) => {
+  const setTokenProvider = vi.fn().mockResolvedValue(undefined);
+  const getUserInfo = vi.fn().mockRejectedValue(err);
+
+  return { nexus: { setTokenProvider, getUserInfo } as never, setTokenProvider, getUserInfo };
+>>>>>>> v2.8.0
 };
 
 const refused = (statusCode: number) =>
@@ -56,8 +65,13 @@ const refused = (statusCode: number) =>
 
 /**
  * What the OAuth token endpoint answers a refresh with a dead refresh token (revoked, or rotated
+<<<<<<< HEAD
  * away by another install). nexus-api attempts the refresh on behalf of the request that hit the
  * expired access token and hands this back in place of the site's 401.
+=======
+ * away by another install). The session attempts the refresh on behalf of the request that hit
+ * the expired access token, and that request fails with this in place of the site's 401.
+>>>>>>> v2.8.0
  */
 const deadRefreshToken = () =>
   new NexusError(
@@ -72,11 +86,18 @@ const storedCredentials = (harness: ReturnType<IHarnessFixtures["makeApi"]>) =>
   harness.getState().confidential.account["nexus"].OAuthCredentials;
 
 /**
+<<<<<<< HEAD
  * setOAuthCredentials keeps the credentials it is handed and then looks the avatar up over the
  * network, so most of the ways that call can fail say nothing about the session. Only the site
  * turning the credentials down means the user has to log in again — and clearing the account on
  * anything else read as signed in to the header and signed out to the user: no account menu,
  * and no login button either.
+=======
+ * Validating the session means looking the account up over the network, so most of the ways
+ * that call can fail say nothing about the session. Only the site turning the credentials down
+ * means the user has to log in again — and clearing the account on anything else read as signed
+ * in to the header and signed out to the user: no account menu, and no login button either.
+>>>>>>> v2.8.0
  */
 describe("updateToken", () => {
   describe("when the site refuses the login", () => {
@@ -111,7 +132,11 @@ describe("updateToken", () => {
     // the Disableable proxy stands in for every request while the network is down
     test("keeps the known account offline", async ({ makeApi }) => {
       const harness = makeApi({ userInfo: makeUserInfo({ name: "Ada" }) });
+<<<<<<< HEAD
       const { nexus } = makeNexus(new ProcessCanceled("network disconnected: setOAuthCredentials"));
+=======
+      const { nexus } = makeNexus(new ProcessCanceled("network disconnected: getUserInfo"));
+>>>>>>> v2.8.0
 
       await updateToken(harness.api, nexus, credentials());
 

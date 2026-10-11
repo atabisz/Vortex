@@ -1,4 +1,3 @@
-import { clipboard } from "electron";
 import * as React from "react";
 import { FormControl, FormGroup } from "react-bootstrap";
 import { findDOMNode } from "react-dom";
@@ -26,7 +25,10 @@ function PlaceholderTextArea(props: IPlaceholderTextAreaProps) {
   const [value, setValue] = React.useState("");
 
   const handlePaste = () => {
-    setValue(clipboard.readText());
+    window.api.clipboard
+      .readText()
+      .then((x) => setValue(x))
+      .catch(() => {});
   };
 
   const onShowContext = (event: React.MouseEvent<any>) => {
