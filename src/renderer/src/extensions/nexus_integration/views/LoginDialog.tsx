@@ -1,4 +1,3 @@
-import { clipboard } from "electron";
 import type { TFunction } from "i18next";
 import * as React from "react";
 import type { ModalBody } from "react-bootstrap";
@@ -330,11 +329,6 @@ class LoginDialog extends ComponentEx<IProps, ILoginDialogState> {
     this.nextState.apiKeyInput = key.replace(/\s/g, "");
   }
 
-  private handlePaste = () => {
-    this.storeKey(clipboard.readText());
-    this.nextState.context = undefined;
-  };
-
   private renderConfirmDialog() {
     return this.context.api.showDialog(
       "question",
@@ -384,18 +378,18 @@ class LoginDialog extends ComponentEx<IProps, ILoginDialogState> {
   };
 
   private copyToClipboard(text: string) {
-    try {
-      clipboard.writeText(text);
-
-      // show the clipboard message, turn it off again 3 seconds later
-      this.nextState.showElement = true;
-      setTimeout(() => (this.nextState.showElement = false), 3000);
-    } catch (err) {
-      // apparently clipboard gets lazy-loaded and that load may fail for some reason
-      this.context.api.showErrorNotification("Failed to access clipboard", err, {
-        allowReport: false,
+    window.api.clipboard
+      .writeText(text)
+      .then(() => {
+        // show the clipboard message, turn it off again 3 seconds later
+        this.nextState.showElement = true;
+        setTimeout(() => (this.nextState.showElement = false), 3000);
+      })
+      .catch((err) => {
+        this.context.api.showErrorNotification("Failed to access clipboard", err, {
+          allowReport: false,
+        });
       });
-    }
   }
 
   private login = () => {
