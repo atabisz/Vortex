@@ -6,6 +6,7 @@ import * as _ from "lodash";
 import SevenZip from "node-7z";
 
 import { addExtension, forgetExtension, removeExtension } from "../../actions";
+import { isValidBcp47 } from "../../bcp47";
 import ExtensionManager from "../../ExtensionManager";
 import { log } from "../../logging";
 import type {
@@ -25,7 +26,6 @@ import {
   emitExtensionInstalled,
   type ExtensionInstallSource,
 } from "../analytics/mixpanel/extensionInstallAnalytics";
-import { countryExists, languageExists } from "../settings_interface/languagemap";
 import { parseExtensionInfo } from "./extensionInfo";
 import {
   findDependencyInCatalog,
@@ -137,9 +137,9 @@ export function clearStaleRemovalFlags(
   });
 }
 
-function removeOldVersion(api: IExtensionApi, catalogEntry: IAvailableExtension): string[] {
+function removeOldVersion(api: IExtensionApi, modId: number): string[] {
   const state = api.getState();
-  const previousVersions = findPreviousVersions(state.app.extensions ?? {}, catalogEntry);
+  const previousVersions = findPreviousVersions(state.app.extensions ?? {}, { modId });
 
   if (previousVersions.length > 0) {
     log("info", "removing previous versions of the extension", {
@@ -178,36 +178,19 @@ export async function validateTheme(extPath: string): Promise<void> {
   await Promise.all(promises);
 }
 
-function isLocaleCode(input: string): boolean {
-  try {
-    new Date().toLocaleString(input);
-    return true;
-  } catch (err) {
-    return false;
-  }
-}
-
 /**
- * validate a translation extension. Can only contain one iso-code named directory (other
- * directories are ignored) which needs to contain at least one json file
+ * validate a translation extension. Can only contain one BCP 47 named directory
+ * (other directories are ignored) which needs to contain at least one json file
  */
 export async function validateTranslation(extPath: string): Promise<void> {
   const entries = await readdir(extPath, { withFileTypes: true });
   const languageDirectories = entries.filter(
-    (entry) => entry.isDirectory() && isLocaleCode(entry.name),
+    (entry) => entry.isDirectory() && isValidBcp47(entry.name),
   );
   if (languageDirectories.length !== 1)
     throw new DataInvalid("Expected exactly one language subdirectory");
 
   const languageDirectory = languageDirectories[0];
-
-  // the check in isLocaleCode is extremely unreliable because it will fall back to
-  // iso on everything. Was it always like that or was that changed in a recent
-  // node release?
-  const [language, country] = languageDirectory.name.split("-");
-  if (!languageExists(language) || (country !== undefined && !countryExists(country))) {
-    throw new DataInvalid("Directory isn't a language code");
-  }
 
   const languageEntries = await readdir(
     path.join(languageDirectory.parentPath, languageDirectory.name),
@@ -222,6 +205,13 @@ export async function validateTranslation(extPath: string): Promise<void> {
  */
 export async function validateExtension(extPath: string): Promise<void> {
   await Promise.all([stat(path.join(extPath, "index.js")), stat(path.join(extPath, "info.json"))]);
+}
+
+interface InstallData {
+  catalogEntry?: IAvailableExtension;
+  // the ids of the downloaded file, for when the catalog has no entry for it
+  nexusIds?: { modId: number; fileId?: number };
+  analytics?: InstallAnalytics;
 }
 
 interface InstallAnalytics {
@@ -239,7 +229,7 @@ const activeInstalls: Map<string, Promise<void>> = new Map();
 function installExtension(
   api: IExtensionApi,
   archivePath: string,
-  data?: { catalogEntry?: IAvailableExtension; analytics?: InstallAnalytics },
+  data?: InstallData,
 ): Promise<void> {
   const key = path.basename(archivePath).toLowerCase();
   const active = activeInstalls.get(key);
@@ -259,13 +249,17 @@ function installExtension(
 async function installExtensionImpl(
   api: IExtensionApi,
   archivePath: string,
-  data?: { catalogEntry?: IAvailableExtension; analytics?: InstallAnalytics },
+  data?: InstallData,
 ): Promise<void> {
   const extensionsPath = path.join(getVortexPath("userData"), "plugins");
   let destPath: string;
   const tempPath = path.join(extensionsPath, path.basename(archivePath)) + ".installing";
 
   const extractor = new SevenZip();
+
+  // the download's own ids name the file actually installed
+  const modId = data?.nexusIds?.modId ?? data?.catalogEntry?.modId;
+  const fileId = data?.nexusIds?.fileId ?? data?.catalogEntry?.fileId;
 
   await withTrackedActivity(
     "vortex.extension-manager",
@@ -352,7 +346,7 @@ async function installExtensionImpl(
       // this install. Cleared after the rename succeeds so the next launch's
       // state-flag-driven removal path in ExtensionManager doesn't wipe the
       // just-installed folder (#19527).
-      const removedKeys = data?.catalogEntry ? removeOldVersion(api, data?.catalogEntry) : [];
+      const removedKeys = modId !== undefined ? removeOldVersion(api, modId) : [];
 
       // we don't actually expect the output directory to exist
       await rm(destPath, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
@@ -373,8 +367,8 @@ async function installExtensionImpl(
 
         infoJsonId: extensionInfo?.id,
 
-        modId: data?.catalogEntry?.modId,
-        fileId: data?.catalogEntry?.fileId,
+        modId,
+        fileId,
         type: data?.catalogEntry?.type ?? guessedType,
       };
 

@@ -26,6 +26,7 @@ import {
   addExtension,
   forgetExtension,
   setExtensionEnabled,
+  setExtensionModId,
   setExtensionVersion,
 } from "./actions/app";
 import type { DialogActions, DialogType, IDialogContent } from "./actions/notifications";
@@ -632,7 +633,6 @@ class ContextProxyHandler implements ProxyHandler<any> {
       registerArchiveType: undefined,
       registerGame: undefined,
       registerGameStub: undefined,
-      registerGameStore: undefined,
       registerGameInfoProvider: undefined,
       registerAttributeExtractor: undefined,
       registerModType: undefined,
@@ -745,6 +745,7 @@ class ExtensionManager {
   private mPendingDisables: string[] = [];
   private mPendingRemoves: string[] = [];
   private mPendingAdds: IExtensionState[] = [];
+  private mPendingModIds: Array<{ extId: string; modId: number }> = [];
   // Extension-registered persistors for custom hives (e.g., loadOrder -> plugins.txt)
   private mExtensionPersistors: {
     [hive: string]: { persistor: IPersistor; debounce: number };
@@ -1019,6 +1020,11 @@ class ExtensionManager {
       store.dispatch(addExtension(state));
     });
     this.mPendingAdds = [];
+
+    this.mPendingModIds.forEach(({ extId, modId }) => {
+      store.dispatch(setExtensionModId(extId, modId));
+    });
+    this.mPendingModIds = [];
 
     this.mExtensionState = getSafe(store.getState(), ["app", "extensions"], {});
 
@@ -3037,10 +3043,6 @@ class ExtensionManager {
       file_based_loadorder: () => require("./extensions/file_based_loadorder/index.ts"),
       file_preview: () => require("./extensions/file_preview/index.ts"),
       firststeps_dashlet: () => require("./extensions/firststeps_dashlet/index.ts"),
-      // gameversion_management must be listed before gamemode_management so that
-      // GameVersionManager is initialized before gamemode_management's once()
-      // calls setupGameMode -> getInstalledVersion
-      gameversion_management: () => require("./extensions/gameversion_management/index.ts"),
       gamemode_management: () => require("./extensions/gamemode_management/index.ts"),
       hardlink_activator: () => require("./extensions/hardlink_activator/index.ts"),
       health_check: () => require("./extensions/health_check/index.ts"),
@@ -3065,7 +3067,7 @@ class ExtensionManager {
       // nexus_integration) rather than alphabetically. The static map is
       // initialised in insertion order and `once()` callbacks run in that same
       // order, and collections' once() relies on those extensions being set up
-      // first (cf. gameversion_management before gamemode_management).
+      // first.
       collections: () => require("./extensions/collections/index.ts"),
       recovery: () => require("./extensions/recovery/index.ts"),
       settings_application: () => require("./extensions/settings_application/index.ts"),
@@ -3073,6 +3075,7 @@ class ExtensionManager {
       settings_metaserver: () => require("./extensions/settings_metaserver/index.ts"),
       starter_dashlet: () => require("./extensions/starter_dashlet/index.ts"),
       sticky_mods: () => require("./extensions/sticky_mods/index.ts"),
+      support_bundle: () => require("./extensions/support_bundle/index.ts"),
       symlink_activator: () => require("./extensions/symlink_activator/index.ts"),
       symlink_activator_elevate: () => require("./extensions/symlink_activator_elevate/index.ts"),
       test_runner: () => require("./extensions/test_runner/index.ts"),
@@ -3080,7 +3083,10 @@ class ExtensionManager {
       updater: () => require("./extensions/updater/index.ts"),
     };
 
-    require("./util/extensionRequire").default(() => this.extensions);
+    require("./util/extensionRequire").default(
+      () => this.extensions,
+      () => this.mExtensionState,
+    );
 
     const loadedExtensions = new Set<string>();
     let dynamicallyLoaded: IRegisteredExtension[] = [];
@@ -3116,6 +3122,14 @@ class ExtensionManager {
       })),
       "failed to persist removal of extension entries",
     );
+    this.persistAppDiff(
+      this.mPendingModIds.map(({ extId, modId }) => ({
+        type: "set" as const,
+        path: ["extensions", extId, "modId"],
+        value: modId,
+      })),
+      "failed to persist restored extension mod ids",
+    );
 
     return staticExts.concat(userExts).concat(bundledExts);
   }
@@ -3148,6 +3162,11 @@ class ExtensionManager {
 
       const ext = this.loadDynamicExtension(state.path, alreadyLoaded, false);
       if (ext !== undefined) {
+        // since 2.7, entries rebuilt from a scan dropped the mod id an older
+        // Vortex wrote to info.json
+        if (state.modId === undefined && ext.info?.modId !== undefined) {
+          this.mPendingModIds.push({ extId, modId: ext.info.modId });
+        }
         result.push(ext);
         loadedExtensions.add(ext.name);
         loadedFromState.add(ext.name);
