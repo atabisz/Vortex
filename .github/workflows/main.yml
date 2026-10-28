@@ -52,12 +52,15 @@ jobs:
     # Fails open: if the filter job itself fails, code is empty and the full build runs.
     if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.code != 'false') }}
 
+    # Fork: Linux is the point of this fork, so it builds first and Windows only runs once
+    # it has passed (build-windows below). The matrix stays so the job keeps its
+    # "build (ubuntu-latest)" name.
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-2022]
+        os: [ubuntu-latest]
 
     runs-on: ${{ matrix.os }}
-    steps:
+    steps: &build-steps
       - uses: actions/checkout@v6
         with:
           submodules: "recursive"
@@ -155,8 +158,15 @@ jobs:
             etc/vortex.api.md
             packages/vortex-api/lib
 
-  api:
+  # Same steps as build, via the YAML anchor; every Linux-only step is gated on runner.os.
+  build-windows:
     needs: build
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    runs-on: windows-2022
+    steps: *build-steps
+
+  api:
+    needs: [build, build-windows]
     if: github.repository == 'Nexus-Mods/Vortex' && github.ref == 'refs/heads/master' && github.event_name == 'push'
     runs-on: ubuntu-latest
 
