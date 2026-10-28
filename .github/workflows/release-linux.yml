@@ -86,13 +86,8 @@ jobs:
       - name: Rebuild native addons for Electron
         run: npx @electron/rebuild -f -v "$ELECTRON_VERSION"
 
-      - name: Rebuild ba2tk for Linux
-        run: |
-          BA2TK_DIR=$(node -e "process.stdout.write(require('path').dirname(require.resolve('ba2tk/package.json', {paths: ['extensions/gamebryo-ba2-support/node_modules', 'node_modules']})))")
-          echo "Rebuilding ba2tk at: $BA2TK_DIR"
-          cd "$BA2TK_DIR"
-          [ -f fetch_ba2tk.js ] && node fetch_ba2tk.js || true
-          npx node-gyp rebuild --target="$ELECTRON_VERSION" --arch=x64 --dist-url=https://electronjs.org/headers
+      # ba2tk is N-API (napi_versions [4]), so its install-time build loads in Electron as-is.
+      # Rebuilding it against Electron 44's V8 headers fails under ubuntu-22.04's GCC 11.
 
       - name: Verify native addons load
         run: node scripts/verify-addons.cjs
