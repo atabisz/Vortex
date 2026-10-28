@@ -283,6 +283,16 @@ else
   probe "workflows resolve ELECTRON_VERSION instead of pinning" FAIL "$pinned"
 fi
 
+# §20 — Upstream-only workflows stay deleted on the fork (NEGATIVE gate)
+section 20 "Upstream-only workflows deleted"
+back=""
+for wf in nightly signing-test package upload-release-to-r2 publish-vortex-api winget-release linear-release annotate-mixpanel-release fingerprint-fixed fingerprint-released fingerprint-resolve cherry-pick pr-maintenance review-extension-issue-created game-extension-test; do
+  [[ -f ".github/workflows/$wf.yml" ]] && back="$back $wf"
+done
+[[ -z "$back" ]] \
+  && probe "no deleted upstream workflow re-added" PASS \
+  || probe "no deleted upstream workflow re-added" FAIL "back:$back — git rm them (playbook §20)"
+
 # §11 — Deliberate test-runner divergences (NEGATIVE gates)
 section 11 "Vitest-only renderer (no Jest scaffolding)"
 [[ ! -f src/renderer/jest.config.mjs ]] \

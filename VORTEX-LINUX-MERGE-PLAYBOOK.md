@@ -386,6 +386,22 @@ The fork's `main.yml`, `release-linux.yml` and `e2e.yml` hard-coded Electron `39
 
 ---
 
+## §20 Upstream-only workflows are deleted on the fork
+
+```bash
+bash scripts/linux-smoke.sh | grep -A1 "§20"
+```
+
+Deleted 2026-10-28 because they do nothing on the fork, and several fire on the fork's own releases: `nightly`, `signing-test`, `package`, `upload-release-to-r2`, `publish-vortex-api`, `winget-release`, `linear-release`, `annotate-mixpanel-release`, `fingerprint-fixed`, `fingerprint-released`, `fingerprint-resolve`, `cherry-pick`, `pr-maintenance`, `review-extension-issue-created`, `game-extension-test`. Kept: `main`, `format`, `actions-check`, `e2e` (upstream's, fork-customised) and the fork's own `release-linux`, `rebase-upstream`, `test-pkgbuild`, `update-api-tag`.
+
+- **On a hand-merge,** an upstream edit to a deleted file shows as `DU` (modify/delete). Resolve with `git rm .github/workflows/<file>`; don't take the upstream copy. The smoke probe fails if one comes back.
+- **The automated sync needs nothing.** `rebase-upstream.sh` replaces `.github/workflows/` with master's set (`git rm -r` then `git checkout master --`), so upstream copies are dropped before the push.
+- **A NEW upstream workflow still lands on every hand-merge.** List it with `git diff --name-status --diff-filter=A <pre-merge> HEAD -- .github/workflows/` and decide keep or delete. If deleted, add it to the §20 list here and in `scripts/linux-smoke.sh`.
+- `.github/actions/{fingerprints,linear-release,package,prepare-nexusmods-release}` are left in place. The first two are pnpm workspace packages with their own tests, so removing them means editing `pnpm-workspace.yaml` and the lockfile on every sync that touches them.
+- Upstream docs (`docs/error-reporting/fingerprint-resolution.md`, `docs/cherry-pick-workflow.md`, `docs/packaging/windows.md`, `RELEASES.md`) still describe the deleted workflows. They're left as-is: editing upstream docs is merge churn for no fork benefit.
+
+---
+
 ## What we've learned the hard way
 
 These are the non-obvious things that cost real time during the 2026-05-08 merge, written down so they don't cost the same time twice.
@@ -658,7 +674,7 @@ Each entry is a real bug we hit at least once — written down so the next merge
 
 From 2026-10-14 to 2026-10-28 no workflow ran on `atabisz/Vortex`: not the cron, not `Main` on a push. The Actions tab said _"Workflows are not currently being run on this fork due to the scale of GitHub Actions usage. A repository maintainer can choose to re-enable these."_ That pause is a per-fork switch that **the REST API does not show**: `actions/permissions` reported `enabled: true` and every workflow reported `active` throughout. The tell is `gh run list` having no runs after a push. Re-enable it with the button in the Actions tab; no API call does it.
 
-The cause was upstream's scheduled workflows running daily on a fork where they do nothing (each ran 14 times in the first half of October). The fork now disables them through the same per-fork API switch used for `fingerprint-*.yml` (state `disabled_manually`). That state survives upstream merges but not a re-clone or a new fork:
+The cause was upstream's scheduled workflows running daily on a fork where they do nothing (each ran 14 times in the first half of October). They were first disabled, then **deleted the same day (§20)**; the disable state below is kept as the fallback for any upstream workflow that has to stay. The fork disabled them through the same per-fork API switch used for `fingerprint-*.yml` (state `disabled_manually`). That state survives upstream merges but not a re-clone or a new fork:
 
 ```bash
 for f in nightly.yml signing-test.yml pr-maintenance.yml game-extension-test.yml; do
