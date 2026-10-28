@@ -60,6 +60,7 @@ jobs:
         os: [ubuntu-latest]
 
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     steps: &build-steps
       - uses: actions/checkout@v6
         with:
@@ -100,7 +101,24 @@ jobs:
             echo "chmod +x $GYP_MAIN"
           fi
 
+      # node-gyp downloads the Node headers per addon on every run, and a stalled download
+      # once hung the Windows install for 45 minutes. Pin the header dir and cache it, along
+      # with @electron/rebuild's ~/.electron-gyp.
+      - name: Point node-gyp at a cacheable header dir
+        run: node -e "require('fs').appendFileSync(process.env.GITHUB_ENV, 'npm_config_devdir=' + require('path').join(require('os').homedir(), '.node-gyp-cache') + '\n')"
+
+      - name: Cache native build headers
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.node-gyp-cache
+            ~/.electron-gyp
+          key: native-headers-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package.json', 'pnpm-lock.yaml') }}
+          restore-keys: native-headers-${{ runner.os }}-${{ runner.arch }}-
+
       - name: Install dependencies
+        # fail fast on a hung download instead of riding GitHub's 6-hour job default
+        timeout-minutes: 20
         run: pnpm install
 
       # Resolve the Electron version from the installed package rather than pinning it here,
@@ -163,6 +181,7 @@ jobs:
     needs: build
     if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: windows-2022
+    timeout-minutes: 45
     steps: *build-steps
 
   api:
