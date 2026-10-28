@@ -1,3 +1,7 @@
+// TODO: remove polyfill with Node.js 26 upgrade
+import { install } from "temporal-polyfill/shim";
+install();
+
 // IPC handler for forked child processes requesting Electron app info
 if (process.send) {
   process.on("message", (msg: unknown) => {
@@ -41,6 +45,8 @@ if (process.env.VORTEX_E2E === "1") {
   }
 }
 
+import { NativePathResolver } from "@vortex/shared/filesystem";
+
 import Application from "./Application";
 import { parseCommandline } from "./cli";
 import { init as initDownloadIpc } from "./downloading/ipc";
@@ -53,6 +59,10 @@ import {
   sendPendingNativeCrashReport,
   sendReportFile,
 } from "./errorReporting";
+import { NodeFileSystemBackendImpl } from "./filesystem/backend";
+import { NodeFileSystemImpl } from "./filesystem/filesystem-impl";
+import { initFileSystem } from "./filesystem/instance";
+import { PathResolverRegistryImpl } from "./filesystem/path-resolver-registry";
 import { getVortexPath } from "./getVortexPath";
 import { init as initIpcHandlers } from "./ipcHandlers";
 import { log } from "./logging";
@@ -156,17 +166,6 @@ try {
 }
 
 process.env.Path = process.env.Path + path.delimiter + import.meta.dirname;
-
-if (process.platform === "linux") {
-  // node-loot.node has RUNPATH $ORIGIN/../../loot_api which resolves correctly
-  // in the source tree but breaks in the packaged app where libloot.so.0 is
-  // co-located with node-loot.node inside bundledPlugins/gamebryo-plugin-management.
-  // Prepend that directory to LD_LIBRARY_PATH so dlopen finds libloot.so.0 when
-  // the extension is loaded in the renderer process (which inherits this env var).
-  const lootLibDir = path.join(getVortexPath("bundledPlugins"), "gamebryo-plugin-management");
-  const existing = process.env.LD_LIBRARY_PATH;
-  process.env.LD_LIBRARY_PATH = existing ? `${lootLibDir}:${existing}` : lootLibDir;
-}
 
 const handleError = (error: Error) => {
   if (Application.shouldIgnoreError(error)) {
@@ -311,7 +310,15 @@ async function main(): Promise<void> {
   const downloadManager = new DownloadManager({ concurrency: 1 });
   const uploadManager = new UploadManager({ userAgent: `Vortex/${app.getVersion()}` });
 
-  initIpcHandlers();
+  // The registry holds exactly one resolver for the universal `native`
+  // scheme. Path providers are owned by the app, never by the registry.
+  const fs = new NodeFileSystemImpl(
+    new NodeFileSystemBackendImpl(),
+    new PathResolverRegistryImpl([new NativePathResolver()]),
+  );
+  initFileSystem(fs);
+
+  initIpcHandlers(fs);
   initDownloadIpc(downloadManager);
   initUploadIpc(uploadManager);
   initTelemetryIpcHandler();

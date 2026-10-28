@@ -4,9 +4,6 @@ const { fs, util } = require("@nexusmods/vortex-api");
 const winapi = require("winapi-bindings");
 
 function findGame() {
-  if (process.platform !== "win32") {
-    return Promise.reject(new Error("Currently only discovered on windows"));
-  }
   try {
     const instPath = winapi.RegGetValue(
       "HKEY_LOCAL_MACHINE",
@@ -18,9 +15,8 @@ function findGame() {
     }
     return Promise.resolve(instPath.value);
   } catch (err) {
-    return util.steam
-      .findByName("The Witcher: Enhanced Edition Director's Cut")
-      .catch(() => util.steam.findByAppId("20900"))
+    return util.GameStoreHelper.findByName("The Witcher: Enhanced Edition Director's Cut", "steam")
+      .catch(() => util.GameStoreHelper.findByAppId("20900", "steam"))
       .then((game) => game.gamePath);
   }
 }

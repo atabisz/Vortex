@@ -67,13 +67,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install volta, Node.js and Yarn
-        uses: volta-cli/action@v5
-
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.9
-        with:
-          cache: true
+        uses: ./.github/actions/setup-pnpm
 
       - name: Configure node-gyp for VS 2022
         if: runner.os == 'Windows'
@@ -87,19 +82,6 @@ jobs:
       - name: Install Linux build dependencies
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev cmake liblz4-dev zlib1g-dev xvfb
-
-      # Rust toolchain required by libloot 0.29.1 (rewritten in Rust at 0.25+)
-      # Must run before "Install dependencies" because postinstall-libloot.cjs
-      # builds libloot from source during pnpm install on Linux
-      - name: Install Rust toolchain
-        if: runner.os == 'Linux'
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
-
-      - name: Cache Rust/Cargo artifacts
-        if: runner.os == 'Linux'
-        uses: Swatinem/rust-cache@v2
 
       # pnpm 10 ships an embedded node-gyp whose gyp_main.py occasionally lands
       # without an execute bit on fresh runners (hardlink/tarball quirk).
@@ -118,30 +100,25 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      # Resolve the Electron version from the installed package rather than pinning it here,
+      # so an upstream Electron bump can't leave the native rebuilds targeting stale headers.
+      - name: Resolve Electron version
+        if: runner.os == 'Linux'
+        run: echo "ELECTRON_VERSION=$(node -p "require('./src/main/node_modules/electron/package.json').version")" >> "$GITHUB_ENV"
+
       - name: Rebuild native addons for Electron
         if: runner.os == 'Linux'
-        run: npx @electron/rebuild -f -v 39.8.0
+        run: npx @electron/rebuild -f -v "$ELECTRON_VERSION"
 
       # @electron/rebuild doesn't traverse pnpm's isolated store, so it misses addons
       # installed into store-isolated workspaces. Rebuild them explicitly here.
       - name: Rebuild pnpm-isolated native addons for Electron
         if: runner.os == 'Linux'
         run: |
-          LOOT_DIR=$(node -e "process.stdout.write(require('path').dirname(require.resolve('loot/package.json', {paths: ['extensions/gamebryo-plugin-management/node_modules', 'node_modules']})))")
-          echo "Rebuilding loot at: $LOOT_DIR"
-          cd "$LOOT_DIR"
-          npx node-gyp rebuild --target=39.8.0 --arch=x64 --dist-url=https://electronjs.org/headers
-
-          BSATK_DIR=$(node -e "process.stdout.write(require('path').dirname(require.resolve('bsatk/package.json', {paths: ['extensions/gamebryo-bsa-support/node_modules', 'node_modules']})))")
-          echo "Rebuilding bsatk at: $BSATK_DIR"
-          cd "$BSATK_DIR"
-          node fetch_bsatk.js
-          npx node-gyp rebuild --target=39.8.0 --arch=x64 --dist-url=https://electronjs.org/headers
-
           FONT_SCANNER_DIR=$(node -e "process.stdout.write(require('path').dirname(require.resolve('font-scanner/package.json', {paths: ['extensions/theme-switcher/node_modules', 'node_modules']})))")
           echo "Rebuilding font-scanner at: $FONT_SCANNER_DIR"
           cd "$FONT_SCANNER_DIR"
-          npx node-gyp rebuild --target=39.8.0 --arch=x64 --dist-url=https://electronjs.org/headers
+          npx node-gyp rebuild --target="$ELECTRON_VERSION" --arch=x64 --dist-url=https://electronjs.org/headers
 
       - name: Verify native addons load
         if: runner.os == 'Linux'

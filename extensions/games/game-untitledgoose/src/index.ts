@@ -5,7 +5,6 @@ import Bluebird from "bluebird";
 
 import { migrate020 } from "./migrations";
 import { EPIC_APP_ID, GAME_ID } from "./statics";
-import { toBlue } from "./util";
 
 const BIX_CONFIG = "BepInEx.cfg";
 function ensureBIXConfig(discovery: types.IDiscoveryResult): Bluebird<void> {
@@ -24,19 +23,21 @@ function ensureBIXConfig(discovery: types.IDiscoveryResult): Bluebird<void> {
 }
 
 function requiresLauncher() {
-  return util.epicGamesLauncher
-    .isGameInstalled(EPIC_APP_ID)
-    .then((epic) => (epic ? { launcher: "epic", addInfo: EPIC_APP_ID } : undefined));
+  return util.GameStoreHelper.findByAppId(EPIC_APP_ID, "epic")
+    .then(() => ({ launcher: "epic", addInfo: EPIC_APP_ID }))
+    .catch(() => undefined);
 }
 
 function findGame() {
   if (process.platform !== "win32") {
-    return Promise.reject(
+    return Bluebird.reject(
       new util.ProcessCanceled("Epic Games Launcher is not available on Linux"),
     );
   }
 
-  return util.epicGamesLauncher.findByAppId(EPIC_APP_ID).then((epicEntry) => epicEntry.gamePath);
+  return util.GameStoreHelper.findByAppId(EPIC_APP_ID, "epic").then(
+    (epicEntry) => epicEntry.gamePath,
+  );
 }
 
 function modPath() {
@@ -53,7 +54,7 @@ function prepareForModding(discovery: types.IDiscoveryResult) {
   );
 }
 
-function main(context: types.IExtensionContext) {
+export default function main(context: types.IExtensionContext) {
   context.registerGame({
     id: GAME_ID,
     name: "Untitled Goose Game",
@@ -67,8 +68,7 @@ function main(context: types.IExtensionContext) {
     setup: prepareForModding,
   });
 
-  // context.registerMigration(toBlue(old => migrate010(context, old) as any));
-  context.registerMigration(toBlue((old) => migrate020(context, old)));
+  context.registerMigration((old) => migrate020(context, old));
 
   context.once(() => {
     if (context.api.ext.bepinexAddGame !== undefined) {
@@ -85,7 +85,3 @@ function main(context: types.IExtensionContext) {
 
   return true;
 }
-
-module.exports = {
-  default: main,
-};

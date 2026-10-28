@@ -60,7 +60,8 @@ vi.mock("../../../util/storeHelper", () => ({
   }),
 }));
 
-vi.mock("../../../util/util", () => ({
+vi.mock("../../../util/util", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../../util/util")>()),
   truthy: vi.fn((v: unknown) => !!v),
 }));
 

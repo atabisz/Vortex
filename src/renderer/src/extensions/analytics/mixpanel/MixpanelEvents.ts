@@ -48,6 +48,8 @@ export class AppLaunchedEvent implements MixpanelEvent {
     architecture?: string,
     is_legacy_ui?: boolean,
     update_channel?: string,
+    zoom_percent?: number,
+    is_hidpi?: boolean,
   ) {
     this.properties = {
       $os: mapPlatformToMixpanel(os), // Override auto-detected OS for accuracy
@@ -56,6 +58,12 @@ export class AppLaunchedEvent implements MixpanelEvent {
       is_legacy_ui, // Custom property for which UI the session is running
       // the population denominator for the app_update_* funnel
       update_channel,
+      // The zoom level this session is actually running at, not just a change event —
+      // answers "what do people settle on" without the noise of every intermediate step.
+      zoom_percent,
+      // Whether this session's display is above the app's HiDPI threshold — lets zoom
+      // usage be cross-referenced against display density.
+      is_hidpi,
     };
   }
 }
@@ -284,15 +292,38 @@ export class AppUpsellClickedEvent implements MixpanelEvent {
   constructor() {}
 }
 
+/** Where the support bundle was asked for. Only the Help menu today. */
+export type SupportBundleSource = "help_menu";
+
+/**
+ * Sent when the user asks Vortex to prepare a support bundle (Help > Create support bundle).
+ * Counts the request, not whether the archive was built or sent on.
+ */
+export class AppSupportBundleClickedEvent implements MixpanelEvent {
+  readonly eventName = "app_support_bundle_clicked";
+  readonly properties: Record<string, unknown>;
+  constructor(props: { source: SupportBundleSource }) {
+    this.properties = { ...props };
+  }
+}
+
+/** Whether Vortex found the game itself or the user picked its folder. */
+export type GameDiscoveryMethod = "automatic" | "manual";
+
 /** Fields on the app_game_manage event. */
 export interface GameManagedProps {
   game_id: number | null;
   extension_version: string;
+  // Store id from discovery (steam, gog, epic, xbox...), null when Vortex couldn't tell.
+  game_store: string | null;
+  discovery_method: GameDiscoveryMethod;
 }
 
 /**
  * Sent the first time a game is managed, when its first profile is created.
- * `extension_version` is the version of the game's support extension.
+ * `extension_version` is the version of the game's support extension, `game_store` the store the
+ * game was installed from, and `discovery_method` whether its folder was found automatically or
+ * set by hand.
  */
 export class AppGameManagedEvent implements MixpanelEvent {
   readonly eventName = "app_game_manage";
@@ -830,12 +861,15 @@ export interface ModsDeployedProps {
   enabled_mod_count: number;
   manual: boolean;
   is_collection_postprocess: boolean;
+  duration_ms: number;
 }
 
 /**
  * Sent when a deployment to the game directory completes successfully. `deployment_method` is the
  * activator (hardlink, symlink, ...); `manual` marks a user-triggered deploy over an automatic one;
  * `is_collection_postprocess` marks the deploy Vortex runs while finishing a collection install.
+ * `duration_ms` runs from the deployment activity starting to the end of post-deployment, so it
+ * excludes time queued behind other deployments and running installs.
  */
 export class ModsDeployedEvent implements MixpanelEvent {
   readonly eventName = "mods_deployed";
@@ -873,6 +907,34 @@ export class AppExtensionInstalledEvent implements MixpanelEvent {
   readonly eventName = "app_extension_installed";
   readonly properties: Record<string, unknown>;
   constructor(props: AppExtensionInstalledProps) {
+    this.properties = { ...props };
+  }
+}
+
+/** Fields on the app_deprecated_api_used event. */
+export interface AppDeprecatedApiUsedProps {
+  /** name of the deprecated surface */
+  api_method: string;
+  /** name of the extension calling the deprecated API */
+  extension_name: string;
+  /** extension version */
+  extension_version?: string;
+  /** extension mod ID if it came from Nexus Mods */
+  mod_id?: number;
+  /** extension file ID if it came from Nexus Mods */
+  file_id?: number;
+  /** whether the extension is bundled or not */
+  bundled: boolean;
+}
+
+/**
+ * Sent when an extension touches a deprecated extension-api surface. Emitted once per session per
+ * extension and method, so a hot-looping extension cannot flood the tracker.
+ */
+export class AppDeprecatedApiUsedEvent implements MixpanelEvent {
+  readonly eventName = "app_deprecated_api_used";
+  readonly properties: Record<string, unknown>;
+  constructor(props: AppDeprecatedApiUsedProps) {
     this.properties = { ...props };
   }
 }

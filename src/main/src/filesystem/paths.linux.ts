@@ -1,50 +1,32 @@
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path/posix";
 
-import type {
-  ResolvedPath,
-  LinuxPathProvider,
-  LinuxPathBase,
-  XDGBase,
-} from "@nexusmods/adaptor-api/fs";
-import {
-  QualifiedPath,
-  PathResolverError,
-  PathProviderError,
-  XDG,
-} from "@nexusmods/adaptor-api/fs";
+import type { ILinuxPathProvider, LinuxPathBase } from "@vortex/shared/filesystem";
+import { QualifiedPath, PathProviderError, XDG } from "@vortex/shared/filesystem";
 
-export class LinuxPathProviderImpl implements LinuxPathProvider {
+/**
+ * Node-backed implementation of {@link ILinuxPathProvider}.
+ *
+ * A pure factory: wraps well-known Linux locations (and the XDG Base
+ * Directory specification) as `native://` {@link QualifiedPath}s via
+ * {@link QualifiedPath.fromNative}. It does not resolve anything - decoding
+ * `native://` paths is the {@link NativePathResolver}'s job.
+ */
+export class LinuxPathProvider implements ILinuxPathProvider {
   readonly platform = "linux" as const;
-  readonly scheme = "linux" as const;
-  readonly parent = null;
 
   #create(path: string): Promise<QualifiedPath> {
-    return Promise.resolve(QualifiedPath.parse(`${this.scheme}://${path}`));
+    return Promise.resolve(QualifiedPath.fromNative(path));
   }
 
   fromBase(base: LinuxPathBase): Promise<QualifiedPath> {
+    // https://specifications.freedesktop.org/basedir/latest
+
     if (base === "home") {
       return this.#create(homedir());
     } else if (base === "temp") {
       return this.#create(tmpdir());
-    } else if (
-      base === XDG.cache ||
-      base === XDG.runtime ||
-      base === XDG.data ||
-      base === XDG.config ||
-      base === XDG.state
-    ) {
-      return this.fromXDGBase(base);
-    }
-
-    const exhausted: never = base;
-    return Promise.reject(new PathProviderError(`Unknown base '${exhausted as string}'`));
-  }
-
-  fromXDGBase(base: XDGBase): Promise<QualifiedPath> {
-    // https://specifications.freedesktop.org/basedir/latest
-    if (base === XDG.data) {
+    } else if (base === XDG.data) {
       return this.#getXDGBaseDirectory("XDG_DATA_HOME", ".local/share");
     } else if (base === XDG.cache) {
       return this.#getXDGBaseDirectory("XDG_CACHE_HOME", ".cache");
@@ -59,7 +41,7 @@ export class LinuxPathProviderImpl implements LinuxPathProvider {
     }
 
     const exhausted: never = base;
-    return Promise.reject(new PathProviderError(`Unknown base '${exhausted as string}'`));
+    return Promise.reject(new PathProviderError(`Unknown base '${String(exhausted)}'`));
   }
 
   #getXDGBaseDirectory(envName: string, relative: string): Promise<QualifiedPath> {
@@ -68,11 +50,5 @@ export class LinuxPathProviderImpl implements LinuxPathProvider {
 
     const value = join(homedir(), relative);
     return this.#create(value);
-  }
-
-  resolve(path: QualifiedPath): Promise<ResolvedPath> {
-    if (path.scheme !== this.scheme)
-      return Promise.reject(new PathResolverError(`Unsupported scheme '${path.scheme}'`));
-    return Promise.resolve(path.path);
   }
 }

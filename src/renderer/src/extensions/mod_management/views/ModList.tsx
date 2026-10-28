@@ -9,6 +9,7 @@ import type * as Redux from "redux";
 import type { ThunkDispatch } from "redux-thunk";
 import * as semver from "semver";
 
+import * as bcp47 from "@/bcp47";
 import { Button } from "@/ui/components/button/Button";
 import { Dropdown } from "@/ui/components/dropdown/Dropdown";
 import { DropdownButton as UiDropdownButton } from "@/ui/components/dropdown/DropdownButton";
@@ -87,6 +88,7 @@ import Author from "./Author";
 import CheckModVersionsButton from "./CheckModVersionsButton";
 import Description from "./Description";
 import InstallArchiveButton from "./InstallArchiveButton";
+import { ModsTableSwitch } from "./ModsTableSwitch";
 import VersionChangelogButton from "./VersionChangelogButton";
 import VersionIconButton from "./VersionIconButton";
 
@@ -424,18 +426,23 @@ class ModList extends ComponentEx<IProps, IComponentState> {
       );
     } else {
       content = (
-        <SuperTable
-          edgeToEdge
-          stickyHeader
-          actions={this.modActions}
-          data={this.state.primaryMods}
-          detailsTitle={t("Mod Attributes")}
-          footerContainer={this.state.tableFooter}
-          staticElements={this.mAttributes}
-          tableId="mods"
-        >
-          <div id="more-mods-container">{this.renderMoreMods(modSources)}</div>
-        </SuperTable>
+        <ModsTableSwitch
+          legacy={
+            <SuperTable
+              edgeToEdge
+              stickyHeader
+              actions={this.modActions}
+              data={this.state.primaryMods}
+              detailsTitle={t("Mod Attributes")}
+              footerContainer={this.state.tableFooter}
+              staticElements={this.mAttributes}
+              tableId="mods"
+            >
+              <div id="more-mods-container">{this.renderMoreMods(modSources)}</div>
+            </SuperTable>
+          }
+          mods={this.state.primaryMods}
+        />
       );
     }
 
@@ -830,7 +837,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
       sortFunc: (lhs: string, rhs: string, locale: string): number => {
         if (collator === undefined || locale !== lang) {
           lang = locale;
-          collator = new Intl.Collator(locale, { sensitivity: "base" });
+          collator = bcp47.getCollator(locale);
         }
         return collator.compare(lhs, rhs);
       },

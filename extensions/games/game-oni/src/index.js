@@ -33,12 +33,14 @@ function main(context) {
   });
 
   function findGame() {
-    return util.steam.findByAppId(SteamId.toString()).then((game) => game.gamePath);
+    return util.GameStoreHelper.findByAppId(SteamId.toString(), "steam").then(
+      (game) => game.gamePath,
+    );
   }
 
   function readRegistryKey(hive, key, name) {
     if (!IsWin) {
-      return Promise.reject(new util.UnsupportedOperatingSystem());
+      return Promise.reject(new util.ProcessCanceled("registry is only available on Windows"));
     }
 
     try {

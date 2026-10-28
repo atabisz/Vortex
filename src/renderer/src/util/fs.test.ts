@@ -1,3 +1,4 @@
+import PromiseBB from "bluebird";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 let mockData: Buffer;
@@ -277,5 +278,25 @@ describe("confirmElevate platform-guarded strings (static)", () => {
     );
     expect(source).toContain("Create with elevated permissions");
     expect(source).toContain("Create as Administrator");
+  });
+});
+
+describe("forcePerm", () => {
+  // Fork: Linux elevates via pkexec (see elevated.ts), so it keeps the "Give permission" button
+  it.runIf(process.platform === "linux")("offers pkexec elevation on Linux", async () => {
+    const showMessageBox = vi.fn().mockResolvedValue({ response: 0 });
+    vi.stubGlobal("window", { api: { dialog: { showMessageBox } } });
+    const denied = Object.assign(new Error("denied"), {
+      code: "EACCES",
+      path: "/nonexistent/vortex-test",
+    });
+    await expect(
+      fs.forcePerm(
+        (input: string) => input,
+        () => PromiseBB.reject(denied),
+      ),
+    ).rejects.toThrow("canceled by user");
+    expect(showMessageBox.mock.calls[0][0].buttons).toEqual(["Cancel", "Retry", "Give permission"]);
+    vi.unstubAllGlobals();
   });
 });

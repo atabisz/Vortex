@@ -136,8 +136,12 @@ function makeManager(store: any) {
     vi.fn(), // onGameModeActivated
   );
   manager.attachToStore(store);
+  // reloadStoreGames walks the known stores itself since upstream 2.8, so count its calls
+  reloadSpy = vi.spyOn(manager as any, "reloadStoreGames").mockResolvedValue(undefined);
   return manager;
 }
+
+let reloadSpy: ReturnType<typeof vi.spyOn>;
 
 describe("GameModeManager.startQuickDiscovery", () => {
   let originalPlatform: PropertyDescriptor;
@@ -178,7 +182,7 @@ describe("GameModeManager.startQuickDiscovery", () => {
 
     // reloadGames should have been called at least twice:
     // once in the initial flow, once in the retry after delay
-    expect(mockReloadGames.mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(reloadSpy.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 
   it("does NOT retry on win32 when discovery returns 0 games", async () => {
@@ -195,7 +199,7 @@ describe("GameModeManager.startQuickDiscovery", () => {
     await Promise.resolve();
 
     // reloadGames should only be called once (no retry on Windows)
-    expect(mockReloadGames.mock.calls.length).toBe(1);
+    expect(reloadSpy.mock.calls.length).toBe(1);
   });
 
   it("does NOT retry when games are found on linux", async () => {
@@ -215,6 +219,6 @@ describe("GameModeManager.startQuickDiscovery", () => {
     await Promise.resolve();
 
     // reloadGames should only be called once (game found, no retry needed)
-    expect(mockReloadGames.mock.calls.length).toBe(1);
+    expect(reloadSpy.mock.calls.length).toBe(1);
   });
 });

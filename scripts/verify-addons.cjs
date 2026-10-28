@@ -33,13 +33,12 @@ const projectRoot = path.resolve(__dirname, "..");
 // pnpm symlinks the addon into that package's node_modules, which then resolves
 // into the shared pnpm store. We pass these paths to require.resolve().
 const addonWorkspaces = {
-    bsatk: path.join(projectRoot, "extensions", "gamebryo-bsa-support", "node_modules"),
     ba2tk: path.join(projectRoot, "extensions", "gamebryo-ba2-support", "node_modules"),
-    esptk: path.join(projectRoot, "extensions", "gamebryo-plugin-management", "node_modules"),
+    esptk: path.join(projectRoot, "src", "renderer", "node_modules"),
     "bsdiff-node": path.join(projectRoot, "extensions", "collections", "node_modules"),
     "xxhash-addon": path.join(projectRoot, "src", "main", "node_modules"),
     vortexmt: path.join(projectRoot, "src", "main", "node_modules"),
-    loot: path.join(projectRoot, "extensions", "gamebryo-plugin-management", "node_modules"),
+    loot: path.join(projectRoot, "src", "renderer", "node_modules"),
 };
 
 // Resolve the actual filesystem path for a given addon using workspace-relative lookup.
@@ -54,7 +53,7 @@ function resolveAddon(addonName) {
 // @electron/rebuild compiles loot.node against Electron's V8 headers (not ABI-stable),
 // so it cannot be dlopen'd by plain Node.js after rebuild. We instead verify:
 //   1. node-loot.node exists at the expected build path
-//   2. ldd confirms liblibloot.so (via libloot.so.0 SONAME) resolves via RUNPATH
+//   2. ldd confirms libloot.so.0 (vendored in node-loot's loot_api/) resolves via RUNPATH
 function verifyLootViaDependencyCheck(lootPkgPath) {
     const lootDir = path.dirname(lootPkgPath);
     const lootNode = path.join(lootDir, "build", "Release", "node-loot.node");
@@ -66,7 +65,7 @@ function verifyLootViaDependencyCheck(lootPkgPath) {
         };
     }
 
-    // Check RPATH/RUNPATH resolves liblibloot.so at runtime using ldd
+    // Check RPATH/RUNPATH resolves libloot.so.0 at runtime using ldd
     let lddOutput = "";
     try {
         lddOutput = execSync(`ldd "${lootNode}"`, { encoding: "utf8" });
@@ -102,7 +101,7 @@ const addonResults = {};
 // - bsdiff-node: binary diff (collections) — Windows prebuilt only
 // - vortexmt: multi-threading util — Windows prebuilt only
 const windowsOnlyAddons = ["esptk", "bsdiff-node", "vortexmt"];
-const crossPlatformAddons = ["xxhash-addon", "bsatk", "ba2tk"];
+const crossPlatformAddons = ["xxhash-addon", "ba2tk"];
 const addonsToVerify =
     process.platform === "win32"
         ? [...windowsOnlyAddons, ...crossPlatformAddons]

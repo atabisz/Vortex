@@ -32,6 +32,11 @@ import React, {
   useState,
 } from "react";
 
+import {
+  OVERLAY_ARROW_HEIGHT,
+  OVERLAY_ARROW_STROKE_WIDTH,
+  OVERLAY_ARROW_WIDTH,
+} from "@/ui/components/overlay_arrow/OverlayArrow";
 import { joinClasses } from "@/ui/utils/joinClasses";
 import type { XOr } from "@/ui/utils/types";
 
@@ -43,12 +48,8 @@ const TRIGGER_GAP = 8;
 const COLLISION_PADDING = 8;
 /** Floor for the reported height, so a cramped corner scrolls rather than collapses. */
 const MIN_AVAILABLE_HEIGHT = 96;
-const ARROW_HEIGHT = 8;
-const ARROW_WIDTH = 12;
 /** Keeps the arrow off the tooltip's rounded corners. */
 const ARROW_PADDING = 8;
-/** FloatingArrow doubles and clips this, so 1 renders as a 1px edge. */
-const ARROW_STROKE_WIDTH = 1;
 const TRANSITION_MS = 30;
 
 export type ITooltipPlacement = Placement;
@@ -59,15 +60,31 @@ interface ITooltipBaseProps {
   /** The trigger. Must forward a ref to a DOM node — wrap bare text in a `span`. */
   children: ReactElement;
   className?: string;
+  /**
+   * Closes when the trigger is pressed, so it never covers a menu the trigger opens.
+   * Turn off for a trigger whose press changes what the tooltip describes.
+   */
+  closeOnPress?: boolean;
   /** Hover delays in ms. A single number sets both open and close. */
   delay?: ITooltipDelay;
   /** Renders the trigger untouched, with no tooltip attached. */
   disabled?: boolean;
   /** Lets the pointer travel into the tooltip and use its content. */
   interactive?: boolean;
+  /** Controlled open state. Omit to let hover and focus own it. */
+  open?: boolean;
+  /**
+   * For a tooltip that shows itself rather than answering a hover: a press anywhere, or a
+   * neighbour in the same delay group opening, leaves it up. Escape still closes it.
+   */
+  persistent?: boolean;
   /** Preferred side. Flips and slides automatically when it would overflow. */
   placement?: ITooltipPlacement;
+  /** Classes for the positioned layer, which owns the stacking, e.g. a lower z-index. */
+  positionerClassName?: string;
   showArrow?: boolean;
+  /** Every open and close, with Floating UI's reason for it. */
+  onOpenChange?: (open: boolean, reason?: OpenChangeReason) => void;
 }
 
 export type ITooltipProps = ITooltipBaseProps &
@@ -80,15 +97,26 @@ export type ITooltipProps = ITooltipBaseProps &
 export const Tooltip = ({
   children,
   className,
+  closeOnPress = true,
   content,
   customContent,
   delay = { close: 50, open: 250 },
   disabled = false,
   interactive = false,
+  open: controlledOpen,
+  persistent = false,
   placement = "top",
+  positionerClassName,
   showArrow = true,
+  onOpenChange,
 }: ITooltipProps) => {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+
+  const setOpen = (next: boolean, reason?: OpenChangeReason) => {
+    setUncontrolledOpen(next);
+    onOpenChange?.(next, reason);
+  };
 
   // Disabling unregisters the trigger as Floating UI's reference, so a tooltip left open
   // across it would come back unplaced — in the window's corner — once re-enabled.
@@ -98,7 +126,7 @@ export const Tooltip = ({
     setWasDisabled(disabled);
 
     if (disabled) {
-      setOpen(false);
+      setUncontrolledOpen(false);
     }
   }
 
@@ -119,12 +147,12 @@ export const Tooltip = ({
       return;
     }
 
-    setOpen(next);
+    setOpen(next, reason);
   };
 
   const { context, floatingStyles, refs } = useFloating({
     middleware: [
-      offset(showArrow ? TRIGGER_GAP + ARROW_HEIGHT : TRIGGER_GAP),
+      offset(showArrow ? TRIGGER_GAP + OVERLAY_ARROW_HEIGHT : TRIGGER_GAP),
       // Swap sides rather than overflow. crossAxis off so shift handles the other axis,
       // or a trigger near an edge flips to an unasked-for side when a nudge would do.
       flip({ crossAxis: false, fallbackAxisSideDirection: "start", padding: COLLISION_PADDING }),
@@ -161,7 +189,8 @@ export const Tooltip = ({
 
   // Inside a TooltipDelayGroup the group owns the timing once something is open,
   // so moving along a row swaps instantly. Standalone, currentId stays null.
-  const groupContext = useDelayGroup(context);
+  // A persistent tooltip leaves the group, which closes whichever member is not current.
+  const groupContext = useDelayGroup(context, { enabled: !disabled && !persistent });
   const hoverDelay = groupContext.currentId === null ? delay : groupContext.delay;
 
   const { isMounted, styles: transitionStyles } = useTransitionStyles(context, {
@@ -171,15 +200,18 @@ export const Tooltip = ({
     initial: { opacity: 0, transform: "scale(0.90)" },
   });
 
+  // A disabled tooltip that still listened would claim the delay group and close the real one.
   const interactions = useInteractions([
     useHover(context, {
       delay: hoverDelay,
+      enabled: !disabled,
       handleClose: interactive ? safePolygon({ blockPointerEvents: false }) : null,
       // Enter only, or nudging the pointer reopens what Escape just dismissed.
       move: false,
     }),
-    useFocus(context),
-    useDismiss(context),
+    useFocus(context, { enabled: !disabled }),
+    // Escape stays either way: a tooltip with no way to dismiss it is a trap.
+    useDismiss(context, { enabled: !disabled, outsidePress: !persistent }),
     useRole(context, { role: "tooltip" }),
   ]);
 
@@ -206,7 +238,12 @@ export const Tooltip = ({
     (
       referenceProps.onPointerDown as ((event: ReactPointerEvent<HTMLElement>) => void) | undefined
     )?.(event);
-    setOpen(false);
+
+    if (persistent || !closeOnPress) {
+      return;
+    }
+
+    setOpen(false, "reference-press");
   };
 
   return (
@@ -218,7 +255,7 @@ export const Tooltip = ({
       {isMounted && (
         <FloatingPortal id={OVERLAY_HOST_ID}>
           <div
-            className={joinClasses("nxm-tooltip-positioner", {
+            className={joinClasses(["nxm-tooltip-positioner", positionerClassName], {
               "nxm-tooltip-positioner-interactive": interactive,
             })}
             ref={refs.setFloating}
@@ -230,7 +267,7 @@ export const Tooltip = ({
                   can't sit on .nxm-tooltip without clipping the arrow. */}
               <div
                 className={joinClasses("nxm-tooltip-body", {
-                  "nxm-tooltip-content": customContent === undefined,
+                  "nxm-tooltip-content": !customContent,
                 })}
               >
                 {body}
@@ -238,12 +275,12 @@ export const Tooltip = ({
 
               {showArrow && (
                 <FloatingArrow
-                  className="nxm-tooltip-arrow"
+                  className="nxm-overlay-arrow"
                   context={context}
-                  height={ARROW_HEIGHT}
+                  height={OVERLAY_ARROW_HEIGHT}
                   ref={arrowRef}
-                  strokeWidth={ARROW_STROKE_WIDTH}
-                  width={ARROW_WIDTH}
+                  strokeWidth={OVERLAY_ARROW_STROKE_WIDTH}
+                  width={OVERLAY_ARROW_WIDTH}
                 />
               )}
             </div>

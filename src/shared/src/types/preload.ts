@@ -1,3 +1,4 @@
+import type { FileSystem } from "../fs/filesystem";
 import type { SerializedSpan } from "../telemetry/types";
 import type {
   BrowserViewConstructorOptions,
@@ -118,6 +119,9 @@ export interface Api {
 
   /** Feature flags API */
   featureFlags: FeatureFlagsApi;
+
+  /** Filesystem API */
+  fs: FileSystem;
 }
 
 export interface Example {

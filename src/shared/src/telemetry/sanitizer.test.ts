@@ -1,4 +1,4 @@
-import type { ReadableSpan } from "@opentelemetry/sdk-trace-base";
+import type { ReadableSpan, SpanExporter } from "@opentelemetry/sdk-trace-base";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -92,7 +92,6 @@ describe("sanitizeSpanAttributes (strict / no consent)", () => {
 
   it("keeps native crash facts extracted from minidumps", () => {
     const attributes = {
-      "crash.native.dumpCount": 1,
       "crash.native.exceptionCode": "0xc0000005",
       "crash.native.exceptionAddress": "0x7ff800008a40",
       "crash.native.module": "nvwgf2umx.dll",
@@ -101,6 +100,12 @@ describe("sanitizeSpanAttributes (strict / no consent)", () => {
       "crash.native.processType": "gpu-process",
     };
     expect(sanitizeSpanAttributes(attributes)).toEqual(attributes);
+  });
+
+  it("keeps bounded unreadable-dump diagnostics without consent", () => {
+    expect(sanitizeSpanAttributes({ "crash.native.unreadableReason": "file-too-large" })).toEqual({
+      "crash.native.unreadableReason": "file-too-large",
+    });
   });
 
   it("buckets count attributes (numbers and numeric strings)", () => {
@@ -142,6 +147,13 @@ describe("sanitizeResourceAttributes", () => {
       "os.type": "Windows_NT",
       "telemetry.sdk.name": "opentelemetry",
     });
+  });
+
+  it("keeps the install's instance id only with consent", () => {
+    const attributes = { "service.state.id": "inst-1" };
+
+    expect(sanitizeResourceAttributes(attributes, false)).toEqual(attributes);
+    expect(sanitizeResourceAttributes(attributes)).toEqual({});
   });
 });
 
@@ -241,6 +253,27 @@ describe("SanitizingSpanExporter", () => {
     expect(forwarded?.[0]?.attributes).toEqual({
       "mod.baseName": "secret.pak",
       "mod.numericModId": "42",
+    });
+  });
+
+  it("adds the resource attributes known when the span is exported", () => {
+    const inner = {
+      export: vi.fn<SpanExporter["export"]>(),
+      shutdown: vi.fn<SpanExporter["shutdown"]>(),
+      forceFlush: vi.fn<() => Promise<void>>(),
+    };
+    const exporter = new SanitizingSpanExporter(
+      inner,
+      () => true,
+      () => ({ "service.state.id": "inst-1" }),
+    );
+
+    exporter.export([fakeSpan()], vi.fn());
+
+    const forwarded = inner.export.mock.calls[0]?.[0];
+    expect(forwarded?.[0]?.resource.attributes).toEqual({
+      "service.name": "vortex",
+      "service.state.id": "inst-1",
     });
   });
 });

@@ -6,6 +6,8 @@ import * as _ from "lodash";
 import * as React from "react";
 import { Button } from "react-bootstrap";
 
+import * as bcp47 from "@/bcp47";
+
 import { ComponentEx } from "../../../../controls/ComponentEx";
 import EmptyPlaceholder from "../../../../controls/EmptyPlaceholder";
 import Icon from "../../../../controls/Icon";
@@ -27,7 +29,13 @@ import type { IMod, IModRule } from "../../../mod_management/types/IMod";
 import { coerceToSemver } from "../../../mod_management/util/coerceToSemver";
 import { findModByRef } from "../../../mod_management/util/findModByRef";
 import renderModName, { renderModReference } from "../../../mod_management/util/modName";
-import { rulePhase } from "../../../mod_management/util/rulePhase";
+import {
+  assignablePhase,
+  changeRuleType,
+  highestRequiredPhase,
+  OPTIONAL_PHASE,
+  rulePhase,
+} from "../../../mod_management/util/rulePhase";
 import { isDependencyRule } from "../../../mod_management/util/testModReference";
 import { ADULT_CONTENT_URL, INSTRUCTIONS_PLACEHOLDER } from "../../constants";
 import type { ICollectionSourceInfo, SourceType } from "../../types/ICollection";
@@ -102,7 +110,7 @@ const getCollator = (() => {
   return (locale: string) => {
     if (collator === undefined || locale !== lang) {
       lang = locale;
-      collator = new Intl.Collator(locale, { sensitivity: "base" });
+      collator = bcp47.getCollator(locale);
     }
     return collator;
   };
@@ -159,10 +167,8 @@ class ModsEditPage extends ComponentEx<IProps, IModsPageState> {
         const { entries } = this.state;
         instanceIds.forEach((id) => {
           if (entries[id]?.rule?.type === "recommends") {
-            const newRule = _.cloneDeep(entries[id].rule);
             onRemoveRule(entries[id].rule);
-            newRule.type = "requires";
-            onAddRule(newRule);
+            onAddRule(changeRuleType(entries[id].rule, "requires"));
           }
         });
       },
@@ -179,10 +185,8 @@ class ModsEditPage extends ComponentEx<IProps, IModsPageState> {
         const { entries } = this.state;
         instanceIds.forEach((id) => {
           if (entries[id].rule?.type === "requires") {
-            const newRule = _.cloneDeep(entries[id].rule);
             onRemoveRule(entries[id].rule);
-            newRule.type = "recommends";
-            onAddRule(newRule);
+            onAddRule(changeRuleType(entries[id].rule, "recommends"));
           }
         });
       },
@@ -320,12 +324,15 @@ class ModsEditPage extends ComponentEx<IProps, IModsPageState> {
     {
       icon: "sort-none",
       title: "Assign order",
+      condition: (instanceIds: string[]) =>
+        instanceIds.some((id) => assignablePhase(this.state.entries[id]?.rule) === undefined)
+          ? this.props.t("Optional mods install after all phases")
+          : true,
       subMenus: (instanceIds: string | string[]) => {
         const { t } = this.props;
         const ids = Array.isArray(instanceIds) ? instanceIds : [instanceIds];
-        const maxPhase = Object.values(this.state.entries).reduce(
-          (prev, entry) => Math.max(prev, rulePhase(entry.rule)),
-          0,
+        const maxPhase = highestRequiredPhase(
+          Object.values(this.state.entries).map((entry) => entry.rule),
         );
         return new Array(maxPhase + 1)
           .fill(0)
@@ -381,7 +388,7 @@ class ModsEditPage extends ComponentEx<IProps, IModsPageState> {
         sortFunc: (lhs: string, rhs: string, locale: string): number => {
           if (this.mCollator === undefined || locale !== this.mLang) {
             this.mLang = locale;
-            this.mCollator = new Intl.Collator(locale, { sensitivity: "base" });
+            this.mCollator = bcp47.getCollator(locale);
           }
           return this.mCollator.compare(lhs, rhs);
         },
@@ -505,9 +512,7 @@ class ModsEditPage extends ComponentEx<IProps, IModsPageState> {
           ],
           onChangeValue: (source: IModEntry, value: any) => {
             this.props.onRemoveRule(source.rule);
-            const newRule = _.cloneDeep(source.rule);
-            newRule.type = value ? "requires" : "recommends";
-            this.props.onAddRule(newRule);
+            this.props.onAddRule(changeRuleType(source.rule, value ? "requires" : "recommends"));
           },
         },
         isSortable: true,
@@ -924,11 +929,16 @@ class ModsEditPage extends ComponentEx<IProps, IModsPageState> {
         isSortable: true,
         isDefaultVisible: false,
         groupName: (phase: any) =>
-          this.props.t("Phase {{phase}}", {
-            replace: { phase: (phase || 0).toString() },
-          }),
+          phase === OPTIONAL_PHASE
+            ? this.props.t("Optional")
+            : this.props.t("Phase {{phase}}", {
+                replace: { phase: (phase || 0).toString() },
+              }),
         isGroupable: true,
         calc: (mod) => rulePhase(mod.rule),
+        customRenderer: (entry: IModEntry, detailCell: boolean, t: TFunction) => (
+          <span>{assignablePhase(entry.rule) ?? t("Optional")}</span>
+        ),
         edit: {},
       },
     ];

@@ -1,11 +1,11 @@
 import * as os from "node:os";
 import * as path from "node:path";
 
-import { XDG } from "@nexusmods/adaptor-api";
+import { XDG } from "@vortex/shared/filesystem";
 
 /**
  * Synchronous helpers for XDG Base Directory Specification paths.
- * Uses typed XDG env-var name constants from @nexusmods/adaptor-api to avoid raw string literals.
+ * Uses typed XDG env-var name constants from @vortex/shared/filesystem to avoid raw string literals.
  *
  * ref: https://specifications.freedesktop.org/basedir/latest
  */

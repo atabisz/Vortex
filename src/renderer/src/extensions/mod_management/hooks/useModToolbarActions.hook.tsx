@@ -1,10 +1,10 @@
-import { mdiPlusCircleOutline, mdiPuzzleOutline } from "@mdi/js";
+import { mdiAutorenew, mdiPlusCircleOutline, mdiPuzzleOutline } from "@mdi/js";
 import { getErrorCode, getErrorMessageOrDefault, unknownToError } from "@vortex/shared";
 import _ from "lodash";
 import React, { useCallback, useMemo } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 
-import { setConfirmPurge, setModAttribute, setSettingsPage } from "@/actions";
+import { setConfirmPurge, setModAttribute } from "@/actions";
 import { useMainContext } from "@/contexts";
 import { registerAction } from "@/controls/ActionControl";
 import { useExtensionObjects } from "@/ExtensionProvider";
@@ -19,18 +19,17 @@ import { fileMD5 } from "@/util/checksum";
 import { TemporaryError, UserCanceled } from "@/util/CustomErrors";
 import * as fs from "@/util/fs";
 import type { TFunction } from "@/util/i18n";
-import onceCB from "@/util/onceCB";
 import * as selectors from "@/util/selectors";
 import { getSafe } from "@/util/storeHelper";
 import { batchDispatch } from "@/util/util";
 import { getIconPath } from "@/views/components/iconMap";
 
 import NXMUrl from "../../nexus_integration/NXMUrl";
-import { getAllActivators } from "../util/deploymentMethods";
 import { NoDeployment } from "../util/exceptions";
 import metaLookupMatch from "../util/metaLookupMatch";
 import updateState from "../util/modUpdateState";
 import type { IModWithState } from "../views/CheckModVersionsButton";
+import { useActivator, useDeployMods, useNoMethodWarning } from "./useDeployMods.hook";
 
 /**
  * A toolbar action plus where it sits in the row. The mods toolbar is assembled from
@@ -49,10 +48,10 @@ interface IPositionedAction {
  * fixed: pinning an action puts it back where it belongs rather than at the end.
  *
  * The order the bar reads in — Install From File, Open, History, Check for Updates,
- * Categories, Manage Rules — comes from these and from the positions passed to
- * `registerAction` elsewhere, so a change here moves the action in the overflow menu
- * too. Deploy and Purge keep the positions they had as components, being unpinned by
- * default and so seen in that menu.
+ * Categories, Manage Rules, Manual apply, Purge — comes from these and from the positions
+ * passed to `registerAction` elsewhere, so a change here moves the action in the overflow
+ * menu too. Manual apply and Purge keep the positions they had as components, which puts
+ * them at the end of the row.
  */
 const POSITION = {
   installFromFile: 25,
@@ -108,103 +107,34 @@ const NO_ACTIONS: IPositionedAction[] = [];
 
 const EMPTY_MODS: { [modId: string]: IModWithState } = {};
 
-/** Tells the user no deployment method is set, and offers to take them there. */
-const useNoMethodWarning = () => {
-  const { api } = useMainContext();
-  const dispatch = useDispatch();
-
-  return useCallback(() => {
-    api.sendNotification({
-      id: "select-deployment-method-first",
-      type: "warning",
-      message: "You have to select a deployment method first",
-      actions: [
-        {
-          title: "Fix",
-          action: (dismiss: () => void) => {
-            api.events.emit("show-main-page", "application_settings");
-            dispatch(setSettingsPage("Mods"));
-            dismiss();
-          },
-        },
-      ],
-    });
-  }, [api, dispatch]);
-};
-
-/** The deployment method the active game is set to use, if it resolves to one. */
-const useActivator = () => {
-  const gameId = useSelector(selectors.activeGameId);
-  const activatorId = useSelector((state: IState) => state.settings.mods.activator?.[gameId]);
-
-  return useMemo(
-    () =>
-      activatorId === undefined
-        ? undefined
-        : getAllActivators().find((activator) => activator.id === activatorId),
-    [activatorId],
-  );
-};
-
-/** Deploy Mods — was `ActivationButton`. */
+/**
+ * Manual apply: deploys whether or not changes were detected, for the cases the menu's Apply
+ * button can't see. Not pinned, never branded, and disabled while applying.
+ */
 const useDeployAction = (t: TFunction): IPositionedAction => {
-  const { api } = useMainContext();
-  const activator = useActivator();
-  const needToDeploy = useSelector(selectors.needToDeploy);
-  const gameId = useSelector(selectors.activeGameId);
-  const profileId = useSelector((state: IState) =>
-    selectors.lastActiveProfileForGame(state, gameId),
-  );
-  const noMethod = useNoMethodWarning();
-
-  const deploy = useCallback(() => {
-    api.events.emit(
-      "deploy-mods",
-      onceCB((err: Error | null) => {
-        if (err === null) {
-          api.sendNotification({
-            id: "mods-deployed",
-            type: "info",
-            message: "Mods deployed",
-            displayMS: 3000,
-          });
-          return;
-        }
-
-        if (err instanceof UserCanceled) {
-          return;
-        }
-
-        if (err instanceof NoDeployment) {
-          api.showErrorNotification(
-            "You need to select a deployment method in settings",
-            undefined,
-            { allowReport: false },
-          );
-          return;
-        }
-
-        api.showErrorNotification("Failed to activate mods", err);
-      }),
-      profileId,
-      undefined,
-      { manual: true },
-    );
-  }, [api, profileId]);
+  const { isDeploying, deploy } = useDeployMods();
 
   return useMemo(
     () => ({
       position: POSITION.deploy,
-      action: {
-        id: "deploy",
-        label: t("Deploy Mods"),
-        iconPath: getIconPath("deploy"),
-        testId: "deploy-mods",
-        brand: needToDeploy ? "primary" : "neutral",
-        onClick: activator !== undefined ? deploy : noMethod,
-      },
+      action: isDeploying
+        ? {
+            id: "deploy",
+            label: t("Applying mod changes…"),
+            iconPath: mdiAutorenew,
+            testId: "deploy-mods",
+            disabled: true,
+          }
+        : {
+            id: "deploy",
+            label: t("Manual apply (Deploy)"),
+            description: t("Apply mods, even when no changes are detected."),
+            iconPath: mdiAutorenew,
+            testId: "deploy-mods",
+            onClick: deploy,
+          },
     }),
-    [activator, deploy, needToDeploy, noMethod, t],
+    [deploy, isDeploying, t],
   );
 };
 
@@ -324,6 +254,7 @@ const usePurgeAction = (t: TFunction): IPositionedAction => {
         id: "purge",
         label: t("Purge Mods"),
         iconPath: getIconPath("purge"),
+        pinned: true,
         testId: "purge-mods",
         onClick: activator !== undefined ? purge : noMethod,
       },
@@ -555,9 +486,14 @@ const useCheckVersionsAction = (t: TFunction): IPositionedAction => {
 const useRegisteredActions = (group: string): IPositionedAction[] => {
   const objects = useExtensionObjects<IActionDefinition>(registerAction, undefined, group, true);
 
-  // Read through the store, so a notice can follow state rather than be fixed at registration.
+  // Read through the store, so a notice and a brand can follow state rather than be
+  // fixed at registration.
   const notices = useSelector(
     () => objects.map((definition) => definition.options?.notice?.()),
+    shallowEqual,
+  );
+  const brands = useSelector(
+    () => objects.map((definition) => definition.options?.brand?.()),
     shallowEqual,
   );
 
@@ -603,6 +539,7 @@ const useRegisteredActions = (group: string): IPositionedAction[] => {
         // what IconBar built its DOM ids from.
         id: definition.title,
         label: !notice ? definition.title : `${definition.title} (${notice})`,
+        brand: brands[index],
         iconPath: getIconPath(definition.icon, mdiPuzzleOutline),
         pinned: definition.options?.pinned ?? false,
         disabled: typeof condition === "string",

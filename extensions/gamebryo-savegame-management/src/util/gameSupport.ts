@@ -26,7 +26,7 @@ function scriptExtenderFiles(input: string, seext: string): string[] {
 const gameSupport = util.makeOverlayableDictionary<string, IGameSupport>(
   {
     skyrim: {
-      mygamesPath: "skyrim",
+      mygamesPath: "Skyrim",
       iniName: "Skyrim.ini",
       prefIniName: "SkyrimPrefs.ini",
       saveFiles: (input: string): string[] => {
@@ -34,7 +34,7 @@ const gameSupport = util.makeOverlayableDictionary<string, IGameSupport>(
       },
     },
     enderal: {
-      mygamesPath: "enderal",
+      mygamesPath: "Enderal",
       iniName: "Enderal.ini",
       prefIniName: "EnderalPrefs.ini",
       saveFiles: (input: string): string[] =>
@@ -172,27 +172,32 @@ export function gameSupported(gameMode: string): boolean {
 
 /**
  * Get the Steam store entry for a discovered game, if it uses Proton on Linux.
- * Mirrors the getSteamEntry pattern from ini_prep/index.ts.
+ * Mirrors the getSteamEntry pattern from ini_prep/index.ts. Looks the entry up by the
+ * game's steamAppId because the extension-facing GameStoreHelper only offers name/appId
+ * lookups since upstream 2.8 (getGameStore is gone).
  * Returns undefined when: not Linux, not a Steam game, or lookup fails.
  */
 async function getSteamEntry(
+  gameMode: string,
   discovery: types.IDiscoveryResult,
 ): Promise<ILocalSteamEntry | undefined> {
   if (process.platform !== "linux" || discovery?.store !== "steam") {
     return undefined;
   }
   try {
-    const steamStore = util.GameStoreHelper.getGameStore("steam");
-    if (steamStore === undefined) {
+    const steamAppId = util.getGame(gameMode)?.details?.["steamAppId"];
+    if (steamAppId === undefined) {
       return undefined;
     }
-    const entries: ILocalSteamEntry[] = await steamStore.allGames();
-    return entries.find(
-      (e) =>
-        e.gamePath !== undefined &&
-        discovery.path !== undefined &&
-        e.gamePath.toLowerCase() === discovery.path.toLowerCase(),
+    const entry: ILocalSteamEntry = await util.GameStoreHelper.findByAppId(
+      steamAppId.toString(),
+      "steam",
     );
+    return entry.gamePath !== undefined &&
+      discovery.path !== undefined &&
+      entry.gamePath.toLowerCase() === discovery.path.toLowerCase()
+      ? entry
+      : undefined;
   } catch {
     return undefined;
   }
@@ -207,7 +212,7 @@ export async function mygamesPath(gameMode: string): Promise<string> {
   if (process.platform === "linux") {
     const discovery = discoveryForGame(gameMode);
     if (discovery !== undefined) {
-      const steamEntry = await getSteamEntry(discovery);
+      const steamEntry = await getSteamEntry(gameMode, discovery);
       if (steamEntry?.usesProton && steamEntry?.compatDataPath) {
         // Inline getMyGamesPath from src/renderer/src/util/linux/proton.ts
         // (bundled extensions cannot import from renderer src/)

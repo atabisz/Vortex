@@ -2,14 +2,15 @@ import * as nodeFs from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { QualifiedPath } from "@nexusmods/adaptor-api/fs";
 import { VortexError } from "@vortex/shared";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { QualifiedPath } from "@vortex/shared/filesystem";
+import { NativePathResolver } from "@vortex/shared/filesystem";
+import { afterEach, assert, beforeEach, describe, expect, it } from "vitest";
 
 import { NodeFileSystemBackendImpl } from "./backend";
 import { NodeFileSystemImpl } from "./filesystem-impl";
 import { PathResolverRegistryImpl } from "./path-resolver-registry";
-import { nativeToQP, platformResolver, platformScheme } from "./testing";
+import { nativeToQP } from "./testing";
 
 describe("NodeFileSystemImpl", () => {
   let root: string;
@@ -21,7 +22,7 @@ describe("NodeFileSystemImpl", () => {
     rootQP = nativeToQP(root);
     fs = new NodeFileSystemImpl(
       new NodeFileSystemBackendImpl(),
-      new PathResolverRegistryImpl([platformResolver()]),
+      new PathResolverRegistryImpl([new NativePathResolver()]),
     );
   });
 
@@ -40,8 +41,8 @@ describe("NodeFileSystemImpl", () => {
     const target = rootQP.join("s.txt");
     await fs.writeFile(target, new Uint8Array([9]));
     const present = await fs.stat(target);
-    expect(present.exists).toBe(true);
-    if (present.exists && present.isFile) expect(present.size).toBe(1);
+    assert(present.exists && present.isFile);
+    expect(present.size).toBe(1);
 
     const missing = await fs.stat(rootQP.join("missing"));
     expect(missing.exists).toBe(false);
@@ -52,9 +53,9 @@ describe("NodeFileSystemImpl", () => {
   });
 
   it("enumerates a directory yielding QualifiedPath entries", async () => {
-    for (const name of ["a.txt", "b.txt", "c.txt"]) {
-      await nodeFs.writeFile(join(root, name), name);
-    }
+    const files = ["a.txt", "b.txt", "c.txt"];
+    await Promise.all(files.map((name) => nodeFs.writeFile(join(root, name), name)));
+
     const iter = await fs.enumerateDirectory(rootQP, { types: "files" });
     const seen: string[] = [];
     while (true) {
@@ -62,10 +63,11 @@ describe("NodeFileSystemImpl", () => {
       if (step.done) break;
       const qp = step.value;
       expect(qp).toBeInstanceOf(QualifiedPath);
-      expect(qp.scheme).toBe(platformScheme());
+      expect(qp.scheme).toBe("native");
       seen.push(qp.basename);
     }
-    expect(seen.sort()).toEqual(["a.txt", "b.txt", "c.txt"]);
+
+    expect(seen.toSorted()).toEqual(files);
   });
 
   it("yields [QualifiedPath, Status] tuples when includeStatus is set", async () => {
@@ -74,11 +76,16 @@ describe("NodeFileSystemImpl", () => {
       includeStatus: true,
       types: "files",
     });
+
     const step = await iter.next();
+    assert(!step.done);
+
     expect(step.done).toBe(false);
-    const [qp, status] = step.value as [QualifiedPath, { size: number }];
+    const [qp, status] = step.value;
+
     expect(qp).toBeInstanceOf(QualifiedPath);
     expect(qp.basename).toBe("x.txt");
+    assert(status.isFile);
     expect(status.size).toBe(2);
   });
 
@@ -112,7 +119,12 @@ describe("NodeFileSystemImpl", () => {
   });
 
   it("rejects paths whose scheme has no registered resolver", async () => {
-    const unknown = QualifiedPath.parse("steam://SteamApps/common/Skyrim");
+    const unknown = QualifiedPath.of({
+      scheme: "steam",
+      data: "",
+      path: "SteamApps/common/Skyrim",
+      root: "",
+    });
     await expect(fs.readFile(unknown)).rejects.toThrow(/No resolver/);
   });
 });

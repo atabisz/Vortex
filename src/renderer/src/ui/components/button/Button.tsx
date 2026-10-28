@@ -15,9 +15,13 @@ import type { XOr } from "@/ui/utils/types";
 export type IButtonBrand = "primary" | "info" | "neutral" | "success" | "danger" | "premium";
 export type IButtonAppearance = "weak" | "subdued" | "moderate" | "strong";
 
+/** `scrim` paints a scrim, which only reads on the achromatic brand, so it is neutral-only. */
+export type IButtonColour =
+  | { appearance?: IButtonAppearance; brand?: IButtonBrand }
+  | { appearance: "scrim"; brand: "neutral" };
+
 export type IButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  brand?: IButtonBrand;
-  appearance?: IButtonAppearance;
+  hasExpandedStyle?: boolean;
   isLoading?: boolean;
   size?: "sm" | "md";
   children?: string;
@@ -25,7 +29,8 @@ export type IButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   disabled?: boolean;
   href?: never;
   isExternal?: never;
-} & XOr<{ leftIconPath?: string }, { leftIcon?: ReactNode }> &
+} & IButtonColour &
+  XOr<{ leftIconPath?: string }, { leftIcon?: ReactNode }> &
   XOr<{ rightIconPath?: string }, { rightIcon?: ReactNode }>;
 
 const ButtonIcon = ({
@@ -72,6 +77,7 @@ export const Button = forwardRef<HTMLButtonElement, IButtonProps>(
       className,
       customContent,
       disabled,
+      hasExpandedStyle = true,
       isExternal,
       isLoading = false,
       leftIcon,
@@ -91,6 +97,7 @@ export const Button = forwardRef<HTMLButtonElement, IButtonProps>(
         {
           "nxm-button-disabled": !!disabled || !!ariaDisabled || isLoading,
           "nxm-button-icon-only": !customContent && !children,
+          "nxm-button-no-expanded-style": !hasExpandedStyle,
           // `md` is the base class, so only `sm` modifies it.
           "nxm-button-sm": size === "sm",
         },

@@ -16,17 +16,17 @@ import {
 import { join, dirname } from "node:path";
 import { Readable, Writable } from "node:stream";
 
+import { parseError, VortexError } from "@vortex/shared";
 import type {
   DirectoryStatus,
   FileStatus,
   StatResult,
   Status,
   StatusTime,
-} from "@nexusmods/adaptor-api/fs";
-import type { Pattern, ResolvedPath } from "@nexusmods/adaptor-api/fs";
-import type { FileSystemBackend as NodeFileSystemBackend } from "@nexusmods/adaptor-api/fs";
-import { matches } from "@nexusmods/adaptor-api/fs";
-import { parseError, VortexError } from "@vortex/shared";
+} from "@vortex/shared/filesystem";
+import type { Pattern, ResolvedPath } from "@vortex/shared/filesystem";
+import type { FileSystemBackend as NodeFileSystemBackend } from "@vortex/shared/filesystem";
+import { matches } from "@vortex/shared/filesystem";
 
 /**
  * Node-backed implementation of {@link NodeFileSystemBackend}. Operates on
@@ -178,6 +178,21 @@ export class NodeFileSystemBackendImpl implements NodeFileSystemBackend {
       const buffer = await readFile(path);
       return buffer;
     } catch (err) {
+      // NOTE(erri120): explicitly calling this out and redirecting the caller to use stream based API instead
+      // https://github.com/nodejs/node/blob/1f26576a3f13b8cc0d09b443efcfc071c667b35f/lib/internal/errors.js#L1259
+      if (
+        err instanceof RangeError &&
+        "code" in err &&
+        typeof err.code === "string" &&
+        err.code === "ERR_FS_FILE_TOO_LARGE"
+      ) {
+        throw new VortexError(
+          `Failed to read file '${path}': file is too large for a single read, use stream API instead`,
+          { kind: "argument-invalid", argument: path },
+          { cause: err },
+        );
+      }
+
       throw parseError(err, { path }, ({ data }) => {
         if (data.kind === "fs:no-permissions") {
           return `Failed to read file '${path}': insufficient permissions`;
@@ -214,22 +229,22 @@ export class NodeFileSystemBackendImpl implements NodeFileSystemBackend {
     path: ResolvedPath,
     mode: "r",
     options?: { start?: number; end?: number },
-  ): Promise<ReadableStream>;
+  ): Promise<ReadableStream<Uint8Array>>;
   createStream(
     path: ResolvedPath,
     mode: "w",
     options?: { start?: number },
-  ): Promise<WritableStream>;
+  ): Promise<WritableStream<Uint8Array>>;
   createStream(
     path: ResolvedPath,
     mode: string,
     options?: { start?: number; end?: number },
-  ): Promise<ReadableStream | WritableStream>;
+  ): Promise<ReadableStream<Uint8Array> | WritableStream<Uint8Array>>;
   async createStream(
     path: ResolvedPath,
     mode: string,
     options?: { start?: number; end?: number },
-  ): Promise<ReadableStream | WritableStream> {
+  ): Promise<ReadableStream<Uint8Array> | WritableStream<Uint8Array>> {
     if (mode === "w") {
       await this.createDirectory(dirname(path));
     }
@@ -243,7 +258,8 @@ export class NodeFileSystemBackendImpl implements NodeFileSystemBackend {
           start: options?.start,
           end: options?.end,
         });
-        return Readable.toWeb(node) as ReadableStream;
+
+        return Readable.toWeb(node) as ReadableStream<Uint8Array>;
       } else if (mode === "w") {
         // 'w': Open file for writing. The file is created (if it does not exist) or truncated (if it exists).
         const fd = await open(path, "w");
@@ -251,7 +267,8 @@ export class NodeFileSystemBackendImpl implements NodeFileSystemBackend {
           autoClose: true,
           start: options?.start,
         });
-        return Writable.toWeb(node) as WritableStream;
+
+        return Writable.toWeb(node) as WritableStream<Uint8Array>;
       }
     } catch (err) {
       throw parseError(err, { path }, ({ data }) => {
@@ -262,6 +279,7 @@ export class NodeFileSystemBackendImpl implements NodeFileSystemBackend {
         } else if (data.kind === "fs:not-a-file") {
           return `Cannot create stream for '${path}': not a file`;
         }
+
         return undefined;
       });
     }
@@ -317,7 +335,7 @@ export class NodeFileSystemBackendImpl implements NodeFileSystemBackend {
       include?: Pattern;
       exclude?: Pattern;
     },
-  ): Promise<AsyncIterator<ResolvedPath, undefined>>;
+  ): Promise<AsyncIterableIterator<ResolvedPath, undefined>>;
   enumerateDirectory(
     path: ResolvedPath,
     options: {
@@ -327,7 +345,7 @@ export class NodeFileSystemBackendImpl implements NodeFileSystemBackend {
       include?: Pattern;
       exclude?: Pattern;
     },
-  ): Promise<AsyncIterator<[ResolvedPath, Status], undefined>>;
+  ): Promise<AsyncIterableIterator<[ResolvedPath, Status], undefined>>;
   enumerateDirectory(
     path: ResolvedPath,
     options?: {
@@ -337,7 +355,7 @@ export class NodeFileSystemBackendImpl implements NodeFileSystemBackend {
       include?: Pattern;
       exclude?: Pattern;
     },
-  ): Promise<AsyncIterator<ResolvedPath | [ResolvedPath, Status], undefined>>;
+  ): Promise<AsyncIterableIterator<ResolvedPath | [ResolvedPath, Status], undefined>>;
   async enumerateDirectory(
     path: ResolvedPath,
     options?: {
@@ -347,7 +365,7 @@ export class NodeFileSystemBackendImpl implements NodeFileSystemBackend {
       include?: Pattern;
       exclude?: Pattern;
     },
-  ): Promise<AsyncIterator<ResolvedPath | [ResolvedPath, Status], undefined>> {
+  ): Promise<AsyncIterableIterator<ResolvedPath | [ResolvedPath, Status], undefined>> {
     const recursive = options?.recursive ?? false;
     const include = options?.include;
     const exclude = options?.exclude;
@@ -357,7 +375,10 @@ export class NodeFileSystemBackendImpl implements NodeFileSystemBackend {
 
     const dir = await opendir(path, { recursive });
 
-    return {
+    const iterator: AsyncIterableIterator<ResolvedPath | [ResolvedPath, Status], undefined> = {
+      [Symbol.asyncIterator]() {
+        return iterator;
+      },
       next: async () => {
         while (true) {
           const entry = await dir.read();
@@ -381,10 +402,16 @@ export class NodeFileSystemBackendImpl implements NodeFileSystemBackend {
         }
       },
       return: async () => {
-        await dir.close().catch(() => undefined);
+        try {
+          await dir.close();
+        } catch {
+          // ignored
+        }
+
         return { done: true, value: undefined };
       },
     };
+    return iterator;
   }
 
   async createLink(
@@ -408,11 +435,12 @@ export class NodeFileSystemBackendImpl implements NodeFileSystemBackend {
 }
 
 function parseTime(stats: BigIntStats): StatusTime {
+  // TODO: Node.js v26.2.0 added `Temporal.Instant` support to `fs.Stats`, replace custom code once upgraded
   const times: StatusTime = {
-    accessTime: stats.atimeNs,
-    modifiedTime: stats.mtimeNs,
-    changeTime: stats.ctimeNs,
-    creationTime: stats.birthtimeNs,
+    accessTime: Temporal.Instant.fromEpochNanoseconds(stats.atimeNs),
+    modifiedTime: Temporal.Instant.fromEpochNanoseconds(stats.mtimeNs),
+    changeTime: Temporal.Instant.fromEpochNanoseconds(stats.ctimeNs),
+    creationTime: Temporal.Instant.fromEpochNanoseconds(stats.birthtimeNs),
   };
 
   return times;

@@ -5,11 +5,27 @@ const path = require("path");
 const MOD_FILE_EXT = ".vpk";
 const STEAM_ID = 440;
 const GAME_ID = "teamfortress2";
+const WINDOWS_EXEC = "tf_win64.exe";
+
+function gameExecutable(discoveryPath) {
+  if (process.platform === "win32") {
+    return WINDOWS_EXEC;
+  }
+  // the Windows build can be installed too, to run through Proton
+  try {
+    fs.statSync(path.join(discoveryPath, WINDOWS_EXEC));
+    return WINDOWS_EXEC;
+  } catch {
+    return "tf.sh";
+  }
+}
 
 const INFO_FILE = path.join("tf", "steam.inf");
 
 function findGame() {
-  return util.steam.findByAppId(STEAM_ID.toString()).then((game) => game.gamePath);
+  return util.GameStoreHelper.findByAppId(STEAM_ID.toString(), "steam").then(
+    (game) => game.gamePath,
+  );
 }
 
 let tools = [
@@ -83,8 +99,8 @@ function main(context) {
     queryModPath: () => path.join("tf", "custom"),
     getGameVersion,
     logo: "gameart.jpg",
-    executable: () => "tf_win64.exe",
-    requiredFiles: ["tf_win64.exe", path.join("tf", "gameinfo.txt")],
+    executable: gameExecutable,
+    requiredFiles: [path.join("tf", "gameinfo.txt")],
     environment: {
       SteamAPPId: STEAM_ID.toString(),
     },

@@ -9,6 +9,7 @@
     "typecheck": "pnpm exec tsc -p tsconfig.json",
     "lint": "pnpm exec eslint --quiet --concurrency auto .",
     "lint:verbose": "pnpm exec eslint --concurrency auto .",
+    "lint:strict": "pnpm exec node ../../scripts/strict-lint.mjs ./oxlintrc.json",
     "api:dts": "pnpm exec rimraf ./lib && pnpm exec tsc -p tsconfig.api.json && pnpm exec node ./api-build.mjs",
     "test": "pnpm exec vitest run"
   },
@@ -67,7 +68,6 @@
     "@mdi/js": "catalog:",
     "@microsoft/api-extractor": "catalog:",
     "@msgpack/msgpack": "catalog:",
-    "@nexusmods/adaptor-api": "workspace:*",
     "@nexusmods/file-dependency-resolver": "workspace:*",
     "@nexusmods/fomod-installer-ipc": "catalog:",
     "@nexusmods/fomod-installer-native": "catalog:",
@@ -96,6 +96,7 @@
     "@types/encoding-down": "catalog:",
     "@types/fs-extra": "catalog:",
     "@types/graphlib": "catalog:",
+    "@types/js-yaml": "catalog:",
     "@types/json-socket": "catalog:",
     "@types/jsonwebtoken": "catalog:",
     "@types/lodash": "catalog:",
@@ -139,8 +140,10 @@
     "content-type": "catalog:",
     "crc-32": "catalog:",
     "csstype": "catalog:",
+    "cytoscape": "catalog:",
+    "cytoscape-cose-bilkent": "catalog:",
+    "cytoscape-edgehandles": "catalog:",
     "d3": "catalog:",
-    "date-fns": "catalog:",
     "dayjs": "catalog:",
     "dequal": "catalog:",
     "dnd-core": "catalog:",
@@ -166,8 +169,10 @@
     "is-admin": "catalog:",
     "json-loader": "catalog:",
     "json-socket": "catalog:",
+    "js-yaml": "catalog:",
     "jsonwebtoken": "catalog:",
     "lodash": "catalog:",
+    "markdown-ast": "catalog:",
     "memoize-one": "catalog:",
     "minimatch": "catalog:",
     "mixpanel-browser": "catalog:",
@@ -175,6 +180,7 @@
     "node-7z": "catalog:",
     "normalize-url": "catalog:",
     "numeral": "catalog:",
+    "p-limit": "catalog:",
     "p-queue": "catalog:",
     "packery": "catalog:",
     "permissions": "catalog:",
@@ -213,6 +219,7 @@
     "source-map-support": "catalog:",
     "string-template": "catalog:",
     "tailwindcss": "catalog:",
+    "temporal-polyfill": "catalog:",
     "tmp": "catalog:",
     "turbowalk": "catalog:",
     "universal-analytics": "catalog:",
@@ -229,5 +236,8 @@
   },
   "dependencies": {
     "@cyclonedx/cyclonedx-library": "catalog:"
+  },
+  "optionalDependencies": {
+    "loot": "catalog:"
   }
 }

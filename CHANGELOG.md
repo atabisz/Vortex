@@ -4,6 +4,220 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.1] - 2026-10-27
+
+### Changed
+
+- Restored the `Manual apply (Deploy)` button in the Mods page toolbar ([#24654](https://github.com/Nexus-Mods/Vortex/pull/24654))
+
+### Fixed
+
+- Create support bundles as zip so they can go on GitHub issues ([#24660](https://github.com/Nexus-Mods/Vortex/pull/24660))
+
+## [2.9.0] - 2026-10-19
+
+### Fixed
+
+- NXM link race condition when installing an extension ([#24507](https://github.com/Nexus-Mods/Vortex/pull/24507))
+
+## [2.9.0-beta.4] - 2026-10-15
+
+### Fixed
+
+- Extension update dialog not showing its entries ([#24532](https://github.com/Nexus-Mods/Vortex/pull/24532))
+
+## [2.9.0-beta.3] - 2026-10-13
+
+### Added
+
+- Prompt to update orphaned extensions that have no `modId` ([#24510](https://github.com/Nexus-Mods/Vortex/pull/24510))
+
+### Fixed
+
+- Extension auto-update not working when the `modId` was missing ([#24509](https://github.com/Nexus-Mods/Vortex/pull/24509))
+
+## [2.9.0-beta.2] - 2026-10-08
+
+### Fixed
+
+- Empty `plugins.txt` reported for games that only have their own plugins ([#24463](https://github.com/Nexus-Mods/Vortex/pull/24463))
+- Plugin list reset by a rescan when the game folder could not be read ([#24461](https://github.com/Nexus-Mods/Vortex/pull/24461))
+- LOOT process left running after Vortex closed or crashed ([#24450](https://github.com/Nexus-Mods/Vortex/pull/24450))
+- LOOT staying down for the rest of the session when its worker ended without being closed ([#24449](https://github.com/Nexus-Mods/Vortex/pull/24449))
+- LOOT failing to start when the active game changed or was cleared while the previous instance was settling ([#24447](https://github.com/Nexus-Mods/Vortex/pull/24447))
+- Plugin list failing to refresh after deployment for profiles with no mods enabled ([#24442](https://github.com/Nexus-Mods/Vortex/pull/24442))
+
+## [2.9.0-beta.1] - 2026-10-06
+
+_First beta of the 2.9 release._
+
+### Added
+
+- Power off after downloads on Linux ([#24393](https://github.com/Nexus-Mods/Vortex/pull/24393))
+- `SelectField`, `SwitchField` and `CheckboxField` built on Headless UI ([#24353](https://github.com/Nexus-Mods/Vortex/pull/24353))
+- Apply button beside Play while there are changes to deploy, showing deployment progress ([#24348](https://github.com/Nexus-Mods/Vortex/pull/24348))
+- Zoom control under Settings → Interface → Accessibility, with Ctrl+=/-/0 and Ctrl+wheel shortcuts in both layouts ([#24340](https://github.com/Nexus-Mods/Vortex/pull/24340))
+- `TextField` built on Headless UI's `Field` ([#24336](https://github.com/Nexus-Mods/Vortex/pull/24336))
+- Remaining FS operations over IPC: `enumerateDirectory`, `readFile`, `writeFile` and `createStream` ([#24335](https://github.com/Nexus-Mods/Vortex/pull/24335))
+- Health Check issues grouped into Warnings and Suggestions sections, each with its own install all and hide all ([#24316](https://github.com/Nexus-Mods/Vortex/pull/24316))
+- Gamebryo plugin management on Linux ([#24269](https://github.com/Nexus-Mods/Vortex/pull/24269))
+
+### Changed
+
+- `registerMigration` now accepts a `PromiseLike` instead of a Bluebird promise ([#24349](https://github.com/Nexus-Mods/Vortex/pull/24349))
+- Updated libloot to 0.29.6 ([#24261](https://github.com/Nexus-Mods/Vortex/pull/24261))
+- LOOT failures now tell the user what went wrong, in the LOOT application's words ([#24231](https://github.com/Nexus-Mods/Vortex/pull/24231))
+- Removed the legacy `gamebryo-bsa-support` extension, which overrode versioned BSA creation for archive invalidation ([#24121](https://github.com/Nexus-Mods/Vortex/pull/24121))
+- Folded `gamebryo-archive-check` into plugin management ([#24119](https://github.com/Nexus-Mods/Vortex/pull/24119))
+- Folded `gamebryo-plugin-indexlock` into plugin management ([#24118](https://github.com/Nexus-Mods/Vortex/pull/24118))
+- Folded `gamebryo-plugin-management` into the renderer as a core extension ([#24111](https://github.com/Nexus-Mods/Vortex/pull/24111))
+
+### Fixed
+
+- Log files flooded by an `EPIPE` loop when Vortex outlived the console it was started from ([#24426](https://github.com/Nexus-Mods/Vortex/pull/24426))
+- Stored load order replaced by an empty one when the game reports none, e.g. Cyberpunk 2077 losing its REDmod order during deployment ([#24407](https://github.com/Nexus-Mods/Vortex/pull/24407))
+- War Thunder's native Linux version not discovered ([#24400](https://github.com/Nexus-Mods/Vortex/pull/24400))
+- Kerbal Space Program's Windows build not discovered on Linux ([#24399](https://github.com/Nexus-Mods/Vortex/pull/24399))
+- Team Fortress 2's native Linux version not discovered ([#24398](https://github.com/Nexus-Mods/Vortex/pull/24398))
+- Starbound using the Windows executable on Linux ([#24397](https://github.com/Nexus-Mods/Vortex/pull/24397))
+- Prison Architect using the wrong mods folder on Linux ([#24396](https://github.com/Nexus-Mods/Vortex/pull/24396))
+- UAC elevation offered on access errors outside Windows ([#24395](https://github.com/Nexus-Mods/Vortex/pull/24395))
+- Executable versions not read on Linux ([#24394](https://github.com/Nexus-Mods/Vortex/pull/24394))
+- File permission errors (`EACCES`) reported as firewall problems ([#24390](https://github.com/Nexus-Mods/Vortex/pull/24390))
+- Garden Paws, Oxygen Not Included and Pathfinder: Kingmaker failing to set up outside Windows ([#24388](https://github.com/Nexus-Mods/Vortex/pull/24388))
+- Skyrim and Enderal `My Games` folders looked up with the wrong casing on Linux ([#24386](https://github.com/Nexus-Mods/Vortex/pull/24386))
+- The Sims 3 Steam version not discovered outside Windows ([#24385](https://github.com/Nexus-Mods/Vortex/pull/24385))
+- The Witcher 2 Steam version not discovered outside Windows ([#24384](https://github.com/Nexus-Mods/Vortex/pull/24384))
+- The Witcher Steam version not discovered outside Windows ([#24383](https://github.com/Nexus-Mods/Vortex/pull/24383))
+- Dragon Age 2 Steam version not discovered outside Windows ([#24382](https://github.com/Nexus-Mods/Vortex/pull/24382))
+- Spine leaving the game selected when global settings were opened from a game ([#24362](https://github.com/Nexus-Mods/Vortex/pull/24362))
+- Health Check mod suggestions using different titles in the list and the detail page ([#24359](https://github.com/Nexus-Mods/Vortex/pull/24359))
+- Header menus not closing when the title bar was clicked ([#24357](https://github.com/Nexus-Mods/Vortex/pull/24357))
+- Witcher 3 menu mod merge error when a game config XML is missing ([#24344](https://github.com/Nexus-Mods/Vortex/pull/24344))
+- Health checks held during a collection install not running again until restart ([#24319](https://github.com/Nexus-Mods/Vortex/pull/24319))
+- Plugin state issues: plugins without a load order position written ahead of the natives, plugin sync still running with plugin management turned off, and sorts running mid profile switch ([#24294](https://github.com/Nexus-Mods/Vortex/pull/24294))
+- Ghosted plugins losing their flags, author and masters in the plugins table ([#24273](https://github.com/Nexus-Mods/Vortex/pull/24273))
+- Persistent Missing Masters warning: plugins a collection ships left disabled, and ghosted masters counted as removed ([#24260](https://github.com/Nexus-Mods/Vortex/pull/24260))
+- State sort running on an empty load order while plugin management was turned off ([#24258](https://github.com/Nexus-Mods/Vortex/pull/24258))
+- Collections with no plugins section failing to apply mod rules ([#24255](https://github.com/Nexus-Mods/Vortex/pull/24255))
+- "Unhandled error" when changing a plugin's light flag while the file is in use ([#24254](https://github.com/Nexus-Mods/Vortex/pull/24254))
+- A dead libloot instance failing to restart ([#24231](https://github.com/Nexus-Mods/Vortex/pull/24231))
+- Plugin sorts failing with "Plugin not loaded" ([#24196](https://github.com/Nexus-Mods/Vortex/pull/24196))
+- `lootSortAsync` not answering its callback, or answering with an unsorted list ([#24193](https://github.com/Nexus-Mods/Vortex/pull/24193))
+- Plugin sorts failing during deployment, and "LOOT sorting successful" shown for sorts that didn't run ([#24190](https://github.com/Nexus-Mods/Vortex/pull/24190))
+- Locked index not shown for mixed-case plugins, and locking a plugin lowercasing every name in the plugins table ([#24188](https://github.com/Nexus-Mods/Vortex/pull/24188))
+- Spurious conflicts when the game is installed in a path containing a `.` ([#24089](https://github.com/Nexus-Mods/Vortex/pull/24089))
+
+## [2.8.2] - 2026-10-13
+
+### Added
+
+- Prompt to update orphaned extensions that have no `modId` ([#24510](https://github.com/Nexus-Mods/Vortex/pull/24510))
+
+### Fixed
+
+- Extension auto-update not working when the `modId` was missing ([#24509](https://github.com/Nexus-Mods/Vortex/pull/24509))
+
+## [2.8.1] - 2026-10-12
+
+### Fixed
+
+- Witcher 3 alphabetical sort not ordering mod folders by character code ([#24488](https://github.com/Nexus-Mods/Vortex/pull/24488))
+- Collections Workshop phases including optional mods, which install after every phase ([#24485](https://github.com/Nexus-Mods/Vortex/pull/24485))
+
+## [2.8.0] - 2026-10-06
+
+### Added
+
+- Option to sort the Witcher 3 load order alphabetically on deploy ([#24409](https://github.com/Nexus-Mods/Vortex/pull/24409))
+
+### Changed
+
+- Witcher 3 Script Mergers already set up in the game directory are now left alone, whichever variant was installed ([#24411](https://github.com/Nexus-Mods/Vortex/pull/24411))
+
+### Fixed
+
+- Witcher 3 Script Merger download failing ([#24411](https://github.com/Nexus-Mods/Vortex/pull/24411))
+- Deployment running when switching between games ([#24350](https://github.com/Nexus-Mods/Vortex/pull/24350))
+- Mod files deleted from the game directory when a deployment could not unlink them ([#24339](https://github.com/Nexus-Mods/Vortex/pull/24339))
+- Game discovery for the older Bethesda games ([#24337](https://github.com/Nexus-Mods/Vortex/pull/24337))
+
+## [2.8.0-beta.2] - 2026-09-29
+
+### Added
+
+- Witcher 3 5.0 (Remastered) support on the existing game entry, with health checks for the in-game mod switches and over-long mod folder names ([#24330](https://github.com/Nexus-Mods/Vortex/pull/24330))
+
+### Changed
+
+- Replaced the Electron clipboard API, with `readText`/`writeText` shims for external extensions ([#24318](https://github.com/Nexus-Mods/Vortex/pull/24318))
+- `GameStoreHelper` is now a sync query engine: `identifyStore` is no longer exported and `launchGameStore` no longer takes `askConsent` ([#24312](https://github.com/Nexus-Mods/Vortex/pull/24312))
+
+### Fixed
+
+- Witcher 3 load order and merge state: wrong collection export order, identical priorities after a purge, and the load order page crashing on mod changes ([#24330](https://github.com/Nexus-Mods/Vortex/pull/24330))
+- Crash when a game store lookup ran before the store list had loaded ([#24312](https://github.com/Nexus-Mods/Vortex/pull/24312))
+
+## [2.8.0-beta.1] - 2026-09-22
+
+_First beta of the 2.8 release._
+
+### Added
+
+- Support bundle in the Help menu, packing the logs, app state and recent crash dumps into a single `.7z` ([#24251](https://github.com/Nexus-Mods/Vortex/pull/24251))
+- `scrim` colour family in the design system, plus a light-theme proof of concept ([#24203](https://github.com/Nexus-Mods/Vortex/pull/24203))
+- `FileSystem` exposed over IPC ([#24166](https://github.com/Nexus-Mods/Vortex/pull/24166))
+- Temporal polyfill ([#24149](https://github.com/Nexus-Mods/Vortex/pull/24149))
+- Spinner while an `Image` loads, then a fade-in ([#24133](https://github.com/Nexus-Mods/Vortex/pull/24133))
+- Download flyout announcing a download beside the spine's download button ([#24131](https://github.com/Nexus-Mods/Vortex/pull/24131))
+- "Reduce motion" setting under Settings → Interface ([#24113](https://github.com/Nexus-Mods/Vortex/pull/24113))
+- "Always use compact headers" setting under Settings → Interface ([#24108](https://github.com/Nexus-Mods/Vortex/pull/24108))
+- BG3 SE Config mod type ([#24080](https://github.com/Nexus-Mods/Vortex/pull/24080))
+
+### Changed
+
+- Centralised game store scanning with snapshots ([#24243](https://github.com/Nexus-Mods/Vortex/pull/24243))
+- Removed the game version provider pattern (`registerGameVersionProvider`) ([#24239](https://github.com/Nexus-Mods/Vortex/pull/24239))
+- Cleaned up the `GameStoreHelper` API surface ([#24229](https://github.com/Nexus-Mods/Vortex/pull/24229))
+- Rebuilt the Games page sections and tiles ([#24217](https://github.com/Nexus-Mods/Vortex/pull/24217))
+- Removed the `IGameStore` API export and `registerGameStore` ([#24214](https://github.com/Nexus-Mods/Vortex/pull/24214))
+- Moved the Xbox game store into the renderer ([#24210](https://github.com/Nexus-Mods/Vortex/pull/24210))
+- `Pill` now takes `brand` and `appearance` props in place of `pillType` ([#24208](https://github.com/Nexus-Mods/Vortex/pull/24208))
+- Replaced the `util.steam` and `util.epicGamesLauncher` APIs with deprecated shims over `GameStoreHelper` ([#24205](https://github.com/Nexus-Mods/Vortex/pull/24205))
+- Reworked native path handling in the FS library ([#24198](https://github.com/Nexus-Mods/Vortex/pull/24198))
+- Deploy and Purge are now pinned to the mods toolbar by default ([#24194](https://github.com/Nexus-Mods/Vortex/pull/24194))
+- Removed `adaptor-api` and the adaptors; FS now lives in `shared` ([#24187](https://github.com/Nexus-Mods/Vortex/pull/24187))
+- Rebuilt the game cards on the Games page ([#24167](https://github.com/Nexus-Mods/Vortex/pull/24167))
+- Removed `AssertSerializable` and simplified the IPC types ([#24161](https://github.com/Nexus-Mods/Vortex/pull/24161))
+- Reworked and consolidated BCP 47 language tag handling ([#24144](https://github.com/Nexus-Mods/Vortex/pull/24144))
+- Moved the GOG, Origin and Uplay game stores into core, removing the bundled extensions ([#24138](https://github.com/Nexus-Mods/Vortex/pull/24138))
+- Upgraded Electron to 44.2.0 ([#24137](https://github.com/Nexus-Mods/Vortex/pull/24137))
+- Cleaned up `EpicGamesLauncher` and exposed the correct game IDs ([#24124](https://github.com/Nexus-Mods/Vortex/pull/24124))
+- Simplified `classifyErrorCode` ([#24122](https://github.com/Nexus-Mods/Vortex/pull/24122))
+- Manage Rules button now takes the info brand while conflicts are unresolved ([#24110](https://github.com/Nexus-Mods/Vortex/pull/24110))
+
+### Fixed
+
+- API rate limits are now handled instead of surfaced to the user ([#24262](https://github.com/Nexus-Mods/Vortex/pull/24262))
+- `lastActiveProfileForGame` skipping memoisation whenever no game was active ([#24228](https://github.com/Nexus-Mods/Vortex/pull/24228))
+- OAuth2 session control: the v3 API now refreshes its token when needed ([#24216](https://github.com/Nexus-Mods/Vortex/pull/24216))
+- Undefined profile in the install manager ([#24211](https://github.com/Nexus-Mods/Vortex/pull/24211))
+- Oblivion failing to activate on case-sensitive Linux filesystems because of the executable's casing ([#24202](https://github.com/Nexus-Mods/Vortex/pull/24202))
+- Incorrect game domain assigned to a mod via MD5 lookup ([#24195](https://github.com/Nexus-Mods/Vortex/pull/24195))
+- Steam discovery crash from an error check that read the message instead of the code ([#24171](https://github.com/Nexus-Mods/Vortex/pull/24171))
+- Notification tray taking focus out of a text field when it opens itself ([#24170](https://github.com/Nexus-Mods/Vortex/pull/24170))
+- Component crash when `FlagService` had not been initialised ([#24162](https://github.com/Nexus-Mods/Vortex/pull/24162))
+
+## [2.7.2] - 2026-09-29
+
+### Added
+
+- Witcher 3 5.0 (Remastered) support on the existing game entry, with health checks for the in-game mod switches and over-long mod folder names ([#24322](https://github.com/Nexus-Mods/Vortex/pull/24322))
+
+### Fixed
+
+- Witcher 3 load order and merge state: wrong collection export order, identical priorities after a purge, and the load order page crashing on mod changes ([#24322](https://github.com/Nexus-Mods/Vortex/pull/24322))
+
 ## [2.7.1] - 2026-09-24
 
 ### Fixed
@@ -2332,6 +2546,18 @@ _Yanked due to critical issue found with file overrides_
 - When providing feedback, users are treated as logged out if using OAuth
 - Changelog dashlet was incorrectly displaying markdown
 
+[2.9.1]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.9.1
+[2.9.0]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.9.0
+[2.9.0-beta.4]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.9.0-beta.4
+[2.9.0-beta.3]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.9.0-beta.3
+[2.9.0-beta.2]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.9.0-beta.2
+[2.9.0-beta.1]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.9.0-beta.1
+[2.8.2]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.8.2
+[2.8.1]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.8.1
+[2.8.0]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.8.0
+[2.8.0-beta.2]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.8.0-beta.2
+[2.8.0-beta.1]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.8.0-beta.1
+[2.7.2]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.7.2
 [2.7.1]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.7.1
 [2.7.0]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.7.0
 [2.7.0-beta.2]: https://github.com/Nexus-Mods/Vortex/releases/tag/2.7.0-beta.2

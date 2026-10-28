@@ -6,18 +6,23 @@ import { vi } from "vitest";
 // Re-exports the real storeHelper utilities from the renderer
 import { setSafe, deleteOrNop } from "../../../src/renderer/src/util/storeHelper";
 
-// Mock GameStoreHelper — getSteamEntry calls util.GameStoreHelper.getGameStore("steam")
-// Tests will override allGames() return values via vi.fn()
+// Mock GameStoreHelper — getSteamEntry calls util.GameStoreHelper.findByAppId(steamAppId, "steam").
+// Tests set the Steam library via mockAllGames; the mock resolves the first entry, as the real
+// Steam store would for the game's app id, and rejects like GameEntryNotFound when it's empty.
 export const mockAllGames = vi.fn().mockResolvedValue([]);
 
 const mockGameStoreHelper = {
-  getGameStore: vi.fn((storeId: string) => {
-    if (storeId === "steam") {
-      return { allGames: mockAllGames };
+  findByAppId: vi.fn(async (_appId: string, storeId?: string) => {
+    const entries = storeId === "steam" ? await mockAllGames() : [];
+    if (entries.length === 0) {
+      throw new Error("game entry not found");
     }
-    return undefined;
+    return entries[0];
   }),
 };
+
+// Mock getGame — getSteamEntry reads the game's steamAppId
+export const mockGetGame = vi.fn((_gameId: string) => ({ details: { steamAppId: 489830 } }));
 
 // Mock getVortexPath
 export const mockGetVortexPath = vi.fn((key: string) => {
@@ -32,6 +37,7 @@ export const util = {
   setSafe,
   deleteOrNop,
   GameStoreHelper: mockGameStoreHelper,
+  getGame: mockGetGame,
   getVortexPath: mockGetVortexPath,
   makeOverlayableDictionary: vi.fn(
     (

@@ -35,20 +35,18 @@ If anything matches, upstream put an inline guard back. Replace each hit with th
 
 Note the operator asymmetry — see "platform-guard operator direction" in Past gotchas for why. Quick rule: skip-on-windows uses `&&`, skip-on-linux uses `||`. Filename names the skipped platform.
 
-Extensions with guards we know about:
-
-- `extensions/gamestore-xbox/package.json` _(skip-on-linux — Windows-only registry/Game Pass integration)_
+Extensions with guards we know about: **none since the v2.9.1 sync.** The last one, `extensions/gamestore-xbox` (skip-on-linux), was deleted upstream when the Xbox store moved into core (`src/renderer/src/util/xbox/`, upstream `d7e76dd5e`). `XboxLauncher` returns `undefined` off-win32, so no guard is needed.
 
 Previously skipped but now fixed (guards removed, CI rebuilds native deps):
 
-- `extensions/gamebryo-plugin-management/package.json` — guard removed `ba23aee71`; uses `copy-native-loot.mjs` for platform-aware native copy (libloot.so.0 on Linux, libloot.dll on Windows)
-- `extensions/gamebryo-bsa-support/package.json` — guard removed `833f02db0`; CI fetches bsatk source and rebuilds with node-gyp
+- `extensions/gamebryo-plugin-management/package.json` — guard removed `ba23aee71`. **The extension itself is gone since v2.9.1:** upstream folded it into core at `src/renderer/src/extensions/gamebryo_plugin_management/`, and loot now resolves from `src/renderer`'s deps (see §10).
+- `extensions/gamebryo-bsa-support/package.json` — guard removed `833f02db0`. **Retired upstream in v2.9 (`0a6f2e78f`, LAZ-1050)** along with the bsatk dependency: `gamebryo-archive-support` already registered the BSA handler. The fork's `patches/bsatk@2.1.0.patch` and the CI bsatk rebuild went with it.
 - `extensions/gamebryo-archive-support/package.json` — guard removed `833f02db0`; has no native deps (pure TS + lz4js), guard was never needed
-- `extensions/gamebryo-ba2-support/package.json` — guard removed `3452f94f1`; ba2tk is pure-TS (cb931f65e), no native deps to skip
+- `extensions/gamebryo-ba2-support/package.json` — guard removed `3452f94f1`; fork-only extension, still needs the CI ba2tk rebuild in `release-linux.yml`
 
-Sentinels: `extensions/skip-on-windows.mjs` and `extensions/skip-on-linux.mjs` must exist (gamestore-xbox still uses the latter).
+Sentinels: `extensions/skip-on-windows.mjs` and `extensions/skip-on-linux.mjs` must exist. Neither has a caller as of v2.9.1. They're kept so the next Windows-only extension has a named guard to reach for instead of an inline `node -e`.
 
-**Native addon CI pattern:** pnpm's isolated store hides addons from `@electron/rebuild`. For any native addon in an extension workspace, add an explicit rebuild step in both `main.yml` and `release-linux.yml` — resolve the package dir, fetch source if needed, then `npx node-gyp rebuild --target=<electron-version>`. Current explicit rebuilds: loot, bsatk, font-scanner.
+**Native addon CI pattern:** pnpm's isolated store hides addons from `@electron/rebuild`. For any native addon in an extension workspace, add an explicit rebuild step in both `main.yml` and `release-linux.yml`: resolve the package dir, fetch source if needed, then `npx node-gyp rebuild --target="$ELECTRON_VERSION"`. Current explicit rebuilds: font-scanner (main, e2e) and ba2tk (release-linux). **loot is deliberately NOT rebuilt:** node-loot 7.x builds against N-API at install time, and upstream keeps it out of `@vortex/main`'s tree because `electron-rebuild` against Electron headers breaks its link (comment in `src/main/copy-assets.mjs`). Never hard-code the Electron version in a workflow; see §19.
 
 ### 2. Webpack externals allowlist for `winapi-bindings`
 
@@ -79,10 +77,12 @@ grep -n "linuxAlias" src/main/build.mjs
 ### 3. LOOT call-site casing
 
 ```bash
-grep -n "toLowerCase\|\\.filePath" extensions/gamebryo-plugin-management/src/autosort.ts | head -20
+grep -n "loot\.\(loadPlugins\|getPluginMetadata\|getPlugin\)(" src/renderer/src/extensions/gamebryo_plugin_management/autosort.ts
 ```
 
-All LOOT calls (`loadPluginsAsync`, `getPluginMetadataAsync`, `getPluginAsync`, `sortPluginsAsync`) must use `path.basename(pluginList[id].filePath)` — the real on-disk filename — not `pluginName.toLowerCase()`. On ext4 without casefold, lowercased names don't match real filenames like `DLCCoast.esm`, so LOOT falls back to probing the `.ghost` variant and spits out the confusing `"… does not have a valid plugin header"` error naming a `.ghost` path the file never had on disk.
+The file moved into core in v2.9.1 (was `extensions/gamebryo-plugin-management/src/autosort.ts`), and node-loot 7.x dropped the `Async` suffixes (`loadPluginsAsync` → `loadPlugins`, `getPluginMetadataAsync` → `getPluginMetadata`, `getPluginAsync` → `getPlugin`). Upstream's 2.9 code passes `toPluginId(name)` to `loadPlugins` and `pluginName` to the two lookups. Both are lower-cased, so the fork's version must win in all three spots.
+
+All LOOT calls that touch files (`loadPlugins`, `getPluginMetadata`, `getPlugin`, `sortPlugins`) must use `path.basename(pluginList[id].filePath)` (the `lootKey` in the plugin-info loop), which is the real on-disk filename, not `pluginName.toLowerCase()`. On ext4 without casefold, lowercased names don't match real filenames like `DLCCoast.esm`, so LOOT falls back to probing the `.ghost` variant and spits out the confusing `"… does not have a valid plugin header"` error naming a `.ghost` path the file never had on disk.
 
 ### 4. Transfer-path platform guard
 
@@ -184,23 +184,29 @@ grep -n "findAllLinuxSteamPaths\|steamRoots" src/renderer/src/util/Steam.ts
 
 `resolveSteamPaths()` must call `findAllLinuxSteamPaths()` and read `libraryfolders.vdf` from every Steam root (not just `basePath`). Without this, secondary libraries are missed when the detected `basePath` isn't the real installation (e.g. `~/.local/share/Steam` found before `~/.steam/debian-installation`).
 
-### 10. Cross-compiled Linux native binaries
+### 10. loot on Linux comes from upstream's node-loot (since v2.9.1)
 
 ```bash
-ls extensions/gamebryo-plugin-management/dist/{node-loot.node,libloot.so.0,libloot_wstring_stub.so}
-ls extensions/gamebryo-bsa-support/dist/bsatk.node
+grep -n "^  loot:" pnpm-workspace.yaml                 # github:Nexus-Mods/node-loot#<sha>
+grep -n "patchedDependencies" pnpm-workspace.yaml       # expect no hit
+ls node_modules/.pnpm/loot@*/node_modules/loot/loot_api/libloot.so.0
+node scripts/verify-addons.cjs                          # "OK: loot (libloot.so.0 => …)"
 ```
 
-These four files are **cross-compile artefacts** that shouldn't get rebuilt every run — `pnpm run build` for these extensions tries to relink native modules from source and fails on Linux because the build toolchain isn't set up for it. They've been around for months. If any of them disappear, check `dist/.gitignore` and the `dist` git-tracking state — we might need to un-ignore them explicitly, or document where they live.
+Up to v2.7.1 the fork carried all of Linux loot itself. `scripts/postinstall-libloot.cjs` built libloot 0.29.1 from Rust source and compiled `libloot_wstring_stub.so` (an LD_PRELOAD shim for the `fromNAPI<std::wstring>` symbol node-loot only defined on Windows). `patches/loot@6.2.3.patch` added a Linux `binding.gyp` branch and swapped the named-pipe IPC for a `/tmp` socket. `main.ts` and the `start` script prepended `bundledPlugins/gamebryo-plugin-management` to `LD_LIBRARY_PATH`. CI installed a Rust toolchain and re-ran `node-gyp` on loot against Electron headers.
 
-**Workaround when `_native` fails:** run `copy-extension.mjs` directly to stage the pre-built `dist/` into `build/bundledPlugins/`:
+**node-loot 7.0.1 (`44306bd`, pinned by upstream v2.9) ships every one of those natively,** so the v2.9.1 sync deleted all of it:
 
-```bash
-cd extensions/gamebryo-plugin-management && pnpm exec node ../copy-extension.mjs
-cd extensions/gamebryo-bsa-support && pnpm exec node ../copy-extension.mjs
-```
+- `loot_api/libloot.so.0` is vendored, built on ubuntu-22.04 (glibc 2.34, GLIBCXX 3.4.29) per its `loot_api/readme.txt`
+- `binding.gyp` has an `OS=='linux'` branch that links `-l:libloot.so.0` with rpath `$ORIGIN:$ORIGIN/../../loot_api`
+- `index.js` uses a unix socket under `os.tmpdir()` off-win32
+- `src/` no longer references `std::wstring` in the N-API helpers, so the stub's symbol is never needed
 
-> Build-time invariant — verified by AppImage/.deb CI, not `scripts/linux-smoke.sh`. Smoke runs on a fresh checkout before any build, so probing for `dist/*.node` would always skip; if a binary goes missing the failure surfaces loudly at `pnpm start` (dlopen error) or in the packaging job. The source-side risk lives in `scripts/manage-node-modules.js` and the extension `package.json` platform guards, both of which §1 already covers.
+Upstream's `src/main/copy-assets.mjs` copies `libloot.so.0` next to `node-loot.node` in `assets/loot/build/Release/`, where the `$ORIGIN` rpath finds it in the packaged app. `prepare-dist-package.mjs`'s `prepareLinux()` now asserts both files exist, mirroring upstream's Windows assertion.
+
+**If a future node-loot bump regresses Linux** (missing `libloot.so.0`, `undefined symbol` at dlopen, `EACCES` on a `\\?\pipe` path), the old fork machinery is recoverable from `sync-v2.9.1/master-pre-merge`: `git show sync-v2.9.1/master-pre-merge:scripts/postinstall-libloot.cjs`, `…:patches/loot@6.2.3.patch`. Don't restore it wholesale; port only the hunk the new version lacks. The "patch keyed on VERSION" lesson in the native-addon section still applies to any patch reintroduced.
+
+> Build-time invariant: verified by `scripts/verify-addons.cjs` (CI step "Verify native addons load") and the AppImage smoke launch, not `scripts/linux-smoke.sh`, because smoke runs before `pnpm install`.
 
 ## §11 Deliberate test-runner divergences
 
@@ -338,6 +344,45 @@ grep -n -A 1 "linux: {" src/main/electron-builder.config.cjs
 The `linux.target` in `src/main/electron-builder.config.cjs` MUST include `"AppImage"` and `"deb"`. `release-linux.yml` smoke-launches `./dist/vortex-setup*.AppImage`, renames it to the stable `vortex-setup.AppImage` the README and PKGBUILD link to, and uploads it next to `vortex_amd64.deb`. If the target regresses, `pnpm package:nosign` still exits 0, but there's nothing to launch, rename or upload.
 
 This already happened once. On 2026-06-24 the v2.1.1 sync brought back upstream's `"target": ["zip"]`, and the release run failed at the AppImage step. It read as a scripting bug in the rename step, which got rewritten three times (`02cc828e6`, `fa94178b3`, `18e159705`) and then dropped (`cc04f9143`), before `536a63a62` restored the target. Losing the rename meant `latest-linux` kept serving the 2026-05-29 AppImage until `2be888bdb` put it back. The probe checks the target in the source tree, so a sync that resets it fails in the smoke test instead of in the release run.
+
+---
+
+## §17 Linux keeps permission elevation (pkexec)
+
+```bash
+grep -n 'process.platform === "win32" || process.platform === "linux"' src/renderer/src/util/fs.ts   # expect 3
+```
+
+Upstream `fc0db1ad6` ("Only offer elevation on access errors on Windows", v2.9) gated the "Give permission" button to `win32` at three sites in `src/renderer/src/util/fs.ts`: `unlockConfirm`, the `ensureDirWritableAsync` EPERM branch, and `raiseUACDialog`. The fork elevates on Linux through pkexec (`sudo -n` on SteamOS) in `util/elevated.ts`, and `permissions.allow()` falls back to `chmod`/`chown` off-win32, so the fork keeps all three sites on `win32 || linux`. `raiseUACDialog`'s text then picks "You will be asked for your password." over the UAC line. Upstream's new `forcePerm` test is inverted to `it.runIf(linux)` and expects the 3-button form. Take upstream's version of this file and the Linux button disappears with no conflict at the three call sites. Only the `raiseUACDialog` message conflicts, so the other two auto-merge to win32-only.
+
+---
+
+## §18 gamebryo plugin management Linux deltas live in core now
+
+```bash
+G=src/renderer/src/extensions/gamebryo_plugin_management
+grep -n '"compatdata"' $G/util/gameSupport.ts                      # Proton AppData for plugins.txt
+grep -n 'needsRestore\|foreign.detected && keys.length === 0' $G/util/PluginPersistor.ts
+grep -n 'loot\.\(loadPlugins\|getPluginMetadata\|getPlugin\)(' $G/autosort.ts   # §3
+```
+
+Upstream 2.8 folded `extensions/gamebryo-plugin-management` (plus `gamebryo-archive-check` and `gamebryo-plugin-indexlock`) into `src/renderer/src/extensions/gamebryo_plugin_management/`. Git's rename detection carried the fork's edits across, which is what made the v2.9.1 conflicts tractable. It also carried fork **noise**, which is the trap:
+
+- **Diff the fork's OLD file against the merge base before resolving**: `git diff $(git merge-base <pre-merge> <tag>) <pre-merge> -- extensions/gamebryo-plugin-management/src/<file>`. That separates real Linux deltas from leftover type-annotation churn. In v2.9.1 the real deltas were the Proton `appDataPath` branch, the foreign-reset recovery, the §3 casing fix, the case-insensitive `fs.watch` filename match, and a fork "Reset Plugin Rules" action that upstream had adopted in the meantime.
+- **Auto-merged hunks can drop declarations.** The fork had inlined `pluginsFile` in `deserialize()`, so upstream's new code referenced a `const pluginsFile` the merge never brought back. A fork filter on `GHOST_EXT` survived while the import it needed did not. Typecheck catches both; neither shows as a conflict.
+- **Features both sides added get duplicated, not conflicted.** "Reset Plugin Rules" landed twice in `index.ts` (upstream's using direct imports, the fork's using `util.`/`types.`). Grep for duplicate `registerAction` names after a move.
+- **`util.getGame`/`util.getVortexPath` don't exist in core.** Fork code that came from the extension needs `../../gamemode_management/util/getGame` and `../../../util/getVortexPath`.
+- **Upstream's tests now pin the behaviours the fork overrides.** `autosort.pluginDetails.test.ts` expected `loadPlugins(["one.esp"])` from the lower-cased id; the fork passes the on-disk `One.esp`. `PluginPersistor.test.ts`'s "still asks when the file is empty and it has no plugin list" is exactly the Proton header-only reset that the fork restores silently. Both tests are flipped to assert the fork behaviour, with a mutation check: disabling the recovery branch turns the persistor test red.
+
+---
+
+## §19 CI native rebuilds read the installed Electron version
+
+```bash
+grep -nE -- '--target=[0-9]|electron/rebuild -f -v [0-9]' .github/workflows/*.yml   # expect no hit
+```
+
+The fork's `main.yml`, `release-linux.yml` and `e2e.yml` hard-coded Electron `39.8.0` in their `@electron/rebuild` and `node-gyp --target` calls, and `package.json`'s `rebuild:native` said `43.0.0`. Upstream reached Electron 44.2.0 by v2.9.1, so every Linux rebuild would have produced addons that fail at dlopen with a NODE_MODULE_VERSION mismatch, and CI would have been green right up to the smoke launch. Each workflow now has a "Resolve Electron version" step that reads `src/main/node_modules/electron/package.json` into `$ELECTRON_VERSION`. `scripts/rebuild-pnpm-natives.cjs` resolves it the same way, and `rebuild:native` lets `electron-rebuild` detect it.
 
 ---
 
@@ -517,12 +562,14 @@ Each entry is a real bug we hit at least once — written down so the next merge
 
 ### native addon loading (loot, esptk, bsatk)
 
+> **Since v2.9.1 the four loot bullets marked RETIRED below describe machinery that no longer exists.** node-loot 7.0.1 ships Linux support itself (see §10) and bsatk was retired upstream. They stay because the failure shapes come back if a node-loot bump regresses Linux.
+
 - **Static top-level `require('esptk')` can take down the whole extension.** If `esptk.node` fails to dlopen (wrong arch, missing deps), the whole `gamebryo-plugin-management` extension fails to register and the Plugins tab silently disappears. Fix: lazy-load via `require()` inside the functions that actually need it, with graceful degradation. Commit `c219b460b`.
-- **`LD_LIBRARY_PATH` is not inherited by `fork()` by default** — Node forks clear path-adjacent env vars. `node-loot.node` has `RUNPATH $ORIGIN/../../loot_api` which is correct in the source tree but broken in the packaged deb/AppImage where `libloot.so.0` sits inside `bundledPlugins/gamebryo-plugin-management/`. Need both fixes: prepend `bundledPlugins/gamebryo-plugin-management` to `LD_LIBRARY_PATH` in `main.ts` at app startup (commit `3a6488b9b`), AND pass `LD_LIBRARY_PATH` explicitly in the loot subprocess `fork()` env block (commit `0875e3db2`).
-- **loot's binding.gyp uses `-l../loot_api/libloot`, which `ld` can't resolve.** On Linux needs `-L../loot_api -llibloot` + RPATH. The patch lives in `patches/loot@<version>.patch` (currently `loot@6.2.3.patch`; older `loot@6.2.1.patch` is a dead leftover); a well-meaning rewrite of the patch to only carry IPC guards once dropped the binding.gyp hunk. Commit `6cc8cbf2a`. Rule: **never rewrite a patch file wholesale — additive hunks only.**
+- **RETIRED v2.9.1.** **`LD_LIBRARY_PATH` is not inherited by `fork()` by default** — Node forks clear path-adjacent env vars. `node-loot.node` has `RUNPATH $ORIGIN/../../loot_api` which is correct in the source tree but broken in the packaged deb/AppImage where `libloot.so.0` sits inside `bundledPlugins/gamebryo-plugin-management/`. Need both fixes: prepend `bundledPlugins/gamebryo-plugin-management` to `LD_LIBRARY_PATH` in `main.ts` at app startup (commit `3a6488b9b`), AND pass `LD_LIBRARY_PATH` explicitly in the loot subprocess `fork()` env block (commit `0875e3db2`).
+- **RETIRED v2.9.1 (node-loot 7.0.1 links `-l:libloot.so.0` itself).** **loot's binding.gyp uses `-l../loot_api/libloot`, which `ld` can't resolve.** On Linux needs `-L../loot_api -llibloot` + RPATH. The patch lives in `patches/loot@<version>.patch` (currently `loot@6.2.3.patch`; older `loot@6.2.1.patch` is a dead leftover); a well-meaning rewrite of the patch to only carry IPC guards once dropped the binding.gyp hunk. Commit `6cc8cbf2a`. Rule: **never rewrite a patch file wholesale — additive hunks only.**
 - **loot/bsatk `prebuild-install || node-gyp rebuild` fallback is easy to break.** A "helpful" `execSync` rewrite that throws on first failure strips the `|| node-gyp rebuild` fallback, so Windows CI fails because prebuild-install has no binaries for its napi version. Always keep the `||` fallback in the shell string and let `execSync` inspect the final exit code. Commits `ffe331d98`, `e49a4a5cd`.
-- **loot's index.js / async.js hard-coded `\\?\pipe\loot-ipc-*`** (Windows named-pipe path) causes `EACCES` on Linux startup. Patched in the same `patches/loot@<version>.patch`. Commit `8fd69eab9`.
-- **The loot patch is keyed on loot's package VERSION, so an upstream node-loot bump orphans it.** `pnpm-workspace.yaml` has `patchedDependencies: loot@6.2.x: patches/loot@6.2.x.patch`, while upstream pins loot by git commit (`loot: github:Nexus-Mods/node-loot#<sha>`). When upstream moves the sha and the new commit bumps `package.json` (v2.7.1 sync: `7b6028f` 6.2.2 → `cc15156` 6.2.3), the version key no longer matches, and the conflict shows up only in the `allowBuilds` loot lines, which reads as a harmless URL bump. Procedure: read the new version (`gh api "repos/Nexus-Mods/node-loot/contents/package.json?ref=<sha>" --jq .content | base64 -d`), `git apply --check` the existing patch against a tarball of the new sha, `git mv` the patch to the new version name, update the `patchedDependencies` key, and keep **both** `allowBuilds` lines (plain URL and `(patch_hash=…)`) pointing at the new sha. The patch hash is a hash of the file content, so an unchanged patch keeps its hash. Verify after `pnpm install`: `grep -- "-L../loot_api" node_modules/.pnpm/loot@*<sha-prefix>*/node_modules/loot/binding.gyp` must hit (unpatched upstream has 0 hits).
+- **RETIRED v2.9.1 (node-loot 7.0.1 uses a unix socket off-win32).** **loot's index.js / async.js hard-coded `\\?\pipe\loot-ipc-*`** (Windows named-pipe path) causes `EACCES` on Linux startup. Patched in the same `patches/loot@<version>.patch`. Commit `8fd69eab9`.
+- **RETIRED v2.9.1 (no loot patch left), lesson kept for any patch reintroduced.** **The loot patch is keyed on loot's package VERSION, so an upstream node-loot bump orphans it.** `pnpm-workspace.yaml` has `patchedDependencies: loot@6.2.x: patches/loot@6.2.x.patch`, while upstream pins loot by git commit (`loot: github:Nexus-Mods/node-loot#<sha>`). When upstream moves the sha and the new commit bumps `package.json` (v2.7.1 sync: `7b6028f` 6.2.2 → `cc15156` 6.2.3), the version key no longer matches, and the conflict shows up only in the `allowBuilds` loot lines, which reads as a harmless URL bump. Procedure: read the new version (`gh api "repos/Nexus-Mods/node-loot/contents/package.json?ref=<sha>" --jq .content | base64 -d`), `git apply --check` the existing patch against a tarball of the new sha, `git mv` the patch to the new version name, update the `patchedDependencies` key, and keep **both** `allowBuilds` lines (plain URL and `(patch_hash=…)`) pointing at the new sha. The patch hash is a hash of the file content, so an unchanged patch keeps its hash. Verify after `pnpm install`: `grep -- "-L../loot_api" node_modules/.pnpm/loot@*<sha-prefix>*/node_modules/loot/binding.gyp` must hit (unpatched upstream has 0 hits).
 
 ### case-sensitive filesystem (ext4 without casefold)
 
@@ -596,7 +643,20 @@ Each entry is a real bug we hit at least once — written down so the next merge
 - **Upstream can tag a release on `master` instead of its release branch.** `v2.7.1` (`c8ea03d00`, GitHub release `targetCommitish: "master"`) is a master merge carrying the 2.8.0-beta.1 changelog and an Electron 43 → 44 bump, and `v2.7.0` is **not** its ancestor. The code that actually shipped as 2.7.1 is the `release/v2.7` head (`48c20dcab`). Merging the tag would have pulled an unreleased beta into the fork. The tell is in the first merge's conflicts: files the release line never touched (Xbox store moved into core, `Steam.ts`, `util/api.ts`) show up, and `CHANGELOG.md` gains a section newer than the tag's own version.
 - **Check before merging:** `git merge-base --is-ancestor v<X.Y>.0 v<X.Y.Z>` and `git ls-remote upstream "refs/heads/release/v<X.Y>"`. If the tag is not on `release/v<X.Y>`, merge the release-branch head (whose `CHANGELOG.md` should top out at `<X.Y.Z>`) and say so in the merge commit message. Release tags up to v2.6.3 were on their release branches (`v2.6.3` = `release/v2.6` head).
 - **Automation consequence:** `.github/scripts/rebase-upstream.sh` picks the highest `vX.Y.Z` tag and runs `merge-base --is-ancestor <tag> master`. A master-placed tag is never an ancestor of a fork master that merged the release branch, so the cron keeps targeting the mis-tag every day. Since `3a3eae13d` fixed the workflow-file push, that run can now succeed: it force-pushes `sync/upstream-v2.7.1` (the same name a hand-merge branch would use) and opens a draft PR carrying beta code. **FIXED alongside the v2.7.1 sync:** Step 2b of the script now fetches `release/v<X.Y>`. If the tag isn't on it, the script merges the branch head instead, but only when that branch's `CHANGELOG.md` tops out at the tagged version. Otherwise it exits 1 with `::error::` and asks for `upstream_ref`, because a branch that has moved past the release can't say which commit shipped. The substitution shows in the merge message and as a `[!NOTE]` in the PR body. The up-to-date check and the PR commit log use the merge ref too, so once `release/v2.7` is in master the cron exits "already includes". An explicit `upstream_ref` bypasses Step 2b. Tested against real refs in six cases: mis-tag → substitute; already merged → no-op; tag on its branch (`v2.6.3`, `v2.7.0`) → unchanged; fake `v2.7.2` on master → exit 1; no release branch → tag as-is.
-- **Upstream's next move to watch (2.8 line):** `gamestore-xbox` moves into core (`src/renderer/src/util/xbox/`) and the extension is deleted, which makes the §1 `skip-on-linux` guard obsolete. `XboxLauncher.create()` returns `undefined` off-win32 and `GameModeManager` filters it with `.filter(Boolean)`, so accept the deletion and retire the §1 guard note when that lands. GOG/Origin/Uplay also move into core, and `util.steam`/`util.epicGamesLauncher` become deprecated shims over `GameStoreHelper`. Expect §9 (`Steam.ts` multi-root) to conflict hard.
+- **LANDED in the v2.9.1 sync, kept as history.** **Upstream's next move to watch (2.8 line):** `gamestore-xbox` moves into core (`src/renderer/src/util/xbox/`) and the extension is deleted, which makes the §1 `skip-on-linux` guard obsolete. `XboxLauncher.create()` returns `undefined` off-win32 and `GameModeManager` filters it with `.filter(Boolean)`, so accept the deletion and retire the §1 guard note when that lands. GOG/Origin/Uplay also move into core, and `util.steam`/`util.epicGamesLauncher` become deprecated shims over `GameStoreHelper`. Expect §9 (`Steam.ts` multi-root) to conflict hard. (It did: one hunk, resolved by porting the multi-root loop onto upstream's new `asBlock`/case-insensitive parser.)
+
+### upstream folds extensions and packages into core (2.8/2.9 line)
+
+- **Upstream deleted `packages/adaptor-api` (`d341701dd`, "keep FS in shared") while fork Linux code imported `XDG` from it.** `pnpm install` then fails with `ERR_PNPM_WORKSPACE_PKG_NOT_FOUND … "@nexusmods/adaptor-api@workspace:*"`, because the fork's `src/renderer/package.json` still lists the workspace dep. `XDG` now lives at `@vortex/shared/filesystem`. Repoint `src/main/src/getVortexPath.ts` and `src/renderer/src/util/linux/xdg.ts`, and drop the dep. Any fork test that `vi.resetModules()` + re-imports a module that touches `@vortex/shared` now throws "Duplicate @vortex/shared error module detected", so import once and rely on call-time reads (`getVortexPath.test.ts`).
+- **Retired extensions leave untracked build output that still loads.** `git rm` removes the tracked files, but `extensions/<name>/{dist,node_modules}` and `src/main/build/bundledPlugins/<name>/` are ignored and stay on disk. A stale `bundledPlugins/gamebryo-plugin-management` would load next to the new core extension. After a sync that retires extensions, delete both for every `extensions/*` dir with no `package.json`. v2.9.1 retired: collections, gamebryo-archive-check, gamebryo-bsa-support, gamebryo-plugin-indexlock, gamebryo-plugin-management, gameinfo-steam, gamestore-{gog,origin,uplay,xbox}, gameversion-hash.
+- **`GameStoreHelper` lost `getGameStore` on the extension API.** `IGameStoreHelper` is now `isGameInstalled`/`findByName`/`findByAppId`/`launchGameStore`. `gamebryo-savegame-management`'s Proton lookup now goes through `findByAppId(<steamAppId>, "steam")`, which still returns the full Steam entry (`usesProton`, `compatDataPath`), so it no longer needs `allGames()`. `util.steam`/`util.epicGamesLauncher` are deprecated shims that only offer `findByAppId`/`findByName`.
+- **`GameModeManager.reloadStoreGames` walks `mKnownGameStores` itself** instead of calling `GameStoreHelper.reloadGames`. Fork tests that counted the helper mock read 0; spy on `reloadStoreGames`.
+- **Cherry-picks on a release branch conflict with their own evolved versions on master.** Syncing from `release/v2.7` to v2.9.1 conflicted `errorReporting.ts`, `minidump.test.ts`, the nexus `util.ts`/`util.updateToken.test.ts` and `test-utils/builders.ts` purely because the 2.7 cherry-picks (Vitalii Mikhailov, Rich Moore) differ from what the same commits became on master. Check the author on the fork side (`git log --format='%an' <merge-base>..<pre-merge> -- <file>`). If every commit is upstream's, take the tag's version.
+- **The fork's Steam `appid` dedupe is Linux-only since v2.9.1.** `parseManifests` drops repeated app ids so symlinked roots don't list a game twice, but upstream's new `Steam.test.ts` reuses appid 42 across libraries and expects all of them. The dedupe and the multi-root read now apply on Linux only. Upstream's suite runs under a stubbed `win32`, with a separate Linux block for the fork behaviour (playbook §9).
+
+### rebase-upstream cron went quiet after 2026-10-14
+
+The workflow is `active` and scheduled daily, yet its last run was 2026-10-14 (success). Draft PRs #12–#15 (v2.7.2, v2.8.0, v2.8.1, v2.8.2) are still open, and no v2.9.x draft was ever opened. The v2.9.1 hand-merge supersedes all four. **Not diagnosed:** the run logs had expired by 2026-10-28. Check `gh run list -R atabisz/Vortex --workflow rebase-upstream.yml` after the next scheduled slot. Also note that the cron opens a draft per tag, not per newest tag, so a gap of N releases produces N drafts to close.
 
 ### platform-guard operator direction
 
@@ -653,6 +713,7 @@ Durable references to the fork-local Linux fixes this file depends on. If any of
 | Linux electron-builder target restored to AppImage + deb after upstream `zip` regression (see §16)              | `536a63a62`                              | _master-only_    |
 | Stable-name `vortex-setup.AppImage` rename restored in `release-linux.yml` (see §16)                            | `2be888bdb`                              | _master-only_    |
 | v2.7.1 sync — hand-merge of `release/v2.7` @ `48c20dcab` (tag was on master, see release-tag gotchas)           | `944f5f9da`                              | _master-only_    |
+| v2.9.1 sync — hand-merge of `release/v2.9` @ `c80326367` (= tag); fork loot machinery retired (§10), §17–§19    | branch `sync/upstream-v2.9.1`            | _master-only_    |
 
 Phase 36 cherry-pick filter range: `merge-base(linux-port, master) = 538aef374..c4d1b4555` with `--no-merges` + patch-id dedup → 407 candidates → 52 clean + 12 auto-resolved + 324 skipped + 2 fix-ups = 66 commits added to linux-port.
 

@@ -91,11 +91,25 @@ else
 fi
 
 # §3 — LOOT call-site casing
+# gamebryo-plugin-management moved into core in upstream 2.8 (extension deleted), so
+# the probe follows it to src/renderer/src/extensions/gamebryo_plugin_management/.
 section 3 "LOOT filePath usage"
-if grep -q "filePath" extensions/gamebryo-plugin-management/src/autosort.ts 2>/dev/null; then
-  probe "LOOT calls use filePath (preserved case)" PASS
+AUTOSORT=src/renderer/src/extensions/gamebryo_plugin_management/autosort.ts
+if [[ ! -f "$AUTOSORT" ]]; then
+  probe "autosort.ts at core path" FAIL "$AUTOSORT missing — upstream moved it again; update this probe"
 else
-  probe "LOOT calls use filePath (preserved case)" FAIL "no filePath references in autosort.ts"
+  if grep -q 'map((id) => path.basename(pluginList\[id\].filePath))' "$AUTOSORT"; then
+    probe "loadPlugins gets real on-disk filenames" PASS
+  else
+    probe "loadPlugins gets real on-disk filenames" FAIL "loadPlugins is fed toPluginId()/lower-cased ids — ext4 ghost-probe error returns"
+  fi
+  for call in getPluginMetadata getPlugin; do
+    if grep -q "loot\.$call(lootKey)" "$AUTOSORT"; then
+      probe "$call uses lootKey (preserved case)" PASS
+    else
+      probe "$call uses lootKey (preserved case)" FAIL "$call called with lower-cased pluginName"
+    fi
+  done
 fi
 
 # Counts hits without tripping the `grep -c returns 1 on zero` exit path.
@@ -234,6 +248,39 @@ if [[ "$linux_target" == *'"AppImage"'* && "$linux_target" == *'"deb"'* ]]; then
   probe "electron-builder linux.target includes AppImage and deb" PASS
 else
   probe "electron-builder linux.target includes AppImage and deb" FAIL "linux target is '${linux_target:-not found}' in src/main/electron-builder.config.cjs — release-linux.yml publishes no AppImage"
+fi
+
+# §17 — Linux keeps permission elevation (pkexec)
+section 17 "Linux permission elevation"
+n=$(count_hits 'process\.platform === "win32" \|\| process\.platform === "linux"' src/renderer/src/util/fs.ts)
+if [[ "$n" -ge 3 ]]; then
+  probe "fs.ts offers elevation on Linux at all 3 sites" PASS
+else
+  probe "fs.ts offers elevation on Linux at all 3 sites" FAIL "$n/3 — upstream fc0db1ad6 gates elevation to win32 only"
+fi
+
+# §18 — gamebryo plugin management Linux deltas (moved into core in 2.8)
+section 18 "gamebryo plugin management (core)"
+GBPM=src/renderer/src/extensions/gamebryo_plugin_management
+if grep -q '"compatdata"' "$GBPM/util/gameSupport.ts" 2>/dev/null; then
+  probe "appDataPath resolves the Proton prefix" PASS
+else
+  probe "appDataPath resolves the Proton prefix" FAIL "no compatdata branch in gameSupport.ts appDataPath"
+fi
+n=$(count_hits 'needsRestore' "$GBPM/util/PluginPersistor.ts")
+if [[ "$n" -ge 3 ]] && grep -q 'foreign.detected && keys.length === 0' "$GBPM/util/PluginPersistor.ts"; then
+  probe "PluginPersistor recovers a Proton plugins.txt reset" PASS
+else
+  probe "PluginPersistor recovers a Proton plugins.txt reset" FAIL "foreign-reset recovery missing ($n needsRestore hits)"
+fi
+
+# §19 — CI native rebuilds follow the installed Electron version
+section 19 "No pinned Electron version in CI"
+pinned=$(grep -nE -- '--target=[0-9]|electron/rebuild -f -v [0-9]' .github/workflows/*.yml 2>/dev/null | head -1)
+if [[ -z "$pinned" ]]; then
+  probe "workflows resolve ELECTRON_VERSION instead of pinning" PASS
+else
+  probe "workflows resolve ELECTRON_VERSION instead of pinning" FAIL "$pinned"
 fi
 
 # §11 — Deliberate test-runner divergences (NEGATIVE gates)

@@ -417,16 +417,16 @@ function unlockConfirm(filePath: string): PromiseBB<boolean> {
       : `Vortex needs to access "${filePath}" but it either has too restrictive ` +
         "permissions or is locked by another process.";
 
-  const buttons = ["Cancel", "Retry"];
-
-  if (processes.length === 0) {
-    buttons.push("Give permission");
-  }
+  // Fork: Linux elevates through pkexec (util/elevated.ts), so it is offered there too
+  const canElevate =
+    (process.platform === "win32" || process.platform === "linux") && processes.length === 0;
+  const buttons = canElevate ? ["Cancel", "Retry", "Give permission"] : ["Cancel", "Retry"];
 
   const options: Electron.MessageBoxOptions = {
     title: "Access denied",
-    message:
-      baseMessage + " If your account has admin rights Vortex can try to unlock the file for you.",
+    message: canElevate
+      ? baseMessage + " If your account has admin rights Vortex can try to unlock the file for you."
+      : baseMessage,
     detail:
       processes.length === 0
         ? undefined
@@ -1306,7 +1306,10 @@ export function ensureDirWritableAsync(
       //  as far as I understand fs-extra that is not supposed to happen! but I suppose
       //  it doesn't hurt to add some code to handle that use case.
       //  https://github.com/Nexus-Mods/Vortex/issues/6856
-      if (["EPERM", "EBADF", "UNKNOWN", "EEXIST"].indexOf(err.code) !== -1) {
+      if (
+        (process.platform === "win32" || process.platform === "linux") &&
+        ["EPERM", "EBADF", "UNKNOWN", "EEXIST"].indexOf(err.code) !== -1
+      ) {
         return PromiseBB.resolve(confirm()).then(() => {
           const userId = permission.getUserId();
           return (
@@ -1446,23 +1449,20 @@ function raiseUACDialog<T>(
   filePath: string,
 ): PromiseBB<T> {
   let fileToAccess = filePath !== undefined ? filePath : err.path;
+  const canElevate = process.platform === "win32" || process.platform === "linux";
   const options: Electron.MessageBoxOptions = {
     title: "Access denied (2)",
-    message:
-      process.platform === "linux"
-        ? t(
-            'Vortex needs to access "{{ fileName }}" but doesn\'t have permission to.\n' +
-              "If your account has admin rights Vortex can unlock the file for you. " +
-              "You will be asked for your password.",
-            { replace: { fileName: fileToAccess } },
-          )
-        : t(
-            'Vortex needs to access "{{ fileName }}" but doesn\'t have permission to.\n' +
-              "If your account has admin rights Vortex can unlock the file for you. " +
-              "Windows will show an UAC dialog.",
-            { replace: { fileName: fileToAccess } },
-          ),
-    buttons: ["Cancel", "Retry", "Give permission"],
+    message: t(
+      'Vortex needs to access "{{ fileName }}" but doesn\'t have permission to.' +
+        (canElevate
+          ? "\nIf your account has admin rights Vortex can unlock the file for you. " +
+            (process.platform === "linux"
+              ? "You will be asked for your password."
+              : "Windows will show an UAC dialog.")
+          : ""),
+      { replace: { fileName: fileToAccess } },
+    ),
+    buttons: canElevate ? ["Cancel", "Retry", "Give permission"] : ["Cancel", "Retry"],
     noLink: true,
     type: "warning",
   };

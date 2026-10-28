@@ -19,7 +19,6 @@
       }
     ],
     "publisherName": ["Black Tree Gaming Limited", "Black Tree Gaming Ltd"],
-    "signExts": [".dll"],
     "signingHashAlgorithms": ["sha256"],
     "rfc3161TimeStampServer": "http://timestamp.comodoca.com/rfc3161",
     "timeStampServer": "http://timestamp.comodoca.com"
@@ -80,6 +79,7 @@
     "node_modules/react-select/scss",
     "node_modules/@nexusmods/fomod-installer-ipc/dist/*.exe",
     "assets/dotnetprobe*",
+    "assets/loot/**",
     "assets/*.exe",
     "assets/css/**",
     "**/*.node",

@@ -8,11 +8,6 @@ import type { ThunkDispatch } from "redux-thunk";
 
 import type { IDownloadsAPIExtension } from "../extensions/download_management/types/IDownloadsAPIExtension";
 import type { ILoadOrderGameInfo } from "../extensions/file_based_loadorder/types/types";
-import type {
-  GameVersionProviderFunc,
-  GameVersionProviderTest,
-  IGameVersionProviderOptions,
-} from "../extensions/gameversion_management/types/IGameVersionProvider";
 import type { IHistoryEvent, IHistoryStack } from "../extensions/history_management/types";
 import type { IGameLoadOrderEntry } from "../extensions/mod_load_order/types/types";
 import type {
@@ -51,7 +46,6 @@ import type { IActionOptions } from "./IActionDefinition";
 import type { IBannerOptions } from "./IBannerOptions";
 import type { DialogType, IDialogResult } from "./IDialog";
 import type { IGame } from "./IGame";
-import type { IGameStore } from "./IGameStore";
 import type { IHealthCheck, IModHealthCheck } from "./IHealthCheck";
 import type { ILookupOptions, IModLookupResult } from "./IModLookupResult";
 import type { INotification, INotificationAction } from "./INotification";
@@ -462,8 +456,8 @@ export interface IRunOptions {
   // is set but in some cases (e.g. when the target process is run elevated) we don't know
   // the pid so this will be undefined.
   onSpawned?: (pid?: number) => void;
-  // called when the process exits, with its exit code (null when terminated by a signal).
-  onExit?: (code: number | null) => void;
+  // called when the process exits, with its exit code, or null and the signal that terminated it.
+  onExit?: (code: number | null, signal: NodeJS.Signals | null) => void;
 }
 
 /**
@@ -947,6 +941,10 @@ export interface IStateVerifier {
   // if set, delete this element or an ancestor element if this one doesn't
   // match the verifier.
   deleteBroken?: boolean | "parent";
+  // if set, a missing value is filled in (by repair or default) without telling the user, for
+  // values persistence can't keep, such as an empty object. A present but invalid value, a
+  // deleteBroken verifier and a repair that drops the value are still reported.
+  silent?: boolean;
   // if set, this function is called to generate the "repaired" value. The
   // optional `context` carries the surrounding record's key/parent so a repair
   // can recover from identity (e.g. a mod recovering installationPath from its
@@ -1311,13 +1309,6 @@ export interface IExtensionContext {
   registerGameStub: (game: IGame, ext: IExtensionDownloadInfo) => void;
 
   /**
-   * registers support for a game store.
-   *
-   * @param {IGameStore} gameStore
-   */
-  registerGameStore: (gameStore: IGameStore) => void;
-
-  /**
    * registers a provider for general information about a game
    * @param {string} id unique id identifying the provider
    * @param {number} priority if two providers provide the same info (same key) the one with the
@@ -1473,7 +1464,7 @@ export interface IExtensionContext {
    *                           As soon as the promise returned from this is resolved, the stored
    *                           version number is updated.
    */
-  registerMigration: (migrate: (oldVersion: string) => PromiseBB<void>) => void;
+  registerMigration: (migrate: (oldVersion: string) => PromiseLike<void>) => void;
 
   /**
    * register a file to be stored with the profile. It will always be synchronised with the current
@@ -1497,17 +1488,6 @@ export interface IExtensionContext {
     label: string,
     description: string,
     supported: () => boolean,
-  ) => void;
-
-  /**
-   * register a game version resolution provider.
-   */
-  registerGameVersionProvider?: (
-    id: string,
-    priority: number,
-    supported: GameVersionProviderTest,
-    getVersion: GameVersionProviderFunc,
-    options?: IGameVersionProviderOptions,
   ) => void;
 
   /**

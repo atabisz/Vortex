@@ -12,9 +12,11 @@ import { BulletDemo } from "@/ui/components/bullet/Bullet.demo";
 import { ButtonDemo } from "@/ui/components/button/Button.demo";
 import { CollectionTileDemo } from "@/ui/components/collection_tile/CollectionTile.demo";
 import { DropdownDemo } from "@/ui/components/dropdown/Dropdown.demo";
-import { InputDemo } from "@/ui/components/form/input/Input.demo";
-import { SelectDemo } from "@/ui/components/form/select/Select.demo";
-import { SwitchDemo } from "@/ui/components/form/switch/Switch.demo";
+import { CheckboxFieldDemo } from "@/ui/components/form/checkbox_field/CheckboxField.demo";
+import { SelectFieldDemo } from "@/ui/components/form/select_field/SelectField.demo";
+import { SwitchFieldDemo } from "@/ui/components/form/switch_field/SwitchField.demo";
+import { TextFieldDemo } from "@/ui/components/form/text_field/TextField.demo";
+import { GameTileDemo } from "@/ui/components/game_tile/GameTile.demo";
 import { IconDemo } from "@/ui/components/icon/Icon.demo";
 import { ImageDemo } from "@/ui/components/image/Image.demo";
 import { ListingDemo } from "@/ui/components/listing/Listing.demo";
@@ -41,8 +43,9 @@ export const DesignSystemPage = ({ active, api }: { active?: boolean; api: IExte
   const [selectedTab, setSelectedTab] = useState("button");
   const [selectedTypographyTab, setSelectedTypographyTab] = useState("typography");
   const [selectedIconTab, setSelectedIconTab] = useState("icon");
-  const [selectedFormTab, setSelectedFormTab] = useState("input");
+  const [selectedFormTab, setSelectedFormTab] = useState("text-field");
   const [selectedDropdownTab, setSelectedDropdownTab] = useState("dropdown");
+  const [selectedTileTab, setSelectedTileTab] = useState("game-tile");
 
   return (
     <Page active={active} id="page-design-system-dev" scrollable={false}>
@@ -81,7 +84,7 @@ export const DesignSystemPage = ({ active, api }: { active?: boolean; api: IExte
 
             <TabButton name="Table" panelId="table" />
 
-            <TabButton name="Collection Tile" panelId="collection-tile" />
+            <TabButton name="Tile" panelId="tile" />
 
             <TabButton name="Toolbar" panelId="toolbar" />
 
@@ -132,24 +135,30 @@ export const DesignSystemPage = ({ active, api }: { active?: boolean; api: IExte
                 onSetSelectedTab={setSelectedFormTab}
               >
                 <TabBar>
-                  <TabButton name="Input" panelId="input" />
+                  <TabButton name="Text field" panelId="text-field" />
 
-                  <TabButton name="Select" panelId="select" />
+                  <TabButton name="Select field" panelId="select-field" />
 
-                  <TabButton name="Switch" panelId="switch" />
+                  <TabButton name="Checkbox field" panelId="checkbox-field" />
+
+                  <TabButton name="Switch field" panelId="switch-field" />
                 </TabBar>
 
                 <div className="mt-6">
-                  <TabPanel id="input">
-                    <InputDemo />
+                  <TabPanel id="text-field">
+                    <TextFieldDemo />
                   </TabPanel>
 
-                  <TabPanel id="select">
-                    <SelectDemo />
+                  <TabPanel id="select-field">
+                    <SelectFieldDemo />
                   </TabPanel>
 
-                  <TabPanel id="switch">
-                    <SwitchDemo />
+                  <TabPanel id="checkbox-field">
+                    <CheckboxFieldDemo />
+                  </TabPanel>
+
+                  <TabPanel id="switch-field">
+                    <SwitchFieldDemo />
                   </TabPanel>
                 </div>
               </TabProvider>
@@ -237,8 +246,29 @@ export const DesignSystemPage = ({ active, api }: { active?: boolean; api: IExte
               <TableDemo />
             </TabPanel>
 
-            <TabPanel id="collection-tile">
-              <CollectionTileDemo api={api} />
+            <TabPanel id="tile">
+              <TabProvider
+                tab={selectedTileTab}
+                tabListId="tile-demo-tabs"
+                tabType="secondary"
+                onSetSelectedTab={setSelectedTileTab}
+              >
+                <TabBar>
+                  <TabButton name="Game" panelId="game-tile" />
+
+                  <TabButton name="Collection" panelId="collection-tile" />
+                </TabBar>
+
+                <div className="mt-6">
+                  <TabPanel id="game-tile">
+                    <GameTileDemo />
+                  </TabPanel>
+
+                  <TabPanel id="collection-tile">
+                    <CollectionTileDemo api={api} />
+                  </TabPanel>
+                </div>
+              </TabProvider>
             </TabPanel>
 
             <TabPanel id="toolbar">

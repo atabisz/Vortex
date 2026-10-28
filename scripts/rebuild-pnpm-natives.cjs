@@ -8,21 +8,16 @@
 const { execSync } = require("child_process");
 const path = require("path");
 
-const ELECTRON_VERSION = "39.8.0";
+const ELECTRON_VERSION = require(
+    require.resolve("electron/package.json", {
+        paths: [path.resolve(__dirname, "..", "src", "main")],
+    }),
+).version;
 const GYP_FLAGS = `--target=${ELECTRON_VERSION} --arch=x64 --dist-url=https://electronjs.org/headers`;
 
 const projectRoot = path.resolve(__dirname, "..");
 
 const addons = [
-    {
-        name: "loot",
-        workspace: path.join(
-            projectRoot,
-            "extensions",
-            "gamebryo-plugin-management",
-            "node_modules",
-        ),
-    },
     {
         name: "font-scanner",
         workspace: path.join(projectRoot, "extensions", "theme-switcher", "node_modules"),

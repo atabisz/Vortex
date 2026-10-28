@@ -51,6 +51,21 @@ The subprocess runs `main.ts` → detects `--report` → `sendReportFile()` in `
 
 `src/main/src/errorReporting.ts` — both crash paths converge here. See [telemetry-otel.md](telemetry-otel.md#crash-reporter-subprocess) for implementation details.
 
+## Native crash dumps on startup
+
+`sendPendingNativeCrashReport()` in `src/main/src/errorReporting.ts` reports each
+eligible dump separately, with its process type and available native crash facts.
+The sweep attempts at most five reports per startup. Other-build dumps and
+`DumpWithoutCrashing` diagnostics are discarded.
+
+Previously, the sweep combined retained dumps into one span with
+`crash.native.dumpCount`. That attribute is no longer emitted. Five eligible dumps
+from a relaunch loop now produce five spans, potentially with the same fingerprint,
+instead of one span with a count of five. Span-count dashboards therefore count
+individual reported dumps within the sweep limit, not affected sessions. Live
+process-gone reports can also describe the same crash; counting both report types
+does not give a count of unique crashes.
+
 ## Error Reporting State (Main)
 
 `errorReportingDisabled` flag in `src/main/src/errorReporting.ts`. Set by `disableErrorReporting()` when the user confirms "Ignore". Suppresses the "Report and Quit" button in future dialogs within the same session.
@@ -88,11 +103,11 @@ Separate from the renderer-side `errorIgnored` flag in `src/renderer/src/util/er
 
 ### Renderer Process — `terminate()`
 
-| File                                                                  | Trigger                                                                                                                    |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `src/renderer/src/renderer.tsx`                                       | `uncaughtException` / `unhandledRejection` global handler                                                                  |
-| `src/renderer/src/extensions/mod_management/InstallManager.ts`        | Attempt to change download state with a duplicate or invalid ID — `allowReport = false` (programming error, not user data) |
-| `extensions/gamebryo-plugin-management/src/util/UserlistPersistor.ts` | Cannot read the userlist file even though it exists — `allowReport = false`; user directed to repair or delete the file    |
+| File                                                                               | Trigger                                                                                                                    |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `src/renderer/src/renderer.tsx`                                                    | `uncaughtException` / `unhandledRejection` global handler                                                                  |
+| `src/renderer/src/extensions/mod_management/InstallManager.ts`                     | Attempt to change download state with a duplicate or invalid ID — `allowReport = false` (programming error, not user data) |
+| `src/renderer/src/extensions/gamebryo_plugin_management/util/UserlistPersistor.ts` | Cannot read the userlist file even though it exists — `allowReport = false`; user directed to repair or delete the file    |
 
 ### Renderer Process — direct exit (no dialog)
 

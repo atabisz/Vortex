@@ -1,9 +1,11 @@
 import * as os from "node:os";
 import * as path from "node:path";
 
-import { XDG } from "@nexusmods/adaptor-api";
+import { XDG, type QualifiedPath, type VortexPathBase } from "@vortex/shared/filesystem";
 import type { VortexPaths } from "@vortex/shared/ipc";
 import { app, type App } from "electron";
+
+import { VortexPathProvider } from "./filesystem/paths.vortex";
 
 // If running as a forked child process, read Electron app info from environment variables
 const electronAppInfoEnv: { [key: string]: string | undefined } =
@@ -131,6 +133,10 @@ function localAppData(): string {
 export function setVortexPath(id: ElectronPathId, value: string) {
   cache[id] = value;
   app.setPath(id, value);
+}
+
+export function getVortexQualifiedPath(base: VortexPathBase): Promise<QualifiedPath> {
+  return VortexPathProvider.instance.fromBase(base);
 }
 
 /**

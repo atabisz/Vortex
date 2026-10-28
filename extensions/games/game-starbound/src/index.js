@@ -4,14 +4,14 @@ const { fs, log, util } = require("@nexusmods/vortex-api");
 const MS_ID = "Chucklefish.StarboundWindows10Edition";
 
 function findGame() {
-  return util.steam
-    .findByName("Starbound")
+  return util.GameStoreHelper.findByName("Starbound", "steam")
     .catch(() => util.GameStoreHelper.findByAppId([MS_ID], "xbox"))
     .then((game) => game.gamePath);
 }
 
 function gameExecutable(discoveryPath) {
-  const defaultLocation = "win64/starbound.exe";
+  const defaultLocation =
+    process.platform === "linux" ? "linux/run-client.sh" : "win64/starbound.exe";
   const xboxLocation = "win/starbound.exe";
   if (
     discoveryPath === undefined ||

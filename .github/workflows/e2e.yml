@@ -42,13 +42,8 @@ jobs:
         with:
           dotnet-version: "9.0.x"
 
-      - name: Install volta, Node.js and Yarn
-        uses: volta-cli/action@v5
-
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.9
-        with:
-          cache: true
+        uses: ./.github/actions/setup-pnpm
 
       - name: Configure node-gyp for VS 2022
         if: runner.os == 'Windows'
@@ -65,9 +60,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      # Resolve the Electron version from the installed package rather than pinning it here,
+      # so an upstream Electron bump can't leave the native rebuilds targeting stale headers.
+      - name: Resolve Electron version
+        if: runner.os == 'Linux'
+        run: echo "ELECTRON_VERSION=$(node -p "require('./src/main/node_modules/electron/package.json').version")" >> "$GITHUB_ENV"
+
       - name: Rebuild native addons for Electron
         if: runner.os == 'Linux'
-        run: npx @electron/rebuild -f -v 39.8.0
+        run: npx @electron/rebuild -f -v "$ELECTRON_VERSION"
 
       # font-scanner lives in pnpm's isolated store and is missed by @electron/rebuild.
       - name: Rebuild font-scanner for Electron
@@ -76,7 +77,7 @@ jobs:
           FONT_SCANNER_DIR=$(node -e "process.stdout.write(require('path').dirname(require.resolve('font-scanner/package.json', {paths: ['extensions/theme-switcher/node_modules', 'node_modules']})))")
           echo "Rebuilding font-scanner at: $FONT_SCANNER_DIR"
           cd "$FONT_SCANNER_DIR"
-          npx node-gyp rebuild --target=39.8.0 --arch=x64 --dist-url=https://electronjs.org/headers
+          npx node-gyp rebuild --target="$ELECTRON_VERSION" --arch=x64 --dist-url=https://electronjs.org/headers
 
       - name: Build
         run: pnpm run build:all

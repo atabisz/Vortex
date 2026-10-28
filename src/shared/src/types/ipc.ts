@@ -3,6 +3,8 @@
 // are never used to create an object. They are only used for type inferrence.
 
 import type { SerializedVortexError } from "../errors/serialization";
+import type { FileSystem, Status } from "../fs/filesystem";
+import type { QualifiedPathWire } from "../fs/paths";
 import type { SerializedSpan } from "../telemetry/types";
 import type { DownloadCheckpoint, DownloadProgress, DownloadStatus } from "./download";
 import type {
@@ -575,7 +577,81 @@ export interface InvokeChannels {
     path: { value: string };
     regex?: string;
   }) => Promise<string>;
+
+  "fs:copy": (
+    source: QualifiedPathWire,
+    target: QualifiedPathWire,
+    options: Parameters<FileSystem["copy"]>[2],
+  ) => Promise<void>;
+  "fs:createDirectory": (path: QualifiedPathWire) => Promise<void>;
+  "fs:createLink": (
+    from: QualifiedPathWire,
+    to: QualifiedPathWire,
+    type: Parameters<FileSystem["createLink"]>[2],
+  ) => Promise<void>;
+  "fs:delete": (path: QualifiedPathWire) => Promise<void>;
+  "fs:deleteRecursive": (path: QualifiedPathWire) => Promise<void>;
+  "fs:readFile": (path: QualifiedPathWire) => Promise<Uint8Array>;
+  "fs:writeFile": (path: QualifiedPathWire, contents: Uint8Array) => Promise<void>;
+  "fs:move": (
+    source: QualifiedPathWire,
+    target: QualifiedPathWire,
+    options: Parameters<FileSystem["move"]>[2],
+  ) => Promise<void>;
+  "fs:stat": (
+    path: QualifiedPathWire,
+    options: Parameters<FileSystem["stat"]>[1],
+  ) => Promise<TemporalWire<Awaited<ReturnType<FileSystem["stat"]>>>>;
+
+  /**
+   * Opens a directory enumeration session on the main process. Returns a
+   * handle the renderer pulls batches of entries through with
+   * {@link InvokeChannels["fs:enumerate-next"]} until done, then releases
+   * with {@link InvokeChannels["fs:enumerate-close"]}.
+   */
+  "fs:enumerate-open": (
+    path: QualifiedPathWire,
+    options?: Parameters<FileSystem["enumerateDirectory"]>[1],
+  ) => Promise<number>;
+  "fs:enumerate-next": (handle: number, max: number) => Promise<EnumerateReply>;
+  "fs:enumerate-close": (handle: number) => Promise<void>;
+
+  /**
+   * Opens a stream session on the main process. Returns a handle the
+   * renderer pulls chunks of bytes through with
+   * {@link InvokeChannels["fs:stream-read"]} (`mode "r"`) or pushes bytes
+   * through with {@link InvokeChannels["fs:stream-write"]} (`mode "w"`)
+   * until done, then releases with
+   * {@link InvokeChannels["fs:stream-close"]}.
+   */
+  "fs:stream-open": (
+    path: QualifiedPathWire,
+    mode: "r" | "w",
+    options?: Parameters<FileSystem["createStream"]>[2],
+  ) => Promise<number>;
+  "fs:stream-read": (handle: number, max: number) => Promise<StreamReadReply>;
+  "fs:stream-write": (handle: number, bytes: Uint8Array) => Promise<void>;
+  "fs:stream-close": (handle: number) => Promise<void>;
 }
+
+/** Wire reply of {@link InvokeChannels["fs:stream-read"]}. `bytes` holds the
+ *  chunks read during this call; sizing is chunk-granular, so a reply may
+ *  exceed `max` by up to one underlying chunk. A `done: true` reply may
+ *  still carry the tail of the file when EOF hit mid-batch. */
+export type StreamReadReply = { done: boolean; bytes: Uint8Array };
+
+export type EnumerateEntryWire = QualifiedPathWire | [QualifiedPathWire, TemporalWire<Status>];
+
+/** Wire reply of {@link InvokeChannels["fs:enumerate-next"]}. Entries are
+ *  always present: a `done: true` reply may still carry the tail of the
+ *  listing when the iterator exhausted mid-batch. */
+export type EnumerateReply = { done: boolean; entries: EnumerateEntryWire[] };
+
+export type TemporalWire<T> = T extends Temporal.Instant
+  ? bigint
+  : T extends object
+    ? { [K in keyof T]: TemporalWire<T[K]> }
+    : T;
 
 /** Represents all IPC-safe typed arrays */
 export type TypedArray =
@@ -623,38 +699,3 @@ export type Serializable =
   | { [key: string]: Serializable }
   | Map<Serializable, Serializable>
   | Set<Serializable>;
-
-type IsAny<T> = 0 extends 1 & T ? true : false;
-
-type HasError<T> = T extends { __error__: string }
-  ? true
-  : T extends object
-    ? { [K in keyof T]: HasError<T[K]> }[keyof T] extends true
-      ? true
-      : false
-    : false;
-
-// NOTE(erri120): If you found this type because you got an error, that means you're trying to pass data across the IPC
-// that can't be serialized. Check the list of supported types above and pick one of them. If you think there is a type missing
-// from the list above, write a small proof and we can discuss it.
-//
-/** Utility type to assert that the type is serializable */
-export type AssertSerializable<T> =
-  // any
-  IsAny<T> extends true
-    ? { __error__: "any is not serializable for IPC" }
-    : // known serializables
-      T extends Serializable
-      ? T
-      : // objects
-        T extends object
-        ? HasError<{ [K in keyof T]: AssertSerializable<T[K]> }> extends true
-          ? { __error__: "Type is not serializable for IPC" }
-          : T
-        : // everything else
-          { __error__: "Type is not serializable for IPC" };
-
-/** Utility type to check all args are serializable */
-export type SerializableArgs<T extends readonly unknown[]> = {
-  [K in keyof T]: AssertSerializable<T[K]>;
-};

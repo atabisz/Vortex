@@ -1,7 +1,7 @@
 ---
 name: watch-log
-description: Watch or investigate a Vortex log file (rotation- and session-aware). A router over six modes loaded on demand — live tail, session/crash/error investigation, persistence (duckdb/level_pivot) integrity, log-line-to-code correlation, single download/install/collection/deploy trace, and a collection-install audit (also serves as the LAZ-483 regression check). Defaults to the dev log; can target prod or a specific file. When the request is too vague to route, it interviews the user (goal, symptom, timeframe, whose log) before running anything.
-when_to_use: When the user wants to watch/tail/follow a log live, or investigate/report on errors, crashes, warnings, persistence integrity, re-installs, version downgrades, a specific log entry, or a download/install/collection/deployment lifecycle in a Vortex log.
+description: Watch or investigate a Vortex log file (rotation- and session-aware). A router over six modes loaded on demand — live tail, session/crash/error investigation, persistence (duckdb/level_pivot) integrity, log-line-to-code correlation, single download/install/collection/deploy/profile switch trace, and a collection-install audit (also serves as the LAZ-483 regression check). Defaults to the dev log; can target prod or a specific file. When the request is too vague to route, it interviews the user (goal, symptom, timeframe, whose log) before running anything.
+when_to_use: When the user wants to watch/tail/follow a log live, or investigate/report on errors, crashes, warnings, persistence integrity, re-installs, version downgrades, a specific log entry, or a download/install/collection/deployment/profile switch lifecycle in a Vortex log.
 user-invocable: true
 ---
 
@@ -16,7 +16,8 @@ the mode(s) and loads only the files needed, keeping context small.
 
 1. **Always read `reference.md`** (the core) first — the universal log facts, the
    dev/prod/rotation log-set resolver, and an index of the on-demand `shared/` chunks
-   (sessions, lifecycle, persistence, multi-file, edge-cases) that modes load as needed.
+   (sessions, lifecycle, persistence, multi-file, edge-cases, gamebryo) that modes load
+   as needed.
 2. **Run the triage gate** (below): if the request is underspecified, interview the
    user before picking anything — do not guess a mode.
 3. **Pick the mode(s)** from `$ARGUMENTS` (plus any triage answers) using the table
@@ -24,7 +25,8 @@ the mode(s) and loads only the files needed, keeping context small.
    "investigate + persistence", or "trace <mod> and correlate <error>").
 4. **For each selected mode, read its file** under `modes/` plus the `shared/` chunks
    named in that mode's Prereq line, and follow it. Read `reference.md` and each chunk
-   at most once, even when running several modes.
+   at most once, even when running several modes. Chunks flagged "any mode" in the
+   index (multi-file, gamebryo) load on their own condition, whatever the mode.
 5. **Running several modes:** if they're independent (the common case), you may run
    them concurrently — e.g. dispatch each mode to its own subagent (pass it
    `reference.md` + the mode file + the resolved log target), then combine the

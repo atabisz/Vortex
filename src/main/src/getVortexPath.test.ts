@@ -1,7 +1,7 @@
 import * as nodeOs from "node:os";
 import * as nodePath from "node:path";
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Mock electron before importing getVortexPath
 vi.mock("electron", () => ({
@@ -28,12 +28,12 @@ vi.mock("node:os", () => ({
   homedir: () => "/home/testuser",
 }));
 
+// Imported once: re-importing per test (vi.resetModules) loads a second @vortex/shared, which
+// its duplicate-module guard rejects. getVortexPath reads platform and env at call time.
+import { getVortexPath } from "./getVortexPath";
+
 describe("getVortexPath - localAppData", () => {
   const originalPlatform = process.platform;
-
-  beforeEach(() => {
-    vi.resetModules();
-  });
 
   afterEach(() => {
     Object.defineProperty(process, "platform", {
@@ -44,7 +44,7 @@ describe("getVortexPath - localAppData", () => {
     vi.unstubAllEnvs();
   });
 
-  it("returns XDG_DATA_HOME on Linux when set", async () => {
+  it("returns XDG_DATA_HOME on Linux when set", () => {
     Object.defineProperty(process, "platform", {
       value: "linux",
       writable: true,
@@ -53,11 +53,10 @@ describe("getVortexPath - localAppData", () => {
     vi.stubEnv("XDG_DATA_HOME", "/custom/data");
     vi.stubEnv("LOCALAPPDATA", "");
 
-    const { getVortexPath } = await import("./getVortexPath");
     expect(getVortexPath("localAppData")).toBe("/custom/data");
   });
 
-  it("returns ~/.local/share on Linux when XDG_DATA_HOME is unset", async () => {
+  it("returns ~/.local/share on Linux when XDG_DATA_HOME is unset", () => {
     Object.defineProperty(process, "platform", {
       value: "linux",
       writable: true,
@@ -67,12 +66,11 @@ describe("getVortexPath - localAppData", () => {
     delete process.env["XDG_DATA_HOME"];
     vi.stubEnv("LOCALAPPDATA", "");
 
-    const { getVortexPath } = await import("./getVortexPath");
     const result = getVortexPath("localAppData");
     expect(result).toBe(nodePath.join(nodeOs.homedir(), ".local", "share"));
   });
 
-  it("returns LOCALAPPDATA on Windows (unchanged behavior)", async () => {
+  it("returns LOCALAPPDATA on Windows (unchanged behavior)", () => {
     Object.defineProperty(process, "platform", {
       value: "win32",
       writable: true,
@@ -81,7 +79,6 @@ describe("getVortexPath - localAppData", () => {
     vi.stubEnv("LOCALAPPDATA", "C:\\Users\\Test\\AppData\\Local");
     vi.stubEnv("XDG_DATA_HOME", "");
 
-    const { getVortexPath } = await import("./getVortexPath");
     expect(getVortexPath("localAppData")).toBe("C:\\Users\\Test\\AppData\\Local");
   });
 });
