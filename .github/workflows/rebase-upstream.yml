@@ -2,7 +2,9 @@ name: Rebase Upstream
 
 on:
   schedule:
-    - cron: "0 6 * * *"
+    # Weekly (Mondays 06:00 UTC): upstream ships a few stable tags a month and the fork syncs
+    # about monthly, so daily polling only burned Actions minutes on a fork GitHub throttles.
+    - cron: "0 6 * * 1"
   workflow_dispatch:
     inputs:
       upstream_ref:

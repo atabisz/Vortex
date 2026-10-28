@@ -654,9 +654,24 @@ Each entry is a real bug we hit at least once — written down so the next merge
 - **Cherry-picks on a release branch conflict with their own evolved versions on master.** Syncing from `release/v2.7` to v2.9.1 conflicted `errorReporting.ts`, `minidump.test.ts`, the nexus `util.ts`/`util.updateToken.test.ts` and `test-utils/builders.ts` purely because the 2.7 cherry-picks (Vitalii Mikhailov, Rich Moore) differ from what the same commits became on master. Check the author on the fork side (`git log --format='%an' <merge-base>..<pre-merge> -- <file>`). If every commit is upstream's, take the tag's version.
 - **The fork's Steam `appid` dedupe is Linux-only since v2.9.1.** `parseManifests` drops repeated app ids so symlinked roots don't list a game twice, but upstream's new `Steam.test.ts` reuses appid 42 across libraries and expects all of them. The dedupe and the multi-root read now apply on Linux only. Upstream's suite runs under a stubbed `win32`, with a separate Linux block for the fork behaviour (playbook §9).
 
-### rebase-upstream cron went quiet after 2026-10-14
+### GitHub paused Actions on the fork (2026-10-14) — upstream's scheduled workflows are disabled here
 
-The workflow is `active` and scheduled daily, yet its last run was 2026-10-14 (success). Draft PRs #12–#15 (v2.7.2, v2.8.0, v2.8.1, v2.8.2) are still open, and no v2.9.x draft was ever opened. The v2.9.1 hand-merge supersedes all four. **Not diagnosed:** the run logs had expired by 2026-10-28. Check `gh run list -R atabisz/Vortex --workflow rebase-upstream.yml` after the next scheduled slot. Also note that the cron opens a draft per tag, not per newest tag, so a gap of N releases produces N drafts to close.
+From 2026-10-14 to 2026-10-28 no workflow ran on `atabisz/Vortex`: not the cron, not `Main` on a push. The Actions tab said _"Workflows are not currently being run on this fork due to the scale of GitHub Actions usage. A repository maintainer can choose to re-enable these."_ That pause is a per-fork switch that **the REST API does not show**: `actions/permissions` reported `enabled: true` and every workflow reported `active` throughout. The tell is `gh run list` having no runs after a push. Re-enable it with the button in the Actions tab; no API call does it.
+
+The cause was upstream's scheduled workflows running daily on a fork where they do nothing (each ran 14 times in the first half of October). The fork now disables them through the same per-fork API switch used for `fingerprint-*.yml` (state `disabled_manually`). That state survives upstream merges but not a re-clone or a new fork:
+
+```bash
+for f in nightly.yml signing-test.yml pr-maintenance.yml game-extension-test.yml; do
+  gh workflow disable "$f" -R atabisz/Vortex
+done
+gh api repos/atabisz/Vortex/actions/workflows --jq '.workflows[] | "\(.path) \(.state)"'
+```
+
+- `nightly.yml` (Windows nightly package) and `signing-test.yml` both need signing secrets the fork doesn't have
+- `pr-maintenance.yml` is upstream's PR-queue housekeeping
+- `game-extension-test.yml` is a daily rerun of tests `Main` already covers on every push
+
+`rebase-upstream.yml` moved from daily to weekly (Mondays 06:00 UTC). Upstream ships a few stable tags a month and the fork syncs about monthly; daily polling opened per-tag drafts (#12–#15) that sat unread until the v2.9.1 sync superseded and closed them. **After each sync, check for NEW upstream scheduled workflows** and disable or gate them before they re-trigger the pause: `grep -l "schedule:" .github/workflows/*.yml`.
 
 ### platform-guard operator direction
 
