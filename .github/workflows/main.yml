@@ -15,6 +15,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Fork: bounds the nx task cache that "Cache nx tasks" carries between runs.
+  NX_MAX_CACHE_SIZE: 1GB
+
 jobs:
   # Required status checks stay "Expected" forever when a workflow is skipped by
   # paths-ignore, so filter inside the workflow instead: a skipped job reports success.
@@ -150,6 +154,16 @@ jobs:
         with:
           path: src/main/build/duckdb-extensions
           key: duckdb-ext-${{ runner.os }}-${{ hashFiles('pnpm-workspace.yaml', 'scripts/duckdb-extensions.json') }}
+
+      # Fork: persist nx's task cache between runs so Build, Lint and Test only redo the
+      # projects whose inputs changed. One entry per commit, restored from the newest earlier
+      # one; NX_MAX_CACHE_SIZE (top of file) keeps each saved entry bounded.
+      - name: Cache nx tasks
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ github.sha }}
+          restore-keys: nx-${{ runner.os }}-
 
       - name: Build
         run: pnpm run build:all
