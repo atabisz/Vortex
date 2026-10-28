@@ -402,6 +402,39 @@ Deleted 2026-10-28 because they do nothing on the fork, and several fire on the 
 
 ---
 
+## §21 Fork CI shape: Linux first, time-boxed, cached
+
+```bash
+python3 -c "import yaml;j=yaml.safe_load(open('.github/workflows/main.yml'))['jobs'];print({k:(v.get('needs'),v.get('timeout-minutes')) for k,v in j.items()})"
+grep -n "npm_config_devdir\|Cache native build headers\|Cache nx tasks\|.nx/workspace-data\|NX_MAX_CACHE_SIZE" .github/workflows/main.yml
+```
+
+Fork-only additions to `main.yml` (and the header-cache/timeout parts in `release-linux.yml`), each added 2026-10-28 for a measured reason. Upstream's `main.yml` has a different shape, so expect conflicts here on every sync and keep these on top of whatever upstream changes.
+
+- **Windows waits for Linux.** `build` runs `ubuntu-latest` only. `build-windows` has `needs: build`, runs only if `needs.build.result == 'success'`, and reuses the same steps through the `&build-steps` YAML anchor, so the step list exists once. A matrix can't gate one entry on another; the old `[ubuntu-latest, windows-2022]` matrix's fail-fast also cancelled Windows whenever Linux failed, so nothing was lost by splitting. GitHub accepts anchors in workflows (proven by the run on `f5d5dba37`). Every Linux-only step is still gated on `runner.os`, and no step may read `matrix.*`, because `build-windows` has no matrix.
+- **Time limits.** "Install dependencies" has 20 minutes; the jobs have 30 (Linux build), 45 (Windows build) and 60 (`release-linux`). GitHub's default is 6 hours. A node-gyp header download that answered `200` and then stalled hung the Windows install for 45 minutes until it was cancelled by hand. Runner minutes are also what got the fork paused (see "GitHub paused Actions on the fork").
+- **Header cache.** A step writes `npm_config_devdir=<home>/.node-gyp-cache` into `$GITHUB_ENV` via `node -e`, so the path is native on Windows too; a bash `$HOME` would produce `/c/Users/...`. Then `actions/cache` keeps `~/.node-gyp-cache` and `~/.electron-gyp`, keyed on OS, arch and `package.json` + `pnpm-lock.yaml`. node-gyp honours the env var (checked: `node-gyp list --verbose` reports the pinned dir). npm prints `Unknown env config "devdir"` for `npx` steps, which is harmless.
+- **nx task cache.** It keeps **both** `.nx/cache` **and `.nx/workspace-data`**, keyed per commit and restored from the newest earlier entry. nx 23 only honours cache entries listed in its index database (`.nx/workspace-data/*-v3.db`). The first version cached `.nx/cache` alone, restored 53 MB, and still ran all 138 builds and 140 typechecks. Locally, moving `workspace-data` aside turns `[local cache]` hits into full re-runs. `NX_MAX_CACHE_SIZE: 1GB` sits in the workflow `env:`, not in upstream's `nx.json`, so the cap causes no sync conflict.
+- **No explicit Electron rebuild for N-API addons** (loot, ba2tk); see §1's native addon CI pattern.
+
+Measured on 2026-10-28, all after the v2.9.1 sync:
+
+| Run         | Linux total / Build | Windows total / Build | Note                                                     |
+| ----------- | ------------------- | --------------------- | -------------------------------------------------------- |
+| `aa89e19fa` | 10m10s / 5m49s      | 11m21s / 6m48s        | first green after the gating split                       |
+| `7cb57e261` | 11m15s / 6m29s      | 14m21s / 10m30s       | nx cache saved, empty start                              |
+| `0b4ddbb28` | 14m56s / 8m44s      | 13m36s / 9m55s        | nx cache restored without the index, so all tasks re-ran |
+| `5fac019ca` | Build 8m26s         | Build 7m48s           | first entry saved with the index                         |
+
+**Not yet measured:** the first run that restores an entry with its index. Record its Build times here when it lands. If Build doesn't drop well below 5 minutes, check the log for `[local cache]` counts before trusting the cache.
+
+Ruled out, so they don't get retried blind:
+
+- **pnpm's store side-effects cache does not skip the Windows loot compile.** With the lockfile unchanged between `aa89e19fa` and `7cb57e261`, loot still ran `node-gyp rebuild` (about 2m40s with font-scanner and winapi-bindings). There are no Windows prebuilds for these, so the cost sits in the addon repos, not this workflow.
+- **Upstream's electron-rebuild cache** (`VORTEX_ELECTRON_REBUILD: defer` plus the cached `build/` dirs) would save about 40 seconds on Windows and under 5 on Linux. It's not worth carrying a divergent copy for that. Port it verbatim only when a sync makes upstream's block cheaper to take than to keep out.
+
+---
+
 ## What we've learned the hard way
 
 These are the non-obvious things that cost real time during the 2026-05-08 merge, written down so they don't cost the same time twice.
