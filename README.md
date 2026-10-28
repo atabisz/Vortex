@@ -2,7 +2,7 @@
 
 > **This is an unofficial community fork.** The real project is [Nexus-Mods/Vortex](https://github.com/Nexus-Mods/Vortex) — maintained by Nexus Mods, with official releases for Windows only, and where you should report bugs if you're on Windows. This fork exists just to get Vortex working on Linux. For general support, feature requests, and anything that isn't a Linux-specific issue, head over there.
 
-Linux builds (AppImage + .deb) are published as [releases on this fork](../../releases). Each Linux release follows an upstream tag — `v2.7.1-linux` is upstream `v2.7.1` plus the Linux patches.
+Linux builds (AppImage + .deb) are published as [releases on this fork](../../releases). Each Linux release follows an upstream tag — `v2.9.1-linux` is upstream `v2.9.1` plus the Linux patches.
 
 ---
 
@@ -46,9 +46,9 @@ makepkg -si
 
 ## What Works
 
-**As of v2.7.1-linux (2026-09-28):**
+**As of v2.9.1-linux (2026-10-28):**
 
-- **Launches on Linux** — `pnpm run start` boots without crashing; the native addons (bsatk, loot, vortexmt, xxhash-addon and friends) compile and load.
+- **Launches on Linux** — `pnpm run start` boots without crashing; the native addons (loot, ba2tk, vortexmt, xxhash-addon and friends) compile and load. LOOT runs on upstream node-loot's own Linux support (vendored `libloot.so.0`) since v2.9.1-linux, so the fork no longer builds libloot from source.
 - **FOMOD installer** — C#/.NET FOMOD installers work via native Linux binaries — no Wine needed.
 - **Steam/Proton game detection** — Multi-root VDF scanning (native Steam + Flatpak), Proton prefix resolution, never-launched games picked up via `oslist`, and the `{mygames}` Wine path resolves correctly (`compatdata/<appid>/pfx/drive_c/users/steamuser/Documents/My Games`).
 - **Top game extensions work** — Skyrim SE, Fallout 4, Cyberpunk 2077, Stardew Valley all confirmed working on Linux with Proton.
@@ -105,6 +105,7 @@ The full development plan is in [VORTEX-LINUX.md](VORTEX-LINUX.md).
 
 Since v2.0.0, releases have mostly been upstream syncs — each one merges the new upstream tag, fixes whatever it broke on Linux, and gets a matching `-linux` release. The per-sync gotchas are written up in [VORTEX-LINUX-MERGE-PLAYBOOK.md](VORTEX-LINUX-MERGE-PLAYBOOK.md).
 
+- **v2.9.1-linux (2026-10-28)** — Synced to upstream v2.9.1, which covers the whole 2.8 and 2.9 lines. Upstream folded plugin management (LOOT), the Xbox/GOG/Origin/Uplay stores and several gamebryo extensions into core; the Linux fixes moved with them. LOOT now uses upstream's native Linux build, retiring the fork's libloot build, loot patch and wstring shim. Linux keeps pkexec elevation where upstream made it Windows-only.
 - **v2.7.1-linux (2026-09-28)** — Synced to upstream v2.7.1.
 - **v2.6.3-linux (2026-09-21)** — Synced to upstream v2.6.3.
 - **v2.5.0-linux (2026-08-11)** — Synced to upstream v2.5.0.

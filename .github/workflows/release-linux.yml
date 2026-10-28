@@ -148,7 +148,7 @@ jobs:
 
             **Installation:**
             - **AppImage** (recommended): Download, `chmod +x`, run. Ubuntu 22.04+ users: `sudo apt install libfuse2` first.
-            - **.deb**: `sudo dpkg -i vortex_*_amd64.deb` (Debian/Ubuntu only)
+            - **.deb**: `sudo dpkg -i vortex_amd64.deb` (Debian/Ubuntu only)
 
             This is a community port — not an official Nexus Mods release.
 
@@ -172,6 +172,6 @@ jobs:
 
             **Installation:**
             - **AppImage** (recommended): Download, `chmod +x`, run. Ubuntu 22.04+ users: `sudo apt install libfuse2` first.
-            - **.deb**: `sudo dpkg -i vortex_*_amd64.deb` (Debian/Ubuntu only)
+            - **.deb**: `sudo dpkg -i vortex_amd64.deb` (Debian/Ubuntu only)
 
             This is a community port — not an official Nexus Mods release.

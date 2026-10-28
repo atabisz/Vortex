@@ -4,13 +4,13 @@
 #
 # This package wraps the pre-built AppImage from the Linux fork's GitHub Releases.
 # To update: set pkgver to the new release tag without the leading 'v' or the
-# '-linux' suffix (v2.7.1-linux -> 2.7.1). _appimage is that release's AppImage
+# '-linux' suffix (v2.9.1-linux -> 2.9.1). _appimage is that release's AppImage
 # asset name: releases up to v2.7.1-linux carry a build-stamped name, later ones
 # publish plain "vortex-setup.AppImage". Then regenerate .SRCINFO with: makepkg --printsrcinfo > .SRCINFO
 
 pkgname=vortex-linux-bin
-pkgver=2.7.1
-_appimage="vortex-setup-1.0.202609280813.AppImage"
+pkgver=2.9.1
+_appimage="vortex-setup.AppImage"
 pkgrel=1
 pkgdesc="Nexus Mods mod manager — unofficial Linux AppImage port"
 arch=("x86_64")
