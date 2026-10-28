@@ -157,11 +157,15 @@ jobs:
 
       # Fork: persist nx's task cache between runs so Build, Lint and Test only redo the
       # projects whose inputs changed. One entry per commit, restored from the newest earlier
-      # one; NX_MAX_CACHE_SIZE (top of file) keeps each saved entry bounded.
+      # one; NX_MAX_CACHE_SIZE (top of file) keeps each saved entry bounded. workspace-data
+      # holds the database nx 23 indexes cache entries in; without it every entry in .nx/cache
+      # is ignored and all tasks re-run.
       - name: Cache nx tasks
         uses: actions/cache@v4
         with:
-          path: .nx/cache
+          path: |
+            .nx/cache
+            .nx/workspace-data
           key: nx-${{ runner.os }}-${{ github.sha }}
           restore-keys: nx-${{ runner.os }}-
 
