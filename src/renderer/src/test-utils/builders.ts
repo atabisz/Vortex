@@ -25,13 +25,14 @@ import * as path from "path";
 
 import type { IFileInfo, IPreference, IUserInfo } from "@nexusmods/nexus-api";
 import type NexusT from "@nexusmods/nexus-api";
+import { VortexProfileId } from "@vortex/shared";
 import type { WireDownloadCheckpoint, WireResolvedResource } from "@vortex/shared/ipc";
 import type { Api, DownloaderApi } from "@vortex/shared/preload";
 import type { LootAsync, PluginInterface, PluginMetadata, Vertex } from "loot";
 import { applyMiddleware, createStore, type Middleware } from "redux";
 import { batch } from "redux-act";
 import thunkMiddleware from "redux-thunk";
-import { vi } from "vitest";
+import { onTestFinished, vi } from "vitest";
 
 import type { MixpanelEvent } from "../extensions/analytics/mixpanel/MixpanelEvents";
 import type { ICategory } from "../extensions/category_management/types/ICategoryDictionary";
@@ -45,8 +46,14 @@ import type InstallDriver from "../extensions/collections/util/InstallDriver";
 import { stateReducer as downloadStateReducer } from "../extensions/download_management/reducers/state";
 import { downloadPathForGame } from "../extensions/download_management/selectors";
 import type { IDownload, IModInfo } from "../extensions/download_management/types/IDownload";
-import type { ILoadOrderEntry } from "../extensions/file_based_loadorder/types/types";
-import type UpdateSet from "../extensions/file_based_loadorder/UpdateSet";
+import { resolveEntry } from "../extensions/file_based_loadorder/registry";
+import type {
+  ILoadOrderEntry,
+  ILoadOrderGameInfo,
+  IRegisteredLoadOrder,
+  IValidationResult,
+  LoadOrder,
+} from "../extensions/file_based_loadorder/types/types";
 import type { IESPFile } from "../extensions/gamebryo_plugin_management/types/IESPFile";
 import type {
   IPlugin,
@@ -58,6 +65,11 @@ import toPluginId from "../extensions/gamebryo_plugin_management/util/toPluginId
 import type { IDiscoveryResult } from "../extensions/gamemode_management/types/IDiscoveryResult";
 import type { IGameStored } from "../extensions/gamemode_management/types/IGameStored";
 import { getGame } from "../extensions/gamemode_management/util/getGame";
+import {
+  getModTypeExtensions,
+  registerModType,
+} from "../extensions/gamemode_management/util/modTypeExtensions";
+import type { IExtensionContextEx } from "../extensions/hardlink_activator";
 import type { HealthCheckRegistry } from "../extensions/health_check/core/HealthCheckRegistry";
 import type {
   HealthCheckId,
@@ -72,6 +84,12 @@ import type InstallManager from "../extensions/mod_management/InstallManager";
 import { deploymentReducer } from "../extensions/mod_management/reducers/deployment";
 import { modsReducer } from "../extensions/mod_management/reducers/mods";
 import type {
+  IDeployedFile,
+  IDeploymentMethod,
+  IFileChange,
+} from "../extensions/mod_management/types/IDeploymentMethod";
+import type { IDeployOptions } from "../extensions/mod_management/types/IDeployOptions";
+import type {
   IChoiceType,
   IFileListItem,
   IMod,
@@ -79,6 +97,10 @@ import type {
   IModReference,
   IModRule,
 } from "../extensions/mod_management/types/IMod";
+import {
+  getAllActivators,
+  registerDeploymentMethod,
+} from "../extensions/mod_management/util/deploymentMethods";
 import type { InstallPhaseTracker } from "../extensions/mod_management/util/InstallPhaseTracker";
 import type { IModLookupInfo } from "../extensions/mod_management/util/testModReference";
 import { accountReducer as nexusAccountReducer } from "../extensions/nexus_integration/reducers/account";
@@ -128,8 +150,6 @@ import type {
   IDriverHarnessState,
   IFakeLoot,
   IFakePersistor,
-  IFbloHarness,
-  IFbloHarnessOpts,
   IGameHarness,
   IGameHarnessOpts,
   IHealthCheckHarness,
@@ -203,6 +223,94 @@ export function makeMod(overrides: Partial<IMod> = {}): IMod {
     attributes: {},
     ...overrides,
   };
+}
+
+/** A file change as a deployment method's externalChanges reports it. */
+export function makeFileChange(overrides: Partial<IFileChange> = {}): IFileChange {
+  return {
+    filePath: "plugin.esp",
+    source: "mod-1",
+    sourceTime: new Date(0),
+    destTime: new Date(0),
+    changeType: "refchange",
+    ...overrides,
+  };
+}
+
+/** A file of a deployment manifest: a mod's file deployed straight into the mod type's folder. */
+export function makeDeployedFile(overrides: Partial<IDeployedFile> = {}): IDeployedFile {
+  return {
+    relPath: "plugin.esp",
+    source: "mod-1",
+    time: 1,
+    ...overrides,
+  };
+}
+
+/** A deployment method that supports every game and whose purge steps do nothing. */
+export function makeDeploymentMethod(
+  overrides: Partial<IDeploymentMethod> = {},
+): IDeploymentMethod {
+  return {
+    id: "test-method",
+    name: "Test Deployment",
+    priority: 1,
+    isFallbackPurgeSafe: true,
+    isSupported: () => undefined,
+    prePurge: () => Promise.resolve(),
+    purge: () => Promise.resolve(),
+    postPurge: () => Promise.resolve(),
+    ...overrides,
+  } as IDeploymentMethod;
+}
+
+/** A game with no deploy skip patterns. */
+export function makeBlacklistGame(): IGame {
+  return { details: {} } as unknown as IGame;
+}
+
+/** The deployment method an extension's init registers, bound to the api. */
+export function makeRealDeploymentMethod(
+  api: IExtensionApi,
+  init: (context: IExtensionContextEx) => boolean,
+): IDeploymentMethod {
+  let method: IDeploymentMethod;
+  const context: Partial<IExtensionContextEx> = {
+    api,
+    registerDeploymentMethod: (registered: IDeploymentMethod) => {
+      method = registered;
+    },
+  };
+  init(context as IExtensionContextEx);
+  return method;
+}
+
+/** Removes `entry` from `registry` if present. */
+function unregister<T>(registry: T[], entry: T): void {
+  const index = registry.indexOf(entry);
+  if (index >= 0) {
+    registry.splice(index, 1);
+  }
+}
+
+/** Registers a deployment method for the current test. */
+export function registerTestDeploymentMethod(method: IDeploymentMethod): void {
+  registerDeploymentMethod(method);
+  onTestFinished(() => unregister(getAllActivators(), method));
+}
+
+/** Registers a mod type deploying to `deployPath` for the current test. */
+export function registerTestModType(typeId: string, deployPath: string): void {
+  registerModType(
+    typeId,
+    50,
+    () => true,
+    () => deployPath,
+    vi.fn(),
+  );
+  const registered = getModTypeExtensions();
+  const modType = registered[registered.length - 1];
+  onTestFinished(() => unregister(getModTypeExtensions(), modType));
 }
 
 /**
@@ -346,6 +454,7 @@ export function makeFakeLoot(overrides: Partial<IFakeLoot> = {}): IFakeLoot {
     sortPlugins: vi.fn<LootAsync["sortPlugins"]>((pluginNames) =>
       Promise.resolve([...pluginNames]),
     ),
+    strayConnections: 0,
     ...overrides,
   };
 }
@@ -872,6 +981,8 @@ const DEFAULT_BINDINGS: IHarnessReducerBinding[] = [
 
 // carries the setState escape hatch through the store as a whole-state replacement dispatch
 const REPLACE_TYPE = "__harness_replace_state";
+// a watched value no state can hold, so the first change always reaches the callback
+const UNSEEN_STATE_VALUE = Symbol("unseen state value");
 // the production hydration action: each bound slice becomes the payload's value at its path,
 // merged over the spec's defaults
 const HYDRATE_REPLACE_TYPE = "__hydrate_replace";
@@ -963,6 +1074,7 @@ export function makeApiHarness(
   const dialogCalls: Array<{ type: DialogType; title: string }> = [];
   const errorNotifications: IApiHarness["errorNotifications"] = [];
   const notifications: IApiHarness["notifications"] = [];
+  const dismissedNotifications: IApiHarness["dismissedNotifications"] = [];
   const historyEntries: IApiHarness["historyEntries"] = [];
   const showHistoryCalls: IApiHarness["showHistoryCalls"] = [];
   const runExecutableCalls: IApiHarness["runExecutableCalls"] = [];
@@ -982,7 +1094,15 @@ export function makeApiHarness(
       events.on(event, cb);
     },
     onStateChange: (statePath: string[], cb: (previous: unknown, current: unknown) => void) => {
-      watcher.on(statePath, ({ prevValue, currentValue }) => cb(prevValue, currentValue));
+      // a dispatch inside a callback replays the change being handled; skipped, as in production
+      let lastValue: unknown = UNSEEN_STATE_VALUE;
+      watcher.on(statePath, ({ prevValue, currentValue }) => {
+        if (lastValue !== UNSEEN_STATE_VALUE && currentValue === lastValue) {
+          return;
+        }
+        lastValue = currentValue;
+        cb(prevValue, currentValue);
+      });
     },
     sendNotification: (notification: INotification) => {
       notifications.push(notification);
@@ -993,7 +1113,9 @@ export function makeApiHarness(
       return runProcess(options);
     },
     genMd5Hash: () => Promise.resolve({ md5sum: "test-md5", numBytes: 0 }),
-    dismissNotification: () => undefined,
+    dismissNotification: (id: string) => {
+      dismissedNotifications.push(id);
+    },
     showErrorNotification: (
       title: string,
       message: unknown,
@@ -1034,6 +1156,10 @@ export function makeApiHarness(
     emit: (event: string, ...args: unknown[]) => {
       events.emit(event, ...args);
     },
+    emitAndAwait: async (event: string, ...args: unknown[]) => {
+      const listeners = events.listeners(event) as Array<(...listenerArgs: unknown[]) => unknown>;
+      await Promise.all(listeners.map((listener) => listener(...args)));
+    },
     getState: () => store.getState(),
     setState: (mutate: (draft: IState) => void) => {
       // copy-on-write
@@ -1047,6 +1173,7 @@ export function makeApiHarness(
     dialogCalls,
     errorNotifications,
     notifications,
+    dismissedNotifications,
     historyEntries,
     showHistoryCalls,
     runExecutableCalls,
@@ -1088,22 +1215,18 @@ export function makeGameHarness(
     },
     extraReducers,
   );
+  if (opts.instanceId !== undefined || opts.activatorId !== undefined) {
+    base.setState((draft) => {
+      if (opts.instanceId !== undefined) {
+        draft.app = { ...draft.app, instanceId: opts.instanceId };
+      }
+      if (opts.activatorId !== undefined) {
+        draft.settings.mods.activator = { [gameId]: opts.activatorId };
+      }
+    });
+  }
   const dataPath = gamePath !== undefined ? getGame(gameId).getModPaths(gamePath)[""] : undefined;
   return { ...base, gameId, profileId, stagingPath, dataPath };
-}
-
-/**
- * A file-based load order harness: a fake api seeded with an active profile and the game's mods,
- * plus an UpdateSet constructed against it. UpdateSet is injected so builders.ts stays free of the
- * renderer view layer, mirroring makeDriverHarness.
- */
-export function makeFbloHarness(
-  UpdateSetCtor: new (api: IExtensionApi, isFBLO: (gameId: string) => boolean) => UpdateSet,
-  opts: IFbloHarnessOpts = {},
-): IFbloHarness {
-  const base = makeGameHarness(opts);
-  const updateSet = new UpdateSetCtor(base.api, opts.isFBLO ?? (() => true));
-  return { ...base, updateSet };
 }
 
 /**
@@ -1160,15 +1283,30 @@ export async function makeProfileSwitchHarness(
 
   const { store } = base.api;
   const deployed: string[] = [];
-  base.api.events.on("deploy-mods", (cb: (err: Error | null) => void, profileId: string) => {
-    deployed.push(profileId);
-    const gameId = base.getState().persistent.profiles[profileId]?.gameId;
-    // stands in for the per-profile config a deployment generates (plugins.txt and the like)
-    void writeSettings(gameSettingsPath(gameId), `deployed:${profileId}`).then(() => {
-      store.dispatch(setDeploymentNecessary(gameId, false));
-      cb(null);
-    });
-  });
+  base.api.events.on(
+    "deploy-mods",
+    (
+      cb: (err: Error | null) => void,
+      profileId: string,
+      _progress?: unknown,
+      deployOptions?: IDeployOptions,
+    ) => {
+      deployed.push(profileId);
+      const gameId = base.getState().persistent.profiles[profileId]?.gameId;
+      const failure = opts.failingDeploys?.[VortexProfileId(profileId)];
+      if (failure !== undefined) {
+        // the real deployment notifies and only hands the error on when asked to
+        store.dispatch(setDeploymentNecessary(gameId, true));
+        cb(deployOptions?.failOnError ? failure : null);
+        return;
+      }
+      // stands in for the per-profile config a deployment generates (plugins.txt and the like)
+      void writeSettings(gameSettingsPath(gameId), `deployed:${profileId}`).then(() => {
+        store.dispatch(setDeploymentNecessary(gameId, false));
+        cb(null);
+      });
+    },
+  );
 
   const onceCallbacks: Array<() => void> = [];
   const registered: Record<string, unknown> = {
@@ -1199,6 +1337,7 @@ export async function makeProfileSwitchHarness(
       store.dispatch(setNextProfile(profileId));
       return switched;
     },
+    profileChanged: nextProfileChange,
     gameSettings: (gameId: string) => readSettings(gameSettingsPath(gameId)),
     savedSettings: (profileId: string) => readSettings(savedSettingsPath(profileId)),
     // test-setup stubs window.api.log with a vi.fn, so its calls are the renderer's log
@@ -1600,6 +1739,38 @@ export function makeLoadOrderEntry(overrides: Partial<ILoadOrderEntry> = {}): IL
     enabled: true,
     ...overrides,
   };
+}
+
+/** A load order registration whose functors do nothing; defaults to an id-less order for "skyrim". */
+export function makeLoadOrderGameInfo(
+  overrides: Partial<ILoadOrderGameInfo> = {},
+): ILoadOrderGameInfo {
+  return {
+    gameId: "skyrim",
+    serializeLoadOrder: () => Promise.resolve(),
+    deserializeLoadOrder: () => Promise.resolve([]),
+    validate: () => Promise.resolve(undefined),
+    ...overrides,
+  };
+}
+
+/** A load order of default entries with the given ids, in that order. */
+export function makeLoadOrder(...entryIds: string[]): LoadOrder {
+  return entryIds.map((id) => makeLoadOrderEntry({ id }));
+}
+
+/** A load order registration as the registry stores it, from an official extension. */
+export function makeRegisteredLoadOrder(
+  overrides: Partial<ILoadOrderGameInfo> = {},
+): IRegisteredLoadOrder {
+  return resolveEntry(makeLoadOrderGameInfo(overrides), false);
+}
+
+/** A failed load order validation with one invalid entry. */
+export function makeValidationResult(
+  overrides: Partial<IValidationResult> = {},
+): IValidationResult {
+  return { invalid: [{ id: "entry-1.pak", reason: "missing master" }], ...overrides };
 }
 
 /**

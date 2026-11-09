@@ -282,7 +282,7 @@ catalogs:
       specifier: 0.13.4
       version: 0.13.4
     '@nexusmods/nexus-api':
-      specifier: github:Nexus-Mods/node-nexus-api#da9b8eda8a3f381f04d87c7290595066ccbdbc5d
+      specifier: github:Nexus-Mods/node-nexus-api#c5eda4a46cafb5dc8000ed2a7986b22132625e2e
       version: 1.7.3
     '@nosferatu500/react-sortable-tree':
       specifier: 4.4.0
@@ -323,6 +323,9 @@ catalogs:
     '@tailwindcss/cli':
       specifier: 4.3.2
       version: 4.3.2
+    '@tanstack/react-virtual':
+      specifier: 3.13.23
+      version: 3.13.23
     '@testing-library/dom':
       specifier: 10.4.1
       version: 10.4.1
@@ -699,8 +702,13 @@ catalogs:
       specifier: 4.17.23
       version: 4.17.23
     loot:
+<<<<<<< HEAD
       specifier: github:Nexus-Mods/node-loot#44306bda0dd9c54e1e38c8ab217afedffd4510aa
       version: 7.0.1
+=======
+      specifier: github:Nexus-Mods/node-loot#fd1ccf136f38281ce5039d31f664a27a3ba14f45
+      version: 7.0.2
+>>>>>>> v2.10.1
     lru-cache:
       specifier: 11.2.7
       version: 11.2.7
@@ -723,7 +731,7 @@ catalogs:
       specifier: github:Nexus-Mods/modmeta-db#daa8935b6e38e255ec192c908adfce35d47c0336
       version: 0.9.3
     nexus-api:
-      specifier: github:Nexus-Mods/node-nexus-api#da9b8eda8a3f381f04d87c7290595066ccbdbc5d
+      specifier: github:Nexus-Mods/node-nexus-api#c5eda4a46cafb5dc8000ed2a7986b22132625e2e
       version: 1.7.3
     node-7z:
       specifier: github:Nexus-Mods/node-7z#b75def8d0d7d81a03f4526c52b8ada9a34a06479
@@ -989,8 +997,8 @@ importers:
   .:
     dependencies:
       node:
-        specifier: runtime:24.20.0
-        version: runtime:24.20.0
+        specifier: runtime:24.22.1
+        version: runtime:24.22.1
     devDependencies:
       '@eslint-react/eslint-plugin':
         specifier: 'catalog:'
@@ -2027,7 +2035,7 @@ importers:
     devDependencies:
       '@nexusmods/nexus-api':
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/da9b8eda8a3f381f04d87c7290595066ccbdbc5d
+        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/c5eda4a46cafb5dc8000ed2a7986b22132625e2e
       '@nexusmods/vortex-api':
         specifier: workspace:*
         version: link:../../../packages/vortex-api
@@ -2144,7 +2152,7 @@ importers:
     devDependencies:
       '@nexusmods/nexus-api':
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/da9b8eda8a3f381f04d87c7290595066ccbdbc5d
+        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/c5eda4a46cafb5dc8000ed2a7986b22132625e2e
       '@nexusmods/vortex-api':
         specifier: workspace:*
         version: link:../../../packages/vortex-api
@@ -2415,7 +2423,7 @@ importers:
     devDependencies:
       '@nexusmods/nexus-api':
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/da9b8eda8a3f381f04d87c7290595066ccbdbc5d
+        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/c5eda4a46cafb5dc8000ed2a7986b22132625e2e
       '@nexusmods/vortex-api':
         specifier: workspace:*
         version: link:../../../packages/vortex-api
@@ -2563,7 +2571,7 @@ importers:
     devDependencies:
       '@nexusmods/nexus-api':
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/da9b8eda8a3f381f04d87c7290595066ccbdbc5d
+        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/c5eda4a46cafb5dc8000ed2a7986b22132625e2e
       '@nexusmods/vortex-api':
         specifier: workspace:*
         version: link:../../../packages/vortex-api
@@ -2573,6 +2581,9 @@ importers:
       '@types/lodash':
         specifier: 'catalog:'
         version: 4.17.24
+      '@types/minimatch':
+        specifier: 'catalog:'
+        version: 2.0.29
       '@types/react':
         specifier: '18'
         version: 18.3.31
@@ -2594,6 +2605,9 @@ importers:
       lodash:
         specifier: 'catalog:'
         version: 4.17.23
+      minimatch:
+        specifier: 'catalog:'
+        version: 3.1.5
       react:
         specifier: 'catalog:'
         version: 18.3.1
@@ -2672,7 +2686,7 @@ importers:
     devDependencies:
       '@nexusmods/nexus-api':
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/da9b8eda8a3f381f04d87c7290595066ccbdbc5d
+        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/c5eda4a46cafb5dc8000ed2a7986b22132625e2e
       '@nexusmods/vortex-api':
         specifier: workspace:*
         version: link:../../packages/vortex-api
@@ -3587,7 +3601,7 @@ importers:
         version: https://codeload.github.com/Nexus-Mods/7z-bin/tar.gz/3298c42e69e3220dc39694bc2f610c077c3e213a
       '@nexusmods/nexus-api':
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/da9b8eda8a3f381f04d87c7290595066ccbdbc5d
+        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/c5eda4a46cafb5dc8000ed2a7986b22132625e2e
       '@nexusmods/vortex-api':
         specifier: workspace:*
         version: link:../../packages/vortex-api
@@ -3617,7 +3631,7 @@ importers:
         version: 4.17.23
       nexus-api:
         specifier: 'catalog:'
-        version: '@nexusmods/nexus-api@https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/da9b8eda8a3f381f04d87c7290595066ccbdbc5d'
+        version: '@nexusmods/nexus-api@https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/c5eda4a46cafb5dc8000ed2a7986b22132625e2e'
       react:
         specifier: 'catalog:'
         version: 18.3.1
@@ -3868,7 +3882,7 @@ importers:
     devDependencies:
       '@nexusmods/nexus-api':
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/da9b8eda8a3f381f04d87c7290595066ccbdbc5d
+        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/c5eda4a46cafb5dc8000ed2a7986b22132625e2e
       '@nexusmods/vortex-api':
         specifier: workspace:*
         version: link:../vortex-api
@@ -3955,6 +3969,12 @@ importers:
 
   packages/pe-resources: {}
 
+  packages/steam-kv-parser:
+    devDependencies:
+      '@types/node':
+        specifier: 24.12.2
+        version: 24.12.2
+
   packages/vortex-api:
     dependencies:
       '@types/bluebird':
@@ -4014,7 +4034,7 @@ importers:
         version: 7.58.9(@types/node@24.12.2)
       '@nexusmods/nexus-api':
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/da9b8eda8a3f381f04d87c7290595066ccbdbc5d
+        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/c5eda4a46cafb5dc8000ed2a7986b22132625e2e
       '@types/react':
         specifier: '18'
         version: 18.3.31
@@ -4086,7 +4106,10 @@ importers:
         version: 0.13.4
       '@nexusmods/nexus-api':
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/da9b8eda8a3f381f04d87c7290595066ccbdbc5d
+        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/c5eda4a46cafb5dc8000ed2a7986b22132625e2e
+      '@nexusmods/steam-kv-parser':
+        specifier: workspace:*
+        version: link:../../packages/steam-kv-parser
       '@nosferatu500/react-sortable-tree':
         specifier: 'catalog:'
         version: 4.4.0(react-dnd@14.0.5)(react-dom@18.3.1)(react@18.3.1)
@@ -4117,6 +4140,9 @@ importers:
       '@tailwindcss/cli':
         specifier: 'catalog:'
         version: 4.3.2
+      '@tanstack/react-virtual':
+        specifier: 'catalog:'
+        version: 3.13.23(react-dom@18.3.1)(react@18.3.1)
       '@types/bluebird':
         specifier: 'catalog:'
         version: 3.5.20
@@ -4634,7 +4660,10 @@ importers:
         version: 0.13.4
       '@nexusmods/nexus-api':
         specifier: 'catalog:'
-        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/da9b8eda8a3f381f04d87c7290595066ccbdbc5d
+        version: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/c5eda4a46cafb5dc8000ed2a7986b22132625e2e
+      '@nexusmods/steam-kv-parser':
+        specifier: workspace:*
+        version: link:../../packages/steam-kv-parser
       '@nosferatu500/react-sortable-tree':
         specifier: 'catalog:'
         version: 4.4.0(react-dnd@14.0.5)(react-dom@18.3.1)(react@18.3.1)
@@ -4659,6 +4688,9 @@ importers:
       '@tailwindcss/cli':
         specifier: 'catalog:'
         version: 4.3.2
+      '@tanstack/react-virtual':
+        specifier: 'catalog:'
+        version: 3.13.23(react-dom@18.3.1)(react@18.3.1)
       '@testing-library/dom':
         specifier: 'catalog:'
         version: 10.4.1
@@ -4719,6 +4751,9 @@ importers:
       '@types/lodash':
         specifier: 'catalog:'
         version: 4.17.24
+      '@types/minimatch':
+        specifier: 'catalog:'
+        version: 2.0.29
       '@types/node-7z':
         specifier: 'catalog:'
         version: 2.1.11
@@ -5121,7 +5156,11 @@ importers:
     optionalDependencies:
       loot:
         specifier: 'catalog:'
+<<<<<<< HEAD
         version: https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/44306bda0dd9c54e1e38c8ab217afedffd4510aa
+=======
+        version: https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/fd1ccf136f38281ce5039d31f664a27a3ba14f45
+>>>>>>> v2.10.1
 
   src/shared:
     dependencies:
@@ -6340,8 +6379,8 @@ packages:
     resolution: {integrity: sha512-XneP+V2eHHXlp1P0HZm7aT3IZmv0u4Igav/iAgLPfZbpO6T0wOaia4joAK531TpqHtz7z2EfQXpiBpBKOwuEeg==}
     engines: {node: '>=22'}
 
-  '@nexusmods/nexus-api@https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/da9b8eda8a3f381f04d87c7290595066ccbdbc5d':
-    resolution: {gitHosted: true, integrity: sha512-xqtQexWCBdJsAov+jwyLHk9ioy58b1mqOfduxKSXGWQy2yerQRj53Mp6Db9XfzYCRPWYM5d/FeJQb78dUN3Sxw==, tarball: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/da9b8eda8a3f381f04d87c7290595066ccbdbc5d}
+  '@nexusmods/nexus-api@https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/c5eda4a46cafb5dc8000ed2a7986b22132625e2e':
+    resolution: {gitHosted: true, integrity: sha512-56YAtfWTzoSxHKUyRI4VaDxLrw9410BSy10TLrkeIHx/lE2yyh0TNN/idegKCPdjgV9xHO2YLsgOI2h3yWr6FQ==, tarball: https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/c5eda4a46cafb5dc8000ed2a7986b22132625e2e}
     version: 1.7.3
 
   '@nosferatu500/react-dnd-scrollzone@2.0.10':
@@ -8051,133 +8090,157 @@ packages:
     resolution: {integrity: sha512-/EKnnqwvN7xYoVDhQEIEJTdPDwGW1wkFz/2Eku3ES/IJd4lcQh/OaIDFBmoJKvpe12enrb1TIoYh1fxasGXolA==}
     cpu: [arm64]
     os: [android]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-darwin-arm64@0.8.3':
     resolution: {integrity: sha512-DFAOliF5YIPv3ayNHGOJhIun6Af4kMaL/YXxf8ZtD1qrOIMFnX/AQBhwfvLalhwmmxuGA8AUteaKRHBvdKZFVA==}
     cpu: [arm64]
     os: [darwin]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-darwin-x64@0.8.3':
     resolution: {integrity: sha512-WlMh4/oEibaTzE9j5Zq8qnsrH4Ii4kWdcDv/Pj2Rb/MYSrKghtg+bxbWpPe/6zJD21p9zZBApQUxl8ECpZOJuQ==}
     cpu: [x64]
     os: [darwin]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-freebsd-x64@0.8.3':
     resolution: {integrity: sha512-hoDOpPP0FTxPSD+6w0Gs4p8iL1yXe6jjIXcdzNxyT1KE6B3JI6O0gTIWQISJ+8QyNpNjIwBb7nHCdRavktJM6A==}
     cpu: [x64]
     os: [freebsd]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-arm-gnu@0.8.3':
     resolution: {integrity: sha512-nNW0GGMJyF04pK4A7Kq7WAYtUWU9uI5ugDAoXl9yHpd3IIZ8UI+zFlM01e+ZGWnQcdxYYLumeRe/EjzZT9bVfQ==}
     cpu: [arm]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-arm-musl@0.8.3':
     resolution: {integrity: sha512-/jpxKhO8AV5TmXgT3R2Gv3YctKRUhyDzd5bQw8TiJ3O4z7qerHzoW2kE40fPAO3L434/IZtZbdhr8HuOqiwECA==}
     cpu: [arm]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-arm64-gnu@0.8.3':
     resolution: {integrity: sha512-CYhLJfnCknabfLvUjsanxC5s3BBtZHUwfzdDL7GcqShIRQh2qqgG7pPfFrFJ6Jp56kkjKXkfluFGn9nnIv0nZg==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-arm64-musl@0.8.3':
     resolution: {integrity: sha512-c6gEdnI0MgA7/rVw6CACMciSbAcxVwLyD/jSBbMLWUeqqbysCNGrGPAHdpSaadpz3W1bd+OdXt9XWjfm66708w==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-x64-gnu@0.8.3':
     resolution: {integrity: sha512-CRVZ9Rw5lIah/PpWeShWv7XiUCMY15N6rZRA2sEZrQvc5Az7Dv9/wsDMa6oBMkfQLXuDkFo4G1QOYyWbebjejg==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-x64-musl@0.8.3':
     resolution: {integrity: sha512-G12Nhecjmv7OlbCX6Y4HU4wYYePd111kTE+yTjbitnt+P3m8bNegtYG4ZGo4scGTq8cKsLF4xcda1XNzCUA6nQ==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-win32-arm64@0.8.3':
     resolution: {integrity: sha512-i8bpXWaMlik9DvFl+89emEx3RZFtSd21Vlt0UrnPvUC7h8NGElP2SwQcdcG+pPmihFIYJAoIuJLw7YdQcFcDkA==}
     cpu: [arm64]
     os: [win32]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-win32-x64@0.8.3':
     resolution: {integrity: sha512-vlYymeTSsx+qxZoNvdl6KehgYDaQC4Sk/9KUnM3V2mriyCwSdhW7lqdpQGl+RLGsDTxyuRGjzGIjgRWk3lohmA==}
     cpu: [x64]
     os: [win32]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-parser/binding-android-arm64@0.8.3':
     resolution: {integrity: sha512-vySYRsMeul9ssvxeHdxgS9ZUIcq7gqljWNqgokjJE0uQWvVvOprihJ6hOsiifVqWsla0BMc3vAFBvNS9QqCw7g==}
     cpu: [arm64]
     os: [android]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-darwin-arm64@0.8.3':
     resolution: {integrity: sha512-+wpB/wqhiZ685Y77I+lj6v9pHSAJ3Y+QMHJmvch0Q0ahIMbNwtKk3s54MhtjCMKO1qpjPbyN/PjuHDg2hbKaVQ==}
     cpu: [arm64]
     os: [darwin]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-darwin-x64@0.8.3':
     resolution: {integrity: sha512-jKqiWejj4zVy7pPtEGu4/Ty+pG1h7ooQOXIkm7shKZTSwTU9X8X+eoH11uIeKHZi2SQWV0GhNz0J56eerseysQ==}
     cpu: [x64]
     os: [darwin]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-freebsd-x64@0.8.3':
     resolution: {integrity: sha512-FC7zSwzFzd4z9bsId07CiHLR+Iw6yW/LzIQhL5AUtPUuVXLgEyx0rilgbRUYkl1CT3GJcLpkh63WuPZUSgCDzw==}
     cpu: [x64]
     os: [freebsd]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-arm-gnu@0.8.3':
     resolution: {integrity: sha512-So61j88b9/ygDnUPlWCm1EUPw4HSxAyDjrNHKgud5N3aRDQ3kw94nW7TriXbo7GBXID9oBHCMNm1r1Fof/Df5Q==}
     cpu: [arm]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-arm-musl@0.8.3':
     resolution: {integrity: sha512-Nmnn20yJvSSKL8ZdtqReBRSGCDkSMqR5jEk/Sk/cdIdZmqVD49Z6M7w2GbMjdrxMI1MBPbsWFMMWxa93cd5t5g==}
     cpu: [arm]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-arm64-gnu@0.8.3':
     resolution: {integrity: sha512-Lfgw7AXJ0rxu6BMPGgfc8HLJWEIr8BHhCzcQp/75k+NM90uCLkHlBNqIg/K42KlSvBgAvu9euOvjdswib+4qJA==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-arm64-musl@0.8.3':
     resolution: {integrity: sha512-cfRyu87xsJ0tFkHNsnMC4Rq6+xsFJ6i2dc4VAH52d2qLvykEJU/Mdi3ul1O2PyOApX/LoLT3uQZ0fWs3D5XE4w==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-x64-gnu@0.8.3':
     resolution: {integrity: sha512-GcQQCUuYxbm6P1n+io/A50rvWKDeWHutIp6rW0ycDOZuEQjOb8hDVgS88+NDyOnd9FfS0/Z6GXopcRFDyKpzOg==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-x64-musl@0.8.3':
     resolution: {integrity: sha512-rMkImBGZzg7GZlj8krYtdiezyjYI4igjKWMut5T65jHyNWFigMQrEpn9mDIBflloW9FKhGE3mN6yTZ/N+4HRwg==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-win32-arm64@0.8.3':
     resolution: {integrity: sha512-/2Pl2cAzCXWxah8FqJapEj/ikpt9cEutEZFCa0hnbfrshkn5+C+aBM3ZDq62d1jsgQjBMmqr5HVhJUA4OAG/Tg==}
     cpu: [arm64]
     os: [win32]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-win32-x64@0.8.3':
     resolution: {integrity: sha512-Ntnvjoan9jnfLhn7Kn3h8j/bhsbVdQSVmKUqFULKtmwImLCJVHOJbLL4qbEJyrOQ7r/FBL1/c/dRvx/AQWzzXg==}
     cpu: [x64]
     os: [win32]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-toolchain/types@0.8.3':
     resolution: {integrity: sha512-9LN3HYs3A9qSPVFunsxlbfwBcUgexti3TmhOzIxB/UH8zFuaHQJXTRDcN17DW6cp1GsyZtiZA7f18uIra36Jag==}
@@ -10591,9 +10654,15 @@ packages:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
 
+<<<<<<< HEAD
   loot@https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/44306bda0dd9c54e1e38c8ab217afedffd4510aa:
     resolution: {gitHosted: true, integrity: sha512-Rg/vyTt218kmIg3qAunng5DQVCXPqMjMo2wkHLZ3VHeKpiQEJ5Pn7z1I3B8VHhLvRrLLp8VuUhMpZkZyxZIU1Q==, tarball: https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/44306bda0dd9c54e1e38c8ab217afedffd4510aa}
     version: 7.0.1
+=======
+  loot@https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/fd1ccf136f38281ce5039d31f664a27a3ba14f45:
+    resolution: {gitHosted: true, integrity: sha512-c6ptJ8T+1LmGhYhmSXXLa9G6sqaWJ1U+RxJJZKaCfyFmJDaxyptrzz1v7su28oIRRcLd5QER2X+hvlh6bZ3XKg==, tarball: https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/fd1ccf136f38281ce5039d31f664a27a3ba14f45}
+    version: 7.0.2
+>>>>>>> v2.10.1
 
   lowercase-keys@3.0.0:
     resolution: {integrity: sha512-ozCC6gdQ+glXOQsveKD0YsDy8DSQFjDTz4zyzEHNV5+JP5D62LmfDZ6o1cycFx9ouG940M5dE8C8CTewdj2YWQ==}
@@ -10938,7 +11007,7 @@ packages:
   node-releases@2.0.36:
     resolution: {integrity: sha512-TdC8FSgHz8Mwtw9g5L4gR/Sh9XhSP/0DEkQxfEFXOpiul5IiHgHan2VhYYb6agDSfp4KuvltmGApc8HMgUrIkA==}
 
-  node@runtime:24.20.0:
+  node@runtime:24.22.1:
     resolution:
       type: variations
       variants:
@@ -10946,9 +11015,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-FLW9etQKtfRxX7Ti+WSFjYINlCX+KR09ZfmJJua4nB4=
+            integrity: sha256-9ie20HmCnmSKS4AP+oidN9viORNQcDADDbhaqGFZGiY=
             type: binary
-            url: https://nodejs.org/download/release/v24.20.0/node-v24.20.0-aix-ppc64.tar.gz
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-aix-ppc64.tar.gz
           targets:
             - cpu: ppc64
               os: aix
@@ -10956,9 +11025,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-QOVgfl7LPbkZJyN3baLXXZZiYPx0p6nnMcG9Z92pa8g=
+            integrity: sha256-icaCWT12zUQjP6U7FWMmTn3py7GJytFpE1xbT637wKc=
             type: binary
-            url: https://nodejs.org/download/release/v24.20.0/node-v24.20.0-darwin-arm64.tar.gz
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-darwin-arm64.tar.gz
           targets:
             - cpu: arm64
               os: darwin
@@ -10966,9 +11035,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-nlsmRM8Qe++2rvymdrltMpa8EBOAlvAi7TeNYjPtgfQ=
+            integrity: sha256-0TJVfn7iuFrwiwyMNDOOZcZDDyI40B9ydyjvQtyDsDU=
             type: binary
-            url: https://nodejs.org/download/release/v24.20.0/node-v24.20.0-darwin-x64.tar.gz
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-darwin-x64.tar.gz
           targets:
             - cpu: x64
               os: darwin
@@ -10976,9 +11045,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-NRVgPiSHh5o5vHVxbxoq/9AnUAxkulDoRc9yyzMhkBM=
+            integrity: sha256-M8N74jS6i+4EGWEEexkWD019DxZOjiRveL3RD+/xSLM=
             type: binary
-            url: https://nodejs.org/download/release/v24.20.0/node-v24.20.0-linux-arm64.tar.gz
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-linux-arm64.tar.gz
           targets:
             - cpu: arm64
               os: linux
@@ -10986,9 +11055,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-pzSzbI0dFs5FXA65wymwfdEhwshVQ1UGSphhvJbDrcw=
+            integrity: sha256-nOVyhEUBaynkmtCY96M2Bhql93DRd9knJ4vCb9Ym5kM=
             type: binary
-            url: https://nodejs.org/download/release/v24.20.0/node-v24.20.0-linux-ppc64le.tar.gz
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-linux-ppc64le.tar.gz
           targets:
             - cpu: ppc64le
               os: linux
@@ -10996,9 +11065,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-2MIktG7wHweKUj2bfbeSgjBvrigemGoVotv/6UfFMB4=
+            integrity: sha256-cZea6xw4W8jugxANODo7HsClIC4D35+ZanBAMwnK/7U=
             type: binary
-            url: https://nodejs.org/download/release/v24.20.0/node-v24.20.0-linux-s390x.tar.gz
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-linux-s390x.tar.gz
           targets:
             - cpu: s390x
               os: linux
@@ -11006,9 +11075,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-1ubRu7mtSssW1YC4m+ipyafkkJJuk708MKINRuFSv4o=
+            integrity: sha256-myUNKdariuON0jAZ4sBKbWspFqsdrXIcX24dorKQHGo=
             type: binary
-            url: https://nodejs.org/download/release/v24.20.0/node-v24.20.0-linux-x64-musl.tar.gz
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-linux-x64-musl.tar.gz
           targets:
             - cpu: x64
               os: linux
@@ -11017,9 +11086,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-hV1YH4pOsagRfjQm3iX+AncFkv68+zE2mu4f+/7p6Ow=
+            integrity: sha256-62co53xXajUWLBIsRcyt8iTYn/AKvI2uRswol8YALXw=
             type: binary
-            url: https://nodejs.org/download/release/v24.20.0/node-v24.20.0-linux-x64.tar.gz
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-linux-x64.tar.gz
           targets:
             - cpu: x64
               os: linux
@@ -11027,10 +11096,10 @@ packages:
             archive: zip
             bin:
               node: node.exe
-            integrity: sha256-McZ5l0TeilRgFkMJgEDGjDaX5WyU5AfWHQ5fpfNBkdc=
-            prefix: node-v24.20.0-win-arm64
+            integrity: sha256-oMgHMZ/t4kxKDY+EVkyCphm9MTsWsQwAfDg8JgnpkXE=
+            prefix: node-v24.22.1-win-arm64
             type: binary
-            url: https://nodejs.org/download/release/v24.20.0/node-v24.20.0-win-arm64.zip
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-win-arm64.zip
           targets:
             - cpu: arm64
               os: win32
@@ -11038,10 +11107,10 @@ packages:
             archive: zip
             bin:
               node: node.exe
-            integrity: sha256-bKyf+8qPakcJHktcdy4GBgScOHHLZ9kAwM7d5jDlRbo=
-            prefix: node-v24.20.0-win-x64
+            integrity: sha256-0gRtKMLD3NIRrFFFwL8w4gR++d+zBmk8jG4uzNi5X6U=
+            prefix: node-v24.22.1-win-x64
             type: binary
-            url: https://nodejs.org/download/release/v24.20.0/node-v24.20.0-win-x64.zip
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-win-x64.zip
           targets:
             - cpu: x64
               os: win32
@@ -11049,9 +11118,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-LIxQfMsPIIEtlSa6jKRUsWUqre9o/IutBvB/sRIt0e8=
+            integrity: sha256-glQSWCWj5eg0vYomDatMgwP3IEZKdBUG7CeYm5uhdps=
             type: binary
-            url: https://unofficial-builds.nodejs.org/download/release/v24.20.0/node-v24.20.0-linux-arm64-musl.tar.gz
+            url: https://unofficial-builds.nodejs.org/download/release/v24.22.1/node-v24.22.1-linux-arm64-musl.tar.gz
           targets:
             - cpu: arm64
               os: linux
@@ -11060,14 +11129,14 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-muE5n+9L2JkOFXc84TJ7M2oguel9jHVJ9PQspzxD9WI=
+            integrity: sha256-Cp7dzi0ujzrdvpT6RtdRMlstdPf9HOYylhZNNrbfxuU=
             type: binary
-            url: https://unofficial-builds.nodejs.org/download/release/v24.20.0/node-v24.20.0-linux-x64-musl.tar.gz
+            url: https://unofficial-builds.nodejs.org/download/release/v24.22.1/node-v24.22.1-linux-x64-musl.tar.gz
           targets:
             - cpu: x64
               os: linux
               libc: musl
-    version: 24.20.0
+    version: 24.22.1
     hasBin: true
 
   noms@0.0.0:
@@ -14476,7 +14545,7 @@ snapshots:
     dependencies:
       node-gyp-build: 4.8.4
 
-  '@nexusmods/nexus-api@https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/da9b8eda8a3f381f04d87c7290595066ccbdbc5d':
+  '@nexusmods/nexus-api@https://codeload.github.com/Nexus-Mods/node-nexus-api/tar.gz/c5eda4a46cafb5dc8000ed2a7986b22132625e2e':
     dependencies:
       form-data: 4.0.6
       jsonwebtoken: 9.0.3
@@ -18755,7 +18824,11 @@ snapshots:
     dependencies:
       js-tokens: 4.0.0
 
+<<<<<<< HEAD
   loot@https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/44306bda0dd9c54e1e38c8ab217afedffd4510aa:
+=======
+  loot@https://codeload.github.com/Nexus-Mods/node-loot/tar.gz/fd1ccf136f38281ce5039d31f664a27a3ba14f45:
+>>>>>>> v2.10.1
     dependencies:
       autogypi: 0.2.2
       lodash: 4.17.23
@@ -19049,7 +19122,7 @@ snapshots:
 
   node-releases@2.0.36: {}
 
-  node@runtime:24.20.0: {}
+  node@runtime:24.22.1: {}
 
   noms@0.0.0:
     dependencies:

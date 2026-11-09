@@ -80,7 +80,6 @@ import type { IExtensionApi, ThunkStore } from "../../types/IExtensionContext";
 import type { IProfile, IState } from "../../types/IState";
 import { withActivityTracking } from "../../util/activity";
 import { getBatchContext, type IBatchContext } from "../../util/BatchContext";
-import calculateFolderSize from "../../util/calculateFolderSize";
 import {
   generateCollectionSessionId,
   isOutstandingOptionalMember,
@@ -188,6 +187,7 @@ import type { IModInstaller, ISupportedInstaller } from "./types/IModInstaller";
 import type { IInstallationDetails, InstallFunc } from "./types/InstallFunc";
 import type { IReplaceChoice, ReplaceChoice } from "./types/IReplaceChoice";
 import type { ISupportedResult, ITestSupportedDetails, TestSupported } from "./types/TestSupported";
+import { calculateModSize } from "./util/calculate_mod_size/calculateModSize.util";
 import { getCSharpScriptAllowListForGame } from "./util/cSharpScriptAllowList";
 import gatherDependencies, {
   findDownloadByRef,
@@ -196,6 +196,7 @@ import gatherDependencies, {
 } from "./util/dependencies";
 import filterModInfo from "./util/filterModInfo";
 import { findModByRef } from "./util/findModByRef";
+import { toPosixSeparators } from "./util/installerHelpers";
 import { InstallPhaseTracker, type IDeploymentDetails } from "./util/InstallPhaseTracker";
 import { isFuzzyVersion } from "./util/isFuzzyVersion";
 import { mergeCaseConflictingDirs } from "./util/mergeCaseConflictingDirs";
@@ -1601,7 +1602,9 @@ class InstallManager {
                       }
                       const depRule = (mods[iter].rules ?? []).find(
                         (rule) =>
-                          rule.type === "requires" && testModReference(existingMod, rule.reference),
+                          rule.type === "requires" &&
+                          rule.ignored !== true &&
+                          testModReference(existingMod, rule.reference),
                       );
                       if (depRule !== undefined) {
                         prev[iter] = { owner: iter, rule: depRule };
@@ -2315,23 +2318,7 @@ class InstallManager {
   }
 
   private setModSize(api: IExtensionApi, modId: string, gameId: string): Promise<void> {
-    const state = api.getState();
-    const stagingFolder = installPathForGame(state, gameId);
-    const mod = state.persistent.mods[gameId]?.[modId];
-    if (mod?.installationPath === undefined) {
-      log("debug", "failed to calculate modSize", "mod is not in state");
-      return Promise.resolve();
-    }
-    const modPath = path.join(stagingFolder, mod.installationPath);
-    return Promise.resolve(calculateFolderSize(modPath))
-      .then((totalSize) => {
-        api.store.dispatch(setModAttribute(gameId, mod.id, "modSize", totalSize));
-        return Promise.resolve();
-      })
-      .catch((err) => {
-        log("debug", "failed to calculate modSize", err);
-        return Promise.resolve();
-      });
+    return calculateModSize(api.store, gameId, modId);
   }
 
   /**
@@ -4615,7 +4602,7 @@ class InstallManager {
       }
     });
 
-    const finalInstructions = result.instructions
+    let finalInstructions = result.instructions
       .filter((instr) => (instr.source ?? instr.type) != null)
       .map((instr) => {
         const key = (instr.source ?? instr.type).toUpperCase();
@@ -4660,6 +4647,10 @@ class InstallManager {
           finalInstructions.push(instr);
         }
       }
+    }
+
+    if (process.platform !== "win32") {
+      finalInstructions = finalInstructions.map(toPosixSeparators);
     }
 
     const invalidInstructions = this.validateInstructions(finalInstructions);

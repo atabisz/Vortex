@@ -13,9 +13,13 @@ import { describe, expect, onTestFinished, vi } from "vitest";
 
 import { startActivity, stopActivity } from "../../actions/session";
 import { flushAsync } from "../../test-utils/async";
-import { makeLootPluginInterface, makePlugin } from "../../test-utils/builders";
+import { makeFakeLoot, makeLootPluginInterface, makePlugin } from "../../test-utils/builders";
 import { test } from "../../test-utils/gamebryoTest";
 import type { IFakeLoot, ILootHarness } from "../../test-utils/harnessTypes";
+<<<<<<< HEAD
+=======
+import type * as ErrorHandling from "../../util/errorHandling";
+>>>>>>> v2.10.1
 import { setPluginList } from "./actions/plugins";
 import LootInterface from "./autosort";
 import { createLootMock, downloadMasterlistMock } from "./lootMocks";
@@ -39,6 +43,11 @@ vi.mock(
   "./util/findInvalidPlugins",
   async () => (await import("./lootMocks.js")).invalidPluginsModule,
 );
+// the span a stray pipe connection is reported on
+vi.mock("../../util/errorHandling", async (importOriginal) => ({
+  ...(await importOriginal<typeof ErrorHandling>()),
+  recordErrorSpan: vi.fn(),
+}));
 
 describe("LootInterface libloot lifecycle", () => {
   test("recreates the loot instance and reloads its state when helpers restart", async ({
@@ -98,6 +107,24 @@ describe("LootInterface libloot lifecycle", () => {
     expect(harness.errorNotifications).toEqual([]);
   });
 
+<<<<<<< HEAD
+=======
+  // the persisted discovery is only cleared once discovery notices the game is gone
+  test("leaves LOOT unstarted for a game whose folder is gone", async ({ makeLoot }) => {
+    const harness = await makeLoot(LootInterface);
+    harness.setState((draft) => {
+      draft.settings.gameMode.discovered.skyrimse.path = path.join(harness.dataDir, "gone");
+    });
+
+    harness.restartHelpers();
+    await flushAsync();
+    await harness.lootInterface.wait();
+
+    expect(createLootMock).not.toHaveBeenCalled();
+    expect(harness.errorNotifications).toEqual([]);
+  });
+
+>>>>>>> v2.10.1
   // a details request carries the game that was active when it was made
   test("answers no plugin details for a game other than the active one", async ({ makeLoot }) => {
     const harness = await makeLoot(LootInterface);
@@ -147,7 +174,16 @@ describe("LootInterface libloot lifecycle", () => {
             ([, err, phase]) => phase === LootPhase.Worker && err.data.kind === "loot:process-died",
           )
           .map(([, , , options]) => options?.context);
+<<<<<<< HEAD
       return { workerDeaths, endWorker: () => endWorker?.() };
+=======
+      // the span context of each failed start reported
+      const initFailures = () =>
+        report.mock.calls
+          .filter(([, , phase]) => phase === LootPhase.Init)
+          .map(([, , , options]) => options?.context);
+      return { workerDeaths, initFailures, endWorker: () => endWorker?.() };
+>>>>>>> v2.10.1
     }
 
     const diesOnInit = () =>
@@ -185,6 +221,70 @@ describe("LootInterface libloot lifecycle", () => {
       );
     });
 
+<<<<<<< HEAD
+=======
+    test("reports how the worker ended when its start fails", async ({ makeLoot }) => {
+      const harness = await makeLoot(LootInterface);
+      const { initFailures, endWorker } = startWorker(harness, diesOnInit, {
+        code: 0xc0000005,
+        signal: null,
+      });
+      await vi.waitFor(() => expect(createLootMock).toHaveBeenCalled());
+
+      endWorker();
+
+      await vi.waitFor(() =>
+        expect(initFailures()[0]).toMatchObject({
+          [SpanAttribute.LootExitCode]: 0xc0000005,
+          [SpanAttribute.LootWorkerRunning]: false,
+        }),
+      );
+      // the restart has to start here, or it takes the next test's worker
+      await vi.waitFor(() => expect(createLootMock).toHaveBeenCalledTimes(2));
+    });
+
+    test("fails the start when the worker ends before it is ready", async ({ makeLoot }) => {
+      const harness = await makeLoot(LootInterface);
+      const { initFailures, endWorker } = startWorker(harness, () => new Promise(() => {}), {
+        code: 1,
+        signal: null,
+      });
+      await vi.waitFor(() => expect(createLootMock).toHaveBeenCalled());
+
+      endWorker();
+
+      await vi.waitFor(() =>
+        expect(initFailures()[0]).toMatchObject({
+          [SpanAttribute.LootExitCode]: 1,
+          [SpanAttribute.LootWorkerRunning]: false,
+        }),
+      );
+      expect(harness.errorNotifications).toContainEqual(
+        expect.objectContaining({ title: "Failed to initialize LOOT" }),
+      );
+      // the restart has to start here, or it takes the next test's worker
+      await vi.waitFor(() => expect(createLootMock).toHaveBeenCalledTimes(2));
+    });
+
+    // another program on the pipe fails the start without touching the worker
+    test("reports a worker still running when its start fails", async ({ makeLoot }) => {
+      const harness = await makeLoot(LootInterface);
+      // only setTimeout is faked: Bluebird schedules on setImmediate, which flushAsync drains
+      vi.useFakeTimers({ toFake: ["setTimeout"] });
+      onTestFinished(() => {
+        vi.useRealTimers();
+      });
+      const { initFailures } = startWorker(harness, diesOnInit, { code: 0, signal: null });
+      await vi.waitFor(() => expect(createLootMock).toHaveBeenCalled());
+      await flushAsync();
+
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(initFailures()[0]).toMatchObject({ [SpanAttribute.LootWorkerRunning]: true });
+      expect(initFailures()[0]).not.toHaveProperty(SpanAttribute.LootExitCode);
+    });
+
+>>>>>>> v2.10.1
     test("starts LOOT again after a worker it did not close ends", async ({ makeLoot }) => {
       const harness = await makeLoot(LootInterface);
       const { endWorker } = startWorker(harness, diesOnInit, { code: 0, signal: null });
@@ -214,6 +314,27 @@ describe("LootInterface libloot lifecycle", () => {
     });
   });
 
+<<<<<<< HEAD
+=======
+  // the worker is unaffected, so the start succeeds and only telemetry hears of it
+  test("reports another process on the pipe of a worker that started", async ({ makeLoot }) => {
+    const harness = await makeLoot(LootInterface);
+    const { recordErrorSpan } = await import("../../util/errorHandling.js");
+    createLootMock.mockResolvedValueOnce(makeFakeLoot({ strayConnections: 2 }));
+
+    harness.restartHelpers();
+
+    await vi.waitFor(() =>
+      expect(recordErrorSpan).toHaveBeenCalledWith(
+        "Another process opened the LOOT pipe",
+        expect.objectContaining({ data: { kind: "loot:stray-connection", count: 2 } }),
+        expect.objectContaining({ [SpanAttribute.LootStrayConnections]: 2 }),
+      ),
+    );
+    expect(harness.errorNotifications).toEqual([]);
+  });
+
+>>>>>>> v2.10.1
   test("closes the replaced loot instance after its grace period", async ({ makeLoot }) => {
     const harness = await makeLoot(LootInterface);
     // only setTimeout is faked: Bluebird schedules on setImmediate, which flushAsync drains

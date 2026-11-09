@@ -12,7 +12,12 @@ export interface IToolbarActionIdentity {
   id: string;
   /** Namespace of the extension that registered the action, absent for a page's own. */
   extension?: string;
+  /** What else its clicks report, from the action's `trackingProperties`. */
+  properties?: IToolbarTrackingProperties;
 }
+
+/** Extra properties an action's click reports, such as which way a toggle went. */
+export type IToolbarTrackingProperties = Record<string, string | number | boolean>;
 
 /**
  * What an action calls itself when its clicks and pins are counted: the `id` that
@@ -26,7 +31,9 @@ export interface IToolbarActionIdentity {
  * to disagree about what a button is called.
  */
 export const identityOf = (action: IToolbarAction): IToolbarActionIdentity | undefined =>
-  action.id ? { id: action.id, extension: action.extension } : undefined;
+  action.id
+    ? { id: action.id, extension: action.extension, properties: action.trackingProperties }
+    : undefined;
 
 /** Where in a toolbar an action was reached from. */
 export type ToolbarSurface = "bar" | "overflow" | "menu";
@@ -47,6 +54,9 @@ export interface IToolbarAnalytics {
   onPinsReset: () => void;
 }
 
+/** What pinning an action puts it on: the toolbar, or a table row's actions. */
+export type ToolbarPinTarget = "toolbar" | "row";
+
 /** Layout facts a `Toolbar` publishes to the groups rendered inside it. */
 export interface IToolbarContext {
   /** The toolbar row, or `null` for a group rendered without a `Toolbar`. */
@@ -56,6 +66,8 @@ export interface IToolbarContext {
    * offer it — which is every toolbar that hasn't asked. See `useToolbarPinning`.
    */
   pinningId: string | null;
+  /** What a pin puts an action on, as the menu's pin toggles say; default the toolbar. */
+  pinTarget?: ToolbarPinTarget;
   /**
    * Content width of the row, or `null` while it can't be measured — no
    * `ResizeObserver`, or the toolbar is hidden. Groups read `null` as "no width

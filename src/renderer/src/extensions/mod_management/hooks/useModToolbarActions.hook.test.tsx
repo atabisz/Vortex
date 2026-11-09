@@ -6,7 +6,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { IActionDefinition, IActionOptions } from "@/types/IActionDefinition";
 
-const { getState, objects } = vi.hoisted(() => ({
+const { dispatch, getState, objects } = vi.hoisted(() => ({
+  dispatch: vi.fn(),
   getState: vi.fn(() => ({})),
   objects: { current: [] as IActionDefinition[] },
 }));
@@ -39,9 +40,9 @@ vi.mock("@/ExtensionProvider", async (importOriginal) => ({
 
 const state = {
   settings: {
-    mods: { activator: {}, confirmPurge: true },
+    mods: { activator: {}, confirmPurge: true, betaTable: false },
     downloads: { copyOnIFF: false },
-    automation: { install: false },
+    automation: { install: false, deploy: false },
   },
   session: { discovery: {} },
   persistent: { mods: {} },
@@ -52,7 +53,7 @@ vi.mock("react-redux", async () => {
 
   return {
     ...actual,
-    useDispatch: () => vi.fn(),
+    useDispatch: () => dispatch,
     useSelector: (selector: (input: unknown) => unknown) => {
       try {
         return selector(state);
@@ -65,6 +66,10 @@ vi.mock("react-redux", async () => {
   };
 });
 
+import { nxmExperiment, nxmRuleSettings } from "@/ui/icon-paths";
+
+import { setAutoDeployment } from "../../settings_interface/actions/automation";
+import { setBetaModsTable } from "../actions/settings";
 import { useModToolbarActions } from "./useModToolbarActions.hook";
 
 const t = ((key: string) => key) as never;
@@ -125,7 +130,7 @@ describe("useModToolbarActions", () => {
       options: {},
     } as unknown as IActionDefinition;
 
-    expect(labels([asComponent])).toHaveLength(4);
+    expect(labels([asComponent])).toEqual(labels([]));
   });
 });
 
@@ -293,4 +298,104 @@ describe("useModToolbarActions manual apply", () => {
     expect(action?.description).toBeUndefined();
     expect(action?.brand).toBeUndefined();
   });
+<<<<<<< HEAD
+=======
+});
+
+describe("useModToolbarActions auto-apply", () => {
+  afterEach(() => {
+    state.settings.automation.deploy = false;
+    dispatch.mockClear();
+  });
+
+  const autoApply = () => actionsFor([]).find((action) => action.id === "auto-apply");
+
+  it("comes just before the view switch, unpinned, in a section of its own", () => {
+    const actions = actionsFor([plain("Manage Rules")]);
+
+    expect(actions.at(-2)).toMatchObject({ id: "auto-apply", section: "automation" });
+    expect(actions.at(-1)?.section).not.toBe("automation");
+    expect(actions.at(-3)?.section).not.toBe("automation");
+    expect(autoApply()?.pinned).toBeFalsy();
+  });
+
+  it("shows the rule settings symbol", () => {
+    expect(autoApply()?.iconPath).toBe(nxmRuleSettings);
+  });
+
+  it("offers to turn auto-apply on while it's off", () => {
+    expect(autoApply()).toMatchObject({
+      label: "Enable auto-apply",
+      description: "Automatically apply changes as you make them.",
+      active: false,
+      trackingProperties: { autoApply: true },
+    });
+
+    autoApply()?.onClick?.();
+
+    expect(dispatch).toHaveBeenCalledWith(setAutoDeployment(true));
+  });
+
+  it("offers to turn auto-apply off, lit, while it's on", () => {
+    state.settings.automation.deploy = true;
+
+    expect(autoApply()).toMatchObject({
+      label: "Disable auto-apply",
+      description: "Mod changes will need to be applied manually.",
+      active: true,
+      trackingProperties: { autoApply: false },
+    });
+
+    autoApply()?.onClick?.();
+
+    expect(dispatch).toHaveBeenCalledWith(setAutoDeployment(false));
+  });
+});
+
+describe("useModToolbarActions beta table", () => {
+  afterEach(() => {
+    state.settings.mods.betaTable = false;
+    dispatch.mockClear();
+  });
+
+  const betaTable = () => actionsFor([]).find((action) => action.id === "beta-table");
+
+  it("comes last, pinned, in a section of its own", () => {
+    const actions = actionsFor([plain("Manage Rules")]);
+
+    expect(actions.at(-1)).toMatchObject({ id: "beta-table", pinned: true, section: "view" });
+  });
+
+  it("shows the experiment flask", () => {
+    expect(betaTable()?.iconPath).toBe(nxmExperiment);
+  });
+
+  it("offers the beta view while the classic one shows", () => {
+    expect(betaTable()).toMatchObject({
+      label: "Switch to beta view",
+      description: "Try the new mod list. Some features aren't supported yet.",
+      active: false,
+      trackingProperties: { view: "beta" },
+    });
+
+    betaTable()?.onClick?.();
+
+    expect(dispatch).toHaveBeenCalledWith(setBetaModsTable(true));
+  });
+
+  it("offers the classic view, lit, while the beta one shows", () => {
+    state.settings.mods.betaTable = true;
+
+    expect(betaTable()).toMatchObject({
+      label: "Switch to classic view",
+      description: "Return to the original mod list.",
+      active: true,
+      trackingProperties: { view: "classic" },
+    });
+
+    betaTable()?.onClick?.();
+
+    expect(dispatch).toHaveBeenCalledWith(setBetaModsTable(false));
+  });
+>>>>>>> v2.10.1
 });

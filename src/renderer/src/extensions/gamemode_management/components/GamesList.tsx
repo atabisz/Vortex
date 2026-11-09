@@ -2,6 +2,7 @@ import type { TFunction } from "i18next";
 import React from "react";
 import { ListGroup } from "react-bootstrap";
 
+import type { GameSource } from "../types/GameSource";
 import type { IDiscoveryResult } from "../types/IDiscoveryResult";
 import type { IGameStored } from "../types/IGameStored";
 import GameRow from "../views/GameRow";
@@ -12,6 +13,13 @@ interface IGamesListProps {
   type: string;
   gameMode: string;
   discoveredGames: { [id: string]: IDiscoveryResult };
+  /**
+   * The store the detected-games response matched each game on, by game id, named until
+   * discovery finds the game and names the store itself.
+   */
+  detectedStores?: Record<string, string>;
+  /** Which Games page list the rows are in, recorded for the app_game_manage event. */
+  source?: GameSource;
   onRefreshGameInfo: (gameId: string) => PromiseLike<void>;
   onBrowseGameLocation: (gameId: string) => PromiseLike<void>;
 }
@@ -22,6 +30,8 @@ export const GamesList = ({
   type,
   gameMode,
   discoveredGames,
+  detectedStores,
+  source,
   onRefreshGameInfo,
   onBrowseGameLocation,
 }: IGamesListProps) => (
@@ -29,9 +39,11 @@ export const GamesList = ({
     {games.map((game) => (
       <GameRow
         active={game.id === gameMode}
+        detectedStore={detectedStores?.[game.id]}
         discovery={discoveredGames[game.id]}
         game={game}
         key={game.id}
+        source={source}
         t={t}
         type={type}
         onBrowseGameLocation={onBrowseGameLocation}

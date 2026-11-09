@@ -48,6 +48,7 @@ makepkg -si
 
 **As of v2.9.1-linux (2026-10-28):**
 
+<<<<<<< HEAD
 - **Launches on Linux** — `pnpm run start` boots without crashing; the native addons (loot, ba2tk, vortexmt, xxhash-addon and friends) compile and load. LOOT runs on upstream node-loot's own Linux support (vendored `libloot.so.0`) since v2.9.1-linux, so the fork no longer builds libloot from source.
 - **FOMOD installer** — C#/.NET FOMOD installers work via native Linux binaries — no Wine needed.
 - **Steam/Proton game detection** — Multi-root VDF scanning (native Steam + Flatpak), Proton prefix resolution, never-launched games picked up via `oslist`, and the `{mygames}` Wine path resolves correctly (`compatdata/<appid>/pfx/drive_c/users/steamuser/Documents/My Games`).
@@ -62,6 +63,11 @@ makepkg -si
 - **FOMOD path normalization** — FOMOD XML installers get their source paths normalised for Linux (forward-slash, lowercase), so mods that used to silently fail on case-sensitive filesystems actually install.
 - **CSharpScript Linux notice** — Mods that use CSharpScript-based FOMOD installers (a Windows-only feature) now surface a clear, actionable notification on Linux instead of failing silently.
 - **chattr+F kernel casefold for mod staging** — On ext4/btrfs, mod staging directories get created with `chattr +F` (kernel-level case folding), which sidesteps the userspace shim's race conditions on deep mod hierarchies; falls back to the shim on XFS/ZFS and anything else.
+=======
+- Bug Report: If you see an error message or encounter an issue while using our application, please create a [bug report](https://github.com/Nexus-Mods/Vortex/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=).
+- Feature Request: If you have an idea or if there is a capability that is missing and would make development easier and more robust, please submit a [feature request](https://github.com/Nexus-Mods/Vortex/issues/new?assignees=&labels=&projects=&template=feature_request.md&title=).
+- Pull Request: Read [CONTRIBUTING.md](CONTRIBUTING.md) first. We are in the middle of large foundational changes and can only take small pull requests at the moment, so check with us before starting anything big.
+>>>>>>> v2.10.1
 
 ## What Doesn't Work
 

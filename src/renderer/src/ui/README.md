@@ -8,6 +8,9 @@ Components adapted from the web team's "next" project for use in Vortex.
 ui/
 ├── components/
 │   ├── alert/           - Full-width page-level message bar (replaces Bootstrap Alert)
+│   ├── badges/          - Small badges marking what something is
+│   │   ├── nexus_badge/ - The Nexus Mods logo in its own colours
+│   │   └── premium_badge/ - Premium diamond badge
 │   ├── bullet/          - Small rotated-square dot used as an inline marker/separator
 │   ├── button/          - Button system (brand × appearance matrix)
 │   ├── collectiontile/  - Collection card with image, metadata, and actions
@@ -34,7 +37,6 @@ ui/
 │   ├── picker/          - Single-value selector (Headless UI Listbox)
 │   ├── pill/            - Compact rounded label for tags and statuses
 │   ├── popover/         - Floating panel of interactive content, or a menu of actions (Headless UI Popover)
-│   ├── premium_badge/   - Premium diamond badge
 │   ├── table/           - Column-driven grid table (work in progress, behind a dev switch)
 │   ├── tabs/            - Tabbed interface with context-based state
 │   ├── toolbar/         - Horizontal toolbar; groups collapse overflow into a kebab dropdown
@@ -152,9 +154,13 @@ import { nxmVortex } from "../../ui/lib/icon_paths/iconPaths";
 
 Colour is expressed as `brand` × `appearance`: `brand` picks the colour family, `appearance` picks the intensity.
 
-**Defaults:** `as="p"`, `brand="neutral"`, `appearance="strong"`, `typographyType` inferred from `as` — only set these when you need something different.
+**Defaults:** `as="p"`, `brand="neutral"`, `appearance="strong"`, `typographyType="body-md"` — only set these when you need something different.
 
-When `typographyType` is omitted it falls back based on `as`: `h1`→`heading-2xl`, `h2`→`heading-xl`, `h3`→`heading-lg`, `h4`→`heading-md`, `h5`→`heading-sm`, `h6`→`heading-xs`, everything else→`body-md`.
+`as` only picks the element; it never changes the type style, so a heading sets its `typographyType` too. `typographyType="inherit"` keeps the parent's type style, for a nested Typography that only changes colour.
+
+Wrap a list or several paragraphs in one Typography with plain elements inside, rather than one per item. See "Text" in `docs/frontend.md`.
+
+Body styles are normal weight; Design's Medium and Semi Bold variants are `className="font-medium"` (500) and `className="font-semibold"` (600) on the same `typographyType`.
 
 ```tsx
 import { Typography } from "../../ui/components/typography/Typography";
@@ -163,10 +169,11 @@ import { Typography } from "../../ui/components/typography/Typography";
 <Typography>Some body text</Typography>
 
 // Only override what differs
-<Typography as="h1">Page Heading</Typography>
+<Typography as="h1" typographyType="heading-2xl">Page Heading</Typography>
 <Typography appearance="subdued">Muted text (neutral)</Typography>
 <Typography brand="info" appearance="moderate">Info text</Typography>
 <Typography as="span" typographyType="body-sm">Inline small text</Typography>
+<Typography appearance="subdued" as="span" typographyType="inherit">Muted, at the parent's size</Typography>
 
 // inverted is neutral-only (for light surfaces)
 <Typography appearance="inverted">On a light background</Typography>
@@ -180,8 +187,8 @@ import { Typography } from "../../ui/components/typography/Typography";
 </Typography>
 ```
 
-**Elements:** `h1`–`h6`, `p`, `span`, `div`, `ul`
-**Types:** `heading-2xl` through `heading-xs`, `title-md` through `title-xs`, `body-2xl` through `body-xs`
+**Elements:** `h1`–`h6`, `p`, `span`, `div`, `ul`, `ol`
+**Types:** `heading-2xl` through `heading-xs`, `title-md` through `title-xs`, `body-2xl` through `body-xs`, plus `inherit`
 **Brands:** `neutral` (default), `primary`, `info`, `success`, `premium`, `danger`, `warning`, `neutral-translucent` (white-alpha translucent ramp), `neutral-on-scrim` (the fixed `on-scrim` ramp, for text laid over a scrim — stays light whatever the theme), `none` (opt out of colour)
 **Appearances:** `weak`, `subdued`, `moderate`, `strong` — plus `inverted` on `neutral` and `neutral-translucent` only. Setting `appearance` with `brand="none"` is disallowed (it would be redundant).
 
@@ -721,7 +728,7 @@ import { Pagination } from "../../ui/components/pagination/Pagination";
 
 ### Table
 
-Column-driven table drawn as one CSS grid: the column widths make its tracks and every row is a subgrid of them, so cells line up without a `<table>`. It carries the grid roles. Work in progress towards the new table design; on the Mods page it only shows while the dev tools "New table design" switch is on.
+Column-driven table drawn as one CSS grid: the column widths make its tracks and every row is a subgrid of them, so cells line up without a `<table>`. It carries the grid roles. Work in progress towards the new table design; on the Mods page it shows in place of the classic table while the toolbar's beta view is on.
 
 ```tsx
 import { Table } from "../../ui/components/table/Table";
@@ -735,7 +742,7 @@ const columns: Array<ITableColumn<Mod>> = [
 <Table columns={columns} getRowId={(m) => m.id} label="Mods" rows={mods} />;
 ```
 
-**`ITableColumn` fields:** `id`, `header`, `cell` (required); `width` (a grid track, default `minmax(0, 1fr)`), `align` (`start` or `end`).
+**`ITableColumn` fields:** `id`, `header`, `cell` (required); `width` (a grid track, default `minmax(280px, 1fr)`, so a flexible column keeps a readable width when the columns overflow), `align` (`start` or `end`).
 
 ### Listing / ListingLoader / NoResults
 
@@ -891,7 +898,7 @@ import { Image } from "../../ui/components/image/Image";
 <Image alt="Preview" src={url} imageType="mod" isBlurred />
 ```
 
-**Image types:** `collection` (4:5 portrait), `mod` (16:9 landscape), `other` (sized by container)
+**Image types:** `avatar` (1:1 square), `collection` (4:5 portrait), `game` (2:3 portrait), `mod` (16:9 landscape), `other` (sized by container)
 
 #### AdultAwareImage
 
@@ -911,7 +918,7 @@ import { AdultAwareImage } from "../../ui/components/image/AdultAwareImage";
 Small diamond badge denoting premium membership.
 
 ```tsx
-import { PremiumBadge } from "../../ui/components/premium_badge/PremiumBadge";
+import { PremiumBadge } from "../../ui/components/badges/premium_badge/PremiumBadge";
 
 <PremiumBadge />;
 ```

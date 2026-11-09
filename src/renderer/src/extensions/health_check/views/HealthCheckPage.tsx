@@ -14,9 +14,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { setDialogVisible, setOpenMainPage, setSettingsPage } from "@/actions/session";
 import type { IExtensionApi } from "@/types/IExtensionContext";
 import type { IState } from "@/types/IState";
+import { PremiumBadge } from "@/ui/components/badges/premium_badge/PremiumBadge";
 import { Button } from "@/ui/components/button/Button";
 import { NoResults } from "@/ui/components/no_results/NoResults";
-import { PremiumBadge } from "@/ui/components/premium_badge/PremiumBadge";
 import { TabBar } from "@/ui/components/tabs/TabBar";
 import { TabButton } from "@/ui/components/tabs/TabButton";
 import { TabPanel } from "@/ui/components/tabs/TabPanel";
@@ -442,8 +442,8 @@ const HealthCheckPage = ({ api, onRefresh, active, registerReset }: IHealthCheck
               <Typography
                 appearance={compact ? "subdued" : "moderate"}
                 as="h2"
-                className="transition-colors"
-                typographyType="heading-xs"
+                className="font-medium transition-colors"
+                typographyType="body-xl"
               >
                 {t("listing::title")}
               </Typography>

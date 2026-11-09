@@ -1,6 +1,11 @@
 /**
  * Tests for the game manage/unmanage analytics: app_game_manage carries the support extension
+<<<<<<< HEAD
  * version, game store and discovery method, and app_game_unmanage fires with a game_id. Numeric game-id resolution is covered by
+=======
+ * version, game store, discovery method and the Games page list the game was picked from, and
+ * app_game_unmanage fires with a game_id. Numeric game-id resolution is covered by
+>>>>>>> v2.10.1
  * numericGameId.test.ts, so it stays unresolved (null) here.
  */
 import { EventEmitter } from "events";
@@ -15,11 +20,25 @@ vi.mock("../../gamemode_management/util/getGame", () => ({
   getGame: (id: string) => ({ id, name: id, version: "2.3.4" }),
 }));
 
+<<<<<<< HEAD
 function harness(discovered: Record<string, { store?: string; pathSetManually?: boolean }> = {}) {
   const emitter = new EventEmitter();
   const events: MixpanelEvent[] = [];
   emitter.on("analytics-track-mixpanel-event", (e: MixpanelEvent) => events.push(e));
   const state = { settings: { gameMode: { discovered } } };
+=======
+function harness(
+  discovered: Record<string, { store?: string; pathSetManually?: boolean }> = {},
+  addOrigin?: { gameId: string; source: "detected_list" | "all_games" },
+) {
+  const emitter = new EventEmitter();
+  const events: MixpanelEvent[] = [];
+  emitter.on("analytics-track-mixpanel-event", (e: MixpanelEvent) => events.push(e));
+  const state = {
+    settings: { gameMode: { discovered } },
+    session: { gameMode: { gameAddOrigin: addOrigin ?? null } },
+  };
+>>>>>>> v2.10.1
   const api = { events: emitter, getState: () => state } as unknown as IExtensionApi;
   return { api, events };
 }
@@ -58,6 +77,27 @@ describe("game manage analytics", () => {
     expect(h.events[0].properties.discovery_method).toBe("automatic");
   });
 
+<<<<<<< HEAD
+=======
+  it("sends null game_source when no origin was recorded", () => {
+    const h = harness();
+    emitGameManaged(h.api, "skyrimse");
+    expect(h.events[0].properties.game_source).toBeNull();
+  });
+
+  it("records which list the game was picked from", () => {
+    const h = harness({}, { gameId: "skyrimse", source: "detected_list" });
+    emitGameManaged(h.api, "skyrimse");
+    expect(h.events[0].properties.game_source).toBe("detected_list");
+  });
+
+  it("ignores an origin recorded for a different game", () => {
+    const h = harness({}, { gameId: "fallout4", source: "all_games" });
+    emitGameManaged(h.api, "skyrimse");
+    expect(h.events[0].properties.game_source).toBeNull();
+  });
+
+>>>>>>> v2.10.1
   it("emits app_game_unmanage with a game_id", () => {
     const h = harness();
     emitGameUnmanaged(h.api, "skyrimse");

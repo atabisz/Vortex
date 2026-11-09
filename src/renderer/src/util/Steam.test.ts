@@ -1,7 +1,19 @@
 import * as path from "path";
 
+<<<<<<< HEAD
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+=======
+import {
+  ChaosFS,
+  InMemoryFSBuilder,
+  QualifiedPath,
+  type ChaosRule,
+  type FileSystem,
+} from "@vortex/shared/filesystem";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+>>>>>>> v2.10.1
 
+import { installInMemoryFS } from "../test-utils/fsApi";
 import { GameEntryNotFound } from "../types/IGameStore";
 import { Steam } from "./Steam";
 
@@ -10,6 +22,7 @@ import { Steam } from "./Steam";
 // imports exists. vi.hoisted runs ahead of the imports, so the mocks can read it.
 // (On Windows the equivalent RegGetValue call sits in a try/catch that swallows the
 // ReferenceError, which is why a plain `let` only fails on CI.)
+<<<<<<< HEAD
 const steam = vi.hoisted(() => ({
   installed: true,
   baseFolder: "C:\\Steam",
@@ -19,11 +32,13 @@ const steam = vi.hoisted(() => ({
 const manifestGate = vi.hoisted(() => ({
   pending: undefined as Promise<Buffer> | undefined,
 }));
+=======
+const steam = vi.hoisted(() => ({ installed: true, baseFolder: "C:\\Steam" }));
+>>>>>>> v2.10.1
 
 const BASE_FOLDER = steam.baseFolder;
 const ALT_LIBRARY = path.join("D:", "SteamLibrary");
 const THIRD_LIBRARY = path.join("E:", "Games");
-const LIB_FOLDERS_FILE = path.resolve(BASE_FOLDER, "config", "libraryfolders.vdf");
 
 const MANIFEST = `"AppState"
 {
@@ -32,6 +47,38 @@ const MANIFEST = `"AppState"
   "installdir" "TestGame"
   "LastOwner" "1"
   "LastUpdated" "0"
+}`;
+
+/** Mini appmanifest with the depot values the telemetry needs: depot ids whose
+    file order differs from depot-id order, inline-brace entries like real Steam
+    files write them, plus branch/language and a shared (redistributable) depot. */
+const DEPOT_MANIFEST = `"AppState"
+{
+  "appid" "42"
+  "name" "Test Game"
+  "installdir" "TestGame"
+  "buildid" "12345"
+  "TargetBuildID" "12346"
+  "StateFlags" "4"
+  "InstalledDepots"
+  {
+    "7" { "manifest" "m7" "size" "1" }
+    "3" { "manifest" "m3" "size" "2" "dlcappid" "1" }
+  }
+  "SharedDepots"
+  {
+    "5" "4"
+  }
+  "UserConfig"
+  {
+    "language" "english"
+    "BetaKey" "beta-2"
+  }
+  "MountedConfig"
+  {
+    "language" "english"
+    "BetaKey" "beta-2"
+  }
 }`;
 
 /** simple-vdf rejects inline braces, so every block needs its own lines. */
@@ -62,8 +109,10 @@ const libraryFolders = (
 const gamePathIn = (library: string): string =>
   path.join(library, "steamapps", "common", "TestGame");
 
-let libraryFoldersError: NodeJS.ErrnoException | undefined;
+/** The libraryfolders.vdf contents to seed; tests set this before scanning. */
 let libraryFoldersVdf = "";
+/** Fault rules wrapped around the seeded FS; tests set these before scanning. */
+let chaosRules: ChaosRule[] = [];
 
 vi.mock("winapi-bindings", () => ({
   RegGetValue: () => {
@@ -86,32 +135,46 @@ vi.mock("./linux/proton", () => ({
   buildProtonCommand: () => ({ executable: "", args: [] }),
 }));
 
-vi.mock("fs/promises", () => ({
-  readdir: () => Promise.resolve(["appmanifest_42.acf"]),
-  readFile: () =>
-    libraryFoldersError !== undefined
-      ? Promise.reject(libraryFoldersError)
-      : Promise.resolve(Buffer.from(libraryFoldersVdf)),
-}));
+/**
+ * Seeds an in-memory FS behind window.api.fs: the libraryfolders.vdf plus one
+ * appmanifest per known library, then wraps it in ChaosFS so tests can inject
+ * parseError-classifiable faults.
+ */
+const installTestFS = (manifest: string = MANIFEST): (() => void) => {
+  const { fs, restore } = installInMemoryFS((builder) => {
+    builder.file(QualifiedPath.fromNative(path.join(BASE_FOLDER, "config", "libraryfolders.vdf")), {
+      type: "text",
+      data: libraryFoldersVdf,
+    });
 
-vi.mock("./fs", () => ({
-  readFileAsync: () => manifestGate.pending ?? Promise.resolve(Buffer.from(MANIFEST)),
-}));
-
-const fsError = (code: string): NodeJS.ErrnoException =>
-  Object.assign(new Error(`${code}: no such file or directory, open '${LIB_FOLDERS_FILE}'`), {
-    code,
-    path: LIB_FOLDERS_FILE,
+    for (const library of [BASE_FOLDER, ALT_LIBRARY, THIRD_LIBRARY]) {
+      builder.file(
+        QualifiedPath.fromNative(path.join(library, "steamapps", "appmanifest_42.acf")),
+        {
+          type: "text",
+          data: manifest,
+        },
+      );
+    }
   });
+
+  (window as unknown as { api?: { fs?: FileSystem } }).api!.fs = new ChaosFS(fs, chaosRules);
+  return restore;
+};
 
 /**
  * Drive the manager-owned scan, then read the data through allGames -
  * allGames itself no longer triggers a parse.
  */
-const scanAllGames = async () => {
-  const store = new Steam();
-  await store.reloadGames();
-  return store.allGames();
+const scanAllGames = async (manifest: string = MANIFEST) => {
+  const restore = installTestFS(manifest);
+  try {
+    const store = new Steam();
+    await store.reloadGames();
+    return store.allGames();
+  } finally {
+    restore();
+  }
 };
 
 const realPlatform = Object.getOwnPropertyDescriptor(process, "platform")!;
@@ -127,10 +190,13 @@ describe("Steam.allGames", () => {
   beforeEach(() => {
     setPlatform("win32");
     steam.installed = true;
+<<<<<<< HEAD
     steam.linuxRoots = undefined;
     libraryFoldersError = undefined;
+=======
+    chaosRules = [];
+>>>>>>> v2.10.1
     libraryFoldersVdf = libraryFolders([]);
-    manifestGate.pending = undefined;
   });
 
   it("finds nothing when Steam isn't installed", async () => {
@@ -139,18 +205,42 @@ describe("Steam.allGames", () => {
     await expect(scanAllGames()).resolves.toEqual([]);
   });
 
-  it.each(["ENOENT", "EPERM"])("falls back to the base folder on %s", async (code) => {
-    libraryFoldersError = fsError(code);
+  it.each(["fs:not-found", "fs:no-permissions"] satisfies ChaosRule["fault"]["kind"][])(
+    "falls back to the base folder on %s",
+    async (kind) => {
+      chaosRules = [
+        {
+          fault: { kind },
+          op: "readFile",
+          path: (p) => p.value.includes("libraryfolders.vdf"),
+        },
+      ];
 
-    const entries = await scanAllGames();
+      const entries = await scanAllGames();
 
-    expect(entries.map((entry) => entry.gamePath)).toEqual([gamePathIn(BASE_FOLDER)]);
-  });
+      expect(entries.map((entry) => entry.gamePath)).toEqual([gamePathIn(BASE_FOLDER)]);
+    },
+  );
 
-  it("propagates errors other than ENOENT/EPERM", async () => {
-    libraryFoldersError = fsError("EIO");
+  it("propagates errors other than not-found/no-permissions", async () => {
+    chaosRules = [
+      {
+        fault: {
+          kind: "os:generic",
+          originalCode: "EIO",
+          message: "EIO: i/o error, read 'libraryfolders.vdf'",
+        },
+        op: "readFile",
+        path: (p) => p.value.includes("libraryfolders.vdf"),
+      },
+    ];
 
-    await expect(new Steam().reloadGames()).rejects.toThrow("EIO");
+    const restore = installTestFS();
+    try {
+      await expect(new Steam().reloadGames()).rejects.toThrow("EIO");
+    } finally {
+      restore();
+    }
   });
 
   it.each([
@@ -236,6 +326,37 @@ describe("Steam.allGames", () => {
       gamePathIn(BASE_FOLDER),
       gamePathIn(ALT_LIBRARY),
     ]);
+  });
+
+  it("keeps the InstalledDepots file order, which depot-id sort would lose", async () => {
+    const entries = await scanAllGames(DEPOT_MANIFEST);
+
+    expect(entries[0]?.installData).toEqual({
+      appId: 42,
+      buildId: 12345,
+      stateFlags: 4,
+      targetBuildId: 12346,
+      branch: "beta-2",
+      language: "english",
+      mountedLanguage: "english",
+      depots: [
+        { depotId: 7, manifestId: "m7", dlcAppId: null },
+        { depotId: 3, manifestId: "m3", dlcAppId: "1" },
+      ],
+      sharedDepots: [{ depotId: 5, ownerAppId: 4 }],
+    });
+  });
+
+  it("normalizes the default branch to null", async () => {
+    const entries = await scanAllGames(DEPOT_MANIFEST.replace("beta-2", "public"));
+
+    expect(entries[0]?.installData?.branch).toBeNull();
+  });
+
+  it("skips install data when the manifest lacks build or state fields", async () => {
+    const entries = await scanAllGames();
+
+    expect(entries[0]?.installData).toBeUndefined();
   });
 });
 

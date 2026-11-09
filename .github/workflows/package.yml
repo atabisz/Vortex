@@ -1,0 +1,163 @@
+name: Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "The version to release (eg: 'v1.0.0')."
+        required: true
+        type: string
+      create-artifacts:
+        description: "Create artifacts?"
+        required: true
+        type: boolean
+        default: true
+      use-codesigning:
+        description: "Use codesigning?"
+        required: false
+        type: boolean
+        default: true
+      release:
+        description: "Create a draft release?"
+        required: false
+        type: boolean
+        default: true
+      staging-release:
+        description: "Create a draft staging release?"
+        required: false
+        type: boolean
+        default: true
+      upload-to-r2:
+        description: "Upload the installer to R2?"
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    outputs:
+      raw-version: ${{ steps.package.outputs.raw-version }}
+      tag-version: ${{ steps.package.outputs.tag-version }}
+      installer-artifact: ${{ steps.package.outputs.installer-artifact }}
+    env:
+      NO_PARALLEL: true
+      ES_USERNAME: ${{ secrets.ES_USERNAME }}
+      ES_PASSWORD: ${{ secrets.ES_PASSWORD }}
+      ES_CREDENTIAL_ID: ${{ secrets.ES_CREDENTIAL_ID }}
+      ES_TOTP_SECRET: ${{ secrets.ES_TOTP_SECRET }}
+      NEXUS_API_KEY: ${{ secrets.NEXUS_API_KEY }}
+      DEBUG: electron-builder # gives electron more verbose logs
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: "recursive"
+
+      - name: Package Vortex
+        id: package
+        uses: ./.github/actions/package
+        with:
+          version: ${{ inputs.version }}
+          use-codesigning: ${{ inputs.use-codesigning }}
+
+      - name: Create Unpacked Artifact
+        if: ${{ inputs.create-artifacts }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.package.outputs.unpacked-artifact }}
+          path: ./dist/win-unpacked
+          if-no-files-found: error
+          retention-days: 90
+
+      # Consumed by both downstream jobs, so it has to cover their conditions too.
+      - name: Create Installer Artifact
+        if: ${{ inputs.create-artifacts || inputs.release || inputs.staging-release || inputs.upload-to-r2 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.package.outputs.installer-artifact }}
+          path: |
+            ./dist/vortex-setup-*.*.*.exe
+            ./dist/vortex-setup-*.*.*.exe.blockmap
+            ./dist/latest.yml
+          if-no-files-found: error
+          retention-days: 90
+
+  create-github-releases:
+    name: Create Draft Releases
+    needs: build
+    if: ${{ inputs.release || inputs.staging-release }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # needed to create the GitHub release
+    steps:
+      - name: Download installer artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ needs.build.outputs.installer-artifact }}
+          path: dist
+
+      - name: Create GitHub Release
+        if: ${{ inputs.release }}
+        uses: softprops/action-gh-release@v3.0.3
+        with:
+          # the .blockmap enables differential downloads: the auto-updater
+          # fetches only the changed blocks of the installer when the previous
+          # version's blockmap is also published
+          files: |
+            ./dist/vortex-setup-*.*.*.exe
+            ./dist/vortex-setup-*.*.*.exe.blockmap
+            ./dist/latest.yml
+          prerelease: ${{ contains(needs.build.outputs.raw-version, '-') }}
+          draft: true
+          name: ${{ needs.build.outputs.raw-version }}
+          tag_name: ${{ needs.build.outputs.tag-version }}
+          target_commitish: ${{ github.ref_name }}
+
+      - name: Create GitHub Release on Vortex-Staging
+        if: ${{ inputs.staging-release }}
+        uses: softprops/action-gh-release@v3.0.3
+        with:
+          files: |
+            ./dist/vortex-setup-*.*.*.exe
+            ./dist/vortex-setup-*.*.*.exe.blockmap
+            ./dist/latest.yml
+          prerelease: ${{ contains(needs.build.outputs.raw-version, '-') }}
+          draft: true
+          name: ${{ needs.build.outputs.raw-version }}
+          tag_name: ${{ needs.build.outputs.tag-version }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          repository: "Nexus-Mods/Vortex-Staging"
+
+  upload-to-r2:
+    name: Upload Installer to R2
+    needs: build
+    if: ${{ inputs.upload-to-r2 }}
+    runs-on: platform-cluster-public
+    permissions:
+      contents: read
+    steps:
+      - name: Install AWS CLI
+        run: |
+          curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+          unzip -q awscliv2.zip
+          sudo ./aws/install --update
+          rm -rf awscliv2.zip aws
+
+      - name: Download installer artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ needs.build.outputs.installer-artifact }}
+          path: installer
+
+      - name: Upload to R2
+        run: |
+          installer=$(ls installer/vortex-setup-*.exe)
+          echo "Uploading $installer"
+          aws s3 cp "$installer" s3://nexusmodsapp/ --endpoint-url "${{ secrets.NEXUSMODS_R2_ENDPOINT }}"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.NEXUSMODSAPP_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.NEXUSMODSAPP_R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto

@@ -6,6 +6,7 @@ import { IconButton } from "../../../controls/TooltipControls";
 import { getSafe } from "../../../util/storeHelper";
 import type { IDownload } from "../../download_management/types/IDownload";
 import type { IModWithState } from "../types/IModProps";
+import { confirmCollectionModUpdate } from "../util/collection_update_warning/collectionUpdateWarning";
 import type { UpdateState } from "../util/modUpdateState";
 import { isIdValid } from "../util/modUpdateState";
 
@@ -110,6 +111,23 @@ class VersionIconButton extends ComponentEx<IProps, {}> {
     }
   }
 
+  private updateMod = async (downloadGame: string, newestFileId: number) => {
+    const { api } = this.context;
+    const { gameMode, mod } = this.props;
+
+    if (!(await confirmCollectionModUpdate(api, gameMode, mod.id))) {
+      return;
+    }
+
+    api.events.emit(
+      "mod-update",
+      downloadGame,
+      mod.attributes?.modId,
+      newestFileId,
+      mod.attributes?.source,
+    );
+  };
+
   private trigger = () => {
     const { gameMode, mod, state } = this.props;
     const newestFileId = getSafe(mod.attributes, ["newestFileId"], undefined);
@@ -127,13 +145,7 @@ class VersionIconButton extends ComponentEx<IProps, {}> {
           mod.id,
         );
       } else {
-        this.context.api.events.emit(
-          "mod-update",
-          downloadGame,
-          mod.attributes?.modId,
-          newestFileId,
-          mod.attributes?.source,
-        );
+        void this.updateMod(downloadGame, newestFileId);
       }
     } else if (state === "update-site" || state === "bug-update-site") {
       if (mod.attributes?.collectionId !== undefined) {

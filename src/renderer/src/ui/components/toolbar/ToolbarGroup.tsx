@@ -1,14 +1,21 @@
-import React, { type HTMLAttributes } from "react";
+import React, { type HTMLAttributes, type ReactNode, type Ref } from "react";
 
-import type { IMenuAction, IPopoverPanel } from "@/ui/components/popover/PopoverMenuItem";
+import type {
+  IMenuAction,
+  IPopoverPanel,
+} from "@/ui/components/popover/popover_menu/PopoverMenu.types";
 import { TooltipDelayGroup } from "@/ui/components/tooltip/TooltipDelayGroup";
 import { joinClasses } from "@/ui/utils/joinClasses";
 
-import type { IToolbarAnalytics, ToolbarSurface } from "./Toolbar.context";
+import type {
+  IToolbarAnalytics,
+  IToolbarTrackingProperties,
+  ToolbarSurface,
+} from "./Toolbar.context";
 import { identityOf, useToolbarContext } from "./Toolbar.context";
 import { ToolbarButton } from "./ToolbarButton";
 import { ToolbarOverflow } from "./ToolbarOverflow";
-import { ToolbarPanelButton } from "./ToolbarPanelButton";
+import { type IToolbarPanelHandle, ToolbarPanelButton } from "./ToolbarPanelButton";
 import { TOOLBAR_CONTROL_ATTRIBUTE, useToolbarOverflow } from "./useToolbarOverflow.hook";
 import { type IToolbarPinning, useToolbarPinning } from "./useToolbarPinning.hook";
 
@@ -22,30 +29,36 @@ export type IToolbarPanel = IPopoverPanel;
  * single meaning, so the two are mutually exclusive.
  */
 export type IToolbarAction = IMenuAction & {
+  /** Shows its label as text beside its icon on the bar, rather than in a tooltip. */
   showLabel?: boolean;
   /** Said under the label in its tooltip on the bar, where there's more to say than its name. */
   description?: string;
+<<<<<<< HEAD
+=======
+  /** A `data-testid` for its control on the bar. */
+>>>>>>> v2.10.1
   testId?: string;
-  /**
-   * What a decision to pin this action is stored against, so it must not change with
-   * the language or the release. Only needed on a toolbar that offers pinning.
-   */
+  /** For a panel action: filled with a way to open its panel, while it's on the bar. */
+  panelHandle?: Ref<IToolbarPanelHandle>;
+  /** What pinning it is stored against, so unchanged by language or release; for pinning only. */
   id?: string;
-  /**
-   * Whether it sits on the bar until the user says otherwise. Ignored by a toolbar
-   * that doesn't offer pinning, which shows every action it was given.
-   */
+  /** Whether it sits on the bar until the user says otherwise; ignored without pinning. */
   pinned?: boolean;
-  /**
-   * The extension that registered this action, for a toolbar counting where its
-   * buttons come from. Absent for an action the page owns.
-   */
+  /** Its section of the overflow menu: a rule divides each run of actions from the next. */
+  section?: string;
+  /** The extension that registered it, for counting clicks; absent for the page's own. */
   extension?: string;
+  /** Extra properties its counted clicks report, such as a toggle's way; never about the user. */
+  trackingProperties?: IToolbarTrackingProperties;
 };
 
 type IToolbarGroupProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
+  /** Its controls, in order; those that don't fit go to the overflow menu. */
   actions: IToolbarAction[];
+  /** The most it shows on the bar, however many would fit. */
   maxVisible?: number;
+  /** Shown after the actions and before the overflow menu, always, so it takes its room first. */
+  beforeOverflow?: ReactNode;
 };
 
 /**
@@ -58,7 +71,8 @@ const widthSignature = (actions: IToolbarAction[]): string =>
   [
     actions.length,
     ...actions.map(
-      (action) => `${action.iconPath ? "i" : ""}${action.showLabel ? action.label : ""}`,
+      (action) =>
+        `${action.iconPath || action.icon !== undefined ? "i" : ""}${action.showLabel ? action.label : ""}`,
     ),
   ].join(":");
 
@@ -69,12 +83,13 @@ const widthSignature = (actions: IToolbarAction[]): string =>
 const controlProps = (action: IToolbarAction) => ({
   appearance: "weak" as const,
   brand: action.brand ?? "neutral",
+  className: action.active ? "nxm-button-active" : undefined,
   "data-testid": action.testId,
   description: action.description,
   disabled: action.disabled,
   isLoading: action.isLoading,
   label: action.label,
-  leftIconPath: action.iconPath,
+  ...(action.icon !== undefined ? { leftIcon: action.icon } : { leftIconPath: action.iconPath }),
   showLabel: action.showLabel,
 });
 
@@ -155,6 +170,7 @@ const ToolbarControl = ({ action, onClick }: { action: IToolbarAction; onClick?:
   action.panel ? (
     <ToolbarPanelButton
       {...controlProps(action)}
+      handle={action.panelHandle}
       panel={action.panel}
       panelRole={action.panelRole}
       onClick={onClick}
@@ -179,6 +195,7 @@ type IGroupBodyProps = IToolbarGroupProps & {
 const ToolbarGroupBody = ({
   actions,
   barActions,
+  beforeOverflow,
   className,
   maxVisible,
   pinning,
@@ -216,13 +233,16 @@ const ToolbarGroupBody = ({
       ref={groupRef}
       {...props}
     >
+      {/* By id where there is one, so a toggle whose label changes keeps its button, and focus. */}
       {visibleActions.map((action) => (
         <ToolbarControl
           action={action}
-          key={action.label}
+          key={action.id ?? action.label}
           onClick={panelClickReporter(action, tracking?.onActionClick)}
         />
       ))}
+
+      {beforeOverflow}
 
       {/* Kept mounted through the measuring pass so its width is measured too. */}
       {(isMeasuring || pinningEnabled || !!hiddenActions.length) && (
