@@ -1,3 +1,4 @@
+import { VortexGameId } from "@vortex/shared";
 import type { TFunction } from "i18next";
 import * as React from "react";
 import { ListGroupItem, Media } from "react-bootstrap";
@@ -15,6 +16,8 @@ import IconBar from "../../../controls/IconBar";
 import type { IActionDefinition } from "../../../types/IActionDefinition";
 import opn from "../../../util/opn";
 import type { IMod } from "../../mod_management/types/IMod";
+import { setGameAddOrigin, setGameAddStore } from "../actions/session";
+import type { GameSource } from "../types/GameSource";
 import type { IDiscoveryResult } from "../types/IDiscoveryResult";
 import type { IGameStored } from "../types/IGameStored";
 import { gameArtURL } from "../util/gameArtURL";
@@ -23,10 +26,17 @@ import GameInfoPopover from "./GameInfoPopover";
 export interface IProps {
   t: TFunction;
   game: IGameStored;
+  /**
+   * The store the detected-games response matched the game on, named until discovery
+   * finds the game and names the store itself.
+   */
+  detectedStore?: string;
   discovery?: IDiscoveryResult;
   mods?: { [modId: string]: IMod };
   active: boolean;
   type: string;
+  /** Which Games page list the row is in, recorded for the app_game_manage event. */
+  source?: GameSource;
   onRefreshGameInfo: (gameId: string) => PromiseLike<void>;
   onBrowseGameLocation: (gameId: string) => PromiseLike<void>;
 }
@@ -60,7 +70,7 @@ class GameRow extends ComponentEx<IProps, {}> {
     }
 
     return (
-      <ListGroupItem className={classes.join(" ")}>
+      <ListGroupItem className={classes.join(" ")} onClickCapture={this.tagOrigin}>
         <Media>
           <Media.Left>
             <div className="game-thumbnail-container-list">
@@ -147,6 +157,23 @@ class GameRow extends ComponentEx<IProps, {}> {
   private openLocation = () => {
     const { discovery } = this.props;
     opn(discovery.path).catch(() => null);
+  };
+
+  // Click capture, because the list layout's add button sits inside IconBar, whose
+  // actions don't take a click context: any click on an unadded row records the row's
+  // list, and only the add the emit is keyed to ends up read.
+  private tagOrigin = () => {
+    const { detectedStore, discovery, game, source } = this.props;
+    if (source === undefined) {
+      return;
+    }
+    const { dispatch } = this.context.api.store;
+    dispatch(setGameAddOrigin(game.id, source));
+    // Discovery's store wins, as on the tile: it's the copy Vortex will manage.
+    const store = discovery?.store ?? detectedStore;
+    if (source === "detected_list" && store !== undefined) {
+      dispatch(setGameAddStore(VortexGameId(game.id), store));
+    }
   };
 
   private changeLocation = () => {

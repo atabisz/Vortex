@@ -2531,7 +2531,7 @@ class ExtensionManager {
                   log("error", "Invalid spawn parameters", {
                     runExe,
                     args,
-                    options: JSON.stringify(options),
+                    options: _.omit(options, ["env"]),
                   });
                 }
 

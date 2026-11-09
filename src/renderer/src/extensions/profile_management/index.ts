@@ -18,13 +18,19 @@
 
 import * as path from "path";
 
-import { getErrorMessageOrDefault } from "@vortex/shared";
+import {
+  getErrorMessageOrDefault,
+  isEnvironmentalError,
+  VortexError,
+  VortexGameId,
+  VortexProfileId,
+} from "@vortex/shared";
 import PromiseBB from "bluebird";
 import type * as Redux from "redux";
 import { generate as shortid } from "shortid";
 
 import type { IDialogResult } from "../../actions/notifications";
-import { addNotification, showDialog } from "../../actions/notifications";
+import { addNotification, dismissNotification, showDialog } from "../../actions/notifications";
 import { clearUIBlocker, setProgress, setUIBlocker } from "../../actions/session";
 import { log } from "../../logging";
 import type { IExtensionDownloadInfo, IRegisteredExtension } from "../../types/extensions";
@@ -52,6 +58,7 @@ import {
 import { getSafe } from "../../util/storeHelper";
 import { truthy } from "../../util/util";
 import { emitGameManaged, emitGameUnmanaged } from "../analytics/mixpanel/gameManageAnalytics";
+import { clearGameAddStore } from "../gamemode_management/actions/session";
 import { getGame, getGameStubDownloadInfo } from "../gamemode_management/util/getGame";
 import { ensureStagingDirectory } from "../mod_management/stagingDirectory";
 import { purgeMods } from "../mod_management/util/deploy";
@@ -63,13 +70,13 @@ import {
   willRemoveProfile,
 } from "./actions/profiles";
 import { clearLastActiveProfile, setCurrentProfile, setNextProfile } from "./actions/settings";
-import { STUCK_TIMEOUT } from "./constants";
+import { PROFILE_SWITCH_FAILED_NOTIFICATION_ID, STUCK_TIMEOUT } from "./constants";
 import { profilesReducer } from "./reducers/profiles";
 import { settingsReducer } from "./reducers/settings";
 import transferSetupReducer from "./reducers/transferSetup";
 import { activeGameId, activeProfile, lastActiveProfileForGame, profileById } from "./selectors";
 import { syncFromProfile, syncToProfile } from "./sync";
-import { CorruptActiveProfile } from "./types/Errors";
+import { CorruptActiveProfile, ProfileSwitchStep } from "./types/Errors";
 import type { IProfile } from "./types/IProfile";
 import type { IProfileFeature } from "./types/IProfileFeature";
 import { sanitizeProfile } from "./util/sanitizeProfile";
@@ -227,8 +234,22 @@ function activateGame(store: ThunkStore<IState>, gameId: string): PromiseBB<void
   }
 }
 
+const SWITCH_STEP_LABEL: Record<ProfileSwitchStep, string> = {
+  [ProfileSwitchStep.PendingProfile]: "pending profile",
+  [ProfileSwitchStep.PreviousProfile]: "previously active profile",
+  [ProfileSwitchStep.NextProfile]: "next active profile",
+};
+
+const isSwitchDeployFailure = (err: unknown): err is VortexError =>
+  err instanceof VortexError && err.data.kind === "profile-switch:deploy-failed";
+
 /** Deploys the profile unless it is its game's last active one with nothing pending. */
-function deploy(api: IExtensionApi, profileId: string | undefined, what: string): PromiseBB<void> {
+function deploy(
+  api: IExtensionApi,
+  profileId: string | undefined,
+  step: ProfileSwitchStep,
+): PromiseBB<void> {
+  const what = SWITCH_STEP_LABEL[step];
   const state: IState = api.store.getState();
   if (profileId === undefined || state.persistent.profiles[profileId] === undefined) {
     return PromiseBB.resolve();
@@ -277,8 +298,19 @@ function deploy(api: IExtensionApi, profileId: string | undefined, what: string)
         if (err === null) {
           log("info", `did deploy ${what}`, profileId);
           resolve();
-        } else {
+        } else if (err instanceof UserCanceled) {
           reject(err);
+        } else {
+          const failure = new VortexError(
+            `Deploying the ${what} failed`,
+            { kind: "profile-switch:deploy-failed", step, profileId: VortexProfileId(profileId) },
+            { cause: err },
+          );
+          if (isEnvironmentalError(err)) {
+            // telemetry classifies by this flag, it does not look at the cause
+            Object.assign(failure, { allowReport: false });
+          }
+          reject(failure);
         }
       }),
       profileId,
@@ -286,6 +318,7 @@ function deploy(api: IExtensionApi, profileId: string | undefined, what: string)
         lastProgress = Date.now();
         api.store.dispatch(setProgress("profile", "deploying", text, percent));
       },
+      { failOnError: true },
     );
   });
 }
@@ -301,7 +334,7 @@ function genOnProfileChange(
   onFinishProfileSwitch: (callback: () => void) => void,
 ) {
   let finishProfileSwitchPromise: PromiseBB<void> = PromiseBB.resolve();
-  const { store } = api;
+  const store = api.store as ThunkStore<IState>;
 
   let cancelPromise: () => void;
 
@@ -315,7 +348,12 @@ function genOnProfileChange(
 
   const cancelSwitch = () => {
     invokeCancel();
-    store.dispatch(setCurrentProfile(undefined, undefined));
+    if (store.getState().settings.profiles.activeProfileId === undefined) {
+      // nothing changes, so the state watcher that announces the end of a switch stays silent
+      api.events.emit("profile-did-change", undefined);
+    } else {
+      store.dispatch(setCurrentProfile(undefined, undefined));
+    }
     store.dispatch(setNextProfile(undefined));
   };
 
@@ -335,6 +373,9 @@ function genOnProfileChange(
 
   return (prev: string, current: string) => {
     log("debug", "profile change", { from: prev, to: current });
+    if (current !== undefined) {
+      store.dispatch(dismissNotification(PROFILE_SWITCH_FAILED_NOTIFICATION_ID));
+    }
     finishProfileSwitchPromise
       .then(() => {
         const state: IState = store.getState();
@@ -450,7 +491,7 @@ function genOnProfileChange(
                   if (pendingId === undefined) {
                     return undefined;
                   }
-                  return deploy(api, pendingId, "pending profile").then(() =>
+                  return deploy(api, pendingId, ProfileSwitchStep.PendingProfile).then(() =>
                     refreshProfile(store, profileById(api.getState(), pendingId), "import"),
                   );
                 })
@@ -460,8 +501,8 @@ function genOnProfileChange(
                 })
                 // ensure the old profile is synchronised before we switch, otherwise me might
                 // revert some changes
-                .then(() => deploy(api, prevId, "previously active profile"))
-                .then(() => deploy(api, nextId, "next active profile"))
+                .then(() => deploy(api, prevId, ProfileSwitchStep.PreviousProfile))
+                .then(() => deploy(api, nextId, ProfileSwitchStep.NextProfile))
                 .then(() => {
                   const prof = profileById(api.store.getState() as IState, current);
                   if (prof === undefined) {
@@ -485,6 +526,17 @@ function genOnProfileChange(
       .catch((err) => {
         cancelSwitch();
         return PromiseBB.reject(err);
+      })
+      .catch(isSwitchDeployFailure, (err: VortexError) => {
+        // the deployment already reported its own error in detail
+        showError(store.dispatch, "Failed to set profile", err.message, {
+          id: PROFILE_SWITCH_FAILED_NOTIFICATION_ID,
+          allowReport: false,
+          actions:
+            prev === undefined
+              ? []
+              : [{ title: "Switch back", action: () => store.dispatch(setNextProfile(prev)) }],
+        });
       })
       .catch(ProcessCanceled, (err) => {
         showError(store.dispatch, "Failed to set profile", err.message, {
@@ -544,8 +596,45 @@ function manageGameDiscovered(api: IExtensionApi, gameId: string) {
     });
 }
 
+/** The store the user picked this game from, if they picked one while adding it. */
+function pickedStore(state: IState, gameId: VortexGameId): string | undefined {
+  const picked = state.session.gameMode.gameAddStore;
+  return picked?.gameId === gameId ? picked.store : undefined;
+}
+
+/**
+ * Runs discovery for one game. With a store the user picked the game from, discovery is
+ * held to that store, and not finding the game there fails the add rather than leaving
+ * it to manage whichever install was found before.
+ */
+async function discoverPickedGame(
+  api: IExtensionApi,
+  gameId: VortexGameId,
+  store: string | undefined,
+): Promise<void> {
+  await api.emitAndAwait("discover-game", gameId, store);
+
+  // A game without its extension isn't discovered at all, and goes on to be offered the
+  // extension; there's nothing yet to hold to the store.
+  if (store === undefined || getGame(gameId) === undefined) {
+    return;
+  }
+
+  const found = api.getState().settings.gameMode.discovered[gameId];
+  // A path no store claims is kept by discovery, so it has no store to compare.
+  if (found?.path === undefined || (found.store !== undefined && found.store !== store)) {
+    throw new VortexError(`"${gameId}" was not found in the game store "${store}"`, {
+      kind: "game-not-found",
+      gameId,
+    });
+  }
+}
+
 function manageGameUndiscovered(api: IExtensionApi, gameId: string): PromiseBB<void> {
   let state: IState = api.store.getState();
+  // read now: the add that recorded it clears it as soon as this returns, and the
+  // download below runs on after that
+  const store = pickedStore(state, VortexGameId(gameId));
   const knownGames = state.session.gameMode.known;
   const gameStored = knownGames.find((game) => game.id === gameId);
 
@@ -591,7 +680,11 @@ function manageGameUndiscovered(api: IExtensionApi, gameId: string): PromiseBB<v
                 .then(() => api.emitAndAwait("install-extension", extension))
                 .then((results: boolean[]) => {
                   if (results.includes(true)) {
-                    relaunch(["--game", extension.name]);
+                    relaunch(
+                      store !== undefined
+                        ? ["--game", extension.name, "--game-store", store]
+                        : ["--game", extension.name],
+                    );
                   }
                 })
                 .finally(() => {
@@ -891,8 +984,10 @@ function init(context: IExtensionContext): boolean {
 
       context.api.events.emit("analytics-track-event", "Games", "Start managing", gameId);
 
-      context.api
-        .emitAndAwait("discover-game", gameId)
+      // what the user picked the game from, which discovery is held to
+      const store = pickedStore(context.api.getState(), VortexGameId(gameId));
+
+      discoverPickedGame(context.api, VortexGameId(gameId), store)
         .then(() => checkOverridden(context.api, gameId))
         .then(() => {
           const state = context.api.getState();
@@ -908,8 +1003,14 @@ function init(context: IExtensionContext): boolean {
         })
         .catch((err) => {
           if (!(err instanceof UserCanceled)) {
-            context.api.showErrorNotification("Failed to manage game", err);
+            // a game missing from the store the user picked isn't a bug to report
+            context.api.showErrorNotification("Failed to manage game", err, {
+              allowReport: !(err instanceof VortexError && err.data.kind === "game-not-found"),
+            });
           }
+        })
+        .finally(() => {
+          context.api.store.dispatch(clearGameAddStore());
         });
     },
   );
@@ -1121,9 +1222,13 @@ function init(context: IExtensionContext): boolean {
           // startQuickDiscovery in gamemode_management.once() and pops the
           // "Game not discovered" dialog even though discovery would have
           // succeeded.
-          context.api
-            .emitAndAwait("discover-game", game.id)
-            .then(() => manageGame(context.api, game.id));
+          discoverPickedGame(context.api, VortexGameId(game.id), commandLine.gameStore)
+            .then(() => manageGame(context.api, game.id))
+            .catch((err) => {
+              context.api.showErrorNotification("Failed to manage game", err, {
+                allowReport: !(err instanceof VortexError && err.data.kind === "game-not-found"),
+              });
+            });
         } else {
           log("warn", "game specified on command line not found", {
             game: commandLine.game,

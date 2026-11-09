@@ -11,6 +11,7 @@ import { GameTile } from "@/ui/components/game_tile/GameTile";
 import { activeGameId } from "@/util/selectors";
 
 import { useGameCardActions } from "../hooks/use_game_card_actions/useGameCardActions.hook";
+import type { GameSource } from "../types/GameSource";
 import type { IGameStored } from "../types/IGameStored";
 import { gameArtURL } from "../util/gameArtURL";
 import { GameDetailsModal } from "./GameDetailsModal";
@@ -22,6 +23,11 @@ import { GameDetailsModal } from "./GameDetailsModal";
 export type IGameSection = "added" | "detected" | "supported";
 
 export interface IGameCardProps {
+  /**
+   * The store the detected-games response matched the game on, named until discovery
+   * finds the game and names the store itself.
+   */
+  detectedStore?: string;
   game: IGameStored;
   section: IGameSection;
   onRefreshGameInfo?: (gameId: string) => PromiseLike<void>;
@@ -32,7 +38,7 @@ export interface IGameCardProps {
  * has to come out of the store — its art, which storefront it came from, the actions
  * extensions registered for it, and the details dialog its menu opens.
  */
-export const GameCard = ({ game, onRefreshGameInfo, section }: IGameCardProps) => {
+export const GameCard = ({ detectedStore, game, onRefreshGameInfo, section }: IGameCardProps) => {
   const { t } = useTranslation();
   const { api } = useMainContext();
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -41,14 +47,26 @@ export const GameCard = ({ game, onRefreshGameInfo, section }: IGameCardProps) =
   const showDetails = useCallback(() => setDetailsOpen(true), []);
   const closeDetails = useCallback(() => setDetailsOpen(false), []);
 
+  // added games' lead action is an "Open", so they don't record an add origin
+  const source: GameSource | undefined =
+    section === "detected" ? "detected_list" : section === "supported" ? "all_games" : undefined;
+
+  const discoveredStore = useSelector(
+    (state: IState) => state.settings.gameMode.discovered[game.id]?.store,
+  );
+  // Discovery's store is the copy Vortex will manage, so it wins. A game whose extension
+  // isn't installed hasn't been through discovery, which leaves the detected store.
+  const store = discoveredStore ?? detectedStore;
+
   // Registered actions still know games as managed or unmanaged, the older split of this.
   const { menu, primary } = useGameCardActions(
     game.id,
     section === "added" ? "managed" : "unmanaged",
     showDetails,
+    source,
+    store,
   );
   const name = game.name.replace(/\t/g, " ");
-  const store = useSelector((state: IState) => state.settings.gameMode.discovered[game.id]?.store);
 
   const actions: Record<
     IGameSection,

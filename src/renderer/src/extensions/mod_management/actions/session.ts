@@ -1,8 +1,8 @@
+import type { VortexModStagingFolder } from "@vortex/shared";
+
 import safeCreateAction from "../../../actions/safeCreateAction";
 import { UserCanceled } from "../../../util/CustomErrors";
-import type { IFileChange } from "../types/IDeploymentMethod";
-import type { IFileEntry } from "../types/IFileEntry";
-import { changeToEntry } from "../util/externalChanges";
+import type { FileAction, IFileEntry } from "../types/IFileEntry";
 
 export interface IDeploymentProblem {
   activator: string;
@@ -53,23 +53,24 @@ export const addDeploymentFailures = safeCreateAction(
  */
 export const setExternalChanges = safeCreateAction("SET_EXTERNAL_CHANGES", (entries) => entries);
 
+/** source limits the action to that mod's files */
 export const setExternalChangeAction = safeCreateAction(
   "SET_EXTERNAL_CHANGE_ACTION",
-  (filePaths: string[], action: string) => ({ filePaths, action }),
+  (filePaths: string[], action: FileAction, source: VortexModStagingFolder | undefined) => ({
+    filePaths,
+    action,
+    source,
+  }),
 );
 
 let curResolve;
 let curReject;
 
-export function showExternalChanges(changes: { [typeId: string]: IFileChange[] }) {
+export function showExternalChanges(entries: IFileEntry[]) {
   return (dispatch) =>
     new Promise<IFileEntry[]>((resolve, reject) => {
       curResolve = resolve;
       curReject = reject;
-      const entries: IFileEntry[] = [];
-      Object.keys(changes).forEach((typeId) => {
-        changes[typeId].forEach((fileChange) => entries.push(changeToEntry(typeId, fileChange)));
-      });
       dispatch(setExternalChanges(entries));
     });
 }
@@ -90,3 +91,9 @@ export function confirmExternalChanges(changes: IFileEntry[], canceled: boolean)
     dispatch(setExternalChanges([]));
   };
 }
+
+/** Asks the new Mods table to open and scroll to a group, by id; undefined once it has. */
+export const focusModsTableGroup = safeCreateAction(
+  "FOCUS_MODS_TABLE_GROUP",
+  (groupId: string | undefined) => groupId,
+);

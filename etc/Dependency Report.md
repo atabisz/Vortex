@@ -29,6 +29,7 @@ This is a list of all modules leaked by Vortex to extensions. Any module listed 
 | @opentelemetry/sdk-trace-base | 2.8.0 |
 | @opentelemetry/semantic-conventions | 1.40.0 |
 | @tailwindcss/cli | 4.3.2 |
+| @tanstack/react-virtual | 3.13.23 |
 | @types/bluebird | 3.5.20 |
 | @types/uuid | 3.4.13 |
 | @vortex/nexus-api-v3 | link:../../packages/nexus-api-v3 |

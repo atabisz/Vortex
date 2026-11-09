@@ -10,6 +10,8 @@ export class NavBar {
   readonly preferencesLink: Locator;
   readonly profilesLink: Locator;
   readonly extensionsLink: Locator;
+  /** The menu's "Apply" button, shown while there are changes to apply. */
+  readonly applyButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -25,8 +27,12 @@ export class NavBar {
     this.preferencesLink = page.getByRole("button", { name: "Preferences", exact: true }).first();
     this.profilesLink = page.getByRole("button", { name: "Profiles", exact: true }).first();
     this.modsLink = page.getByText("Mods", { exact: true }).first();
+<<<<<<< HEAD
     this.gamesLink = page.locator('a[href="#/games"]').first();
     this.homeLink = page.locator(".main-nav-sidebar a").first();
     this.extensionsLink = page.getByText("Extensions", { exact: true }).first();
+=======
+    this.applyButton = page.getByTestId("menu-apply");
+>>>>>>> v2.10.1
   }
 }

@@ -1,4 +1,4 @@
-import { getErrorMessageOrDefault } from "@vortex/shared";
+import { getErrorMessageOrDefault, VortexGameId } from "@vortex/shared";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,11 +7,13 @@ import { registerAction } from "@/controls/ActionControl";
 import { useExtensionObjects } from "@/ExtensionProvider";
 import type { IActionDefinition } from "@/types/IActionDefinition";
 import type { IState } from "@/types/IState";
-import { PopoverMenu } from "@/ui/components/popover/PopoverMenu";
-import type { IMenuAction } from "@/ui/components/popover/PopoverMenuItem";
+import { PopoverMenu } from "@/ui/components/popover/popover_menu/PopoverMenu";
+import type { IMenuAction } from "@/ui/components/popover/popover_menu/PopoverMenu.types";
 import { getIconPath } from "@/views/components/iconMap";
 
+import { setGameAddOrigin, setGameAddStore } from "../../actions/session";
 import { setGameHidden } from "../../actions/settings";
+import type { GameSource } from "../../types/GameSource";
 
 /**
  * Where a tile stops leading with an action and starts filing it in the menu. It's the
@@ -108,6 +110,8 @@ export const useGameCardActions = (
   gameId: string,
   type: string,
   onShowDetails: () => void,
+  source?: GameSource,
+  store?: string,
 ): IGameCardActions => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
@@ -172,9 +176,27 @@ export const useGameCardActions = (
 
     return {
       menu: [menu],
-      primary: leads
-        ? { label: sorted[0].action.label, onClick: () => sorted[0].action.onClick?.() }
-        : undefined,
+      primary:
+        leads &&
+        // The lead action of an unadded game is its add; recording the list it was
+        // picked from lets app_game_manage attribute the add. Never set for the
+        // added section, whose lead is an "Open".
+        source !== undefined
+          ? {
+              label: sorted[0].action.label,
+              onClick: () => {
+                dispatch(setGameAddOrigin(gameId, source));
+                // A tile of the detected list names the store the user is picking; the
+                // add manages that store's install, so discovery mustn't choose another.
+                if (source === "detected_list" && store !== undefined) {
+                  dispatch(setGameAddStore(VortexGameId(gameId), store));
+                }
+                sorted[0].action.onClick?.();
+              },
+            }
+          : leads
+            ? { label: sorted[0].action.label, onClick: () => sorted[0].action.onClick?.() }
+            : undefined,
     };
-  }, [dispatch, gameId, hidden, onShowDetails, registered, t]);
+  }, [dispatch, gameId, hidden, onShowDetails, registered, source, store, t]);
 };

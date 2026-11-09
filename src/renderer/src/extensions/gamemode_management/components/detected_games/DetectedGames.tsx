@@ -1,5 +1,5 @@
 import { mdiLoading, mdiRefresh, mdiWifiOff } from "@mdi/js";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -15,6 +15,7 @@ import { activeGameId } from "@/util/selectors";
 
 import { setSortDetected } from "../../actions/settings";
 import type { IGameStored } from "../../types/IGameStored";
+import { listableDetectedIds } from "../../util/detected_games/listableDetectedIds";
 import { GamesGrid } from "../GamesGrid";
 import { GamesList } from "../GamesList";
 import { Section } from "../section/Section";
@@ -22,6 +23,10 @@ import { Section } from "../section/Section";
 interface IDetectedGamesProps {
   games: IGameStored[];
   count: string;
+  /** The store each game was detected on, by internal id, for its tile to name. */
+  detectedStores?: Record<string, string>;
+  /** Internal ids of the caller's favourite games; they lead every sort. */
+  favourites?: string[];
   filtering: boolean;
   hasAddedGames: boolean;
   onBrowseGameLocation: (gameId: string) => PromiseLike<void>;
@@ -29,9 +34,25 @@ interface IDetectedGamesProps {
   onRefreshGameInfo: (gameId: string) => PromiseLike<void>;
 }
 
-/** Games found installed but not added yet, and the scan that finds them. */
+/** Which step of a scan failed, as `start-quick-discovery` reports it. */
+type ScanFailure = "discovery" | "detection";
+
+/**
+ * Games found installed but not added yet, and the scan that finds them.
+ *
+ * The scanning state also covers a detection request started elsewhere, at startup or
+ * login. A detection failure shows as the panel when the section is empty, and in the
+ * description when cards or a search fill it; both follow the stored status, so they clear
+ * when detection recovers. A scan the user starts reports its outcome in one short
+ * toast, found, none or couldn't check; a discovery failure raises its own error
+ * notification instead. A cancelled scan's result is ignored. "Found N new" is only counted against an earlier
+ * successful detection, as without one there's nothing to tell new games from: the last request
+ * succeeded, or games it stored remain, which only a successful one stores, after a later failure.
+ */
 export const DetectedGames = ({
   count,
+  detectedStores,
+  favourites,
   filtering,
   games,
   hasAddedGames,
@@ -53,47 +74,85 @@ export const DetectedGames = ({
   const discoveryRunning = useSelector(
     (state: IState) => state.session.discovery?.running ?? false,
   );
+  const detectedGames = useSelector((state: IState) => state.session.gameMode?.detectedGames);
+  const knownGames = useSelector((state: IState) => state.session.gameMode?.known);
+  const profiles = useSelector((state: IState) => state.persistent.profiles);
+  const detectionStatus = useSelector(
+    (state: IState) => state.session.gameMode?.detectedGamesStatus,
+  );
+  const detectionRunning = detectionStatus === "running";
+  const detectionFailed = detectionStatus === "failed";
 
   const [quickScanning, setQuickScanning] = useState(false);
   const [scanFailed, setScanFailed] = useState(false);
+  const scanIdRef = useRef(0);
 
-  const scanning = (quickScanning || discoveryRunning) && !filtering;
+  const scanning = (quickScanning || discoveryRunning || detectionRunning) && !filtering;
+  const failed = scanFailed || detectionFailed;
 
   const handleScan = () => {
-    // The scan reports every game on disk, so "new" is a diff against what came before.
+    const addedGameIds = new Set(Object.values(profiles).map((profile) => profile.gameId));
     const knownBefore = new Set(
-      Object.keys(discoveredGames).filter((id) => discoveredGames[id].path !== undefined),
+      listableDetectedIds(detectedGames ?? [], knownGames, discoveredGames, addedGameIds),
     );
+    const comparable = detectionStatus === "success" || (detectedGames?.length ?? 0) > 0;
+    const scanId = ++scanIdRef.current;
 
     setScanFailed(false);
     setQuickScanning(true);
 
-    const scan = new Promise<string[]>((resolve, reject) => {
-      api.events.emit("start-quick-discovery", (gameIds: string[], err?: Error) =>
-        err !== undefined ? reject(err) : resolve(gameIds),
+    const scan = new Promise<{ found: string[]; failure?: ScanFailure }>((resolve) => {
+      api.events.emit(
+        "start-quick-discovery",
+        (found: string[], err?: Error, failure: ScanFailure = "discovery") =>
+          resolve({ found, failure: err === undefined ? undefined : failure }),
       );
     });
 
-    scan
-      .then(
-        (found) => {
-          const added = found.filter((id) => !knownBefore.has(id)).length;
+    void scan
+      .then(({ found, failure }) => {
+        if (scanId !== scanIdRef.current) {
+          return;
+        }
 
-          setScanFailed(false);
+        if (failure === "discovery") {
+          setScanFailed(true);
+          return;
+        }
+
+        if (failure === "detection") {
           api.sendNotification({
-            type: added > 0 ? "success" : "info",
-            message:
-              added > 0 ? t("Found {{count}} new game", { count: added }) : t("No new games found"),
+            type: "error",
+            message: t("Couldn't check for new games. Check your internet connection."),
             displayMS: 4000,
           });
-        },
-        () => setScanFailed(true),
-      )
+          return;
+        }
+
+        if (!comparable) {
+          api.sendNotification({
+            type: "info",
+            message: t("Game detection finished"),
+            displayMS: 4000,
+          });
+          return;
+        }
+
+        const added = found.filter((id) => !knownBefore.has(id)).length;
+
+        api.sendNotification({
+          type: added > 0 ? "success" : "info",
+          message:
+            added > 0 ? t("Found {{count}} new game", { count: added }) : t("No new games found"),
+          displayMS: 4000,
+        });
+      })
       .finally(() => setQuickScanning(false));
   };
 
   // An aborted scan only settles once in-flight lookups finish, so clear the flag now.
   const handleCancelScan = () => {
+    scanIdRef.current++;
     api.events.emit("cancel-game-scan");
     setQuickScanning(false);
   };
@@ -126,7 +185,7 @@ export const DetectedGames = ({
       };
     }
 
-    if (scanFailed) {
+    if (failed) {
       return {
         children: retryButton,
         iconPath: mdiWifiOff,
@@ -154,18 +213,34 @@ export const DetectedGames = ({
 
   const emptyState = getEmptyState();
 
-  // Sorted here because the order is this section's own setting; undated games sort oldest.
-  const shownGames = [...games].sort((lhs, rhs) =>
-    sortOrder === "alphabetical"
-      ? lhs.name.localeCompare(rhs.name)
-      : (discoveredGames[rhs.id]?.timestamp ?? 0) - (discoveredGames[lhs.id]?.timestamp ?? 0),
+  // Sorted here because the order is this section's own setting; favourites lead
+  // regardless of it, and undated games sort oldest.
+  const favouriteSet = new Set(favourites ?? []);
+  const shownGames = [...games].sort(
+    (lhs, rhs) =>
+      Number(favouriteSet.has(rhs.id)) - Number(favouriteSet.has(lhs.id)) ||
+      (sortOrder === "alphabetical"
+        ? lhs.name.localeCompare(rhs.name)
+        : (discoveredGames[rhs.id]?.timestamp ?? 0) - (discoveredGames[lhs.id]?.timestamp ?? 0)),
   );
 
   // Anything waiting to be added lights the section, new to this scan or not.
   const highlighted = !!shownGames.length;
 
   // With games already added, the header alone reports an empty scan; failures keep a panel.
-  const quietlyEmpty = !shownGames.length && hasAddedGames && !filtering && !scanFailed;
+  const quietlyEmpty = !shownGames.length && hasAddedGames && !filtering && !failed;
+
+  const getDescription = () => {
+    if (detectionFailed && (shownGames.length > 0 || filtering)) {
+      return t("Can't detect games right now. Check your internet connection and try again.");
+    }
+
+    if (quietlyEmpty) {
+      return t("We'll show any installed games you haven't added yet here.");
+    }
+
+    return t("Installed games you haven't added yet.");
+  };
 
   return (
     <Section
@@ -212,11 +287,7 @@ export const DetectedGames = ({
           highlighted,
       })}
       count={count}
-      description={
-        quietlyEmpty
-          ? t("We'll show any installed games you haven't added yet here.")
-          : t("Installed games you haven't added yet.")
-      }
+      description={getDescription()}
       testId={highlighted ? "detected-games-lit" : undefined}
       title={highlighted || quietlyEmpty ? t("New games detected") : t("Games detected")}
     >
@@ -231,9 +302,11 @@ export const DetectedGames = ({
         >
           {layout === "list" ? (
             <GamesList
+              detectedStores={detectedStores}
               discoveredGames={discoveredGames}
               gameMode={gameMode}
               games={shownGames}
+              source="detected_list"
               t={t}
               type="unmanaged"
               onBrowseGameLocation={onBrowseGameLocation}
@@ -241,6 +314,7 @@ export const DetectedGames = ({
             />
           ) : (
             <GamesGrid
+              detectedStores={detectedStores}
               games={shownGames}
               section="detected"
               onRefreshGameInfo={onRefreshGameInfo}

@@ -1,25 +1,90 @@
-import update from "immutability-helper";
+import type { VortexGameId } from "@vortex/shared";
 
-import type { IReducerSpec } from "../../../types/IExtensionContext";
-import { setSafe } from "../../../util/storeHelper";
+import { actionsToReducerSpec } from "@/reducers/builder";
+
 import * as actions from "../actions/session";
+import type { GameSource } from "../types/GameSource";
+import type { DetectedGamesStatus, IDetectedGame } from "../types/IDetectedGame";
+import type { IGameStored } from "../types/IGameStored";
 
-/**
- * reducer for changes to ephemeral session state
- */
-export const sessionReducer: IReducerSpec = {
-  reducers: {
-    [actions.setKnownGames as any]: (state, payload) => update(state, { known: { $set: payload } }),
-    [actions.setGameDisabled as any]: (state, payload) =>
-      setSafe(state, ["disabled", payload.gameId], payload.disabledBy),
-    [actions.clearGameDisabled as any]: (state, payload) =>
-      update(state, { disabled: { $set: {} } }),
-    [actions.setShowHiddenGames as any]: (state, payload) =>
-      setSafe(state, ["showHidden"], payload),
-  },
-  defaults: {
-    known: [],
-    disabled: {},
-    showHidden: false,
-  },
+type DefaultState = {
+  known: IGameStored[];
+  disabled: Record<string, string>;
+  showHidden: boolean;
+  detectedGames: IDetectedGame[];
+  /** Unset before any request, or once there's nothing to say about the last one. */
+  detectedGamesStatus?: DetectedGamesStatus;
+  favouriteGames: number[];
+  gameAddOrigin: { gameId: string; source: GameSource } | null;
+  /**
+   * The store the user picked the game from while adding it. Unlike `gameAddOrigin` it's
+   * cleared when the add ends, because discovery acts on it.
+   */
+  gameAddStore: { gameId: VortexGameId; store: string } | null;
 };
+
+declare module "@/types/IState" {
+  interface ISessionState {
+    gameMode: DefaultState;
+  }
+}
+
+const defaultState: DefaultState = {
+  known: [],
+  disabled: {},
+  showHidden: false,
+  detectedGames: [],
+  favouriteGames: [],
+  gameAddOrigin: null,
+  gameAddStore: null,
+};
+
+export const sessionReducer = actionsToReducerSpec(defaultState, actions, {
+  setKnownGames: (state, payload) => ({
+    ...state,
+    known: payload,
+  }),
+  setGameDisabled: (state, payload) => ({
+    ...state,
+    disabled: {
+      ...state.disabled,
+      [payload.gameId]: payload.disabledBy,
+    },
+  }),
+  clearGameDisabled: (state) => ({
+    ...state,
+    disabled: {},
+  }),
+  setShowHiddenGames: (state, payload) => ({
+    ...state,
+    showHidden: payload,
+  }),
+  setDetectedGames: (state, payload) => ({
+    ...state,
+    detectedGames: payload,
+  }),
+  setDetectedGamesStatus: (state, payload) => ({
+    ...state,
+    detectedGamesStatus: payload,
+  }),
+  setFavouriteGames: (state, payload) => ({
+    ...state,
+    favouriteGames: payload,
+  }),
+  clearFavouriteGames: (state) => ({
+    ...state,
+    favouriteGames: [],
+  }),
+  setGameAddOrigin: (state, payload) => ({
+    ...state,
+    gameAddOrigin: payload,
+  }),
+  setGameAddStore: (state, payload) => ({
+    ...state,
+    gameAddStore: payload,
+  }),
+  clearGameAddStore: (state) => ({
+    ...state,
+    gameAddStore: null,
+  }),
+});
